@@ -1,0 +1,19 @@
+{
+  "name": "mdf",
+  "version": "0.1.0",
+  "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
+  "author": {
+    "name": "Jaejin Song"
+  },
+  "homepage": "https://github.com/jaejinsong/midnight-forge",
+  "repository": "https://github.com/jaejinsong/midnight-forge",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "plugin",
+    "claude-code",
+    "codex",
+    "harness"
+  ],
+  "skills": "./skills/"
+}
