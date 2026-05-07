@@ -16,6 +16,13 @@ v1 does not include setup, MCP servers, rules routing, runners, background jobs,
 
 ## Claude Code
 
+Install the released plugin through the GitHub-hosted Claude Code marketplace:
+
+```text
+/plugin marketplace add jjlabsio/midnight-forge
+/plugin install mdf@midnight-forge
+```
+
 Invoke the handshake through the Claude command shim:
 
 ```text
@@ -36,6 +43,14 @@ Then run:
 ```
 
 ## Codex
+
+Install the released plugin through the GitHub-hosted Codex marketplace:
+
+```bash
+codex plugin marketplace add jjlabsio/midnight-forge
+```
+
+Then open the Codex Plugin Directory, select the `Midnight Forge` marketplace, and install or enable `mdf`.
 
 Invoke the shared skill through Codex skills:
 

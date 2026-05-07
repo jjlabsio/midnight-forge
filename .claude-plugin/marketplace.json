@@ -1,0 +1,21 @@
+{
+  "name": "midnight-forge",
+  "owner": {
+    "name": "Jaejin Song"
+  },
+  "plugins": [
+    {
+      "name": "mdf",
+      "source": {
+        "source": "github",
+        "repo": "jjlabsio/midnight-forge",
+        "ref": "v0.1.0"
+      },
+      "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jaejin Song"
+      }
+    }
+  ]
+}
