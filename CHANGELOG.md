@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 - 2026-05-07
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.1.2...v0.1.3)
+
+### Changes
+
+- Fix Claude marketplace plugin source ([#4](https://github.com/jjlabsio/midnight-forge/pull/4))
 ## v0.1.2 - 2026-05-07
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.1.0...v0.1.2)
