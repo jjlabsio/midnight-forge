@@ -14,12 +14,19 @@ Midnight Forge (`mdf`) is a v1 plugin skeleton for proving that one shared skill
 
 v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, state persistence, or harness workflows.
 
-## Claude Code
+## Install
 
-Install the released plugin through the GitHub-hosted Claude Code marketplace:
+### Claude Code
+
+Add the GitHub-hosted Claude Code marketplace:
 
 ```text
 /plugin marketplace add jjlabsio/midnight-forge
+```
+
+Install the `mdf` plugin:
+
+```text
 /plugin install mdf@midnight-forge
 ```
 
@@ -29,20 +36,7 @@ Invoke the handshake through the Claude command shim:
 /mdf:mdf-handshake
 ```
 
-Local development smoke test:
-
-```bash
-cd /Users/jaejinsong/code/projects/plugins
-claude --plugin-dir ./midnight-forge
-```
-
-Then run:
-
-```text
-/mdf:mdf-handshake
-```
-
-## Codex
+### Codex
 
 Install the released plugin through the GitHub-hosted Codex marketplace:
 
@@ -58,13 +52,28 @@ Invoke the shared skill through Codex skills:
 $mdf-handshake
 ```
 
-Local development smoke test:
+## Local Smoke Tests
+
+These commands are for validating local plugin changes before release. They are separate from the normal install flow above.
+
+### Claude Code
+
+Run Claude Code with the local plugin directory:
 
 ```bash
-codex plugin marketplace add /Users/jaejinsong/code/projects/plugins
+cd /Users/jaejinsong/code/projects/plugins
+claude --plugin-dir ./midnight-forge
 ```
 
-For local testing, create a temporary Codex marketplace at `/Users/jaejinsong/code/projects/plugins/.agents/plugins/marketplace.json`:
+Then run:
+
+```text
+/mdf:mdf-handshake
+```
+
+### Codex
+
+Create a temporary Codex marketplace at `/Users/jaejinsong/code/projects/plugins/.agents/plugins/marketplace.json`:
 
 ```json
 {
@@ -89,6 +98,12 @@ For local testing, create a temporary Codex marketplace at `/Users/jaejinsong/co
 }
 ```
 
+Register the local marketplace root:
+
+```bash
+codex plugin marketplace add /Users/jaejinsong/code/projects/plugins
+```
+
 Restart Codex, install or enable `mdf` from the `Local Plugins` marketplace, then run:
 
 ```text
@@ -96,6 +111,17 @@ $mdf-handshake
 ```
 
 The temporary marketplace file is only for local testing and is not part of the v1 plugin skeleton.
+
+## Expected Output
+
+```text
+midnight-forge skill loaded
+runtime: Codex
+cwd: /path/to/current/project
+mode: plugin skill only; no setup, MCP, rules, runner, or harness workflow used
+```
+
+Claude Code should report `runtime: Claude Code` for the same skill.
 
 ## Release
 
@@ -112,14 +138,3 @@ release: 0.1.0
 ```
 
 When a PR is merged to `main`, the release workflow reads the merged PR intent. If a release is requested, it syncs the Claude Code and Codex plugin manifest versions, updates `CHANGELOG.md`, commits `chore(release): vX.Y.Z`, creates an annotated tag, and creates a GitHub Release. npm publishing is intentionally not part of this workflow.
-
-## Expected Output
-
-```text
-midnight-forge skill loaded
-runtime: Codex
-cwd: /path/to/current/project
-mode: plugin skill only; no setup, MCP, rules, runner, or harness workflow used
-```
-
-Claude Code should report `runtime: Claude Code` for the same skill.
