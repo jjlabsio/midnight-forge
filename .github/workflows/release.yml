@@ -174,9 +174,8 @@ jobs:
           const claudeMarketplacePath = ".claude-plugin/marketplace.json";
           const claudeMarketplace = JSON.parse(fs.readFileSync(claudeMarketplacePath, "utf8"));
           claudeMarketplace.plugins[0].version = version;
-          claudeMarketplace.plugins[0].source.ref = tag;
           fs.writeFileSync(claudeMarketplacePath, JSON.stringify(claudeMarketplace, null, 2) + "\n");
-          console.log(`Synced ${claudeMarketplacePath} to ${tag}`);
+          console.log(`Synced ${claudeMarketplacePath} to ${version}`);
 
           const codexMarketplacePath = ".agents/plugins/marketplace.json";
           const codexMarketplace = JSON.parse(fs.readFileSync(codexMarketplacePath, "utf8"));
