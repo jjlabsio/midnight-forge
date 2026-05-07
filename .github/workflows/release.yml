@@ -29,12 +29,24 @@ jobs:
       - name: Read merged PR
         if: github.event_name == 'push'
         run: |
-          gh api \
+          PR_JSON="$(gh api \
             -H "Accept: application/vnd.github+json" \
             "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
-            --jq '.[0] // {}' > pr.json
+            --jq '.[0] // {}')"
+
+          PR_NUMBER="$(printf '%s' "$PR_JSON" | jq -r '.number // empty')"
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER="$(printf '%s' "$HEAD_COMMIT" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | tail -n 1)"
+          fi
+
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr view "$PR_NUMBER" --json number,title,body,labels > pr.json
+          else
+            printf '%s\n' "$PR_JSON" > pr.json
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_COMMIT: ${{ github.event.head_commit.message }}
 
       - name: Resolve release version
         id: release
