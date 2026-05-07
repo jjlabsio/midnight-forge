@@ -146,6 +146,7 @@ jobs:
           node <<'NODE'
           const fs = require("node:fs");
           const version = process.env.VERSION;
+          const tag = `v${version}`;
           const files = [
             ".claude-plugin/plugin.json",
             ".codex-plugin/plugin.json",
@@ -157,6 +158,19 @@ jobs:
             fs.writeFileSync(file, JSON.stringify(json, null, 2) + "\n");
             console.log(`Synced ${file} to ${version}`);
           }
+
+          const claudeMarketplacePath = ".claude-plugin/marketplace.json";
+          const claudeMarketplace = JSON.parse(fs.readFileSync(claudeMarketplacePath, "utf8"));
+          claudeMarketplace.plugins[0].version = version;
+          claudeMarketplace.plugins[0].source.ref = tag;
+          fs.writeFileSync(claudeMarketplacePath, JSON.stringify(claudeMarketplace, null, 2) + "\n");
+          console.log(`Synced ${claudeMarketplacePath} to ${tag}`);
+
+          const codexMarketplacePath = ".agents/plugins/marketplace.json";
+          const codexMarketplace = JSON.parse(fs.readFileSync(codexMarketplacePath, "utf8"));
+          codexMarketplace.plugins[0].source.ref = tag;
+          fs.writeFileSync(codexMarketplacePath, JSON.stringify(codexMarketplace, null, 2) + "\n");
+          console.log(`Synced ${codexMarketplacePath} to ${tag}`);
           NODE
         env:
           VERSION: ${{ steps.release.outputs.version }}
@@ -217,6 +231,8 @@ jobs:
         run: |
           node -e 'JSON.parse(require("fs").readFileSync(".claude-plugin/plugin.json", "utf8"))'
           node -e 'JSON.parse(require("fs").readFileSync(".codex-plugin/plugin.json", "utf8"))'
+          node -e 'JSON.parse(require("fs").readFileSync(".claude-plugin/marketplace.json", "utf8"))'
+          node -e 'JSON.parse(require("fs").readFileSync(".agents/plugins/marketplace.json", "utf8"))'
           test -s CHANGELOG.md
 
       - name: Commit and tag
@@ -225,7 +241,7 @@ jobs:
           VERSION="v${{ steps.release.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .claude-plugin/plugin.json .codex-plugin/plugin.json CHANGELOG.md
+          git add .claude-plugin/plugin.json .codex-plugin/plugin.json .claude-plugin/marketplace.json .agents/plugins/marketplace.json CHANGELOG.md
           git diff --cached --quiet || git commit -m "chore(release): ${VERSION}"
           git tag -a "${VERSION}" -m "${VERSION}"
           git push origin HEAD:${{ github.ref_name }}
