@@ -82,6 +82,22 @@ $mdf-handshake
 
 The temporary marketplace file is only for local testing and is not part of the v1 plugin skeleton.
 
+## Release
+
+Releases are PR-based. Do not release directly from `main`.
+
+Every PR must include one release intent line in the PR body, title, or labels:
+
+```text
+release: major
+release: minor
+release: patch
+release: none
+release: 0.1.0
+```
+
+When a PR is merged to `main`, the release workflow reads the merged PR intent. If a release is requested, it syncs the Claude Code and Codex plugin manifest versions, updates `CHANGELOG.md`, commits `chore(release): vX.Y.Z`, creates an annotated tag, and creates a GitHub Release. npm publishing is intentionally not part of this workflow.
+
 ## Expected Output
 
 ```text

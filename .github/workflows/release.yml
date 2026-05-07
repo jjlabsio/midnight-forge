@@ -1,0 +1,246 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Exact version to release, for example 0.1.0. Leave empty to resolve from the merged PR."
+        required: false
+        type: string
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore(release):')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read merged PR
+        if: github.event_name == 'push'
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq '.[0] // {}' > pr.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve release version
+        id: release
+        run: |
+          node <<'NODE'
+          const { execSync } = require("node:child_process");
+          const fs = require("node:fs");
+
+          const manifest = JSON.parse(fs.readFileSync(".codex-plugin/plugin.json", "utf8"));
+          const current = manifest.version;
+          const inputVersion = process.env.INPUT_VERSION || "";
+          const pr = fs.existsSync("pr.json")
+            ? JSON.parse(fs.readFileSync("pr.json", "utf8"))
+            : {};
+          const labels = Array.isArray(pr.labels)
+            ? pr.labels.map((label) => label.name).join("\n")
+            : "";
+          const text = [
+            inputVersion,
+            pr.title || "",
+            pr.body || "",
+            labels,
+            process.env.HEAD_COMMIT || "",
+          ].join("\n");
+
+          const semver = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+          const releaseIntentRaw = text.match(
+            /(?:release-version|release|version)\s*:\s*(major|minor|patch|none|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)/i
+          )?.[1];
+          const releaseIntent = releaseIntentRaw?.toLowerCase();
+          const explicitVersion =
+            inputVersion ||
+            (releaseIntentRaw && semver.test(releaseIntentRaw) ? releaseIntentRaw : "");
+
+          let bump = "";
+          if (explicitVersion) {
+            bump = "exact";
+          } else if (["major", "minor", "patch", "none"].includes(releaseIntent)) {
+            bump = releaseIntent;
+          }
+
+          const nextVersion = bump === "none" ? "" : explicitVersion || bumpVersion(current, bump);
+          const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
+
+          if (!nextVersion) {
+            output.write("has_changes=false\n");
+            console.log("No release requested.");
+            process.exit(0);
+          }
+
+          if (!semver.test(nextVersion)) {
+            throw new Error(`Invalid semver: ${nextVersion}`);
+          }
+
+          if (compareSemver(nextVersion, current) < 0) {
+            throw new Error(`Release version ${nextVersion} is lower than current version ${current}`);
+          }
+
+          const tag = `v${nextVersion}`;
+          const tagExists = (() => {
+            try {
+              execSync(`git rev-parse --verify --quiet refs/tags/${tag}`, {
+                stdio: "ignore",
+              });
+              return true;
+            } catch {
+              return false;
+            }
+          })();
+
+          if (tagExists) {
+            output.write("has_changes=false\n");
+            console.log(`Tag ${tag} already exists, skipping release.`);
+            process.exit(0);
+          }
+
+          output.write("has_changes=true\n");
+          output.write(`version=${nextVersion}\n`);
+          console.log(`Release version resolved: ${nextVersion} (${bump})`);
+
+          function bumpVersion(version, type) {
+            if (!type) {
+              throw new Error("No release intent found. Add release: major|minor|patch|none|x.y.z to the PR.");
+            }
+            const [major, minor, patch] = version.split(".").map(Number);
+            if (type === "major") return `${major + 1}.0.0`;
+            if (type === "minor") return `${major}.${minor + 1}.0`;
+            if (type === "patch") return `${major}.${minor}.${patch + 1}`;
+            throw new Error(`Unsupported release intent: ${type}`);
+          }
+
+          function compareSemver(a, b) {
+            const parse = (value) => value.split(/[+-]/)[0].split(".").map(Number);
+            const left = parse(a);
+            const right = parse(b);
+            for (let i = 0; i < 3; i += 1) {
+              if (left[i] !== right[i]) return left[i] - right[i];
+            }
+            return 0;
+          }
+          NODE
+        env:
+          HEAD_COMMIT: ${{ github.event.head_commit.message }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+
+      - name: Update plugin manifest versions
+        if: steps.release.outputs.has_changes == 'true'
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const version = process.env.VERSION;
+          const files = [
+            ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json",
+          ];
+
+          for (const file of files) {
+            const json = JSON.parse(fs.readFileSync(file, "utf8"));
+            json.version = version;
+            fs.writeFileSync(file, JSON.stringify(json, null, 2) + "\n");
+            console.log(`Synced ${file} to ${version}`);
+          }
+          NODE
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+
+      - name: Update changelog
+        if: steps.release.outputs.has_changes == 'true'
+        run: |
+          node <<'NODE'
+          const { execSync } = require("node:child_process");
+          const fs = require("node:fs");
+
+          const version = process.env.VERSION;
+          const tag = `v${version}`;
+          const repo = process.env.GITHUB_REPOSITORY;
+          const pr = fs.existsSync("pr.json")
+            ? JSON.parse(fs.readFileSync("pr.json", "utf8"))
+            : {};
+          const lastTag = (() => {
+            try {
+              return execSync("git describe --tags --abbrev=0", {
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "ignore"],
+              }).trim();
+            } catch {
+              return "";
+            }
+          })();
+          const compare = lastTag
+            ? `https://github.com/${repo}/compare/${lastTag}...${tag}`
+            : `https://github.com/${repo}/releases/tag/${tag}`;
+          const title = pr.title || process.env.HEAD_COMMIT || tag;
+          const prRef = pr.number ? ` ([#${pr.number}](https://github.com/${repo}/pull/${pr.number}))` : "";
+          const date = new Date().toISOString().slice(0, 10);
+          const entry = [
+            `## ${tag} - ${date}`,
+            "",
+            `[compare changes](${compare})`,
+            "",
+            "### Changes",
+            "",
+            `- ${title}${prRef}`,
+            "",
+          ].join("\n");
+
+          const path = "CHANGELOG.md";
+          const existing = fs.existsSync(path)
+            ? fs.readFileSync(path, "utf8")
+            : "# Changelog\n";
+          const body = existing.replace(/^# Changelog\s*\n?/, "").trimStart();
+          fs.writeFileSync(path, `# Changelog\n\n${entry}${body}`.trimEnd() + "\n");
+          NODE
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          HEAD_COMMIT: ${{ github.event.head_commit.message }}
+
+      - name: Validate release files
+        if: steps.release.outputs.has_changes == 'true'
+        run: |
+          node -e 'JSON.parse(require("fs").readFileSync(".claude-plugin/plugin.json", "utf8"))'
+          node -e 'JSON.parse(require("fs").readFileSync(".codex-plugin/plugin.json", "utf8"))'
+          test -s CHANGELOG.md
+
+      - name: Commit and tag
+        if: steps.release.outputs.has_changes == 'true'
+        run: |
+          VERSION="v${{ steps.release.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/plugin.json .codex-plugin/plugin.json CHANGELOG.md
+          git diff --cached --quiet || git commit -m "chore(release): ${VERSION}"
+          git tag -a "${VERSION}" -m "${VERSION}"
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin "${VERSION}"
+
+      - name: Create GitHub Release
+        if: steps.release.outputs.has_changes == 'true'
+        run: |
+          VERSION="v${{ steps.release.outputs.version }}"
+          NOTES_FILE="$(mktemp)"
+          awk -v version="$VERSION" '
+            $0 == "## " version || index($0, "## " version " - ") == 1 { capture = 1; next }
+            capture && /^## / { exit }
+            capture { print }
+          ' CHANGELOG.md > "$NOTES_FILE"
+          gh release create "${VERSION}" --title "${VERSION}" --notes-file "$NOTES_FILE"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
