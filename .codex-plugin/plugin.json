@@ -1,0 +1,33 @@
+{
+  "name": "mdf",
+  "version": "0.1.0",
+  "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
+  "author": {
+    "name": "Jaejin Song"
+  },
+  "homepage": "https://github.com/jaejinsong/midnight-forge",
+  "repository": "https://github.com/jaejinsong/midnight-forge",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "plugin",
+    "codex",
+    "claude-code",
+    "harness"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Midnight Forge",
+    "shortDescription": "Shared mdf skill plugin skeleton for Codex and Claude Code.",
+    "longDescription": "Midnight Forge v1 verifies that one shared SKILL.md bundle can be used from both Codex and Claude Code without setup, MCP, rules, or a runner.",
+    "developerName": "Jaejin Song",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Run the mdf-handshake skill."
+    ]
+  }
+}
