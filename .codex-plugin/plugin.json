@@ -1,6 +1,6 @@
 {
   "name": "mdf",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
   "author": {
     "name": "Jaejin Song"

@@ -9,10 +9,10 @@
       "source": {
         "source": "github",
         "repo": "jjlabsio/midnight-forge",
-        "ref": "v0.1.0"
+        "ref": "v0.1.2"
       },
       "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
-      "version": "0.1.0",
+      "version": "0.1.2",
       "author": {
         "name": "Jaejin Song"
       }
