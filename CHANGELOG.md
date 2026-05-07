@@ -1,1 +1,9 @@
 # Changelog
+
+## v0.1.0 - 2026-05-07
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/releases/tag/v0.1.0)
+
+### Changes
+
+- Add PR-based release automation ([#1](https://github.com/jjlabsio/midnight-forge/pull/1))
