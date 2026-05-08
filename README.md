@@ -1,6 +1,6 @@
 # Midnight Forge
 
-Midnight Forge (`mdf`) is a v1 plugin skeleton for proving that one shared skill bundle can be delivered to both Claude Code and Codex.
+Midnight Forge (`mdf`) is a harness for solo developers, built to work across Claude Code and Codex.
 
 ## v1 Scope
 
@@ -8,11 +8,11 @@ Midnight Forge (`mdf`) is a v1 plugin skeleton for proving that one shared skill
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included skill: `mdf-handshake`
+- Included skills: `mdf-handshake`, `task`, `tasks`
 
 ## Intentionally Excluded
 
-v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, state persistence, or harness workflows.
+v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, harness workflows, or persistence outside the documented local task system.
 
 ## Install
 
@@ -36,6 +36,15 @@ Invoke the handshake through the Claude command shim:
 /mdf:mdf-handshake
 ```
 
+Invoke the task skills through Claude Code:
+
+```text
+/mdf:task add "Write the release checklist"
+/mdf:task start
+/mdf:tasks
+/mdf:tasks all
+```
+
 ### Codex
 
 Install the released plugin through the GitHub-hosted Codex marketplace:
@@ -51,6 +60,50 @@ Invoke the shared skill through Codex skills:
 ```text
 $mdf-handshake
 ```
+
+Invoke the task skills through Codex:
+
+```text
+$task add "Write the release checklist"
+$task start
+$tasks
+$tasks all
+```
+
+## Task System
+
+Midnight Forge includes a first-pass local task system built from LLM-driven skills:
+
+- Codex: `$task`, `$tasks`
+- Claude Code: `/mdf:task`, `/mdf:tasks`
+
+Task state is local-only and git-external:
+
+```text
+~/.mdf/projects/{project-hash}/
+```
+
+The project hash is based on `git remote get-url origin` when available, otherwise the absolute project root path. Because task state is outside git, it is shared across worktrees on the same machine but is not committed, pushed, or shared with teammates through PRs.
+
+Each task is a Markdown file with YAML frontmatter plus these fixed English body sections:
+
+```markdown
+## Context
+
+## Files
+
+## Criteria
+
+## Log
+```
+
+Task status is derived instead of stored:
+
+- `locks/{id}.lock` exists: active
+- Otherwise `completed` exists in frontmatter: done
+- Otherwise: queue
+
+Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
 
 ## Local Smoke Tests
 
