@@ -87,11 +87,13 @@ Review queue tasks in the current project whose `created` date is at least 30 da
 
 Delete done tasks completed at least 7 days ago only after explicit confirmation.
 
-1. List every done task in the current project with `completed` date at least 7 days old.
-2. Show the exact task file paths that would be deleted.
-3. Ask for explicit confirmation before deleting anything.
-4. After confirmation, delete the listed task files and any matching lock files.
-5. If there are no candidates, report that there is nothing to clean.
+1. Find tasks in the current project with `completed` date at least 7 days old.
+2. Exclude any task that also has `locks/{id}.lock`; because lock plus `completed` derives to active, report it as a consistency issue and skip it.
+3. List every remaining cleanup candidate.
+4. Show the exact task file paths that would be deleted.
+5. Ask for explicit confirmation before deleting anything.
+6. After confirmation, delete only the listed task files.
+7. If there are no valid cleanup candidates, report that there is nothing to clean.
 
 ## Error Handling
 
