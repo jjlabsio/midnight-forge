@@ -1,6 +1,6 @@
 ---
 name: task
-description: Manage one local MDF task lifecycle from any worktree: add, start, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects.
+description: "Manage one local MDF task lifecycle from any worktree: add, start, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects."
 ---
 
 # task
