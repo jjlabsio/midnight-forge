@@ -42,10 +42,10 @@ Expected: Output includes the skill-writing workflow. Apply the relevant rules w
 
 Create the file with this exact structure and content, preserving the command names and storage paths:
 
-```markdown
+````markdown
 ---
 name: task
-description: Manage one local MDF task lifecycle from any worktree: add, start, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects.
+description: "Manage one local MDF task lifecycle from any worktree: add, start, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects."
 ---
 
 # task
@@ -267,7 +267,7 @@ Delete a task only after explicit user confirmation.
 ## Error Handling
 
 Report clear errors for missing task ID, unknown subcommand, missing task file, malformed frontmatter, invalid due date, ambiguous due date, attempting `bump` or `top` on active or done tasks, and existing locks without takeover confirmation.
-```
+````
 
 - [ ] **Step 3: Verify `task` skill defines every required subcommand**
 
@@ -310,10 +310,10 @@ Expected: Commit succeeds with one new file.
 
 Create the file with this exact structure and content:
 
-```markdown
+````markdown
 ---
 name: tasks
-description: Show and clean MDF task boards for the current project or all local projects stored under ~/.mdf/projects.
+description: "Show and clean MDF task boards for the current project or all local projects stored under ~/.mdf/projects."
 ---
 
 # tasks
@@ -403,13 +403,14 @@ Delete done tasks completed at least 7 days ago only after explicit confirmation
 1. List every done task in the current project with `completed` date at least 7 days old.
 2. Show the exact task file paths that would be deleted.
 3. Ask for explicit confirmation before deleting anything.
-4. After confirmation, delete the listed task files and any matching lock files.
-5. If there are no candidates, report that there is nothing to clean.
+4. Exclude any task that has both `completed` and `locks/{id}.lock`; report it as a consistency issue and do not delete its task file or lock.
+5. After confirmation, delete only the listed task files.
+6. If there are no candidates, report that there is nothing to clean.
 
 ## Error Handling
 
 Report clear errors for unknown subcommands, malformed `meta.json`, malformed task frontmatter, unreadable task files, and unreadable lock JSON. Continue rendering other valid tasks when one file is malformed.
-```
+````
 
 - [ ] **Step 2: Verify board commands are present**
 
@@ -536,7 +537,7 @@ to:
 
 After the existing Codex handshake invocation block, add:
 
-```markdown
+````markdown
 Invoke the task skills through Codex:
 
 ```text
@@ -545,13 +546,13 @@ $task start
 $tasks
 $tasks all
 ```
-```
+````
 
 - [ ] **Step 3: Add Claude Code task invocation examples after the Claude handshake block**
 
 After the existing Claude Code handshake invocation block, add:
 
-```markdown
+````markdown
 Invoke the task skills through Claude Code:
 
 ```text
@@ -560,13 +561,13 @@ Invoke the task skills through Claude Code:
 /mdf:tasks
 /mdf:tasks all
 ```
-```
+````
 
 - [ ] **Step 4: Add the task system documentation section before `## Local Smoke Tests`**
 
 Insert:
 
-```markdown
+````markdown
 ## Task System
 
 Midnight Forge includes a first-pass local task system built from LLM-driven skills:
@@ -601,7 +602,7 @@ Task status is derived instead of stored:
 - Otherwise: queue
 
 Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
-```
+````
 
 - [ ] **Step 5: Verify README mentions the required concepts**
 
