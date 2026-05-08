@@ -12,7 +12,7 @@ Midnight Forge (`mdf`) is a v1 plugin skeleton for proving that one shared skill
 
 ## Intentionally Excluded
 
-v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, state persistence, or harness workflows.
+v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, harness workflows, or persistence outside the documented local task system.
 
 ## Install
 
