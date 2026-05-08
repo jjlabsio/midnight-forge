@@ -1,6 +1,6 @@
 # Midnight Forge
 
-Midnight Forge (`mdf`) is a v1 plugin skeleton for proving that one shared skill bundle can be delivered to both Claude Code and Codex.
+Midnight Forge (`mdf`) is a harness for solo developers, built to work across Claude Code and Codex.
 
 ## v1 Scope
 
