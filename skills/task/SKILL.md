@@ -60,7 +60,7 @@ Use the git root basename for `name`; if not in a git repository, use the curren
 
 Task IDs are 3-digit zero-padded strings such as `"001"`.
 
-If `counter.json` is missing or malformed, scan `tasks/[0-9][0-9][0-9].md`, find the largest existing ID, and rewrite `counter.json` with `next_id` set to largest ID plus one before creating a task.
+Before creating a task, scan `tasks/[0-9][0-9][0-9].md` and find the largest existing ID. If `counter.json` is missing or malformed, or if its `next_id` is less than or equal to the largest existing ID, rewrite `counter.json` with `next_id` set to largest ID plus one. Never choose an ID that already has a matching `tasks/{id}.md`; do not overwrite an existing task file.
 
 ## Task File Format
 
@@ -142,15 +142,15 @@ When a lock already exists, show task ID, title, worktree, branch, runtime, and 
 Create a queued task.
 
 1. Initialize project storage if needed.
-2. Repair `counter.json` if needed.
-3. Read `next_id`; use it as the new 3-digit task ID.
+2. Scan existing task filenames and repair `counter.json` if it is missing, malformed, or stale.
+3. Read `next_id`; use it as the new 3-digit task ID only if `tasks/{id}.md` does not already exist. If the file exists, rescan existing IDs, repair `counter.json`, and choose the repaired `next_id` instead.
 4. Set `order` to one greater than the current maximum order among queue tasks, or `1` if no queue tasks exist.
 5. Generate a short title from the description.
 6. Fill `Context` with a 2-5 sentence summary of relevant conversation.
 7. Fill `Files` only with file paths explicitly mentioned in the conversation.
 8. Fill `Criteria` only with checklist items explicitly stated or clearly implied. Leave it empty when criteria are not known.
 9. Append `- YYYY-MM-DD: Created task.` to `Log`.
-10. Write `tasks/{id}.md`, then update `counter.json` to `next_id + 1` in the same turn.
+10. Write `tasks/{id}.md` without overwriting any existing task file, then update `counter.json` to `next_id + 1` in the same turn.
 11. Report the created task ID, title, and file path.
 
 ### `add "description" --next`
@@ -167,7 +167,7 @@ Start a specific task.
 
 1. Require a task ID.
 2. Load `tasks/{id}.md`; report a clear error if missing or malformed.
-3. Reject done tasks unless the user explicitly asks to reopen in a later instruction.
+3. Reject done tasks.
 4. If `locks/{id}.lock` exists, show lock details and ask whether to take over.
 5. Create or replace `locks/{id}.lock` only after there is no lock or takeover is confirmed.
 6. Read files listed in `## Files` when those paths exist relative to the current working directory.
