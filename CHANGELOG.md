@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.0 - 2026-05-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.1.3...v0.2.0)
+
+### Changes
+
+- Add MDF task system skills ([#5](https://github.com/jjlabsio/midnight-forge/pull/5))
 ## v0.1.3 - 2026-05-07
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.1.2...v0.1.3)
