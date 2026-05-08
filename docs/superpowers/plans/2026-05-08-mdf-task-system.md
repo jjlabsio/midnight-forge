@@ -105,7 +105,7 @@ Use the git root basename for `name`; if not in a git repository, use the curren
 
 Task IDs are 3-digit zero-padded strings such as `"001"`.
 
-If `counter.json` is missing or malformed, scan `tasks/[0-9][0-9][0-9].md`, find the largest existing ID, and rewrite `counter.json` with `next_id` set to largest ID plus one before creating a task.
+Before creating a task, scan `tasks/[0-9][0-9][0-9].md` and find the largest existing ID. If `counter.json` is missing or malformed, or if its `next_id` is less than or equal to the largest existing ID, rewrite `counter.json` with `next_id` set to largest ID plus one. Never choose an ID that already has a matching `tasks/{id}.md`; do not overwrite an existing task file.
 
 ## Task File Format
 
@@ -187,15 +187,15 @@ When a lock already exists, show task ID, title, worktree, branch, runtime, and 
 Create a queued task.
 
 1. Initialize project storage if needed.
-2. Repair `counter.json` if needed.
-3. Read `next_id`; use it as the new 3-digit task ID.
+2. Scan existing task filenames and repair `counter.json` if it is missing, malformed, or stale.
+3. Read `next_id`; use it as the new 3-digit task ID only if `tasks/{id}.md` does not already exist. If the file exists, rescan existing IDs, repair `counter.json`, and choose the repaired `next_id` instead.
 4. Set `order` to one greater than the current maximum order among queue tasks, or `1` if no queue tasks exist.
 5. Generate a short title from the description.
 6. Fill `Context` with a 2-5 sentence summary of relevant conversation.
 7. Fill `Files` only with file paths explicitly mentioned in the conversation.
 8. Fill `Criteria` only with checklist items explicitly stated or clearly implied. Leave it empty when criteria are not known.
 9. Append `- YYYY-MM-DD: Created task.` to `Log`.
-10. Write `tasks/{id}.md`, then update `counter.json` to `next_id + 1` in the same turn.
+10. Write `tasks/{id}.md` without overwriting any existing task file, then update `counter.json` to `next_id + 1` in the same turn.
 11. Report the created task ID, title, and file path.
 
 ### `add "description" --next`
@@ -400,12 +400,13 @@ Review queue tasks in the current project whose `created` date is at least 30 da
 
 Delete done tasks completed at least 7 days ago only after explicit confirmation.
 
-1. List every done task in the current project with `completed` date at least 7 days old.
-2. Show the exact task file paths that would be deleted.
-3. Ask for explicit confirmation before deleting anything.
-4. Exclude any task that has both `completed` and `locks/{id}.lock`; report it as a consistency issue and do not delete its task file or lock.
-5. After confirmation, delete only the listed task files.
-6. If there are no candidates, report that there is nothing to clean.
+1. Find tasks in the current project with `completed` date at least 7 days old.
+2. Exclude any task that also has `locks/{id}.lock`; because lock plus `completed` derives to active, report it as a consistency issue and skip it.
+3. List every remaining cleanup candidate.
+4. Show the exact task file paths that would be deleted.
+5. Ask for explicit confirmation before deleting anything.
+6. After confirmation, delete only the listed task files.
+7. If there are no valid cleanup candidates, report that there is nothing to clean.
 
 ## Error Handling
 
