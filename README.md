@@ -8,11 +8,12 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included skills: `mdf-handshake`, `task`, `tasks`
+- Included MDF skills: `mdf-handshake`, `task`, `tasks`
+- Included agent-skills workflows: `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
 
-v1 does not include setup, MCP servers, rules routing, runners, background jobs, model orchestration, harness workflows, or persistence outside the documented local task system.
+v1 does not include setup, MCP servers, runners, background jobs, model orchestration, or persistence outside the documented local task system. Agent-skills workflows are exposed as normal Codex plugin skills and local Markdown prompts; they do not require a separate repository checkout or external service.
 
 ## Install
 
@@ -70,6 +71,20 @@ $tasks
 $tasks all
 ```
 
+Invoke the agent-skills workflow entrypoints through Codex:
+
+```text
+$spec
+$plan
+$build
+$test
+$review
+$code-simplify
+$ship
+```
+
+The entrypoints are thin wrappers around the original agent-skills workflows. They preserve the original command distinctions between required startup skills, conditional escalation, optional checklists, and the `ship` persona fan-out flow.
+
 ## Task System
 
 Midnight Forge includes a first-pass local task system built from LLM-driven skills:
@@ -104,6 +119,16 @@ Task status is derived instead of stored:
 - Otherwise: queue
 
 Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
+
+## Agent Skills Workflows
+
+Midnight Forge vendors the original `agent-skills` materials into native plugin paths:
+
+- `skills/`: original workflow/domain skills plus Codex entrypoints
+- `references/`: testing, security, performance, accessibility, and orchestration references
+- `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
+
+The `using-agent-skills` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, and migration work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 ## Local Smoke Tests
 
