@@ -122,6 +122,8 @@ Task files must not use a `status` frontmatter field. `drop` and `clean` require
 
 ## Agent Skills Workflows
 
+These workflows reference and vendor the original [agent-skills](https://github.com/addyosmani/agent-skills) workflow system.
+
 Midnight Forge vendors the original `agent-skills` materials into native plugin paths:
 
 - `skills/`: original workflow/domain skills plus Codex entrypoints
