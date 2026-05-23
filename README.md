@@ -120,6 +120,18 @@ Task status is derived instead of stored:
 
 Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
 
+## Worktree Policy
+
+Midnight Forge includes a `using-git-worktrees` skill for implementation work that must not touch `main` or the repository default branch. MDF worktrees are always project-local:
+
+```text
+.worktrees/<branch-name>
+```
+
+The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
+
+`$task work <id>` and `$task start` use this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch.
+
 ## Agent Skills Workflows
 
 These workflows reference and vendor the original [agent-skills](https://github.com/addyosmani/agent-skills) workflow system.
@@ -130,7 +142,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
 
-The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, commit, and PR work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, and PR work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 ## Local Smoke Tests
 

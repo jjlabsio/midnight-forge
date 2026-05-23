@@ -30,6 +30,7 @@ const originalSkillNames = [
   "spec-driven-development",
   "test-driven-development",
   "use-mdf",
+  "using-git-worktrees",
 ];
 
 const references = [
@@ -195,11 +196,37 @@ for (const trigger of [
   "documentation",
   "migration",
   "task lifecycle",
+  "worktrees",
   "commits",
   "PRs",
   "general software development workflow decisions",
 ]) {
   assertContains(useMdf, trigger);
+}
+
+const usingGitWorktrees = rel("skills", "using-git-worktrees", "SKILL.md");
+for (const text of [
+  "name: using-git-worktrees",
+  ".worktrees/<branch-name>",
+  "Stop if `.worktrees/` is not ignored",
+  "Do not edit `.gitignore` from this skill",
+  ".env.local",
+  "Install dependencies",
+  "Do not run tests, builds, lint checks",
+  "does not write MDF task locks",
+]) {
+  assertContains(usingGitWorktrees, text);
+}
+
+const taskSkill = rel("skills", "task", "SKILL.md");
+for (const text of [
+  "## Worktree Guard",
+  "use the `using-git-worktrees` skill",
+  "work {id}` and `start` before creating or replacing `locks/{id}.lock`",
+  "If worktree setup fails or stops for any reason, do not create or replace the task lock",
+  "The lock must record the resulting worktree path and branch",
+]) {
+  assertContains(taskSkill, text);
 }
 
 for (const manifestPath of [

@@ -135,6 +135,30 @@ Do not require `pid`. Locks are ownership markers, not process liveness proofs.
 
 When a lock already exists, show task ID, title, worktree, branch, runtime, and started time. Ask the user before takeover. If the user confirms takeover, replace the lock and append a dated log entry.
 
+## Worktree Guard
+
+Before starting implementation work for a task, use the `using-git-worktrees` skill to ensure work happens outside `main` or the repository default branch.
+
+This guard applies to `work {id}` and `start` before creating or replacing `locks/{id}.lock`.
+
+For MDF task work, derive the target branch from the task ID and title:
+
+```text
+task-002-worktree-pr-lifecycle-guardrails
+```
+
+Use a lowercase ASCII slug for the title, remove punctuation, collapse separators to `-`, and keep the branch human-readable. The target worktree path must follow the `using-git-worktrees` policy:
+
+```text
+<project-root>/.worktrees/<branch-name>
+```
+
+If the current checkout is already a linked worktree, use it only when the `using-git-worktrees` skill accepts it. If the current checkout is a normal repository checkout on `main` or the default branch, automatically create the task worktree through `using-git-worktrees`.
+
+If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
+
+After `using-git-worktrees` succeeds, create `locks/{id}.lock` using the resulting worktree path and branch, not the original checkout path. Continue the task briefing from that worktree.
+
 ## Commands
 
 ### `add "description"`
@@ -169,13 +193,14 @@ Start a specific task.
 2. Load `tasks/{id}.md`; report a clear error if missing or malformed.
 3. Reject done tasks.
 4. If `locks/{id}.lock` exists, show lock details and ask whether to take over.
-5. Create or replace `locks/{id}.lock` only after there is no lock or takeover is confirmed.
-6. Read files listed in `## Files` when those paths exist relative to the current working directory.
-7. Print a briefing with task title, status, context, file summaries, criteria, and recent log entries.
+5. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. Stop without locking the task if worktree setup does not complete.
+6. Create or replace `locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch.
+7. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
+8. Print a briefing with task title, status, worktree, branch, context, file summaries, criteria, and recent log entries.
 
 ### `start`
 
-Find queue tasks, sort by `order` ascending, choose the first task, and perform `work {id}`. If there are no queue tasks, report that the queue is empty.
+Find queue tasks, sort by `order` ascending, choose the first task, and perform `work {id}` including the worktree guard. If there are no queue tasks, report that the queue is empty.
 
 ### `done`
 
