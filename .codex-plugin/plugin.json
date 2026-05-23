@@ -27,7 +27,7 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Use the using-agent-skills skill to choose the right workflow, or run task/tasks for local MDF task management."
+      "Use the use-mdf skill to choose the right MDF workflow, or run task/tasks for local MDF task management."
     ]
   }
 }

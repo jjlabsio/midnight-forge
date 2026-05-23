@@ -29,7 +29,7 @@ const originalSkillNames = [
   "source-driven-development",
   "spec-driven-development",
   "test-driven-development",
-  "using-agent-skills",
+  "use-mdf",
 ];
 
 const references = [
@@ -175,8 +175,9 @@ assert(
   "skills/idea-refine/SKILL.md must use the vendored script path"
 );
 
-const usingAgentSkills = rel("skills", "using-agent-skills", "SKILL.md");
+const useMdf = rel("skills", "use-mdf", "SKILL.md");
 for (const trigger of [
+  "use-mdf",
   "spec",
   "mdf spec",
   "plan",
@@ -193,9 +194,12 @@ for (const trigger of [
   "performance",
   "documentation",
   "migration",
+  "task lifecycle",
+  "commits",
+  "PRs",
   "general software development workflow decisions",
 ]) {
-  assertContains(usingAgentSkills, trigger);
+  assertContains(useMdf, trigger);
 }
 
 for (const manifestPath of [
@@ -237,7 +241,7 @@ for (const [label, value] of [
 }
 assert(
   Array.isArray(codexManifest.interface?.defaultPrompt) &&
-    codexManifest.interface.defaultPrompt.join("\n").includes("using-agent-skills"),
+    codexManifest.interface.defaultPrompt.join("\n").includes("use-mdf"),
   ".codex-plugin defaultPrompt must route users toward the workflow selector"
 );
 

@@ -130,7 +130,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
 
-The `using-agent-skills` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, and migration work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, commit, and PR work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 ## Local Smoke Tests
 

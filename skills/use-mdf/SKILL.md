@@ -1,13 +1,13 @@
 ---
-name: using-agent-skills
-description: "Use before software development workflow decisions in Codex or MDF, including spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, or general software development workflow decisions."
+name: use-mdf
+description: "Use before software development workflow decisions in Codex or MDF, including use-mdf, spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, commits, PRs, or general software development workflow decisions."
 ---
 
-# Using Agent Skills
+# Use MDF
 
 ## Overview
 
-Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+Midnight Forge is a collection of task lifecycle and engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right MDF skill for your current task.
 
 ## Skill Discovery
 
