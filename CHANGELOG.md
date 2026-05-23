@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 - 2026-05-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.2.0...v0.3.0)
+
+### Changes
+
+- feat: port agent-skills workflows into mdf ([#7](https://github.com/jjlabsio/midnight-forge/pull/7))
 ## v0.2.0 - 2026-05-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.1.3...v0.2.0)
