@@ -1,7 +1,7 @@
 {
   "name": "mdf",
   "version": "0.2.0",
-  "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
+  "description": "Midnight Forge ships MDF task skills plus agent-skills workflows for spec, plan, build, test, review, simplify, and ship.",
   "author": {
     "name": "Jaejin Song"
   },
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Midnight Forge",
-    "shortDescription": "Shared mdf skill plugin skeleton for Codex and Claude Code.",
-    "longDescription": "Midnight Forge v1 verifies that one shared SKILL.md bundle can be used from both Codex and Claude Code without setup, MCP, rules, or a runner.",
+    "shortDescription": "MDF task skills and agent-skills workflows for Codex and Claude Code.",
+    "longDescription": "Midnight Forge exposes local MDF task management plus vendored agent-skills workflows for spec, plan, build, test, review, code-simplify, and ship. It includes workflow references and specialist persona prompts without requiring a separate agent-skills checkout.",
     "developerName": "Jaejin Song",
     "category": "Coding",
     "capabilities": [
@@ -27,7 +27,7 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Run the mdf-handshake skill."
+      "Use the using-agent-skills skill to choose the right workflow, or run task/tasks for local MDF task management."
     ]
   }
 }

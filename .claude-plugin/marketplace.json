@@ -7,7 +7,7 @@
     {
       "name": "mdf",
       "source": "./",
-      "description": "Midnight Forge v1 shared skill plugin skeleton for Claude Code and Codex.",
+      "description": "Midnight Forge ships MDF task skills plus agent-skills workflows for spec, plan, build, test, review, simplify, and ship.",
       "version": "0.2.0",
       "author": {
         "name": "Jaejin Song"
