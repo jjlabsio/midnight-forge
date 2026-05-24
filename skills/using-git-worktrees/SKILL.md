@@ -25,6 +25,7 @@ Before creating anything, check whether the current checkout is already an isola
 git_dir=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 git_common=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 branch=$(git branch --show-current)
+default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
 superproject=$(git rev-parse --show-superproject-working-tree 2>/dev/null)
 ```
 
@@ -35,9 +36,10 @@ If `superproject` is non-empty, stop. Submodules are not treated as isolated MDF
 If `git_dir != git_common`, the current checkout is already a linked worktree:
 
 1. Require a non-empty branch name. If HEAD is detached, stop.
-2. If the caller provided an expected MDF task lock worktree path, it must equal the current worktree path. If it does not match, stop.
-3. Report the current worktree path and branch.
-4. Continue using the current worktree. Do not create another worktree.
+2. Stop if the branch is `main` or the repository default branch. A linked worktree is only acceptable when it is isolated from main/default branch work.
+3. If the caller provided an expected MDF task lock worktree path, it must equal the current worktree path. If it does not match, stop.
+4. Report the current worktree path and branch.
+5. Continue using the current worktree. Do not create another worktree.
 
 If `git_dir == git_common`, the current checkout is a normal repository checkout. Continue to Step 1.
 
@@ -144,6 +146,7 @@ Stop instead of warning and continuing when:
 - The current directory is not a git repository.
 - The current directory is inside a submodule.
 - The current checkout is detached.
+- The current linked worktree is on `main` or the repository default branch.
 - The current linked worktree does not match the caller's expected MDF task lock path.
 - `.worktrees/` is not ignored.
 - The target branch already exists.

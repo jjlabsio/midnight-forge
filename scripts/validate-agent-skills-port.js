@@ -212,6 +212,7 @@ const usingGitWorktrees = rel("skills", "using-git-worktrees", "SKILL.md");
 for (const text of [
   "name: using-git-worktrees",
   ".worktrees/<branch-name>",
+  "Stop if the branch is `main` or the repository default branch",
   "Stop if `.worktrees/` is not ignored",
   "Do not edit `.gitignore` from this skill",
   ".env.local",
