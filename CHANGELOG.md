@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.0 - 2026-05-24
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.3.0...v0.4.0)
+
+### Changes
+
+- Add MDF worktree and PR lifecycle guardrails ([#8](https://github.com/jjlabsio/midnight-forge/pull/8))
 ## v0.3.0 - 2026-05-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.2.0...v0.3.0)
