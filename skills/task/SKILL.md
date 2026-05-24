@@ -1,6 +1,6 @@
 ---
 name: task
-description: "Manage one local MDF task lifecycle from any worktree: add, start, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects."
+description: "Manage one local MDF task lifecycle from any worktree: add, work, complete, reprioritize, annotate, or drop tasks stored under ~/.mdf/projects."
 ---
 
 # task
@@ -139,7 +139,7 @@ When a lock already exists, show task ID, title, worktree, branch, runtime, and 
 
 Before starting implementation work for a task, use the `using-git-worktrees` skill to ensure work happens outside `main` or the repository default branch.
 
-This guard applies to `work {id}` and `start` before creating or replacing `locks/{id}.lock`.
+This guard applies to `work {id}` before creating or replacing `locks/{id}.lock`.
 
 For MDF task work, derive the target branch from the task ID and title:
 
@@ -158,6 +158,26 @@ If the current checkout is already a linked worktree, use it only when the `usin
 If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
 
 After `using-git-worktrees` succeeds, create `locks/{id}.lock` using the resulting worktree path and branch, not the original checkout path. Continue the task briefing from that worktree.
+
+## Intent Parsing
+
+Users do not need to memorize exact command names. Treat the commands below as canonical operations, and map clear natural-language requests to the nearest command before acting.
+
+Use these mappings:
+
+- "add this as a task", "create a task", "task로 추가해", or similar -> `add "description"`
+- "put this first", "next task", "다음에 할 일로 추가해", or similar -> `add "description" --next`
+- "add a due date", "due", "마감일", or similar -> `add "description" --due DATE`
+- "work on 002", "002 작업할게", "002 시작", or similar -> `work 002`
+- "start the next queued task", "다음 작업 시작", or similar -> choose the first queue task by `order` and perform `work {id}`
+- "done", "complete this", "완료", "끝났어", or similar -> `done`
+- "complete 002", "002 완료", or similar -> `done 002`
+- "log this", "note", "메모 남겨", or similar -> `note {id} "message"`
+- "move earlier", "우선순위 올려", or similar -> `bump {id}`
+- "move to top", "맨 위로", or similar -> `top {id}`
+- "delete", "remove", "drop", "삭제", or similar -> `drop {id}`
+
+If the intent maps to exactly one safe command, execute it. If the intent is ambiguous, ask one short clarifying question before changing task state. Keep explicit confirmation for destructive commands such as `drop`.
 
 ## Commands
 
@@ -197,10 +217,6 @@ Start a specific task.
 6. Create or replace `locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch.
 7. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 8. Print a briefing with task title, status, worktree, branch, context, file summaries, criteria, and recent log entries.
-
-### `start`
-
-Find queue tasks, sort by `order` ascending, choose the first task, and perform `work {id}` including the worktree guard. If there are no queue tasks, report that the queue is empty.
 
 ### `done`
 

@@ -41,7 +41,7 @@ Invoke the task skills through Claude Code:
 
 ```text
 /mdf:task add "Write the release checklist"
-/mdf:task start
+/mdf:task work 001
 /mdf:tasks
 /mdf:tasks all
 ```
@@ -66,7 +66,7 @@ Invoke the task skills through Codex:
 
 ```text
 $task add "Write the release checklist"
-$task start
+$task work 001
 $tasks
 $tasks all
 ```
@@ -130,7 +130,7 @@ Midnight Forge includes a `using-git-worktrees` skill for implementation work th
 
 The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
 
-`$task work <id>` and `$task start` use this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch.
+`$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
 
 ## PR Policy
 

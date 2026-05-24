@@ -226,7 +226,9 @@ const taskSkill = rel("skills", "task", "SKILL.md");
 for (const text of [
   "## Worktree Guard",
   "use the `using-git-worktrees` skill",
-  "work {id}` and `start` before creating or replacing `locks/{id}.lock`",
+  "work {id}` before creating or replacing `locks/{id}.lock`",
+  "## Intent Parsing",
+  "Users do not need to memorize exact command names",
   "If worktree setup fails or stops for any reason, do not create or replace the task lock",
   "The lock must record the resulting worktree path and branch",
   "done {id} --message \"message\"",
