@@ -19,6 +19,9 @@ const originalSkillNames = [
   "doubt-driven-development",
   "frontend-ui-engineering",
   "git-workflow-and-versioning",
+  "github-clear-gone",
+  "github-commit",
+  "github-pr",
   "idea-refine",
   "incremental-implementation",
   "interview-me",
@@ -198,7 +201,8 @@ for (const trigger of [
   "task lifecycle",
   "worktrees",
   "commits",
-  "PRs",
+  "GitHub PRs",
+  "gone branch cleanup",
   "general software development workflow decisions",
 ]) {
   assertContains(useMdf, trigger);
@@ -227,6 +231,43 @@ for (const text of [
   "The lock must record the resulting worktree path and branch",
 ]) {
   assertContains(taskSkill, text);
+}
+
+const githubPr = rel("skills", "github-pr", "SKILL.md");
+for (const text of [
+  "name: github-pr",
+  "Session context is the primary selector",
+  "Active lock files validate the selected task; they do not select it by themselves",
+  "Never complete an MDF task solely because it is the only active lock",
+  "Completed task before PR preparation.",
+  "Analyze all commits in the branch, not just the latest commit",
+  "## Test Plan",
+  "Do not run `gh pr create` unless the user explicitly asks",
+]) {
+  assertContains(githubPr, text);
+}
+
+const githubCommit = rel("skills", "github-commit", "SKILL.md");
+for (const text of [
+  "name: github-commit",
+  "git diff HEAD",
+  "git log --oneline -10",
+  "Do not commit secrets",
+  "Create a single commit",
+]) {
+  assertContains(githubCommit, text);
+}
+
+const githubClearGone = rel("skills", "github-clear-gone", "SKILL.md");
+for (const text of [
+  "name: github-clear-gone",
+  "git fetch --prune",
+  "git branch -v",
+  "git worktree list",
+  "Ask for explicit confirmation before deleting anything",
+  "Never delete branches that are not marked `[gone]`",
+]) {
+  assertContains(githubClearGone, text);
 }
 
 for (const manifestPath of [

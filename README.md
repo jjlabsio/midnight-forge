@@ -132,6 +132,18 @@ The skill stops on ambiguous state instead of warning and continuing. `.worktree
 
 `$task work <id>` and `$task start` use this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch.
 
+## PR Policy
+
+Midnight Forge includes a `github-pr` skill for GitHub pull request preparation. Before drafting or creating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
+
+When the session identifies exactly one valid active MDF task, `github-pr` adds `completed: YYYY-MM-DD`, appends `Completed task before PR preparation.` to the task log, deletes the matching lock, and continues PR preparation. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR preparation stops for user clarification.
+
+MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
+
+- `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
+- `github-pr`: prepare a GitHub PR body with summary, test plan, MDF task note, and release intent; push and run `gh pr create` only when explicitly asked.
+- `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
+
 ## Agent Skills Workflows
 
 These workflows reference and vendor the original [agent-skills](https://github.com/addyosmani/agent-skills) workflow system.
@@ -142,7 +154,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
 
-The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, and PR work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 ## Local Smoke Tests
 
