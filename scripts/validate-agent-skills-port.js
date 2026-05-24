@@ -19,6 +19,9 @@ const originalSkillNames = [
   "doubt-driven-development",
   "frontend-ui-engineering",
   "git-workflow-and-versioning",
+  "github-clear-gone",
+  "github-commit",
+  "github-pr",
   "idea-refine",
   "incremental-implementation",
   "interview-me",
@@ -29,7 +32,8 @@ const originalSkillNames = [
   "source-driven-development",
   "spec-driven-development",
   "test-driven-development",
-  "using-agent-skills",
+  "use-mdf",
+  "using-git-worktrees",
 ];
 
 const references = [
@@ -175,8 +179,9 @@ assert(
   "skills/idea-refine/SKILL.md must use the vendored script path"
 );
 
-const usingAgentSkills = rel("skills", "using-agent-skills", "SKILL.md");
+const useMdf = rel("skills", "use-mdf", "SKILL.md");
 for (const trigger of [
+  "use-mdf",
   "spec",
   "mdf spec",
   "plan",
@@ -193,9 +198,82 @@ for (const trigger of [
   "performance",
   "documentation",
   "migration",
+  "task lifecycle",
+  "worktrees",
+  "commits",
+  "GitHub PRs",
+  "gone branch cleanup",
   "general software development workflow decisions",
 ]) {
-  assertContains(usingAgentSkills, trigger);
+  assertContains(useMdf, trigger);
+}
+
+const usingGitWorktrees = rel("skills", "using-git-worktrees", "SKILL.md");
+for (const text of [
+  "name: using-git-worktrees",
+  ".worktrees/<branch-name>",
+  "Stop if the branch is `main` or the repository default branch",
+  "Stop if `.worktrees/` is not ignored",
+  "Do not edit `.gitignore` from this skill",
+  ".env.local",
+  "Install dependencies",
+  "Do not run tests, builds, lint checks",
+  "does not write MDF task locks",
+]) {
+  assertContains(usingGitWorktrees, text);
+}
+
+const taskSkill = rel("skills", "task", "SKILL.md");
+for (const text of [
+  "## Worktree Guard",
+  "use the `using-git-worktrees` skill",
+  "work {id}` before creating or replacing `locks/{id}.lock`",
+  "## Intent Parsing",
+  "Users do not need to memorize exact command names",
+  "If worktree setup fails or stops for any reason, do not create or replace the task lock",
+  "The lock must record the resulting worktree path and branch",
+  "done {id} --message \"message\"",
+]) {
+  assertContains(taskSkill, text);
+}
+
+const githubPr = rel("skills", "github-pr", "SKILL.md");
+for (const text of [
+  "name: github-pr",
+  "Session context is the primary selector",
+  "Active lock files validate the selected task; they do not select it by themselves",
+  "Never complete an MDF task solely because it is the only active lock",
+  "use the `github-commit` skill",
+  "use the `task` skill's `done {id} --message \"message\"` completion behavior",
+  "Completed task before PR preparation.",
+  "Analyze all commits in the branch, not just the latest commit",
+  "## Test Plan",
+  "Do not run `gh pr create` unless the user explicitly asks",
+]) {
+  assertContains(githubPr, text);
+}
+
+const githubCommit = rel("skills", "github-commit", "SKILL.md");
+for (const text of [
+  "name: github-commit",
+  "git diff HEAD",
+  "git log --oneline -10",
+  "Do not commit secrets",
+  "Create a single commit",
+]) {
+  assertContains(githubCommit, text);
+}
+
+const githubClearGone = rel("skills", "github-clear-gone", "SKILL.md");
+for (const text of [
+  "name: github-clear-gone",
+  "git fetch --prune",
+  "git branch -v",
+  "git worktree list",
+  "Ask for explicit confirmation before deleting anything",
+  "Never delete branches that are not marked `[gone]`",
+]) {
+  assertContains(githubClearGone, text);
 }
 
 for (const manifestPath of [
@@ -237,7 +315,7 @@ for (const [label, value] of [
 }
 assert(
   Array.isArray(codexManifest.interface?.defaultPrompt) &&
-    codexManifest.interface.defaultPrompt.join("\n").includes("using-agent-skills"),
+    codexManifest.interface.defaultPrompt.join("\n").includes("use-mdf"),
   ".codex-plugin defaultPrompt must route users toward the workflow selector"
 );
 

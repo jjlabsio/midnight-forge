@@ -41,7 +41,7 @@ Invoke the task skills through Claude Code:
 
 ```text
 /mdf:task add "Write the release checklist"
-/mdf:task start
+/mdf:task work 001
 /mdf:tasks
 /mdf:tasks all
 ```
@@ -66,7 +66,7 @@ Invoke the task skills through Codex:
 
 ```text
 $task add "Write the release checklist"
-$task start
+$task work 001
 $tasks
 $tasks all
 ```
@@ -120,6 +120,30 @@ Task status is derived instead of stored:
 
 Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
 
+## Worktree Policy
+
+Midnight Forge includes a `using-git-worktrees` skill for implementation work that must not touch `main` or the repository default branch. MDF worktrees are always project-local:
+
+```text
+.worktrees/<branch-name>
+```
+
+The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
+
+`$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
+
+## PR Policy
+
+Midnight Forge includes a `github-pr` skill for GitHub pull request preparation. Before drafting or creating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
+
+When the session identifies exactly one valid active MDF task, `github-pr` uses the `task` skill's completion behavior with the log message `Completed task before PR preparation.`, then continues PR preparation. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR preparation stops for user clarification.
+
+MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
+
+- `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
+- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a GitHub PR body with summary, test plan, MDF task note, and release intent, and push/run `gh pr create` only when explicitly asked.
+- `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
+
 ## Agent Skills Workflows
 
 These workflows reference and vendor the original [agent-skills](https://github.com/addyosmani/agent-skills) workflow system.
@@ -130,7 +154,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
 
-The `using-agent-skills` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, and migration work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 ## Local Smoke Tests
 

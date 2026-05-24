@@ -1,13 +1,13 @@
 ---
-name: using-agent-skills
-description: "Use before software development workflow decisions in Codex or MDF, including spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, or general software development workflow decisions."
+name: use-mdf
+description: "Use before software development workflow decisions in Codex or MDF, including use-mdf, spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktrees, commits, GitHub PRs, gone branch cleanup, or general software development workflow decisions."
 ---
 
-# Using Agent Skills
+# Use MDF
 
 ## Overview
 
-Agent Skills is a collection of engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right skill for your current task.
+Midnight Forge is a collection of task lifecycle and engineering workflow skills organized by development phase. Each skill encodes a specific process that senior engineers follow. This meta-skill helps you discover and apply the right MDF skill for your current task.
 
 ## Skill Discovery
 
@@ -32,7 +32,11 @@ Task arrives
     ├── Reviewing code? ───────────────→ code-review-and-quality
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
-    ├── Committing/branching? ─────────→ git-workflow-and-versioning
+    ├── Need isolated worktree? ───────→ using-git-worktrees
+    ├── Creating a commit? ────────────→ github-commit
+    ├── Preparing a GitHub PR? ────────→ github-pr
+    ├── Cleaning gone branches? ───────→ github-clear-gone
+    ├── General git workflow? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
     └── Deploying/launching? ─────────→ shipping-and-launch
@@ -52,7 +56,7 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `code-simplify`, `mdf code-simplify`, `$code-simplify` | `code-simplify` | `code-simplification` |
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for migration work.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for migration work.
 
 ## Core Operating Behaviors
 
@@ -184,13 +188,17 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
+| Build | using-git-worktrees | Isolated `.worktrees/` workspace before touching implementation work |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Review | code-review-and-quality | Five-axis review with quality gates |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |
-| Ship | git-workflow-and-versioning | Atomic commits, clean history |
+| Ship | github-commit | Create one git commit from the current diff |
+| Ship | github-pr | Complete the current session's MDF task before GitHub PR preparation |
+| Ship | github-clear-gone | Remove stale gone local branches and associated worktrees after confirmation |
+| Ship | git-workflow-and-versioning | General git workflow and versioning guidance |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
 | Ship | documentation-and-adrs | Document the why, not just the what |
 | Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
