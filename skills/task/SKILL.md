@@ -217,6 +217,16 @@ Completion means adding `completed: YYYY-MM-DD` to frontmatter, appending `- YYY
 
 Complete the specified task using the same completion behavior as `done`.
 
+### `done {id} --message "message"`
+
+Complete the specified task using the same completion behavior as `done`, but append the provided message to `## Log`:
+
+```markdown
+- YYYY-MM-DD: message
+```
+
+Use this form when another MDF workflow completes a task for a specific lifecycle reason, such as PR preparation. Do not change any other completion behavior: still add `completed: YYYY-MM-DD` to frontmatter and delete `locks/{id}.lock` if it exists.
+
 ### `bump {id}`
 
 Move a queue task one position earlier. Reject active or done tasks. Swap its `order` with the nearest queue task that has a smaller order. If it is already first, report that no change is needed.

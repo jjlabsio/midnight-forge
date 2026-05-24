@@ -17,12 +17,13 @@ Before drafting, creating, or updating a PR:
 
 1. Check git status and current branch.
 2. Confirm the work is not being prepared from `main` or the repository default branch.
-3. Run the MDF task completion guard below.
-4. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
-5. Confirm the repository has an `origin` remote.
-6. Summarize relevant commits, changed files, verification evidence, and release intent.
+3. If there are uncommitted changes, use the `github-commit` skill to create one commit before PR preparation continues.
+4. Run the MDF task completion guard below.
+5. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
+6. Confirm the repository has an `origin` remote.
+7. Summarize relevant commits, changed files, verification evidence, and release intent.
 
-Do not create a PR when the worktree is dirty unless the user explicitly asks for a draft based on uncommitted work.
+Do not create a PR from uncommitted changes. Use `github-commit` first.
 
 ## MDF Task Completion Guard
 
@@ -65,17 +66,15 @@ Multiple active locks are allowed when the session task is clear and the selecte
 
 ### Step 4: Complete the Task
 
-When the selected session task passes validation, perform the same state transition as `$task done {id}`:
+When the selected session task passes validation, use the `task` skill's `done {id} --message "message"` completion behavior with this message:
 
-1. Add `completed: YYYY-MM-DD` to task frontmatter.
-2. Append this log entry under `## Log`:
-
-```markdown
-- YYYY-MM-DD: Completed task before PR preparation.
+```text
+Completed task before PR preparation.
 ```
 
-3. Delete `locks/{id}.lock`.
-4. Report that MDF task `{id}` was completed before PR preparation.
+This keeps the `task` skill as the source of truth for completion behavior: it adds `completed: YYYY-MM-DD`, appends the log message, and deletes `locks/{id}.lock`.
+
+Report that MDF task `{id}` was completed before PR preparation.
 
 Do not complete any other active task.
 
@@ -126,7 +125,7 @@ If release intent is not clear, ask the user before creating the PR.
 Stop instead of continuing when:
 
 - The current branch is `main` or the repository default branch.
-- The worktree is dirty and the user asked to create a PR from committed work.
+- `github-commit` cannot create a commit from uncommitted changes.
 - The session does not identify exactly one MDF task and task completion is needed.
 - The selected task file is missing, malformed, or already completed.
 - The selected lock file is missing, unreadable, or malformed.
@@ -135,6 +134,6 @@ Stop instead of continuing when:
 
 ## Boundaries
 
-This skill may complete the current session's MDF task when the guard passes. It does not create commits. Use a dedicated commit workflow for commit preparation.
+This skill may complete the current session's MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. This skill may use `github-commit` before PR preparation when uncommitted changes exist.
 
 Do not run `gh pr create` unless the user explicitly asks to create the PR. When asked to create the PR, push the current branch to `origin` first if needed, then create the PR with `gh pr create`.

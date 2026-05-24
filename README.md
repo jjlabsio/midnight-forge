@@ -136,12 +136,12 @@ The skill stops on ambiguous state instead of warning and continuing. `.worktree
 
 Midnight Forge includes a `github-pr` skill for GitHub pull request preparation. Before drafting or creating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
 
-When the session identifies exactly one valid active MDF task, `github-pr` adds `completed: YYYY-MM-DD`, appends `Completed task before PR preparation.` to the task log, deletes the matching lock, and continues PR preparation. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR preparation stops for user clarification.
+When the session identifies exactly one valid active MDF task, `github-pr` uses the `task` skill's completion behavior with the log message `Completed task before PR preparation.`, then continues PR preparation. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR preparation stops for user clarification.
 
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 
 - `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
-- `github-pr`: prepare a GitHub PR body with summary, test plan, MDF task note, and release intent; push and run `gh pr create` only when explicitly asked.
+- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a GitHub PR body with summary, test plan, MDF task note, and release intent, and push/run `gh pr create` only when explicitly asked.
 - `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
 
 ## Agent Skills Workflows

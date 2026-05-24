@@ -229,6 +229,7 @@ for (const text of [
   "work {id}` and `start` before creating or replacing `locks/{id}.lock`",
   "If worktree setup fails or stops for any reason, do not create or replace the task lock",
   "The lock must record the resulting worktree path and branch",
+  "done {id} --message \"message\"",
 ]) {
   assertContains(taskSkill, text);
 }
@@ -239,6 +240,8 @@ for (const text of [
   "Session context is the primary selector",
   "Active lock files validate the selected task; they do not select it by themselves",
   "Never complete an MDF task solely because it is the only active lock",
+  "use the `github-commit` skill",
+  "use the `task` skill's `done {id} --message \"message\"` completion behavior",
   "Completed task before PR preparation.",
   "Analyze all commits in the branch, not just the latest commit",
   "## Test Plan",
