@@ -155,6 +155,17 @@ Use a lowercase ASCII slug for the title, remove punctuation, collapse separator
 
 If the current checkout is already a linked worktree, use it only when the `using-git-worktrees` skill accepts it. If the current checkout is a normal repository checkout on `main` or the default branch, automatically create the task worktree through `using-git-worktrees`.
 
+If `using-git-worktrees` stops because `.worktrees/` is not ignored, handle that as repository setup work before task activation:
+
+1. Do not create or replace `locks/{id}.lock`; leave the task queued.
+2. Ask whether to create a setup branch that adds `.worktrees/` to `.gitignore` and opens a PR before starting the task.
+3. If the user agrees, perform the setup from the normal repository checkout, not from a task worktree. Stop first if the checkout has uncommitted changes.
+4. Create a branch named `chore/ignore-worktrees`, or a similarly clear unique branch if that branch already exists.
+5. Add `.worktrees/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
+6. Commit the change with the message `chore: ignore local worktrees`.
+7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with release intent `release: none`. If pushing or PR creation fails, report the branch, commit, and exact failure.
+8. Do not resume or lock the original task until the setup PR has been merged and `work {id}` is run again.
+
 If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
 
 After `using-git-worktrees` succeeds, create `locks/{id}.lock` using the resulting worktree path and branch, not the original checkout path. Continue the task briefing from that worktree.
@@ -213,7 +224,7 @@ Start a specific task.
 2. Load `tasks/{id}.md`; report a clear error if missing or malformed.
 3. Reject done tasks.
 4. If `locks/{id}.lock` exists, show lock details and ask whether to take over.
-5. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. Stop without locking the task if worktree setup does not complete.
+5. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not ignored, offer the setup branch and PR flow from the Worktree Guard section instead of locking the task. Stop without locking the task if worktree setup does not complete.
 6. Create or replace `locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch.
 7. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 8. Print a briefing with task title, status, worktree, branch, context, file summaries, criteria, and recent log entries.
