@@ -132,6 +132,8 @@ The skill stops on ambiguous state instead of warning and continuing. `.worktree
 
 `$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
 
+If task work cannot start because `.worktrees/` is not ignored, `$task work <id>` treats that as repository setup, not task work. It leaves the task queued, asks whether to create a `chore/ignore-worktrees` setup branch, adds `.worktrees/` to `.gitignore`, commits the change, and opens a `release: none` PR when the user agrees. The original task is not locked or resumed until that setup PR has been merged and `work <id>` is run again.
+
 ## PR Policy
 
 Midnight Forge includes a `github-pr` skill for GitHub pull request preparation. Before drafting or creating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.

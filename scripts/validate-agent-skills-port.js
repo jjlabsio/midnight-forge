@@ -231,6 +231,9 @@ for (const text of [
   "## Intent Parsing",
   "Users do not need to memorize exact command names",
   "If worktree setup fails or stops for any reason, do not create or replace the task lock",
+  "If `using-git-worktrees` stops because `.worktrees/` is not ignored",
+  "chore/ignore-worktrees",
+  "Do not resume or lock the original task until the setup PR has been merged",
   "The lock must record the resulting worktree path and branch",
   "done {id} --message \"message\"",
 ]) {
