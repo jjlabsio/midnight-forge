@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.1 - 2026-05-25
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.4.0...v0.4.1)
+
+### Changes
+
+- Add task setup PR flow for worktree ignore ([#9](https://github.com/jjlabsio/midnight-forge/pull/9))
 ## v0.4.0 - 2026-05-24
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.3.0...v0.4.0)
