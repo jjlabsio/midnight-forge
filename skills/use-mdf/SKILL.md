@@ -33,6 +33,7 @@ Task arrives
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
     ├── Need isolated worktree? ───────→ using-git-worktrees
+    ├── Migrating legacy tasks? ───────→ migrate-tasks
     ├── Creating a commit? ────────────→ github-commit
     ├── Preparing a GitHub PR? ────────→ github-pr
     ├── Cleaning gone branches? ───────→ github-clear-gone
@@ -55,8 +56,9 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `review`, `mdf review`, `$review`, code review | `review` | `code-review-and-quality` |
 | `code-simplify`, `mdf code-simplify`, `$code-simplify` | `code-simplify` | `code-simplification` |
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
+| `migrate-tasks`, `mdf migrate-tasks`, `$migrate-tasks`, legacy task migration | `migrate-tasks` | copy-first migration into canonical `.mdf/work/` storage |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for migration work.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
 
 ## MDF Artifact Storage
 
@@ -204,6 +206,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
 | Build | using-git-worktrees | Isolated `.worktrees/` workspace before touching implementation work |
+| Build | migrate-tasks | Copy legacy MDF tasks into canonical `.mdf/work/` storage |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |

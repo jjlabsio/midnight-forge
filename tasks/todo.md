@@ -55,7 +55,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `README.md`, `skills/spec/SKILL.md`, `skills/spec-driven-development/SKILL.md`
 
-- [ ] Task 12: Add migrate-tasks skill and command
+- [x] Task 12: Add migrate-tasks skill and command
   - Acceptance: `skills/migrate-tasks/SKILL.md` and `commands/migrate-tasks.md` define copy-first legacy migration from `~/.mdf/projects/{project-hash}` to canonical `.mdf/work/` storage.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `skills/migrate-tasks/SKILL.md`, `commands/migrate-tasks.md`, `skills/use-mdf/SKILL.md`, `README.md`

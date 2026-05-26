@@ -8,7 +8,7 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included MDF skills: `mdf-handshake`, `task`, `tasks`
+- Included MDF skills: `mdf-handshake`, `task`, `tasks`, `migrate-tasks`
 - Included agent-skills workflows: `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
@@ -44,6 +44,7 @@ Invoke the task skills through Claude Code:
 /mdf:task work 001
 /mdf:tasks
 /mdf:tasks all
+/mdf:migrate-tasks
 ```
 
 ### Codex
@@ -69,6 +70,7 @@ $task add "Write the release checklist"
 $task work 001
 $tasks
 $tasks all
+$migrate-tasks
 ```
 
 Invoke the agent-skills workflow entrypoints through Codex:
@@ -133,6 +135,8 @@ Task status is stored in the item card and reconciled with locks:
 - Otherwise: queue
 
 `drop` and `clean` require explicit confirmation before deleting work item directories.
+
+Legacy task stores under `~/.mdf/projects/{project-hash}` can be copied into canonical `.mdf/work/` storage with `$migrate-tasks` or `/mdf:migrate-tasks`. Migration is dry-run first, requires explicit confirmation before writing, preserves `legacy_id` and `legacy_source`, and never deletes, moves, or rewrites legacy files.
 
 ## Worktree Policy
 
