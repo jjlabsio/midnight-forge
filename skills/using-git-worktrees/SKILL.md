@@ -17,6 +17,8 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
+MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
+
 ## Step 0: Detect Existing Isolation
 
 Before creating anything, check whether the current checkout is already an isolated worktree:
@@ -60,6 +62,8 @@ The worktree path is always:
 ```
 
 Do not use `worktrees/`, `~/.config/superpowers/worktrees/`, `~/.mdf/worktrees/`, or any other fallback location.
+
+Do not copy or initialize `.mdf/` in the new worktree. `.mdf/` remains at `<project-root>/.mdf/`, where `<project-root>` is the canonical root used to create the worktree.
 
 ## Step 2: Validate Safety
 
@@ -133,6 +137,7 @@ Report:
 ```text
 Worktree ready at <full-path>
 Branch: <branch-name>
+Canonical root: <project-root>
 Dependency setup: <completed|skipped|failed>
 Ready for caller workflow to continue
 ```
@@ -157,6 +162,6 @@ Stop instead of warning and continuing when:
 
 ## Caller Responsibilities
 
-This skill does not write MDF task locks. For MDF task work, the `task` skill should call this skill before creating a lock, then write `locks/{id}.lock` using the resulting worktree path and branch.
+This skill does not write MDF task locks. For MDF task work, the `task` skill should call this skill before creating a lock, then write `locks/{id}.lock` using the resulting worktree path and branch. In the canonical storage model, the actual lock path is `<canonical-root>/.mdf/locks/{id}.lock`, and the lock should include `canonical_root`, `work_id`, `worktree`, and `branch`.
 
 This skill does not prepare commits or PRs. Commit and PR lifecycle checks should live in dedicated MDF workflow skills.

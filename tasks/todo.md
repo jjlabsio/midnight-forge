@@ -5,17 +5,17 @@
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/task/SKILL.md`
 
-- [ ] Task 2: Document canonical-root behavior in worktree setup
+- [x] Task 2: Document canonical-root behavior in worktree setup
   - Acceptance: `skills/using-git-worktrees/SKILL.md` says worktrees must not create independent `.mdf/` storage and caller workflows use the canonical root from locks.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/using-git-worktrees/SKILL.md`
 
-- [ ] Task 3: Update tasks board and cross-project discovery
+- [x] Task 3: Update tasks board and cross-project discovery
   - Acceptance: `skills/tasks/SKILL.md` reads project-local `.mdf/index.jsonl`, `.mdf/work/*/item.md`, `.mdf/locks/*.lock`, and uses `~/.mdf/projects.json` for all-project discovery.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/tasks/SKILL.md`
 
-- [ ] Task 4: Add shared artifact resolution rules to workflow entrypoints
+- [x] Task 4: Add shared artifact resolution rules to workflow entrypoints
   - Acceptance: `skills/use-mdf/SKILL.md` explains active lock resolution, implicit work item fallback, revisioned artifact files, and latest pointer updates.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/use-mdf/SKILL.md`

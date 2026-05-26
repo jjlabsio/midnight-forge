@@ -58,6 +58,20 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 
 Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for migration work.
 
+## MDF Artifact Storage
+
+When a skill produces a markdown workflow artifact, resolve the current work item before writing:
+
+1. Resolve the canonical project root. If running under `<canonical-root>/.worktrees/<branch>`, use `<canonical-root>`, not the linked worktree.
+2. Read `<canonical-root>/.mdf/locks/*.lock`.
+3. If a lock's `worktree` matches the current checkout and includes `work_id`, use that work item.
+4. If there is no matching lock, create an implicit work item under `<canonical-root>/.mdf/work/{work_id}/`.
+5. Write artifacts as `<canonical-root>/.mdf/work/{work_id}/{type}-NNN.md`.
+6. Repeated runs create new revisions such as `spec-001.md`, `spec-002.md`, and `review-001.md`.
+7. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.
+
+Do not create a separate `.mdf/` directory inside linked worktrees. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
+
 ## Core Operating Behaviors
 
 These behaviors apply at all times, across all skills. They are non-negotiable.
