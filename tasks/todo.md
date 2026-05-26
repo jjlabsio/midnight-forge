@@ -60,7 +60,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `skills/migrate-tasks/SKILL.md`, `commands/migrate-tasks.md`, `skills/use-mdf/SKILL.md`, `README.md`
 
-- [ ] Task 13: Final verification after migration support
+- [x] Task 13: Final verification after migration support
   - Acceptance: validation passes, diff is clean, and migration/routing references are consistent.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`, `rg "migrate-tasks|~/.mdf/projects|SPEC.md|status frontmatter" skills commands docs README.md`
   - Files: final consistency pass only
