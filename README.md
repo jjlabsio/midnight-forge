@@ -154,14 +154,14 @@ If task work cannot start because `.worktrees/` is not ignored, `$task work <id>
 
 ## PR Policy
 
-Midnight Forge includes a `github-pr` skill for GitHub pull request preparation. Before drafting or creating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
+Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Before creating or updating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
 
-When the session identifies exactly one valid active MDF task, `github-pr` uses the `task` skill's completion behavior with the log message `Completed task before PR preparation.`, then continues PR preparation. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR preparation stops for user clarification.
+When the session identifies exactly one valid active MDF task, `github-pr` uses the `task` skill's completion behavior with the log message `Completed task before PR creation.`, then pushes the branch and creates a GitHub PR. If an open PR already exists for the branch, it reports that PR instead of creating a duplicate. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR creation stops for user clarification.
 
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 
 - `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
-- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a GitHub PR body with summary, test plan, MDF task note, and release intent, and push/run `gh pr create` only when explicitly asked.
+- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a GitHub PR body with summary, test plan, MDF task note, and release intent, then push and create the remote PR.
 - `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
 
 ## Agent Skills Workflows
@@ -175,6 +175,8 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
 
 The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+
+Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release intent tokens, required PR template headings, and repository conventions are preserved as written.
 
 ## Local Smoke Tests
 
@@ -260,5 +262,7 @@ release: patch
 release: none
 release: 0.1.0
 ```
+
+Use `release: none` only when the PR does not change what plugin users install, read, or invoke. Changes to shipped plugin behavior, skills, references, user-facing docs, or workflow guidance require the smallest appropriate release intent.
 
 When a PR is merged to `main`, the release workflow reads the merged PR intent. If a release is requested, it syncs the Claude Code and Codex plugin manifest versions, updates `CHANGELOG.md`, commits `chore(release): vX.Y.Z`, creates an annotated tag, and creates a GitHub Release. npm publishing is intentionally not part of this workflow.
