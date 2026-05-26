@@ -273,6 +273,109 @@ The `task` skill is the foundation because it creates work items and locks. Entr
 
 **Estimated scope:** Small: verification only
 
+### Phase 5: Review Fixes and Legacy Migration
+
+## Task 10: Fix project registry and ignore guards
+
+**Description:** Update task/artifact initialization guidance so every `<canonical-root>/.mdf/` initialization upserts `~/.mdf/projects.json`, and so `.mdf/` writes stop unless `.mdf/` is already gitignored. The `.mdf/` ignore setup should mirror the existing `.worktrees/` setup branch and PR flow.
+
+**Acceptance criteria:**
+- [ ] `skills/task/SKILL.md` says initialization upserts `~/.mdf/projects.json` keyed by `canonical_root`.
+- [ ] `skills/use-mdf/SKILL.md` says implicit work item creation follows the same registry upsert rule.
+- [ ] `.mdf/` ignore guard stops before writing when `.mdf/` is not ignored.
+- [ ] Setup branch guidance uses `chore/ignore-mdf` or `chore/ignore-local-workflow-state`, commits the ignore change, and optionally opens a PR with `release: none`.
+- [ ] The original task/artifact write does not resume until the setup PR has merged.
+
+**Verification:**
+- [ ] `node scripts/validate-agent-skills-port.js`
+- [ ] `git diff --check`
+- [ ] Manual read-through confirms `tasks all` can discover projects after any `.mdf/` initialization.
+
+**Dependencies:** Tasks 1-4
+
+**Files likely touched:**
+- `skills/task/SKILL.md`
+- `skills/use-mdf/SKILL.md`
+- `README.md`
+
+**Estimated scope:** Medium: 3 files
+
+## Task 11: Resolve status and spec artifact wording
+
+**Description:** Fix documentation contradictions found during review: README must describe the new stored status model without the old no-status rule, and `spec` guidance must refer to the saved spec artifact instead of always referring to `SPEC.md`.
+
+**Acceptance criteria:**
+- [ ] README no longer says task files must not use `status` frontmatter for the new item-card model.
+- [ ] README says `drop` and `clean` delete work item directories after confirmation.
+- [ ] `skills/spec/SKILL.md` asks the user to review the saved spec artifact, mentioning `SPEC.md` only for explicit repo-level specs.
+- [ ] `skills/spec-driven-development/SKILL.md` no longer treats committing specs to version control as the default for MDF workflow artifacts.
+
+**Verification:**
+- [ ] `node scripts/validate-agent-skills-port.js`
+- [ ] `git diff --check`
+- [ ] `rg "Task files must not use a `status`|reviewed SPEC.md|Commit the spec" README.md skills/spec/SKILL.md skills/spec-driven-development/SKILL.md`
+
+**Dependencies:** Tasks 5, 8
+
+**Files likely touched:**
+- `README.md`
+- `skills/spec/SKILL.md`
+- `skills/spec-driven-development/SKILL.md`
+
+**Estimated scope:** Small: 3 files
+
+## Task 12: Add migrate-tasks skill and command
+
+**Description:** Add a new `migrate-tasks` skill and `/mdf:migrate-tasks` command shim that copies legacy task state from `~/.mdf/projects/{project-hash}` into canonical project-root `.mdf/work/` storage.
+
+**Acceptance criteria:**
+- [ ] `skills/migrate-tasks/SKILL.md` exists with frontmatter and clear trigger description.
+- [ ] `commands/migrate-tasks.md` is a thin shim that reads the skill and follows it.
+- [ ] Migration defaults to dry-run/candidate listing and asks for confirmation before writing.
+- [ ] Migration is copy-first and never deletes or moves legacy state.
+- [ ] Migrated items preserve `legacy_id` and `legacy_source`.
+- [ ] Legacy 3-digit IDs are converted to 4-digit IDs when possible; conflicts allocate the next available ID.
+- [ ] Legacy locks are copied only after adding `canonical_root`, `work_id`, and new `task_id`.
+- [ ] Migration updates `.mdf/index.jsonl` and `~/.mdf/projects.json`.
+- [ ] Migration writes `.mdf/work/{work_id}/migration-NNN.md`.
+
+**Verification:**
+- [ ] `node scripts/validate-agent-skills-port.js`
+- [ ] `git diff --check`
+- [ ] Manual scenario review for queued, active, done, and conflicting legacy tasks.
+
+**Dependencies:** Task 10
+
+**Files likely touched:**
+- `skills/migrate-tasks/SKILL.md`
+- `commands/migrate-tasks.md`
+- `skills/use-mdf/SKILL.md`
+- `README.md`
+
+**Estimated scope:** Medium: 3-4 files
+
+## Task 13: Final verification after migration support
+
+**Description:** Re-run validation and stale-reference checks after review fixes and migration support are added.
+
+**Acceptance criteria:**
+- [ ] Validation script passes.
+- [ ] `git diff --check` passes.
+- [ ] `migrate-tasks` appears in the relevant routing and README surfaces.
+- [ ] Remaining legacy storage references are either current migration references or historical docs with historical notes.
+
+**Verification:**
+- [ ] `node scripts/validate-agent-skills-port.js`
+- [ ] `git diff --check`
+- [ ] `rg "migrate-tasks|~/.mdf/projects|SPEC.md|status frontmatter" skills commands docs README.md`
+
+**Dependencies:** Tasks 10-12
+
+**Files likely touched:**
+- No new functional files expected
+
+**Estimated scope:** Small: verification only
+
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |

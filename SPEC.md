@@ -46,9 +46,11 @@ skills/test/SKILL.md
 skills/review/SKILL.md
 skills/ship/SKILL.md
 skills/using-git-worktrees/SKILL.md
+skills/migrate-tasks/SKILL.md
 skills/*/SKILL.md where artifact behavior is described
 commands/task.md
 commands/tasks.md
+commands/migrate-tasks.md
 ```
 
 No MCP server, CLI helper, background daemon, event store, or generated runtime code is required for this change.
@@ -93,6 +95,40 @@ Global project discovery should be documented as:
 ```
 
 `~/.mdf/projects.json` is a registry of known projects and their canonical roots. It is not the authoritative store for per-project artifact content.
+
+Whenever a skill initializes `<canonical-project-root>/.mdf/`, it must upsert the project into `~/.mdf/projects.json`. The upsert key is `canonical_root`, not `remote`, because projects may not have a remote and multiple checkouts may share one remote.
+
+Registry entries should include:
+
+```json
+{
+  "id": "1d55c7f13adf",
+  "name": "midnight-forge",
+  "canonical_root": "/Users/example/code/midnight-forge",
+  "remote": "https://github.com/example/midnight-forge.git",
+  "index": ".mdf/index.jsonl",
+  "last_seen": "2026-05-26T10:00:00+09:00"
+}
+```
+
+The `id` is the first 12 lowercase hex characters of SHA-256 over `remote` when present, otherwise over `canonical_root`. Upserts must preserve unrelated project entries.
+
+## Gitignore Guard
+
+Before creating or writing `<canonical-root>/.mdf/`, skills must verify that `.mdf/` is ignored by git when inside a git repository.
+
+If `.mdf/` is not ignored:
+
+1. Do not create or write `.mdf/`.
+2. Offer to create a setup branch that adds `.mdf/` to `.gitignore`.
+3. Perform setup from the normal repository checkout, not from a task worktree.
+4. Stop first if the checkout has uncommitted changes.
+5. Add `.mdf/` without changing unrelated ignore rules.
+6. Commit with `chore: ignore local mdf state`.
+7. If the user wants, push and open a PR with release intent `release: none`.
+8. Do not resume the original task or artifact write until the setup PR has been merged.
+
+If `.worktrees/` also needs to be ignored, the setup branch may add both `.worktrees/` and `.mdf/` with commit message `chore: ignore local workflow state`.
 
 ## Work Item Model
 
@@ -214,8 +250,66 @@ Contract-like outputs are still local MDF artifacts by default. They should use 
 | `github-commit` | `.mdf/work/{work_id}/commit-001.md` |
 | `github-pr` | `.mdf/work/{work_id}/pr-001.md` |
 | `github-clear-gone` | `.mdf/work/{work_id}/git-cleanup-001.md` |
+| `migrate-tasks` | `.mdf/work/{work_id}/migration-001.md` |
 | `tasks` | response body by default; `.mdf/work/{work_id}/tasks-001.md` only when saved |
 | future `cleanup-docs` | `.mdf/work/{work_id}/cleanup-001.md` when saved |
+
+## Legacy Task Migration
+
+Add a `migrate-tasks` skill and `/mdf:migrate-tasks` command shim to migrate existing legacy task state from:
+
+```text
+~/.mdf/projects/{project-hash}/
+  meta.json
+  counter.json
+  tasks/
+  locks/
+```
+
+to:
+
+```text
+<canonical-root>/.mdf/
+  project.json
+  index.jsonl
+  work/
+  locks/
+```
+
+Migration rules:
+
+- Copy first; never move or delete legacy files during migration.
+- Default to dry-run/candidate listing before writing.
+- Ask for explicit confirmation before writing new `.mdf` files.
+- Require the `.mdf/` gitignore guard to pass before writing.
+- Preserve `legacy_id` and `legacy_source` in migrated `item.md` frontmatter.
+- Convert legacy 3-digit IDs to 4-digit IDs when no conflict exists, e.g. `"001"` -> `"0001"`.
+- If the target task ID or work item directory conflicts, allocate the next available 4-digit task ID and preserve `legacy_id`.
+- Copy legacy locks only after adding `canonical_root`, `work_id`, and the new `task_id`; preserve `legacy_id`.
+- Update `.mdf/index.jsonl` and `~/.mdf/projects.json`.
+- Write a migration report to `.mdf/work/{work_id}/migration-NNN.md`.
+- Legacy cleanup is out of scope and requires a separate explicit confirmation flow.
+
+Example migrated item frontmatter:
+
+```yaml
+---
+work_id: "2026-05-08-0001-fix-login-timeout"
+task_id: "0001"
+legacy_id: "001"
+kind: "task"
+title: "Fix login timeout"
+order: 1
+status: "done"
+created: "2026-05-08"
+due: "2026-05-10"
+completed: "2026-05-12"
+worktree: null
+branch: null
+latest: {}
+legacy_source: "~/.mdf/projects/{project-hash}/tasks/001.md"
+---
+```
 
 ## Code Style
 
@@ -266,6 +360,10 @@ Manual review scenarios:
    - Expected: the artifact is stored in that implicit work item.
 5. Cross-project listing reads `~/.mdf/projects.json`.
    - Expected: project entries point to canonical roots and local `.mdf/index.jsonl` files.
+6. `.mdf/` is not gitignored.
+   - Expected: task/artifact initialization stops and offers a setup branch/PR instead of writing `.mdf/`.
+7. Legacy tasks exist under `~/.mdf/projects/{project-hash}`.
+   - Expected: `migrate-tasks` lists candidates, copies confirmed tasks into `.mdf/work/`, preserves `legacy_id`, and leaves legacy files untouched.
 
 ## Boundaries
 
@@ -274,12 +372,16 @@ Manual review scenarios:
 - Always: keep work item storage shallow: `.mdf/work/{work_id}/{artifact}`.
 - Always: write a new revision when the same skill runs again for the same work item.
 - Always: update `item.md` latest pointers and `.mdf/index.jsonl` when artifacts are created.
+- Always: upsert `~/.mdf/projects.json` when initializing project-local `.mdf/`.
+- Always: stop before writing `.mdf/` when `.mdf/` is not gitignored, and offer a setup branch/PR.
+- Always: migrate legacy task state by copying, never moving or deleting.
 - Ask first: promoting any MDF artifact into tracked docs.
 - Ask first: deleting or migrating existing `~/.mdf/projects/{project-hash}` task state.
 - Ask first: adding executable tooling beyond markdown skill instructions.
 - Never: create a separate `.mdf/` inside a linked worktree.
 - Never: overwrite a previous artifact revision.
 - Never: require every skill run to have an explicit task until the task-first policy is intentionally introduced.
+- Never: delete legacy task files during migration.
 
 ## Success Criteria
 
@@ -289,10 +391,12 @@ Manual review scenarios:
 - Locks include enough metadata for a skill running inside a worktree to find the current work item.
 - The documented model supports both explicit task work items and implicit work items.
 - The documented model supports future task-first behavior without changing the storage layout.
+- Project-local `.mdf/` initialization updates `~/.mdf/projects.json` so `tasks all` can discover the project.
+- `.mdf/` setup follows the same stop/setup-branch/PR safety pattern as `.worktrees/`.
+- `migrate-tasks` can copy existing legacy tasks and locks into the new work item layout without deleting legacy state.
 - Verification commands pass.
 
 ## Open Questions
 
 - What default expiration should each artifact type use?
-- Should `~/.mdf/projects.json` be introduced now, or documented as the next step after project-local `.mdf` storage lands?
-- Should old `~/.mdf/projects/{project-hash}/tasks/{id}.md` state be migrated, left as legacy, or supported in parallel for one release?
+- Should legacy cleanup after successful migration be handled by `migrate-tasks` later, or by a separate cleanup skill?

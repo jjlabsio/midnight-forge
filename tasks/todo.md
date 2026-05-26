@@ -44,3 +44,23 @@
   - Acceptance: validation passes, markdown diff is clean, and stale storage references are intentional.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`, `rg "~/.mdf/projects|tasks/plan.md|tasks/todo.md|SPEC.md" skills commands docs README.md`
   - Files: final consistency pass only
+
+- [ ] Task 10: Fix project registry and ignore guards
+  - Acceptance: `.mdf/` initialization upserts `~/.mdf/projects.json`; `.mdf/` writes stop unless `.mdf/` is gitignored and offer the setup branch/PR flow.
+  - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
+  - Files: `skills/task/SKILL.md`, `skills/use-mdf/SKILL.md`, `README.md`
+
+- [ ] Task 11: Resolve status and spec artifact wording
+  - Acceptance: README uses the new item-card status model; spec review guidance refers to the saved spec artifact instead of always `SPEC.md`.
+  - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
+  - Files: `README.md`, `skills/spec/SKILL.md`, `skills/spec-driven-development/SKILL.md`
+
+- [ ] Task 12: Add migrate-tasks skill and command
+  - Acceptance: `skills/migrate-tasks/SKILL.md` and `commands/migrate-tasks.md` define copy-first legacy migration from `~/.mdf/projects/{project-hash}` to canonical `.mdf/work/` storage.
+  - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
+  - Files: `skills/migrate-tasks/SKILL.md`, `commands/migrate-tasks.md`, `skills/use-mdf/SKILL.md`, `README.md`
+
+- [ ] Task 13: Final verification after migration support
+  - Acceptance: validation passes, diff is clean, and migration/routing references are consistent.
+  - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`, `rg "migrate-tasks|~/.mdf/projects|SPEC.md|status frontmatter" skills commands docs README.md`
+  - Files: final consistency pass only
