@@ -1,6 +1,6 @@
 # Todo: MDF Work Artifact Storage
 
-- [ ] Task 1: Define canonical `.mdf` storage in task lifecycle
+- [x] Task 1: Define canonical `.mdf` storage in task lifecycle
   - Acceptance: `skills/task/SKILL.md` defines canonical root `.mdf/project.json`, `.mdf/index.jsonl`, `.mdf/work/`, `.mdf/locks/`, `work_id`, `item.md`, and lock metadata with `canonical_root`.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/task/SKILL.md`
