@@ -28,6 +28,9 @@ git_dir=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 git_common=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 branch=$(git branch --show-current)
 default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
+if [ -z "$default_branch" ]; then
+  default_branch=$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')
+fi
 superproject=$(git rev-parse --show-superproject-working-tree 2>/dev/null)
 ```
 
@@ -71,10 +74,18 @@ Run these checks before creating the worktree:
 
 ```bash
 project_root=$(git rev-parse --show-toplevel)
+default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
+if [ -z "$default_branch" ]; then
+  default_branch=$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')
+fi
+git fetch origin "$default_branch"
+git show-ref --verify --quiet "refs/remotes/origin/$default_branch"
 git check-ignore -q "$project_root/.worktrees"
 git show-ref --verify --quiet "refs/heads/<branch-name>"
 test -e "$project_root/.worktrees/<branch-name>"
 ```
+
+Stop if the repository does not have an `origin` remote, if the default branch cannot be resolved from `origin/HEAD` or `git remote show origin`, if fetching `origin/<default-branch>` fails, or if `origin/<default-branch>` does not exist.
 
 Stop if `.worktrees/` is not ignored. Do not edit `.gitignore` from this skill.
 
@@ -86,11 +97,13 @@ If `git worktree list --porcelain` shows broken or prunable worktrees, report th
 
 ## Step 3: Create Worktree
 
-Create the isolated workspace:
+Create the isolated workspace from the fetched remote default branch, not from the local default branch:
 
 ```bash
-git worktree add "$project_root/.worktrees/<branch-name>" -b "<branch-name>"
+git worktree add "$project_root/.worktrees/<branch-name>" -b "<branch-name>" "origin/$default_branch"
 ```
+
+Do not create new worktrees from a stale local `main` or stale local default branch. The remote default branch is the required base for new implementation worktrees.
 
 If creation fails, stop and report the exact failure. Do not continue in the normal checkout.
 
@@ -137,6 +150,7 @@ Report:
 ```text
 Worktree ready at <full-path>
 Branch: <branch-name>
+Base: origin/<default-branch>
 Canonical root: <project-root>
 Dependency setup: <completed|skipped|failed>
 Ready for caller workflow to continue
@@ -153,6 +167,8 @@ Stop instead of warning and continuing when:
 - The current checkout is detached.
 - The current linked worktree is on `main` or the repository default branch.
 - The current linked worktree does not match the caller's expected MDF task lock path.
+- The repository does not have an `origin` remote.
+- The remote default branch cannot be resolved, fetched, or verified.
 - `.worktrees/` is not ignored.
 - The target branch already exists.
 - The target path already exists.

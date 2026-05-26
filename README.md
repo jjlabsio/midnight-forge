@@ -146,7 +146,7 @@ Midnight Forge includes a `using-git-worktrees` skill for implementation work th
 .worktrees/<branch-name>
 ```
 
-The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
+The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. New worktrees are created from the fetched remote default branch, not from a potentially stale local default branch. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
 
 `$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
 
@@ -156,7 +156,7 @@ If task work cannot start because `.worktrees/` is not ignored, `$task work <id>
 
 Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Before creating or updating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
 
-When the session identifies exactly one valid active MDF task, `github-pr` uses the `task` skill's completion behavior with the log message `Completed task before PR creation.`, then pushes the branch and creates a GitHub PR. If an open PR already exists for the branch, it reports that PR instead of creating a duplicate. If the session task is ambiguous or conflicts with local task, worktree, or branch state, PR creation stops for user clarification.
+When the session identifies exactly one valid active MDF task, `github-pr` first fetches the remote base branch and verifies that the current branch merges cleanly. It then uses the `task` skill's completion behavior with the log message `Completed task before PR creation.`, pushes the branch, and creates a GitHub PR. If an open PR already exists for the branch, it reports that PR instead of creating a duplicate. If the session task is ambiguous, conflicts with local task/worktree/branch state, or does not merge cleanly into the remote base branch, PR creation stops for user clarification.
 
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 

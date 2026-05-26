@@ -22,12 +22,28 @@ Before creating or updating a PR:
 1. Check git status and current branch.
 2. Confirm the work is not being prepared from `main` or the repository default branch.
 3. If there are uncommitted changes, use the `github-commit` skill to create one commit before PR creation continues.
-4. Run the MDF task completion guard below.
-5. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
-6. Confirm the repository has an `origin` remote.
-7. Summarize relevant commits, changed files, verification evidence, and release signal.
+4. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
+5. Confirm the repository has an `origin` remote.
+6. Fetch the remote base branch and run the mergeability preflight below.
+7. Run the MDF task completion guard below.
+8. Summarize relevant commits, changed files, verification evidence, and release signal.
 
 Do not create a PR from uncommitted changes. Use `github-commit` first.
+
+## Mergeability Preflight
+
+Before completing the MDF task or pushing the branch, verify that the current branch can merge cleanly into the remote base branch:
+
+```bash
+base_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
+if [ -z "$base_branch" ]; then
+  base_branch=$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')
+fi
+git fetch origin "$base_branch"
+git merge-tree --write-tree HEAD "origin/$base_branch"
+```
+
+If `git merge-tree --write-tree` exits non-zero, stop before task completion and PR creation. Report the conflicted files and tell the user the branch must be rebased onto `origin/<base-branch>` first. Do not push or create/update the PR while this preflight fails.
 
 ## MDF Task Completion Guard
 
@@ -111,7 +127,7 @@ Examples:
 ```text
 docs: add human-facing language policy
 feat(github-pr): create remote PRs by default
-fix(github-pr): avoid defaulting release intent to none
+fix(github-pr): avoid defaulting release signal to none
 ```
 
 Use this simple PR body shape:
@@ -159,6 +175,8 @@ Stop instead of continuing when:
 - Session task context conflicts with current worktree or branch.
 - The GitHub CLI is unavailable or not authenticated.
 - The repository does not have an `origin` remote.
+- The remote base branch cannot be resolved or fetched.
+- The current branch does not merge cleanly into the remote base branch.
 - Release signal is required and unclear.
 - Pushing the branch fails.
 - `gh pr create` fails.
