@@ -5,6 +5,8 @@ description: "Use when preparing, creating, or reviewing a GitHub pull request f
 
 # GitHub PR
 
+When saving PR drafts or PR creation records for MDF continuity, resolve the current MDF work item and write `.mdf/work/{work_id}/pr-NNN.md`. This does not replace the actual GitHub PR when the user explicitly asks to create one.
+
 ## Overview
 
 Prepare GitHub pull requests for MDF-managed work. This skill enforces the MDF lifecycle rule that the task for the current session is completed before PR preparation continues.

@@ -5,6 +5,8 @@ description: Subjects every non-trivial decision to a fresh-context adversarial 
 
 # Doubt-Driven Development
 
+When saving doubt cycle reports, adversarial findings, or reconciliation notes, resolve the current MDF work item and write `.mdf/work/{work_id}/doubt-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.doubt` plus `.mdf/index.jsonl`.
+
 ## Overview
 
 A confident answer is not a correct one. Long sessions accumulate context that quietly turns assumptions into "facts" without anyone noticing. Doubt-driven development is the discipline of materializing a fresh-context reviewer — biased to **disprove**, not approve — before any non-trivial output stands.

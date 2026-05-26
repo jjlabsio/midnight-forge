@@ -5,6 +5,8 @@ description: Hardens code against vulnerabilities. Use when handling user input,
 
 # Security and Hardening
 
+When saving security reviews, hardening notes, or threat-model artifacts, resolve the current MDF work item and write `.mdf/work/{work_id}/security-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.security` plus `.mdf/index.jsonl`.
+
 ## Overview
 
 Security-first development practices for web applications. Treat every external input as hostile, every secret as sacred, and every authorization check as mandatory. Security isn't a phase — it's a constraint on every line of code that touches user data, authentication, or external systems.

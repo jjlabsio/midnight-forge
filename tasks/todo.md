@@ -30,7 +30,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/build/SKILL.md`, `skills/incremental-implementation/SKILL.md`, `skills/test/SKILL.md`, `skills/test-driven-development/SKILL.md`, `skills/debugging-and-error-recovery/SKILL.md`, `skills/review/SKILL.md`, `skills/code-review-and-quality/SKILL.md`, `skills/ship/SKILL.md`, `skills/shipping-and-launch/SKILL.md`
 
-- [ ] Task 7: Update domain-specific artifact mappings
+- [x] Task 7: Update domain-specific artifact mappings
   - Acceptance: domain skills use `contract`, `decision`, `migration`, `security`, `performance`, `ui`, `browser`, `context`, `ci`, `commit`, `pr`, and `git-cleanup` artifact names as appropriate.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/api-and-interface-design/SKILL.md`, `skills/documentation-and-adrs/SKILL.md`, `skills/deprecation-and-migration/SKILL.md`, `skills/security-and-hardening/SKILL.md`, `skills/performance-optimization/SKILL.md`, `skills/frontend-ui-engineering/SKILL.md`, `skills/browser-testing-with-devtools/SKILL.md`, `skills/context-engineering/SKILL.md`, `skills/ci-cd-and-automation/SKILL.md`, `skills/github-commit/SKILL.md`, `skills/github-pr/SKILL.md`, `skills/github-clear-gone/SKILL.md`

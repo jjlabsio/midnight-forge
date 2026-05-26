@@ -5,6 +5,8 @@ description: "Use when creating a git commit for MDF work; reviews git status, d
 
 # GitHub Commit
 
+When saving commit metadata for MDF continuity, resolve the current MDF work item and write `.mdf/work/{work_id}/commit-NNN.md`. This does not replace the actual git commit; it records commit hash, message, and relevant verification evidence.
+
 ## Overview
 
 Create one git commit for the current work, based on the simple `commit-commands` workflow.
