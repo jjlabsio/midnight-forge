@@ -56,7 +56,25 @@ Before creating or writing `.mdf/`, verify that `.mdf/` is ignored by git. If `.
 3. Optionally open a PR with release intent `release: none`.
 4. Do not resume migration until that setup PR is merged and the command is run again.
 
-When initializing `<canonical-root>/.mdf/`, also upsert the project into `~/.mdf/projects.json` keyed by `canonical_root`. Preserve unrelated project entries.
+When initializing `<canonical-root>/.mdf/`, also upsert the project into `~/.mdf/projects.json`. The registry must use this schema:
+
+```json
+{
+  "version": 1,
+  "projects": {
+    "/absolute/project/root": {
+      "id": "1d55c7f13adf",
+      "name": "project-basename",
+      "canonical_root": "/absolute/project/root",
+      "remote": "git@github.com:user/project.git",
+      "index": ".mdf/index.jsonl",
+      "last_seen": "2026-05-08T00:00:00Z"
+    }
+  }
+}
+```
+
+Use `projects[canonical_root]` as the upsert target and preserve unrelated project entries. If `~/.mdf/projects.json` is missing, create it with `version: 1` and an empty `projects` object before upserting. If it exists but is malformed or does not match this schema, stop and report the registry problem instead of overwriting it.
 
 ## Candidate Parsing
 

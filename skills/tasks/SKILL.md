@@ -35,6 +35,26 @@ Global discovery uses:
 
 Each registry entry should include the project name, canonical root path, remote when known, and the relative task index path `.mdf/index.jsonl`.
 
+The registry file must use this schema:
+
+```json
+{
+  "version": 1,
+  "projects": {
+    "/absolute/project/root": {
+      "id": "1d55c7f13adf",
+      "name": "project-basename",
+      "canonical_root": "/absolute/project/root",
+      "remote": "git@github.com:user/project.git",
+      "index": ".mdf/index.jsonl",
+      "last_seen": "2026-05-08T00:00:00Z"
+    }
+  }
+}
+```
+
+Read project entries from `projects`, keyed by `canonical_root`. If `~/.mdf/projects.json` exists but is malformed or does not match this schema, report a clear registry error and do not guess another shape.
+
 Do not initialize storage for read-only board commands. If the current project has no MDF storage, show an empty board.
 
 ## Status Rules
@@ -68,7 +88,7 @@ Show the current project board. If storage is missing, show empty `Active`, `Que
 Show all local project boards.
 
 1. If `~/.mdf/projects.json` does not exist, report that no registered local MDF projects exist.
-2. Read each project entry and resolve its canonical root.
+2. Read each entry in `projects` and resolve its canonical root.
 3. For each valid project, read `.mdf/index.jsonl`, `.mdf/work/*/item.md` when needed, and `.mdf/locks/`.
 4. Group output by project name from the registry or `.mdf/project.json`, including canonical root path.
 5. Include Active, Queue, and recent Done summaries for each project.

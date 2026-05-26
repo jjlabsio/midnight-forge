@@ -65,20 +65,25 @@ Use the canonical root basename for `name`. Include `remote` when origin exists;
 
 When a task or artifact changes, update or append the corresponding index entry so the latest line for a `work_id` is authoritative.
 
-Whenever `<canonical-root>/.mdf/` is initialized, upsert this project into `~/.mdf/projects.json`. Use `canonical_root` as the upsert key. Preserve unrelated project entries. Each registry entry should include:
+Whenever `<canonical-root>/.mdf/` is initialized, upsert this project into `~/.mdf/projects.json`. The file must use this schema:
 
 ```json
 {
-  "id": "1d55c7f13adf",
-  "name": "project-basename",
-  "canonical_root": "/absolute/project/root",
-  "remote": "git@github.com:user/project.git",
-  "index": ".mdf/index.jsonl",
-  "last_seen": "2026-05-08T00:00:00Z"
+  "version": 1,
+  "projects": {
+    "/absolute/project/root": {
+      "id": "1d55c7f13adf",
+      "name": "project-basename",
+      "canonical_root": "/absolute/project/root",
+      "remote": "git@github.com:user/project.git",
+      "index": ".mdf/index.jsonl",
+      "last_seen": "2026-05-08T00:00:00Z"
+    }
+  }
 }
 ```
 
-Set `id` to the first 12 lowercase hex characters of SHA-256 over `remote` when present, otherwise over `canonical_root`.
+Use `projects[canonical_root]` as the upsert target and preserve unrelated project entries. Set `id` to the first 12 lowercase hex characters of SHA-256 over `remote` when present, otherwise over `canonical_root`. If `~/.mdf/projects.json` is missing, create it with `version: 1` and an empty `projects` object before upserting. If it exists but is malformed or does not match this schema, stop and report the registry problem instead of overwriting it.
 
 ## Work Items and IDs
 
