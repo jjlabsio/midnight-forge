@@ -20,7 +20,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/use-mdf/SKILL.md`
 
-- [ ] Task 5: Update define and planning artifacts
+- [x] Task 5: Update define and planning artifacts
   - Acceptance: define/planning skills save `intent-NNN.md`, `idea-NNN.md`, `spec-NNN.md`, and `plan-NNN.md` under `.mdf/work/{work_id}/` by default.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/spec/SKILL.md`, `skills/spec-driven-development/SKILL.md`, `skills/plan/SKILL.md`, `skills/planning-and-task-breakdown/SKILL.md`, `skills/interview-me/SKILL.md`, `skills/idea-refine/SKILL.md`

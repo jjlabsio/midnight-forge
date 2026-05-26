@@ -185,6 +185,16 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - [Question needing human input]
 ```
 
+## MDF Artifact Storage
+
+Save implementation plans under the current MDF work item by default:
+
+```text
+<canonical-root>/.mdf/work/{work_id}/plan-NNN.md
+```
+
+Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated planning runs create `plan-001.md`, `plan-002.md`, and so on; update `item.md` `latest.plan` and `.mdf/index.jsonl`. Only create tracked files such as `tasks/plan.md` and `tasks/todo.md` when the user explicitly asks for repo-level planning files.
+
 ## Parallelization Opportunities
 
 When multiple agents or sessions are available:
