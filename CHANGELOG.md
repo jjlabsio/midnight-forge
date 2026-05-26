@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.3 - 2026-05-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.2...v0.5.3)
+
+### Changes
+
+- fix: derive releases from PR titles ([#13](https://github.com/jjlabsio/midnight-forge/pull/13))
 ## v0.5.2 - 2026-05-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.1...v0.5.2)
