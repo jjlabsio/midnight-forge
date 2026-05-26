@@ -16,21 +16,75 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const text = [
-              pr.title || "",
-              pr.body || "",
-              ...(pr.labels || []).map((label) => label.name),
-            ].join("\n");
+            const labels = (pr.labels || []).map((label) => label.name);
+            const result = resolveReleaseSignal(pr.title || "", labels);
 
-            const releaseIntent = text.match(
-              /(?:release-version|release|version)\s*:\s*(major|minor|patch|none|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)/i
-            );
-
-            if (!releaseIntent) {
-              core.setFailed(
-                "PR must declare release intent: release: major|minor|patch|none|x.y.z"
-              );
+            if (!result.ok) {
+              core.setFailed(result.message);
               return;
             }
 
-            core.info(`Release intent: ${releaseIntent[1]}`);
+            core.info(`Release signal: ${result.bump} from ${result.source}`);
+
+            function resolveReleaseSignal(title, labels) {
+              const titleBump = bumpFromTitle(title);
+              const hasNoReleaseLabel = labels.some(
+                (label) => label.toLowerCase() === "release-none"
+              );
+
+              if (hasNoReleaseLabel && titleBump.bump) {
+                return {
+                  ok: false,
+                  message:
+                    "Conflicting release signals: remove the release-none label or use a non-release PR title.",
+                };
+              }
+
+              if (hasNoReleaseLabel) {
+                return { ok: true, bump: "none", source: "release-none label" };
+              }
+
+              if (titleBump.bump) {
+                return { ok: true, bump: titleBump.bump, source: "PR title" };
+              }
+
+              return {
+                ok: false,
+                message:
+                  titleBump.message ||
+                  "PR title must use a supported Conventional Commit type: feat, fix, docs, chore, refactor, perf, test, ci, or build.",
+              };
+            }
+
+            function bumpFromTitle(title) {
+              const typeBumps = new Map([
+                ["feat", "minor"],
+                ["fix", "patch"],
+                ["docs", "patch"],
+                ["chore", "patch"],
+                ["refactor", "patch"],
+                ["perf", "patch"],
+                ["test", "patch"],
+                ["ci", "patch"],
+                ["build", "patch"],
+              ]);
+              const match = title.match(/^([a-z]+)(?:\([^)]+\))?(!)?:\s+\S/);
+
+              if (!match) {
+                return {
+                  bump: "",
+                  message:
+                    "PR title must use Conventional Commit format, for example feat: add capability or fix: correct behavior.",
+                };
+              }
+
+              const [, type, breaking] = match;
+              if (!typeBumps.has(type)) {
+                return {
+                  bump: "",
+                  message: `Unsupported Conventional Commit type: ${type}`,
+                };
+              }
+
+              return { bump: breaking ? "major" : typeBumps.get(type) };
+            }

@@ -73,7 +73,7 @@ When a skill produces a markdown workflow artifact, resolve the current work ite
 7. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.
 8. When initializing `<canonical-root>/.mdf/`, upsert the project into `~/.mdf/projects.json` keyed by `canonical_root`.
 
-Do not create a separate `.mdf/` directory inside linked worktrees. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored. If it is not ignored, stop and offer the same setup branch and PR flow used for local workflow state: add `.mdf/` to `.gitignore`, commit with `chore: ignore local mdf state`, optionally open a PR with `release: none`, and do not resume the original artifact write until the setup PR is merged. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
+Do not create a separate `.mdf/` directory inside linked worktrees. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored. If it is not ignored, stop and offer the same setup branch and PR flow used for local workflow state: add `.mdf/` to `.gitignore`, commit with `chore: ignore local mdf state`, optionally open a PR with the `release-none` label, and do not resume the original artifact write until the setup PR is merged. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
 
 ## Core Operating Behaviors
 

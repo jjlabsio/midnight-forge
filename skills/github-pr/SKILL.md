@@ -22,12 +22,28 @@ Before creating or updating a PR:
 1. Check git status and current branch.
 2. Confirm the work is not being prepared from `main` or the repository default branch.
 3. If there are uncommitted changes, use the `github-commit` skill to create one commit before PR creation continues.
-4. Run the MDF task completion guard below.
-5. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
-6. Confirm the repository has an `origin` remote.
-7. Summarize relevant commits, changed files, verification evidence, and release intent.
+4. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
+5. Confirm the repository has an `origin` remote.
+6. Fetch the remote base branch and run the mergeability preflight below.
+7. Run the MDF task completion guard below.
+8. Summarize relevant commits, changed files, verification evidence, and release signal.
 
 Do not create a PR from uncommitted changes. Use `github-commit` first.
+
+## Mergeability Preflight
+
+Before completing the MDF task or pushing the branch, verify that the current branch can merge cleanly into the remote base branch:
+
+```bash
+base_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
+if [ -z "$base_branch" ]; then
+  base_branch=$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')
+fi
+git fetch origin "$base_branch"
+git merge-tree --write-tree HEAD "origin/$base_branch"
+```
+
+If `git merge-tree --write-tree` exits non-zero, stop before task completion and PR creation. Report the conflicted files and tell the user the branch must be rebased onto `origin/<base-branch>` first. Do not push or create/update the PR while this preflight fails.
 
 ## MDF Task Completion Guard
 
@@ -52,10 +68,10 @@ If the session context identifies more than one plausible task ID, stop and ask 
 
 For the selected task ID:
 
-1. Find the matching `.mdf/work/*/item.md` by `task_id`; stop if it is missing or malformed.
-2. Reject the task if `status: "done"` or `completed` exists.
+1. Find exactly one `.mdf/work/*/item.md` whose frontmatter `task_id` matches the selected task ID; stop if it is missing, duplicated, unreadable, or malformed.
+2. Reject the task if frontmatter already has `status: "done"` or `completed`.
 3. Load `.mdf/locks/{id}.lock`; stop if it is missing, unreadable, or malformed.
-4. If the lock and item disagree on `task_id` or `work_id`, stop.
+4. If the lock and item disagree on task ID or work ID, stop.
 
 ### Step 3: Validate Repository Context
 
@@ -91,14 +107,14 @@ After the MDF task completion guard succeeds or determines there is no MDF task 
 3. Summarize changed files and notable commits.
 4. Include verification commands and outcomes.
 5. Include the completed MDF task ID when one was completed.
-6. Include release intent when the repository requires it.
-7. Draft a concise PR title and body.
+6. Draft a concise Conventional Commit PR title and body.
+7. Include the `release-none` label only when the PR should not release.
 8. Push the current branch to `origin`.
 9. Check whether an open PR already exists for the current branch.
 10. If an open PR exists, report its URL instead of creating a duplicate.
 11. If no open PR exists, create one with `gh pr create`.
 
-Before drafting PR title prose or PR body bullet prose, follow `../../references/human-facing-language.md`. Keep required PR template headings, release intent tokens, file paths, commands, and repository conventions exactly as specified.
+Before drafting PR title prose or PR body bullet prose, follow `../../references/human-facing-language.md`. Keep required PR template headings, release labels, file paths, commands, and repository conventions exactly as specified.
 
 Use a Conventional Commit style PR title:
 
@@ -111,7 +127,7 @@ Examples:
 ```text
 docs: add human-facing language policy
 feat(github-pr): create remote PRs by default
-fix(github-pr): avoid defaulting release intent to none
+fix(github-pr): avoid defaulting release signal to none
 ```
 
 Use this simple PR body shape:
@@ -126,25 +142,24 @@ Use this simple PR body shape:
 
 ## MDF
 - Completed task: ...
-
-release: <major|minor|patch|none|version>
 ```
 
 Keep the summary to 1-3 bullets. Include a test plan checklist even when verification was not run; mark unchecked items honestly.
 
-For this repository, every PR must include one release intent line in the PR body, title, or labels:
+For this repository, normal release behavior is derived from the PR title. Use Conventional Commit style:
 
 ```text
-release: major
-release: minor
-release: patch
-release: none
-release: 0.1.0
+feat: add capability
+fix: correct behavior
+docs: update release policy
+chore: update workflow
+refactor: simplify parser
+perf: improve resolver speed
 ```
 
-For this plugin repository, use `release: none` only when the PR does not change what plugin users install, read, or invoke. Changes to shipped plugin behavior, skills, references, user-facing docs, or workflow guidance require a release intent. Use the smallest appropriate release: `release: patch` for fixes and clarifications, `release: minor` for new user-facing capabilities, and `release: major` for breaking changes.
+`feat` creates a minor release. `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `ci`, and `build` create patch releases. Add `!` after the type or scope for a major release.
 
-If release intent is not clear, ask the user before creating the PR.
+Do not add release-intent lines to the PR body. If the PR should not release, apply the `release-none` label and use a non-release PR title. If the release signal is not clear, ask the user before creating the PR.
 
 Do not require a second explicit confirmation before pushing or creating the PR. This skill invocation is the PR creation request.
 
@@ -160,7 +175,9 @@ Stop instead of continuing when:
 - Session task context conflicts with current worktree or branch.
 - The GitHub CLI is unavailable or not authenticated.
 - The repository does not have an `origin` remote.
-- Release intent is required and unclear.
+- The remote base branch cannot be resolved or fetched.
+- The current branch does not merge cleanly into the remote base branch.
+- Release signal is required and unclear.
 - Pushing the branch fails.
 - `gh pr create` fails.
 

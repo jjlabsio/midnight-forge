@@ -53,7 +53,7 @@ Before creating or writing `.mdf/`, verify that `.mdf/` is ignored by git. If `.
 
 1. Add `.mdf/` to `.gitignore` on a setup branch such as `chore/ignore-mdf`.
 2. Commit with `chore: ignore local mdf state`.
-3. Optionally open a PR with release intent `release: none`.
+3. Optionally open a PR with the `release-none` label.
 4. Do not resume migration until that setup PR is merged and the command is run again.
 
 When initializing `<canonical-root>/.mdf/`, also upsert the project into `~/.mdf/projects.json`. The registry must use this schema:
