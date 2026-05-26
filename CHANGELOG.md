@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.1 - 2026-05-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.4.1...v0.5.1)
+
+### Changes
+
+- v0.5.1
 ## v0.4.1 - 2026-05-25
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.4.0...v0.4.1)
