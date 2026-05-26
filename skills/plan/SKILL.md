@@ -18,4 +18,4 @@ Read the existing spec (SPEC.md or equivalent) and the relevant codebase section
 5. Add checkpoints between phases
 6. Present the plan for human review
 
-Save the plan to tasks/plan.md and task list to tasks/todo.md.
+Save the plan to `.mdf/work/{work_id}/plan-NNN.md` by default, using the current MDF work item resolution rules. If the user explicitly asks for repo-level planning files, save the plan to tasks/plan.md and task list to tasks/todo.md.

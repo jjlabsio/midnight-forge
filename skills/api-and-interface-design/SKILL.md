@@ -5,6 +5,8 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
+When saving API or interface contracts, resolve the current MDF work item and write `.mdf/work/{work_id}/contract-NNN.md`. Promote contracts into tracked project docs only when the user explicitly asks or project policy requires it.
+
 ## Overview
 
 Design stable, well-documented interfaces that are hard to misuse. Good interfaces make the right thing easy and the wrong thing hard. This applies to REST APIs, GraphQL schemas, module boundaries, component props, and any surface where one piece of code talks to another.

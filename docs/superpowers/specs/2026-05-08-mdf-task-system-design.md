@@ -1,5 +1,7 @@
 # MDF Task System Design
 
+> Historical note: this document describes the first-pass task storage model. Current MDF task and artifact storage is defined in `skills/task/SKILL.md` and uses canonical project-root `.mdf/` storage with `~/.mdf/projects.json` only as a project registry.
+
 ## Goal
 
 Add a first-pass MDF task system using LLM-driven skills, not MCP tools, CLI helpers, or executable task-management code. The system should let a user add, inspect, prioritize, start, complete, annotate, and clean task files from any worktree while sharing task state through a single git-external storage location.

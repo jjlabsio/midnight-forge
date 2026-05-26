@@ -133,7 +133,7 @@ This is a checkable test, not a vibe. It also has a floor: if you've gone severa
 
 The output of this skill is a **confirmed statement of intent**: the restate from Step 4, with an explicit yes from Step 5. That's the deliverable. Specs, plans, and task lists are downstream; they consume the intent this skill produces.
 
-If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.
+If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md` after confirmation. Resolve `canonical_root` and `work_id` from the active lock first; if there is no active lock, create an implicit work item. Only promote intent into tracked docs such as `docs/intent/[topic].md` when the user explicitly asks.
 
 ## Example
 

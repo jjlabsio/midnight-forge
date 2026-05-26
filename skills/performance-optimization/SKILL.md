@@ -5,6 +5,8 @@ description: Optimizes application performance. Use when performance requirement
 
 # Performance Optimization
 
+When saving performance baselines, findings, or optimization reports, resolve the current MDF work item and write `.mdf/work/{work_id}/performance-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.performance` plus `.mdf/index.jsonl`.
+
 ## Overview
 
 Measure before optimizing. Performance work without measurement is guessing — and guessing leads to premature optimization that adds complexity without improving what matters. Profile first, identify the actual bottleneck, fix it, measure again. Optimize only what measurements prove matters.

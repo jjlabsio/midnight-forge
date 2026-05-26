@@ -8,7 +8,7 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included MDF skills: `mdf-handshake`, `task`, `tasks`
+- Included MDF skills: `mdf-handshake`, `task`, `tasks`, `migrate-tasks`
 - Included agent-skills workflows: `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
@@ -44,6 +44,7 @@ Invoke the task skills through Claude Code:
 /mdf:task work 001
 /mdf:tasks
 /mdf:tasks all
+/mdf:migrate-tasks
 ```
 
 ### Codex
@@ -69,6 +70,7 @@ $task add "Write the release checklist"
 $task work 001
 $tasks
 $tasks all
+$migrate-tasks
 ```
 
 Invoke the agent-skills workflow entrypoints through Codex:
@@ -92,15 +94,29 @@ Midnight Forge includes a first-pass local task system built from LLM-driven ski
 - Codex: `$task`, `$tasks`
 - Claude Code: `/mdf:task`, `/mdf:tasks`
 
-Task state is local-only and git-external:
+Task state is local-only and gitignored under the canonical project root:
 
 ```text
-~/.mdf/projects/{project-hash}/
+<canonical-project-root>/.mdf/
+  project.json
+  index.jsonl
+  work/
+  locks/
 ```
 
-The project hash is based on `git remote get-url origin` when available, otherwise the absolute project root path. Because task state is outside git, it is shared across worktrees on the same machine but is not committed, pushed, or shared with teammates through PRs.
+Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
-Each task is a Markdown file with YAML frontmatter plus these fixed English body sections:
+MDF only writes `.mdf/` after confirming it is ignored by git. If `.mdf/` is not ignored, the task flow stops and offers a setup branch/PR that adds `.mdf/` to `.gitignore` with release intent `release: none`.
+
+Cross-project discovery uses a lightweight registry:
+
+```text
+~/.mdf/projects.json
+```
+
+Because `.mdf/` is gitignored, task state and workflow artifacts are not committed, pushed, or shared with teammates through PRs unless the user explicitly promotes a document into tracked project files.
+
+Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:
 
 ```markdown
 ## Context
@@ -112,13 +128,15 @@ Each task is a Markdown file with YAML frontmatter plus these fixed English body
 ## Log
 ```
 
-Task status is derived instead of stored:
+Task status is stored in the item card and reconciled with locks:
 
-- `locks/{id}.lock` exists: active
-- Otherwise `completed` exists in frontmatter: done
+- `.mdf/locks/{task_id}.lock` exists: active
+- Otherwise `status: "done"` or `completed` exists: done
 - Otherwise: queue
 
-Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
+`drop` and `clean` require explicit confirmation before deleting work item directories.
+
+Legacy task stores under `~/.mdf/projects/{project-hash}` can be copied into canonical `.mdf/work/` storage with `$migrate-tasks` or `/mdf:migrate-tasks`. Migration is dry-run first, requires explicit confirmation before writing, preserves `legacy_id` and `legacy_source`, and never deletes, moves, or rewrites legacy files.
 
 ## Worktree Policy
 

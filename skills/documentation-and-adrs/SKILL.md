@@ -5,6 +5,8 @@ description: Records decisions and documentation. Use when making architectural 
 
 # Documentation and ADRs
 
+When saving local decision notes or ADR-style workflow artifacts, resolve the current MDF work item and write `.mdf/work/{work_id}/decision-NNN.md` by default. Only promote a decision into tracked docs such as `docs/decisions/` when the user explicitly asks or project policy requires a durable reviewed document.
+
 ## Overview
 
 Document decisions, not just code. The most valuable documentation captures the *why* — the context, constraints, and trade-offs that led to a decision. Code shows *what* was built; documentation explains *why it was built this way* and *what alternatives were considered*. This context is essential for future humans and agents working in the codebase.

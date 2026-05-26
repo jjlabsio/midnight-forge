@@ -168,8 +168,17 @@ The spec is a living document, not a one-time artifact:
 
 - **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
 - **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Commit the spec** — The spec belongs in version control alongside the code.
-- **Reference the spec in PRs** — Link back to the spec section that each PR implements.
+- **Keep the spec discoverable** — MDF workflow specs live under `.mdf/work/{work_id}/` by default and are indexed in `.mdf/index.jsonl`.
+- **Promote only when needed** — Commit a spec to tracked project docs only when the user explicitly asks or project policy requires it.
+- **Reference the spec in PRs when available** — Link to the tracked spec if promoted; otherwise summarize the relevant MDF spec artifact.
+
+For MDF workflow artifacts, save specs under the current work item by default:
+
+```text
+<canonical-root>/.mdf/work/{work_id}/spec-NNN.md
+```
+
+Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated spec runs create `spec-001.md`, `spec-002.md`, and so on; update `item.md` `latest.spec` and `.mdf/index.jsonl`. Only promote a spec into tracked project docs, such as `SPEC.md`, when the user explicitly asks or project policy requires it.
 
 ## Common Rationalizations
 
@@ -197,4 +206,4 @@ Before proceeding to implementation, confirm:
 - [ ] The human has reviewed and approved the spec
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The spec is saved to a file in the repository
+- [ ] The spec is saved to `.mdf/work/{work_id}/spec-NNN.md`, or to a tracked repository file only when explicitly requested

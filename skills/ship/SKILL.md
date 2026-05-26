@@ -68,6 +68,8 @@ Produce a single output:
 - [test-engineer report]
 ```
 
+When saving the ship decision, specialist report merge, or rollback plan, resolve the current MDF work item and write `.mdf/work/{work_id}/ship-NNN.md`. Update `item.md` `latest.ship` and `.mdf/index.jsonl`.
+
 ## Rules
 
 1. The three Phase A personas run in parallel — never sequentially.

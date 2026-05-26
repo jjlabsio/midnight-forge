@@ -5,6 +5,8 @@ description: Optimizes agent context setup. Use when starting a new session, whe
 
 # Context Engineering
 
+When saving context audits, rules-file recommendations, or session maps, resolve the current MDF work item and write `.mdf/work/{work_id}/context-NNN.md`. Actual rules files such as `AGENTS.md` or `CLAUDE.md` remain in their normal project locations when explicitly created.
+
 ## Overview
 
 Feed agents the right information at the right time. Context is the single biggest lever for agent output quality — too little and the agent hallucinates, too much and it loses focus. Context engineering is the practice of deliberately curating what the agent sees, when it sees it, and how it's structured.

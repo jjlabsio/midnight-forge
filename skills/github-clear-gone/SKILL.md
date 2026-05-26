@@ -5,6 +5,8 @@ description: "Use when cleaning local git branches marked gone after remote dele
 
 # GitHub Clear Gone
 
+When saving gone-branch cleanup reports, resolve the current MDF work item and write `.mdf/work/{work_id}/git-cleanup-NNN.md`. This report is separate from the actual branch or worktree deletions, which still require explicit confirmation.
+
 ## Overview
 
 Clean up local branches whose upstream branches were deleted. This is based on the simple `clean_gone` command workflow.
