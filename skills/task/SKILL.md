@@ -39,7 +39,7 @@ If `.mdf/` is not ignored:
 4. Create a branch named `chore/ignore-mdf`, or `chore/ignore-local-workflow-state` when adding both `.mdf/` and `.worktrees/`.
 5. Add `.mdf/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
 6. Commit the change with the message `chore: ignore local mdf state`, or `chore: ignore local workflow state` when adding both `.mdf/` and `.worktrees/`.
-7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with release intent `release: none`. If pushing or PR creation fails, report the branch, commit, and exact failure.
+7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with the `release-none` label. If pushing or PR creation fails, report the branch, commit, and exact failure.
 8. Do not resume the original task or artifact write until the setup PR has been merged and the command is run again.
 
 Do not create an independent `.mdf/` directory inside a linked worktree. A task running from `<canonical-root>/.worktrees/<branch>` still reads and writes `<canonical-root>/.mdf/`.
@@ -206,7 +206,7 @@ If `using-git-worktrees` stops because `.worktrees/` is not ignored, handle that
 4. Create a branch named `chore/ignore-worktrees`, or a similarly clear unique branch if that branch already exists.
 5. Add `.worktrees/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
 6. Commit the change with the message `chore: ignore local worktrees`.
-7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with release intent `release: none`. If pushing or PR creation fails, report the branch, commit, and exact failure.
+7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with the `release-none` label. If pushing or PR creation fails, report the branch, commit, and exact failure.
 8. Do not resume or lock the original task until the setup PR has been merged and `work {id}` is run again.
 
 If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.

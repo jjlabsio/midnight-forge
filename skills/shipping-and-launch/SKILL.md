@@ -78,7 +78,7 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 ## Feature Flag Strategy
 
-Ship behind feature flags to decouple deployment from release:
+Ship behind feature flags to decouple deployment from release timing:
 
 ```typescript
 // Feature flag check

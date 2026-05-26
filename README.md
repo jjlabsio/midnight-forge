@@ -106,7 +106,7 @@ Task state is local-only and gitignored under the canonical project root:
 
 Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
-MDF only writes `.mdf/` after confirming it is ignored by git. If `.mdf/` is not ignored, the task flow stops and offers a setup branch/PR that adds `.mdf/` to `.gitignore` with release intent `release: none`.
+MDF only writes `.mdf/` after confirming it is ignored by git. If `.mdf/` is not ignored, the task flow stops and offers a setup branch/PR that adds `.mdf/` to `.gitignore` and applies the `release-none` label.
 
 Cross-project discovery uses a lightweight registry:
 
@@ -150,7 +150,7 @@ The skill stops on ambiguous state instead of warning and continuing. `.worktree
 
 `$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
 
-If task work cannot start because `.worktrees/` is not ignored, `$task work <id>` treats that as repository setup, not task work. It leaves the task queued, asks whether to create a `chore/ignore-worktrees` setup branch, adds `.worktrees/` to `.gitignore`, commits the change, and opens a `release: none` PR when the user agrees. The original task is not locked or resumed until that setup PR has been merged and `work <id>` is run again.
+If task work cannot start because `.worktrees/` is not ignored, `$task work <id>` treats that as repository setup, not task work. It leaves the task queued, asks whether to create a `chore/ignore-worktrees` setup branch, adds `.worktrees/` to `.gitignore`, commits the change, and opens a no-release PR with the `release-none` label when the user agrees. The original task is not locked or resumed until that setup PR has been merged and `work <id>` is run again.
 
 ## PR Policy
 
@@ -161,7 +161,7 @@ When the session identifies exactly one valid active MDF task, `github-pr` uses 
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 
 - `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
-- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a GitHub PR body with summary, test plan, MDF task note, and release intent, then push and create the remote PR.
+- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a Conventional Commit PR title plus a body with summary, test plan, and MDF task note, then push and create the remote PR.
 - `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
 
 ## Agent Skills Workflows
@@ -176,7 +176,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 
 The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
-Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release intent tokens, required PR template headings, and repository conventions are preserved as written.
+Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, and repository conventions are preserved as written.
 
 ## Local Smoke Tests
 
@@ -253,16 +253,8 @@ Claude Code should report `runtime: Claude Code` for the same skill.
 
 Releases are PR-based. Do not release directly from `main`.
 
-Every PR must include one release intent line in the PR body, title, or labels:
+Normal release behavior is derived from the merged PR title using Conventional Commit style. `feat` creates a minor release. `fix`, `docs`, `chore`, `refactor`, `perf`, `test`, `ci`, and `build` create patch releases. Add `!` after the type or scope for a major release.
 
-```text
-release: major
-release: minor
-release: patch
-release: none
-release: 0.1.0
-```
+PR bodies are not release signal sources. If a PR should not release, apply the `release-none` label and use a non-release PR title. Exact manual versions are handled through the release workflow's `version` dispatch input.
 
-Use `release: none` only when the PR does not change what plugin users install, read, or invoke. Changes to shipped plugin behavior, skills, references, user-facing docs, or workflow guidance require the smallest appropriate release intent.
-
-When a PR is merged to `main`, the release workflow reads the merged PR intent. If a release is requested, it syncs the Claude Code and Codex plugin manifest versions, updates `CHANGELOG.md`, commits `chore(release): vX.Y.Z`, creates an annotated tag, and creates a GitHub Release. npm publishing is intentionally not part of this workflow.
+When a PR is merged to `main`, the release workflow reads the merged PR title and labels. If a release is requested, it syncs the Claude Code and Codex plugin manifest versions, updates `CHANGELOG.md`, commits `chore(release): vX.Y.Z`, creates an annotated tag, and creates a GitHub Release. npm publishing is intentionally not part of this workflow.
