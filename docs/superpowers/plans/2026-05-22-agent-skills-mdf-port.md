@@ -71,6 +71,8 @@ Convert each original `.claude/commands/*.md` file into a Codex-native skill. Ke
 
 - [ ] **Step 2: Preserve conditional semantics**
 
+Historical note: this plan captured the original entrypoint wrapper behavior. Current MDF artifact-producing skills save workflow artifacts under `.mdf/work/{work_id}/` by default and only create tracked planning files such as `tasks/plan.md` and `tasks/todo.md` when explicitly requested.
+
 Ensure wrappers do not invoke every related skill unconditionally:
 - `spec` starts with `spec-driven-development`.
 - `plan` starts with `planning-and-task-breakdown`, stays read-only, and writes `tasks/plan.md` and `tasks/todo.md`.

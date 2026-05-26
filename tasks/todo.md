@@ -35,7 +35,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/api-and-interface-design/SKILL.md`, `skills/documentation-and-adrs/SKILL.md`, `skills/deprecation-and-migration/SKILL.md`, `skills/security-and-hardening/SKILL.md`, `skills/performance-optimization/SKILL.md`, `skills/frontend-ui-engineering/SKILL.md`, `skills/browser-testing-with-devtools/SKILL.md`, `skills/context-engineering/SKILL.md`, `skills/ci-cd-and-automation/SKILL.md`, `skills/github-commit/SKILL.md`, `skills/github-pr/SKILL.md`, `skills/github-clear-gone/SKILL.md`
 
-- [ ] Task 8: Align command shims and repo docs
+- [x] Task 8: Align command shims and repo docs
   - Acceptance: command shims remain thin, docs either use the new canonical `.mdf` model or mark old storage descriptions as legacy.
   - Verify: `rg "~/.mdf/projects|tasks/plan.md|SPEC.md" skills commands docs README.md` and `node scripts/validate-agent-skills-port.js`
   - Files: `commands/task.md`, `commands/tasks.md`, `README.md`, `docs/superpowers/specs/2026-05-08-mdf-task-system-design.md`, `docs/superpowers/plans/2026-05-08-mdf-task-system.md`

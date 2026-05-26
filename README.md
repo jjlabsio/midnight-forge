@@ -92,15 +92,27 @@ Midnight Forge includes a first-pass local task system built from LLM-driven ski
 - Codex: `$task`, `$tasks`
 - Claude Code: `/mdf:task`, `/mdf:tasks`
 
-Task state is local-only and git-external:
+Task state is local-only and gitignored under the canonical project root:
 
 ```text
-~/.mdf/projects/{project-hash}/
+<canonical-project-root>/.mdf/
+  project.json
+  index.jsonl
+  work/
+  locks/
 ```
 
-The project hash is based on `git remote get-url origin` when available, otherwise the absolute project root path. Because task state is outside git, it is shared across worktrees on the same machine but is not committed, pushed, or shared with teammates through PRs.
+Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
-Each task is a Markdown file with YAML frontmatter plus these fixed English body sections:
+Cross-project discovery uses a lightweight registry:
+
+```text
+~/.mdf/projects.json
+```
+
+Because `.mdf/` is gitignored, task state and workflow artifacts are not committed, pushed, or shared with teammates through PRs unless the user explicitly promotes a document into tracked project files.
+
+Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:
 
 ```markdown
 ## Context
@@ -112,10 +124,10 @@ Each task is a Markdown file with YAML frontmatter plus these fixed English body
 ## Log
 ```
 
-Task status is derived instead of stored:
+Task status is stored in the item card and reconciled with locks:
 
-- `locks/{id}.lock` exists: active
-- Otherwise `completed` exists in frontmatter: done
+- `.mdf/locks/{task_id}.lock` exists: active
+- Otherwise `status: "done"` or `completed` exists: done
 - Otherwise: queue
 
 Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.

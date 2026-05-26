@@ -1,5 +1,7 @@
 # MDF Task System Implementation Plan
 
+> Historical note: this plan describes the first-pass task storage model. Current MDF task and artifact storage is defined in `skills/task/SKILL.md` and uses canonical project-root `.mdf/` storage with `~/.mdf/projects.json` only as a project registry.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add first-pass MDF task management through LLM-driven `task` and `tasks` skills plus Claude Code command shims.
