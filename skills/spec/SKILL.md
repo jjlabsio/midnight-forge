@@ -19,4 +19,4 @@ Then generate a structured spec covering all six core areas: objective, commands
 
 Save the spec as `.mdf/work/{work_id}/spec-NNN.md` by default, using the current MDF work item resolution rules. If the user explicitly asks for a repo-level reviewed spec, save the spec as SPEC.md in the project root and confirm with the user before proceeding.
 
-Stop before implementation. Ask whether to proceed to planning only after the user has reviewed SPEC.md.
+Stop before implementation. Ask whether to proceed to planning only after the user has reviewed the saved spec artifact. If the user explicitly requested a repo-level spec, refer to `SPEC.md`; otherwise refer to `.mdf/work/{work_id}/spec-NNN.md`.

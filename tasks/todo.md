@@ -50,7 +50,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `skills/task/SKILL.md`, `skills/use-mdf/SKILL.md`, `README.md`
 
-- [ ] Task 11: Resolve status and spec artifact wording
+- [x] Task 11: Resolve status and spec artifact wording
   - Acceptance: README uses the new item-card status model; spec review guidance refers to the saved spec artifact instead of always `SPEC.md`.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `README.md`, `skills/spec/SKILL.md`, `skills/spec-driven-development/SKILL.md`

@@ -168,8 +168,9 @@ The spec is a living document, not a one-time artifact:
 
 - **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
 - **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Commit the spec** — The spec belongs in version control alongside the code.
-- **Reference the spec in PRs** — Link back to the spec section that each PR implements.
+- **Keep the spec discoverable** — MDF workflow specs live under `.mdf/work/{work_id}/` by default and are indexed in `.mdf/index.jsonl`.
+- **Promote only when needed** — Commit a spec to tracked project docs only when the user explicitly asks or project policy requires it.
+- **Reference the spec in PRs when available** — Link to the tracked spec if promoted; otherwise summarize the relevant MDF spec artifact.
 
 For MDF workflow artifacts, save specs under the current work item by default:
 

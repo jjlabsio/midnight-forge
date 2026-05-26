@@ -132,7 +132,7 @@ Task status is stored in the item card and reconciled with locks:
 - Otherwise `status: "done"` or `completed` exists: done
 - Otherwise: queue
 
-Task files must not use a `status` frontmatter field. `drop` and `clean` require explicit confirmation before deleting task files.
+`drop` and `clean` require explicit confirmation before deleting work item directories.
 
 ## Worktree Policy
 
