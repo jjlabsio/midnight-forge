@@ -29,7 +29,18 @@ Project storage layout:
 └── locks/
 ```
 
-Initialize this layout lazily for write commands. Do not create storage for read-only errors. The `.mdf/` directory should be gitignored by default.
+Initialize this layout lazily for write commands. Do not create storage for read-only errors. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored by git.
+
+If `.mdf/` is not ignored:
+
+1. Do not create or write `.mdf/`.
+2. Ask whether to create a setup branch that adds `.mdf/` to `.gitignore` and opens a PR before starting the task.
+3. If the user agrees, perform setup from the normal repository checkout, not from a task worktree. Stop first if the checkout has uncommitted changes.
+4. Create a branch named `chore/ignore-mdf`, or `chore/ignore-local-workflow-state` when adding both `.mdf/` and `.worktrees/`.
+5. Add `.mdf/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
+6. Commit the change with the message `chore: ignore local mdf state`, or `chore: ignore local workflow state` when adding both `.mdf/` and `.worktrees/`.
+7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with release intent `release: none`. If pushing or PR creation fails, report the branch, commit, and exact failure.
+8. Do not resume the original task or artifact write until the setup PR has been merged and the command is run again.
 
 Do not create an independent `.mdf/` directory inside a linked worktree. A task running from `<canonical-root>/.worktrees/<branch>` still reads and writes `<canonical-root>/.mdf/`.
 
@@ -53,6 +64,21 @@ Use the canonical root basename for `name`. Include `remote` when origin exists;
 ```
 
 When a task or artifact changes, update or append the corresponding index entry so the latest line for a `work_id` is authoritative.
+
+Whenever `<canonical-root>/.mdf/` is initialized, upsert this project into `~/.mdf/projects.json`. Use `canonical_root` as the upsert key. Preserve unrelated project entries. Each registry entry should include:
+
+```json
+{
+  "id": "1d55c7f13adf",
+  "name": "project-basename",
+  "canonical_root": "/absolute/project/root",
+  "remote": "git@github.com:user/project.git",
+  "index": ".mdf/index.jsonl",
+  "last_seen": "2026-05-08T00:00:00Z"
+}
+```
+
+Set `id` to the first 12 lowercase hex characters of SHA-256 over `remote` when present, otherwise over `canonical_root`.
 
 ## Work Items and IDs
 
@@ -209,18 +235,19 @@ If the intent maps to exactly one safe command, execute it. If the intent is amb
 Create a queued task.
 
 1. Initialize project storage if needed.
-2. Ensure `<canonical-root>/.mdf/` exists with `project.json`, `index.jsonl`, `work/`, and `locks/`.
-3. Scan `.mdf/work/*/item.md` and find the largest existing numeric `task_id`.
-4. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
-5. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
-6. Generate a short title from the description.
-7. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
-8. Fill `Context` with a 2-5 sentence summary of relevant conversation.
-9. Fill `Files` only with file paths explicitly mentioned in the conversation.
-10. Fill `Criteria` only with checklist items explicitly stated or clearly implied. Leave it empty when criteria are not known.
-11. Append `- YYYY-MM-DD: Created task.` to `Log`.
-12. Append or update the work item's line in `.mdf/index.jsonl`.
-13. Report the task ID, work ID, title, and item file path.
+2. Ensure `.mdf/` is ignored by git before writing. If not ignored, follow the `.mdf/` setup branch and PR flow and stop.
+3. Ensure `<canonical-root>/.mdf/` exists with `project.json`, `index.jsonl`, `work/`, and `locks/`, then upsert `~/.mdf/projects.json`.
+4. Scan `.mdf/work/*/item.md` and find the largest existing numeric `task_id`.
+5. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
+6. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
+7. Generate a short title from the description.
+8. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
+9. Fill `Context` with a 2-5 sentence summary of relevant conversation.
+10. Fill `Files` only with file paths explicitly mentioned in the conversation.
+11. Fill `Criteria` only with checklist items explicitly stated or clearly implied. Leave it empty when criteria are not known.
+12. Append `- YYYY-MM-DD: Created task.` to `Log`.
+13. Append or update the work item's line in `.mdf/index.jsonl`.
+14. Report the task ID, work ID, title, and item file path.
 
 ### `add "description" --next`
 

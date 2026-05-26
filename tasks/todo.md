@@ -45,7 +45,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`, `rg "~/.mdf/projects|tasks/plan.md|tasks/todo.md|SPEC.md" skills commands docs README.md`
   - Files: final consistency pass only
 
-- [ ] Task 10: Fix project registry and ignore guards
+- [x] Task 10: Fix project registry and ignore guards
   - Acceptance: `.mdf/` initialization upserts `~/.mdf/projects.json`; `.mdf/` writes stop unless `.mdf/` is gitignored and offer the setup branch/PR flow.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`
   - Files: `skills/task/SKILL.md`, `skills/use-mdf/SKILL.md`, `README.md`

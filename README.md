@@ -104,6 +104,8 @@ Task state is local-only and gitignored under the canonical project root:
 
 Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
+MDF only writes `.mdf/` after confirming it is ignored by git. If `.mdf/` is not ignored, the task flow stops and offers a setup branch/PR that adds `.mdf/` to `.gitignore` with release intent `release: none`.
+
 Cross-project discovery uses a lightweight registry:
 
 ```text
