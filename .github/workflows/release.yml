@@ -62,31 +62,18 @@ jobs:
             ? JSON.parse(fs.readFileSync("pr.json", "utf8"))
             : {};
           const labels = Array.isArray(pr.labels)
-            ? pr.labels.map((label) => label.name).join("\n")
-            : "";
-          const text = [
-            inputVersion,
-            pr.title || "",
-            pr.body || "",
-            labels,
-            process.env.HEAD_COMMIT || "",
-          ].join("\n");
+            ? pr.labels.map((label) => label.name)
+            : [];
 
           const semver = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
-          const releaseIntentRaw = text.match(
-            /(?:release-version|release|version)\s*:\s*(major|minor|patch|none|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)/i
-          )?.[1];
-          const releaseIntent = releaseIntentRaw?.toLowerCase();
-          const explicitVersion =
-            inputVersion ||
-            (releaseIntentRaw && semver.test(releaseIntentRaw) ? releaseIntentRaw : "");
-
-          let bump = "";
-          if (explicitVersion) {
-            bump = "exact";
-          } else if (["major", "minor", "patch", "none"].includes(releaseIntent)) {
-            bump = releaseIntent;
-          }
+          const releaseSignal = resolveReleaseSignal({
+            inputVersion,
+            prTitle: pr.title || "",
+            labels,
+            headCommit: process.env.HEAD_COMMIT || "",
+          });
+          const explicitVersion = releaseSignal.version || "";
+          const bump = releaseSignal.bump;
 
           const nextVersion = bump === "none" ? "" : explicitVersion || bumpVersion(current, bump);
           const output = fs.createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
@@ -125,11 +112,78 @@ jobs:
 
           output.write("has_changes=true\n");
           output.write(`version=${nextVersion}\n`);
-          console.log(`Release version resolved: ${nextVersion} (${bump})`);
+          console.log(`Release version resolved: ${nextVersion} (${bump}, ${releaseSignal.source})`);
+
+          function resolveReleaseSignal({ inputVersion, prTitle, labels, headCommit }) {
+            if (inputVersion) {
+              if (!semver.test(inputVersion)) {
+                throw new Error(`Invalid workflow dispatch version: ${inputVersion}`);
+              }
+              return { bump: "exact", version: inputVersion, source: "workflow dispatch input" };
+            }
+
+            const title = prTitle || headCommit;
+            const titleBump = bumpFromTitle(title);
+            const hasNoReleaseLabel = labels.some(
+              (label) => label.toLowerCase() === "release-none"
+            );
+
+            if (hasNoReleaseLabel && titleBump.bump) {
+              throw new Error(
+                "Conflicting release signals: remove the release-none label or use a non-release PR title."
+              );
+            }
+
+            if (hasNoReleaseLabel) {
+              return { bump: "none", version: "", source: "release-none label" };
+            }
+
+            if (titleBump.bump) {
+              return { bump: titleBump.bump, version: "", source: prTitle ? "PR title" : "merge commit title" };
+            }
+
+            throw new Error(
+              titleBump.message ||
+              "No release signal found. Use a supported Conventional Commit PR title or the release-none label."
+            );
+          }
+
+          function bumpFromTitle(title) {
+            const typeBumps = new Map([
+              ["feat", "minor"],
+              ["fix", "patch"],
+              ["docs", "patch"],
+              ["chore", "patch"],
+              ["refactor", "patch"],
+              ["perf", "patch"],
+              ["test", "patch"],
+              ["ci", "patch"],
+              ["build", "patch"],
+            ]);
+            const match = title.match(/^([a-z]+)(?:\([^)]+\))?(!)?:\s+\S/);
+
+            if (!match) {
+              return {
+                bump: "",
+                message:
+                  "Release title must use Conventional Commit format, for example feat: add capability or fix: correct behavior.",
+              };
+            }
+
+            const [, type, breaking] = match;
+            if (!typeBumps.has(type)) {
+              return {
+                bump: "",
+                message: `Unsupported Conventional Commit type: ${type}`,
+              };
+            }
+
+            return { bump: breaking ? "major" : typeBumps.get(type) };
+          }
 
           function bumpVersion(version, type) {
             if (!type) {
-              throw new Error("No release intent found. Add release: major|minor|patch|none|x.y.z to the PR.");
+              throw new Error("No release signal found. Use a supported Conventional Commit PR title or the release-none label.");
             }
             const [major, minor, patch] = version.split(".").map(Number);
             if (type === "major") return `${major + 1}.0.0`;
