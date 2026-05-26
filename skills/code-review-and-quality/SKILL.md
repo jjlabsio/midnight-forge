@@ -11,6 +11,8 @@ When saving a code review report, resolve the current MDF work item and write `.
 
 Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
 
+Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the user's apparent conversation language for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
+
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 
 ## When to Use
