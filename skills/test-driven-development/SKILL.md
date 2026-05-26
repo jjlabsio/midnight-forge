@@ -9,6 +9,8 @@ description: Drives development with tests. Use when implementing any logic, fix
 
 Write a failing test before writing the code that makes it pass. For bug fixes, reproduce the bug with a test before attempting a fix. Tests are proof — "seems right" is not done. A codebase with good tests is an AI agent's superpower; a codebase without tests is a liability.
 
+When saving test plans, reproduction notes, or test result reports, resolve the current MDF work item and write `.mdf/work/{work_id}/test-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.test` plus `.mdf/index.jsonl`.
+
 ## When to Use
 
 - Implementing any new logic or behavior

@@ -21,3 +21,5 @@ Pick the next pending task from the plan. For each task:
 8. Mark the task complete and move to the next one
 
 If any step fails, follow the `debugging-and-error-recovery` skill.
+
+When saving implementation notes or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Update `item.md` `latest.build` and `.mdf/index.jsonl`.

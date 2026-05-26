@@ -9,6 +9,8 @@ description: Delivers changes incrementally. Use when implementing any feature o
 
 Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
 
+When saving implementation logs or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.build` plus `.mdf/index.jsonl`.
+
 ## When to Use
 
 - Implementing any multi-file change

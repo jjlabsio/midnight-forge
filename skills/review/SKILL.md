@@ -19,3 +19,5 @@ Review the current changes (staged or recent commits) across all five axes:
 
 Categorize findings as Critical, Important, or Suggestion.
 Output a structured review with specific file:line references and fix recommendations.
+
+When saving the review report, resolve the current MDF work item and write `.mdf/work/{work_id}/review-NNN.md`. Update `item.md` `latest.review` and `.mdf/index.jsonl`.

@@ -22,3 +22,5 @@ For bug fixes (Prove-It pattern):
 5. Run the full test suite for regressions
 
 For browser-related issues, also invoke `browser-testing-with-devtools` to verify with Chrome DevTools MCP.
+
+When saving a test plan or test result report, resolve the current MDF work item and write `.mdf/work/{work_id}/test-NNN.md`. Update `item.md` `latest.test` and `.mdf/index.jsonl`.

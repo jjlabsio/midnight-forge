@@ -5,6 +5,8 @@ description: Conducts multi-axis code review. Use before merging any change. Use
 
 # Code Review and Quality
 
+When saving a code review report, resolve the current MDF work item and write `.mdf/work/{work_id}/review-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.review` plus `.mdf/index.jsonl`.
+
 ## Overview
 
 Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.

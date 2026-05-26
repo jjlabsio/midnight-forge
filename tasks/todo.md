@@ -25,7 +25,7 @@
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/spec/SKILL.md`, `skills/spec-driven-development/SKILL.md`, `skills/plan/SKILL.md`, `skills/planning-and-task-breakdown/SKILL.md`, `skills/interview-me/SKILL.md`, `skills/idea-refine/SKILL.md`
 
-- [ ] Task 6: Update build, test, debug, review, and ship artifacts
+- [x] Task 6: Update build, test, debug, review, and ship artifacts
   - Acceptance: implementation and verification skills save local workflow reports under `.mdf/work/{work_id}/` with mapped artifact names.
   - Verify: `node scripts/validate-agent-skills-port.js`
   - Files: `skills/build/SKILL.md`, `skills/incremental-implementation/SKILL.md`, `skills/test/SKILL.md`, `skills/test-driven-development/SKILL.md`, `skills/debugging-and-error-recovery/SKILL.md`, `skills/review/SKILL.md`, `skills/code-review-and-quality/SKILL.md`, `skills/ship/SKILL.md`, `skills/shipping-and-launch/SKILL.md`
