@@ -40,7 +40,7 @@
   - Verify: `rg "~/.mdf/projects|tasks/plan.md|SPEC.md" skills commands docs README.md` and `node scripts/validate-agent-skills-port.js`
   - Files: `commands/task.md`, `commands/tasks.md`, `README.md`, `docs/superpowers/specs/2026-05-08-mdf-task-system-design.md`, `docs/superpowers/plans/2026-05-08-mdf-task-system.md`
 
-- [ ] Task 9: Final verification and consistency pass
+- [x] Task 9: Final verification and consistency pass
   - Acceptance: validation passes, markdown diff is clean, and stale storage references are intentional.
   - Verify: `node scripts/validate-agent-skills-port.js`, `git diff --check`, `rg "~/.mdf/projects|tasks/plan.md|tasks/todo.md|SPEC.md" skills commands docs README.md`
   - Files: final consistency pass only
