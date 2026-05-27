@@ -9,6 +9,8 @@ Use this Codex-native entrypoint when the user invokes `ship`, `mdf ship`, `$shi
 
 Invoke the `shipping-and-launch` skill.
 
+`ship` remains the final GO/NO-GO gate after planned work has been built and verified. Do not collapse this behavior into `build`.
+
 `/ship` is a **fan-out orchestrator**. It runs three specialist personas in parallel against the current change, then merges their reports into a single go/no-go decision with a rollback plan. The personas operate independently — no shared state, no ordering — which is what makes parallel execution safe and useful here.
 
 ## Phase A — Parallel fan-out
