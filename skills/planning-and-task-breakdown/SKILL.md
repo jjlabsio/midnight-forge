@@ -137,9 +137,13 @@ After drafting the plan, run a blocker-oriented evaluator pass before saving or 
 - Incorrect dependency ordering
 - Genuine blockers or unknowns hidden from the plan instead of surfaced in risks or open questions
 
+When subagents are available, run this evaluator pass with a separate reviewer subagent. Give the reviewer only the draft plan, the approved SPEC, relevant codebase constraints, and the blocker checklist above. The reviewer must return only blocker findings or `no blockers`; it must not rewrite the plan or ask the user directly.
+
+If subagents are unavailable, run the same blocker checklist in the main context.
+
 If the evaluator finds blockers, revise the plan and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
 
-If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current planning phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
+The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current planning phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 
 ## Task Sizing Guidelines
 

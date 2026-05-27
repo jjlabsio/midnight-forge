@@ -267,6 +267,9 @@ for (const text of [
 const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md");
 for (const text of [
   "Run a blocker-oriented evaluator loop after drafting",
+  "run this evaluator pass with a separate reviewer subagent",
+  "If subagents are unavailable, run the same blocker checklist in the main context",
+  "The main agent owns revisions, user questions, artifact saving",
   "TODO, TBD, placeholder text",
   "Internal contradictions",
   "Ambiguity that could lead the planner to design the wrong implementation",
@@ -279,6 +282,9 @@ for (const text of [
 const planningBreakdown = rel("skills", "planning-and-task-breakdown", "SKILL.md");
 for (const text of [
   "Step 6: Evaluate and Revise",
+  "run this evaluator pass with a separate reviewer subagent",
+  "If subagents are unavailable, run the same blocker checklist in the main context",
+  "The main agent owns revisions, user questions, artifact saving",
   "Missing tasks or missing implementation steps",
   "Missing coverage for stated SPEC requirements",
   "Inconsistent file paths, type names, API names, command names, or dependencies",
@@ -301,6 +307,8 @@ for (const text of [
 const readme = rel("README.md");
 for (const text of [
   "spec -> plan -> build -> ship",
+  "separate reviewer subagent",
+  "main-context checklist fallback",
   "standalone quality tools",
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
 ]) {

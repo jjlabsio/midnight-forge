@@ -184,7 +184,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 
 The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
-The recommended happy path for planned work is `spec -> plan -> build -> ship`. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
+The recommended happy path for planned work is `spec -> plan -> build -> ship`. `spec` and `plan` evaluator passes use a separate reviewer subagent when the runtime supports subagents, with a main-context checklist fallback when it does not. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
 
 Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, and repository conventions are preserved as written.
 
