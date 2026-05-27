@@ -56,6 +56,7 @@ const entrypoints = {
     "spec",
     "mdf spec",
     "Invoke the `spec-driven-development` skill.",
+    "blocker-oriented evaluator/revision loop",
     "SPEC.md",
     "confirm with the user before proceeding",
   ],
@@ -64,24 +65,29 @@ const entrypoints = {
     "mdf plan",
     "Invoke the `planning-and-task-breakdown` skill.",
     "read only",
+    "blocker-oriented evaluator/revision loop",
     "tasks/plan.md",
     "tasks/todo.md",
   ],
   build: [
     "build",
     "Invoke the `incremental-implementation` skill alongside the `test-driven-development` skill.",
+    "process every pending task from the current plan",
+    "final whole-build verification",
     "debugging-and-error-recovery",
     "If any step fails",
   ],
   test: [
     "test",
     "Invoke the `test-driven-development` skill.",
+    "standalone workflow",
     "For browser-related issues",
     "browser-testing-with-devtools",
   ],
   review: [
     "review",
     "Invoke the `code-review-and-quality` skill.",
+    "standalone workflow",
     "Use security-and-hardening skill",
     "Use performance-optimization skill",
   ],
@@ -93,6 +99,7 @@ const entrypoints = {
   ship: [
     "ship",
     "Invoke the `shipping-and-launch` skill.",
+    "final GO/NO-GO gate",
     "fan-out orchestrator",
     "code-reviewer",
     "security-auditor",
@@ -248,12 +255,56 @@ for (const text of [
   "Never complete an MDF task solely because it is the only active lock",
   "use the `github-commit` skill",
   "use the `task` skill's `done {id} --message \"message\"` completion behavior",
-  "Completed task before PR preparation.",
+  "Completed task before PR creation.",
   "Analyze all commits in the branch, not just the latest commit",
   "## Test Plan",
-  "Do not run `gh pr create` unless the user explicitly asks",
+  "Do not require a second explicit confirmation before pushing or creating the PR",
+  "gh pr create",
 ]) {
   assertContains(githubPr, text);
+}
+
+const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md");
+for (const text of [
+  "Run a blocker-oriented evaluator loop after drafting",
+  "TODO, TBD, placeholder text",
+  "Internal contradictions",
+  "Ambiguity that could lead the planner to design the wrong implementation",
+  "Do not block on wording polish",
+  "ask only the clarifying question or related small set of questions",
+]) {
+  assertContains(specDrivenDevelopment, text);
+}
+
+const planningBreakdown = rel("skills", "planning-and-task-breakdown", "SKILL.md");
+for (const text of [
+  "Step 6: Evaluate and Revise",
+  "Missing tasks or missing implementation steps",
+  "Missing coverage for stated SPEC requirements",
+  "Inconsistent file paths, type names, API names, command names, or dependencies",
+  "Do not block on wording polish",
+  "ask only the clarifying question or related small set of questions",
+]) {
+  assertContains(planningBreakdown, text);
+}
+
+const incrementalImplementation = rel("skills", "incremental-implementation", "SKILL.md");
+for (const text of [
+  "every pending task from the current plan",
+  "Review the task against its acceptance criteria",
+  "whole-change verification loop",
+  "This internal loop does not replace standalone `test`, `review`, or `ship`",
+]) {
+  assertContains(incrementalImplementation, text);
+}
+
+const readme = rel("README.md");
+for (const text of [
+  "spec -> plan -> build -> ship",
+  "standalone quality tools",
+  "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
+]) {
+  assertContains(readme, text);
 }
 
 const githubCommit = rel("skills", "github-commit", "SKILL.md");
