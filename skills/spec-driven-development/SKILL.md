@@ -128,6 +128,20 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
+**Run a blocker-oriented evaluator loop after drafting.** Once the SPEC draft covers the required sections, evaluate it before saving or presenting it. Block only on issues likely to cause flawed planning:
+
+- TODO, TBD, placeholder text, or incomplete required sections
+- Internal contradictions between objective, scope, commands, testing, boundaries, or success criteria
+- Ambiguity that could lead the planner to design the wrong implementation
+- Scope too broad for one coherent implementation plan
+- Unrequested features, speculative architecture, or over-engineering beyond the user's request
+- Success criteria that are too abstract to verify
+- Necessary unresolved questions that are missing from `Open Questions`
+
+If the evaluator finds blockers, revise the SPEC and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
+
+If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current SPEC phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
+
 ### Phase 2: Plan
 
 With the validated spec, generate a technical implementation plan:
@@ -206,4 +220,5 @@ Before proceeding to implementation, confirm:
 - [ ] The human has reviewed and approved the spec
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
+- [ ] The blocker-oriented evaluator loop found no planning-blocking issues
 - [ ] The spec is saved to `.mdf/work/{work_id}/spec-NNN.md`, or to a tracked repository file only when explicitly requested

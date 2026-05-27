@@ -122,6 +122,25 @@ Add explicit checkpoints:
 - [ ] Review with human before proceeding
 ```
 
+### Step 6: Evaluate and Revise
+
+After drafting the plan, run a blocker-oriented evaluator pass before saving or presenting it. Block only on issues likely to cause flawed implementation:
+
+- Missing tasks or missing implementation steps needed to satisfy the spec
+- TODO, TBD, placeholder text, or incomplete task sections
+- Missing coverage for stated SPEC requirements
+- Major scope creep beyond the SPEC
+- Task boundaries that are too vague, too large, or not independently verifiable
+- Steps that would leave an implementer stuck because required context, files, contracts, or decisions are absent
+- Missing concrete verification for a task or checkpoint
+- Inconsistent file paths, type names, API names, command names, or dependencies across tasks
+- Incorrect dependency ordering
+- Genuine blockers or unknowns hidden from the plan instead of surfaced in risks or open questions
+
+If the evaluator finds blockers, revise the plan and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
+
+If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current planning phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
+
 ## Task Sizing Guidelines
 
 | Size | Files | Scope | Example |
@@ -230,4 +249,5 @@ Before starting implementation, confirm:
 - [ ] Task dependencies are identified and ordered correctly
 - [ ] No task touches more than ~5 files
 - [ ] Checkpoints exist between major phases
+- [ ] The blocker-oriented evaluator loop found no implementation-blocking issues
 - [ ] The human has reviewed and approved the plan
