@@ -128,7 +128,7 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
-**Run a blocker-oriented evaluator loop after drafting.** Once the SPEC draft covers the required sections, evaluate it before saving or presenting it. Block only on issues likely to cause flawed planning:
+**Run an inline blocker-oriented self-review loop after drafting.** Once the SPEC draft covers the required sections, evaluate it before saving or presenting it. This is the default `$spec` quality gate. Block only on issues likely to cause flawed planning:
 
 - TODO, TBD, placeholder text, or incomplete required sections
 - Internal contradictions between objective, scope, commands, testing, boundaries, or success criteria
@@ -138,13 +138,14 @@ This lets you loop, retry, and problem-solve toward a clear goal rather than gue
 - Success criteria that are too abstract to verify
 - Necessary unresolved questions that are missing from `Open Questions`
 
-When subagent execution is available, run this evaluator pass with the dedicated `agents/spec-evaluator.md` role as part of the normal `$spec` workflow. The user does not need to explicitly request subagents for this internal gate.
+Revise the SPEC and repeat the inline self-review until there are no blockers or a focused user question is required. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
 
-In Claude Code, use the named `spec-evaluator` agent when available. In Codex, if named plugin agents are not directly available, spawn a generic/default subagent and pass the `agents/spec-evaluator.md` instructions with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
+Subagent-assisted SPEC evaluation may be used only when both conditions are true:
 
-If subagent execution is unavailable in the current runtime, run the same blocker checklist in the main context and note the fallback.
+1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
+2. The runtime exposes the needed subagent tools.
 
-If the evaluator finds blockers, revise the SPEC and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
+When those conditions are met, use `agents/spec-evaluator.md` as the prompt template. In Claude Code, use the named `spec-evaluator` agent when available. In Codex, if named plugin agents are not directly available but generic subagents are explicitly authorized and available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
 
 The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current SPEC phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 

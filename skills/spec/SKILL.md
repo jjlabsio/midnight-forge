@@ -17,7 +17,7 @@ Begin by understanding what the user wants to build. Ask clarifying questions ab
 
 Then generate a structured spec covering all six core areas: objective, commands, project structure, code style, testing strategy, and boundaries.
 
-Before saving or presenting the spec, run the blocker-oriented evaluator/revision loop from `spec-driven-development`. Revise only for issues that would cause flawed planning; do not block on wording polish, stylistic preferences, or nice-to-have additions.
+Before saving or presenting the spec, run the inline blocker-oriented self-review loop from `spec-driven-development`. Revise only for issues that would cause flawed planning; do not block on wording polish, stylistic preferences, or nice-to-have additions.
 
 Save the spec as `.mdf/work/{work_id}/spec-NNN.md` by default, using the current MDF work item resolution rules. If the user explicitly asks for a repo-level reviewed spec, save the spec as SPEC.md in the project root and confirm with the user before proceeding.
 

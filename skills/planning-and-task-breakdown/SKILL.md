@@ -124,7 +124,7 @@ Add explicit checkpoints:
 
 ### Step 6: Evaluate and Revise
 
-After drafting the plan, run a blocker-oriented evaluator pass before saving or presenting it. Block only on issues likely to cause flawed implementation:
+After drafting the plan, run an inline blocker-oriented self-review pass before saving or presenting it. This is the default `$plan` quality gate. Block only on issues likely to cause flawed implementation:
 
 - Missing tasks or missing implementation steps needed to satisfy the spec
 - TODO, TBD, placeholder text, or incomplete task sections
@@ -137,13 +137,14 @@ After drafting the plan, run a blocker-oriented evaluator pass before saving or 
 - Incorrect dependency ordering
 - Genuine blockers or unknowns hidden from the plan instead of surfaced in risks or open questions
 
-When subagent execution is available, run this evaluator pass with the dedicated `agents/plan-evaluator.md` role as part of the normal `$plan` workflow. The user does not need to explicitly request subagents for this internal gate.
+Revise the plan and repeat the inline self-review until there are no blockers or a focused user question is required. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
 
-In Claude Code, use the named `plan-evaluator` agent when available. In Codex, if named plugin agents are not directly available, spawn a generic/default subagent and pass the `agents/plan-evaluator.md` instructions with the draft plan, the approved SPEC, relevant codebase constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the plan or ask the user directly.
+Subagent-assisted plan evaluation may be used only when both conditions are true:
 
-If subagent execution is unavailable in the current runtime, run the same blocker checklist in the main context and note the fallback.
+1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
+2. The runtime exposes the needed subagent tools.
 
-If the evaluator finds blockers, revise the plan and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
+When those conditions are met, use `agents/plan-evaluator.md` as the prompt template. In Claude Code, use the named `plan-evaluator` agent when available. In Codex, if named plugin agents are not directly available but generic subagents are explicitly authorized and available, pass the evaluator prompt template with the draft plan, the approved SPEC, relevant codebase constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the plan or ask the user directly.
 
 The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current planning phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 
