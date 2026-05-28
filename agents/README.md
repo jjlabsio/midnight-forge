@@ -7,8 +7,8 @@ Specialist personas that play a single role with a single perspective. Each pers
 | [code-reviewer](code-reviewer.md) | Senior Staff Engineer | Five-axis review before merge |
 | [security-auditor](security-auditor.md) | Security Engineer | Vulnerability detection, OWASP-style audit |
 | [test-engineer](test-engineer.md) | QA Engineer | Test strategy, coverage analysis, Prove-It pattern |
-| [spec-evaluator](spec-evaluator.md) | SPEC Evaluator | Internal blocker review for draft SPEC artifacts |
-| [plan-evaluator](plan-evaluator.md) | Plan Evaluator | Internal blocker review for draft implementation plans |
+| [spec-evaluator](spec-evaluator.md) | SPEC Evaluator | Optional prompt template for explicitly authorized SPEC subagent review |
+| [plan-evaluator](plan-evaluator.md) | Plan Evaluator | Optional prompt template for explicitly authorized plan subagent review |
 
 ## How personas relate to skills and commands
 
@@ -44,22 +44,25 @@ Pick this only when **independent** investigations can run in parallel and produ
 
 This is the only parallel fan-out orchestration pattern this repo endorses. See [references/orchestration-patterns.md](../references/orchestration-patterns.md) for the full pattern catalog and anti-patterns.
 
-### Internal workflow evaluator
+### Optional workflow evaluator prompt templates
 
-Pick this only when a workflow command has produced a draft artifact and needs a narrow blocker pass before saving or presenting it.
+Normal `$spec` / `/mdf:spec` and `$plan` / `/mdf:plan` run inline blocker-oriented self-review by default. Pick an evaluator prompt template only when a workflow command has produced a draft artifact, needs a narrow blocker pass before saving or presenting it, and both subagent conditions are true:
 
-- `$spec` / `/mdf:spec` -> internally invokes `spec-evaluator` after a SPEC draft exists
-- `$plan` / `/mdf:plan` -> internally invokes `plan-evaluator` after an implementation plan draft exists
+1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
+2. The runtime exposes the needed subagent tools.
 
-Evaluator personas are not public commands. The main agent owns user questions, revisions, artifact saving, and deciding whether another evaluator pass is needed.
+- `$spec` / `/mdf:spec` -> may use `spec-evaluator` as the optional prompt template after a SPEC draft exists and the two-part condition is met
+- `$plan` / `/mdf:plan` -> may use `plan-evaluator` as the optional prompt template after an implementation plan draft exists and the two-part condition is met
+
+Evaluator personas are not public commands. The main agent owns user questions, revisions, artifact saving, inline review by default, and deciding whether another evaluator pass is needed.
 
 ## Decision matrix
 
 ```
 Is the work a single perspective on a single artifact?
-├── Yes → Is this an internal spec/plan draft gate?
-│        ├── Yes → Internal evaluator persona (`spec-evaluator` or `plan-evaluator`)
-│        └── No  → Direct persona invocation
+├── Yes → Is this an explicitly authorized subagent pass for a spec/plan draft?
+│        ├── Yes → Evaluator prompt template (`spec-evaluator` or `plan-evaluator`)
+│        └── No  → Direct persona invocation or inline workflow review
 └── No  → Are the sub-tasks independent (no shared mutable state, no ordering)?
          ├── Yes → Slash command with parallel fan-out (e.g. /ship)
          └── No  → Sequential slash commands run by the user (/spec -> /plan -> /build -> /test -> /review)
@@ -117,8 +120,8 @@ Why this fails:
 
 The personas in this repo are designed to work as Claude Code subagents and as Agent Teams teammates without modification:
 
-- **As subagents:** auto-discovered when this plugin is enabled (no path config needed). Use the Agent tool with `subagent_type: code-reviewer` (or `security-auditor`, `test-engineer`, `spec-evaluator`, `plan-evaluator`). `/ship` is the canonical fan-out example; `$spec` and `$plan` use evaluator personas as internal sequential gates.
-- **In Codex:** if named plugin agents are not directly available, spawn a generic/default subagent and pass the relevant evaluator persona instructions as the subagent prompt. If subagent execution is unavailable, run the same blocker checklist in the main context and note the fallback.
+- **As subagents:** auto-discovered when this plugin is enabled (no path config needed). Use the Agent tool with `subagent_type: code-reviewer` (or `security-auditor`, `test-engineer`, `spec-evaluator`, `plan-evaluator`) only when the current user request and workflow allow subagents. `/ship` is the canonical fan-out example; `$spec` and `$plan` use inline self-review by default.
+- **In Codex:** use inline workflow review by default. If the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools, pass the relevant evaluator persona instructions as an optional subagent prompt template.
 - **As Agent Teams teammates** (experimental, requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`): reference the same persona name when spawning a teammate. The persona's body is **appended to** the teammate's system prompt as additional instructions (not a replacement), so your persona text sits on top of the team-coordination instructions the lead installs (SendMessage, task-list tools, etc.).
 
 Subagents only report results back to the main agent. Agent Teams let teammates message each other directly. Use subagents when reports are enough; use Agent Teams when sub-agents need to challenge each other's findings (e.g. competing-hypothesis debugging). See [references/orchestration-patterns.md](../references/orchestration-patterns.md) for the full mapping.
