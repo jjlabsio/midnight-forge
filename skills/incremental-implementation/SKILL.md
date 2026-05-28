@@ -51,8 +51,8 @@ For each planned task:
 2. Write or identify the task-specific verification before implementation
 3. Implement the smallest complete change for that task
 4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
-5. Review the task against its acceptance criteria
-6. Fix blocking findings, then rerun the affected verification and review
+5. Review the task against its acceptance criteria with `code-review-and-quality` in `task` scope
+6. Fix blocking findings, then rerun the affected verification and `task` scope review
 7. Commit the task-sized change
 8. Continue to the next pending task
 
@@ -60,8 +60,8 @@ After all selected tasks complete, run a whole-change verification loop:
 
 1. Run the full test suite where available
 2. Run build, typecheck, and lint commands where available
-3. Review the full diff against the spec and implementation plan
-4. Fix blocking findings, then rerun the affected verification and review
+3. Review the full diff against the spec and implementation plan with `code-review-and-quality` in `whole-build` scope
+4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
 5. Save build evidence to `.mdf/work/{work_id}/build-NNN.md`
 
 This internal loop does not replace standalone `test`, `review`, or `ship`. Use `test` and `review` independently for manual changes, debugging, PR preparation, or pre-ship checks. Use `ship` as the final GO/NO-GO gate.
