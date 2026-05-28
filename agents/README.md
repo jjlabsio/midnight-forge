@@ -42,7 +42,7 @@ Pick this only when **independent** investigations can run in parallel and produ
 
 - `/ship` → fans out to `code-reviewer` + `security-auditor` + `test-engineer` in parallel, then synthesizes their reports into a go/no-go decision
 
-This is the only orchestration pattern this repo endorses. See [references/orchestration-patterns.md](../references/orchestration-patterns.md) for the full pattern catalog and anti-patterns.
+This is the only parallel fan-out orchestration pattern this repo endorses. See [references/orchestration-patterns.md](../references/orchestration-patterns.md) for the full pattern catalog and anti-patterns.
 
 ### Internal workflow evaluator
 
