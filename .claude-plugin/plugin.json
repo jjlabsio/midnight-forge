@@ -19,6 +19,8 @@
   "agents": [
     "./agents/code-reviewer.md",
     "./agents/security-auditor.md",
-    "./agents/test-engineer.md"
+    "./agents/test-engineer.md",
+    "./agents/spec-evaluator.md",
+    "./agents/plan-evaluator.md"
   ]
 }

@@ -9,6 +9,8 @@ Use this Codex-native entrypoint when the user invokes `test`, `mdf test`, `$tes
 
 Invoke the `test-driven-development` skill.
 
+This remains a standalone workflow even though `build` may invoke test logic internally. Use it for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+
 For new features:
 1. Write tests that describe the expected behavior (they should FAIL)
 2. Implement the code to make them pass

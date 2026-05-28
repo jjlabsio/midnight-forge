@@ -43,6 +43,29 @@ For each slice:
 4. **Commit** -- save your progress with a descriptive message (see `git-workflow-and-versioning` for atomic commit guidance)
 5. **Move to the next slice** — carry forward, don't restart
 
+For MDF `build`, the selected work is normally every pending task from the current plan, in dependency order. Process only one task when the user explicitly asks for a single next task or names a specific task.
+
+For each planned task:
+
+1. Read the task acceptance criteria and verification steps
+2. Write or identify the task-specific verification before implementation
+3. Implement the smallest complete change for that task
+4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
+5. Review the task against its acceptance criteria
+6. Fix blocking findings, then rerun the affected verification and review
+7. Commit the task-sized change
+8. Continue to the next pending task
+
+After all selected tasks complete, run a whole-change verification loop:
+
+1. Run the full test suite where available
+2. Run build, typecheck, and lint commands where available
+3. Review the full diff against the spec and implementation plan
+4. Fix blocking findings, then rerun the affected verification and review
+5. Save build evidence to `.mdf/work/{work_id}/build-NNN.md`
+
+This internal loop does not replace standalone `test`, `review`, or `ship`. Use `test` and `review` independently for manual changes, debugging, PR preparation, or pre-ship checks. Use `ship` as the final GO/NO-GO gate.
+
 ## Slicing Strategies
 
 ### Vertical Slices (Preferred)
@@ -244,4 +267,6 @@ After completing all increments for a task:
 - [ ] The full test suite passes
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified
+- [ ] The task-level review found no blocking issues
+- [ ] The whole-change verification loop has run after all selected tasks
 - [ ] No uncommitted changes remain
