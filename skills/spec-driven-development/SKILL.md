@@ -138,9 +138,11 @@ This lets you loop, retry, and problem-solve toward a clear goal rather than gue
 - Success criteria that are too abstract to verify
 - Necessary unresolved questions that are missing from `Open Questions`
 
-When subagents are available, run this evaluator pass with a separate reviewer subagent. Give the reviewer only the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The reviewer must return only blocker findings or `no blockers`; it must not rewrite the SPEC or ask the user directly.
+When subagent execution is available, run this evaluator pass with the dedicated `agents/spec-evaluator.md` role as part of the normal `$spec` workflow. The user does not need to explicitly request subagents for this internal gate.
 
-If subagents are unavailable, run the same blocker checklist in the main context.
+In Claude Code, use the named `spec-evaluator` agent when available. In Codex, if named plugin agents are not directly available, spawn a generic/default subagent and pass the `agents/spec-evaluator.md` instructions with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
+
+If subagent execution is unavailable in the current runtime, run the same blocker checklist in the main context and note the fallback.
 
 If the evaluator finds blockers, revise the SPEC and run the evaluator again. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
 
