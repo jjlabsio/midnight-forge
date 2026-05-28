@@ -58,7 +58,7 @@ const entrypoints = {
     "spec",
     "mdf spec",
     "Invoke the `spec-driven-development` skill.",
-    "blocker-oriented evaluator/revision loop",
+    "inline blocker-oriented self-review loop",
     "SPEC.md",
     "confirm with the user before proceeding",
   ],
@@ -67,7 +67,7 @@ const entrypoints = {
     "mdf plan",
     "Invoke the `planning-and-task-breakdown` skill.",
     "read only",
-    "blocker-oriented evaluator/revision loop",
+    "inline blocker-oriented self-review loop",
     "tasks/plan.md",
     "tasks/todo.md",
   ],
@@ -138,6 +138,17 @@ function assertContains(filePath, text) {
   assert(
     read(filePath).includes(text),
     `${path.relative(root, filePath)} must include ${JSON.stringify(text)}`
+  );
+}
+
+function assertNotContains(filePath, text) {
+  if (!exists(filePath)) {
+    assert(false, `Missing ${path.relative(root, filePath)} for negative content check`);
+    return;
+  }
+  assert(
+    !read(filePath).includes(text),
+    `${path.relative(root, filePath)} must not include ${JSON.stringify(text)}`
   );
 }
 
@@ -268,11 +279,12 @@ for (const text of [
 
 const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md");
 for (const text of [
-  "Run a blocker-oriented evaluator loop after drafting",
-  "dedicated `agents/spec-evaluator.md` role",
-  "normal `$spec` workflow",
-  "generic/default subagent",
-  "If subagent execution is unavailable in the current runtime",
+  "Run an inline blocker-oriented self-review loop after drafting",
+  "default `$spec` quality gate",
+  "Subagent-assisted SPEC evaluation may be used only when both conditions are true",
+  "The current user request explicitly authorizes subagents, delegation, or parallel agent work",
+  "The runtime exposes the needed subagent tools",
+  "use `agents/spec-evaluator.md` as the prompt template",
   "The main agent owns revisions, user questions, artifact saving",
   "TODO, TBD, placeholder text",
   "Internal contradictions",
@@ -282,14 +294,23 @@ for (const text of [
 ]) {
   assertContains(specDrivenDevelopment, text);
 }
+for (const text of [
+  "The user does not need to explicitly request subagents for this internal gate",
+  "When subagent execution is available, run this evaluator pass",
+  "normal `$spec` workflow",
+]) {
+  assertNotContains(specDrivenDevelopment, text);
+}
 
 const planningBreakdown = rel("skills", "planning-and-task-breakdown", "SKILL.md");
 for (const text of [
   "Step 6: Evaluate and Revise",
-  "dedicated `agents/plan-evaluator.md` role",
-  "normal `$plan` workflow",
-  "generic/default subagent",
-  "If subagent execution is unavailable in the current runtime",
+  "run an inline blocker-oriented self-review pass",
+  "default `$plan` quality gate",
+  "Subagent-assisted plan evaluation may be used only when both conditions are true",
+  "The current user request explicitly authorizes subagents, delegation, or parallel agent work",
+  "The runtime exposes the needed subagent tools",
+  "use `agents/plan-evaluator.md` as the prompt template",
   "The main agent owns revisions, user questions, artifact saving",
   "Missing tasks or missing implementation steps",
   "Missing coverage for stated SPEC requirements",
@@ -298,6 +319,13 @@ for (const text of [
   "ask only the clarifying question or related small set of questions",
 ]) {
   assertContains(planningBreakdown, text);
+}
+for (const text of [
+  "The user does not need to explicitly request subagents for this internal gate",
+  "When subagent execution is available, run this evaluator pass",
+  "normal `$plan` workflow",
+]) {
+  assertNotContains(planningBreakdown, text);
 }
 
 const incrementalImplementation = rel("skills", "incremental-implementation", "SKILL.md");
@@ -312,11 +340,10 @@ for (const text of [
 
 const readme = rel("README.md");
 for (const text of [
-  "spec -> plan -> build -> ship",
-  "dedicated evaluator agents",
-  "named `spec-evaluator` and `plan-evaluator` agents",
-  "generic/default subagent",
-  "same blocker checklist runs in the main context",
+  "spec -> plan -> build -> review -> ship",
+  "`spec`, `plan`, and `build` use inline loops by default",
+  "Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization",
+  "runtime tool availability",
   "standalone quality tools",
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
 ]) {
@@ -333,10 +360,14 @@ for (const text of [
   "Do not:",
   "Rewrite the SPEC",
   "Ask the user directly",
-  "Invoke internally from `spec` / `spec-driven-development`",
+  "prompt template",
+  "explicitly authorizes subagents, delegation, or parallel agent work",
+  "runtime exposes the needed subagent tools",
 ]) {
   assertContains(specEvaluator, text);
 }
+assertNotContains(specEvaluator, "Invoke internally from `spec` / `spec-driven-development`");
+assertNotContains(specEvaluator, "Use internally from the spec workflow");
 
 const planEvaluator = rel("agents", "plan-evaluator.md");
 for (const text of [
@@ -348,9 +379,24 @@ for (const text of [
   "Do not:",
   "Rewrite the plan",
   "Ask the user directly",
-  "Invoke internally from `plan` / `planning-and-task-breakdown`",
+  "prompt template",
+  "explicitly authorizes subagents, delegation, or parallel agent work",
+  "runtime exposes the needed subagent tools",
 ]) {
   assertContains(planEvaluator, text);
+}
+assertNotContains(planEvaluator, "Invoke internally from `plan` / `planning-and-task-breakdown`");
+assertNotContains(planEvaluator, "Use internally from the plan workflow");
+
+const codeReviewQuality = rel("skills", "code-review-and-quality", "SKILL.md");
+for (const text of [
+  "## Review Scopes",
+  "`task` scope",
+  "`whole-build` scope",
+  "`standalone` scope",
+  "scope constrains which evidence matters",
+]) {
+  assertContains(codeReviewQuality, text);
 }
 
 const githubCommit = rel("skills", "github-commit", "SKILL.md");
