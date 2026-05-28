@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.4 - 2026-05-28
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.3...v0.5.4)
+
+### Changes
+
+- docs: add evaluator workflow gates ([#14](https://github.com/jjlabsio/midnight-forge/pull/14))
 ## v0.5.3 - 2026-05-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.2...v0.5.3)
