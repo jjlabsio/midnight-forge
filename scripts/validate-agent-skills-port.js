@@ -49,6 +49,8 @@ const agents = [
   "code-reviewer.md",
   "security-auditor.md",
   "test-engineer.md",
+  "spec-evaluator.md",
+  "plan-evaluator.md",
 ];
 
 const entrypoints = {
@@ -267,8 +269,10 @@ for (const text of [
 const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md");
 for (const text of [
   "Run a blocker-oriented evaluator loop after drafting",
-  "run this evaluator pass with a separate reviewer subagent",
-  "If subagents are unavailable, run the same blocker checklist in the main context",
+  "dedicated `agents/spec-evaluator.md` role",
+  "normal `$spec` workflow",
+  "generic/default subagent",
+  "If subagent execution is unavailable in the current runtime",
   "The main agent owns revisions, user questions, artifact saving",
   "TODO, TBD, placeholder text",
   "Internal contradictions",
@@ -282,8 +286,10 @@ for (const text of [
 const planningBreakdown = rel("skills", "planning-and-task-breakdown", "SKILL.md");
 for (const text of [
   "Step 6: Evaluate and Revise",
-  "run this evaluator pass with a separate reviewer subagent",
-  "If subagents are unavailable, run the same blocker checklist in the main context",
+  "dedicated `agents/plan-evaluator.md` role",
+  "normal `$plan` workflow",
+  "generic/default subagent",
+  "If subagent execution is unavailable in the current runtime",
   "The main agent owns revisions, user questions, artifact saving",
   "Missing tasks or missing implementation steps",
   "Missing coverage for stated SPEC requirements",
@@ -307,12 +313,44 @@ for (const text of [
 const readme = rel("README.md");
 for (const text of [
   "spec -> plan -> build -> ship",
-  "separate reviewer subagent",
-  "main-context checklist fallback",
+  "dedicated evaluator agents",
+  "named `spec-evaluator` and `plan-evaluator` agents",
+  "generic/default subagent",
+  "same blocker checklist runs in the main context",
   "standalone quality tools",
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
 ]) {
   assertContains(readme, text);
+}
+
+const specEvaluator = rel("agents", "spec-evaluator.md");
+for (const text of [
+  "name: spec-evaluator",
+  "Return exactly one of these shapes",
+  "no blockers",
+  "question needed",
+  "Block only on issues likely to cause flawed planning",
+  "Do not:",
+  "Rewrite the SPEC",
+  "Ask the user directly",
+  "Invoke internally from `spec` / `spec-driven-development`",
+]) {
+  assertContains(specEvaluator, text);
+}
+
+const planEvaluator = rel("agents", "plan-evaluator.md");
+for (const text of [
+  "name: plan-evaluator",
+  "Return exactly one of these shapes",
+  "no blockers",
+  "question needed",
+  "Block only on issues likely to cause flawed implementation",
+  "Do not:",
+  "Rewrite the plan",
+  "Ask the user directly",
+  "Invoke internally from `plan` / `planning-and-task-breakdown`",
+]) {
+  assertContains(planEvaluator, text);
 }
 
 const githubCommit = rel("skills", "github-commit", "SKILL.md");
@@ -359,8 +397,10 @@ assert(
   Array.isArray(claudeManifest.agents) &&
     claudeManifest.agents.includes("./agents/code-reviewer.md") &&
     claudeManifest.agents.includes("./agents/security-auditor.md") &&
-    claudeManifest.agents.includes("./agents/test-engineer.md"),
-  ".claude-plugin/plugin.json must expose the vendored specialist agents"
+    claudeManifest.agents.includes("./agents/test-engineer.md") &&
+    claudeManifest.agents.includes("./agents/spec-evaluator.md") &&
+    claudeManifest.agents.includes("./agents/plan-evaluator.md"),
+  ".claude-plugin/plugin.json must expose the vendored specialist and evaluator agents"
 );
 for (const [label, value] of [
   [".claude-plugin description", claudeManifest.description],

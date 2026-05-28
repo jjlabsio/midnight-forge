@@ -180,11 +180,11 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 
 - `skills/`: original workflow/domain skills plus Codex entrypoints
 - `references/`: testing, security, performance, accessibility, and orchestration references
-- `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, and `test-engineer`
+- `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, `test-engineer`, `spec-evaluator`, and `plan-evaluator`
 
 The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
-The recommended happy path for planned work is `spec -> plan -> build -> ship`. `spec` and `plan` evaluator passes use a separate reviewer subagent when the runtime supports subagents, with a main-context checklist fallback when it does not. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
+The recommended happy path for planned work is `spec -> plan -> build -> ship`. `spec` and `plan` evaluator passes use dedicated evaluator agents when subagent execution is available: Claude Code can invoke named `spec-evaluator` and `plan-evaluator` agents, while Codex can spawn a generic/default subagent with the corresponding evaluator instructions when named plugin agents are not directly available. If subagent execution is unavailable, the same blocker checklist runs in the main context and the fallback is noted. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
 
 Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, and repository conventions are preserved as written.
 
