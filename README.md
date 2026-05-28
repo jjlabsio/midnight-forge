@@ -90,10 +90,10 @@ The entrypoints are thin wrappers around the original agent-skills workflows. Th
 The normal MDF workflow is:
 
 ```text
-spec -> plan -> build -> ship
+spec -> plan -> build -> review -> ship
 ```
 
-`spec` and `plan` draft reviewed workflow artifacts before implementation. `build` processes the approved plan with task-level verification and review loops. `ship` remains the final GO/NO-GO gate. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+`spec`, `plan`, and `build` use inline loops by default. `spec` and `plan` draft reviewed workflow artifacts before implementation. `build` processes the approved plan with task-level verification and review loops. `review` remains the independent standalone review step when desired before PR, merge, or ship. `ship` remains the final GO/NO-GO gate. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
 
 ## Task System
 
@@ -184,7 +184,9 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 
 The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
-The recommended happy path for planned work is `spec -> plan -> build -> ship`. `spec` and `plan` evaluator passes use dedicated evaluator agents when subagent execution is available: Claude Code can invoke named `spec-evaluator` and `plan-evaluator` agents, while Codex can spawn a generic/default subagent with the corresponding evaluator instructions when named plugin agents are not directly available. If subagent execution is unavailable, the same blocker checklist runs in the main context and the fallback is noted. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
+The recommended happy path for planned work is `spec -> plan -> build -> review -> ship` when independent review is desired. `spec`, `plan`, and `build` use inline loops by default: `spec` and `plan` run inline blocker-oriented self-review before saving artifacts, and `build` runs inline implementation, verification, task review, and whole-build review gates.
+
+Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization for subagents/delegation/parallel agent work and runtime tool availability. When those conditions are met, `agents/spec-evaluator.md` and `agents/plan-evaluator.md` can be used as optional prompt templates for narrow blocker review. Without both conditions, normal workflow gates stay inline. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
 
 Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, and repository conventions are preserved as written.
 
