@@ -9,7 +9,7 @@ Use this Codex-native entrypoint when the user invokes `review`, `mdf review`, `
 
 Invoke the `code-review-and-quality` skill.
 
-This remains a standalone workflow even though `build` may invoke review logic internally. Use it for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+This remains a standalone workflow even though `build` may invoke review logic internally. Use `code-review-and-quality` in `standalone` scope for independent verification, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
 
 Review the current changes (staged or recent commits) across all five axes:
 

@@ -23,6 +23,16 @@ Before writing review findings, explanations, or recommendations, follow `../../
 - When refactoring existing code
 - After any bug fix (review both the fix and the regression test)
 
+## Review Scopes
+
+Use the same five-axis criteria for every review. The selected scope constrains which evidence matters, which requirements apply, and which findings are blockers.
+
+- `task` scope: review the current task-sized diff against that task's acceptance criteria and verification evidence. Block on issues that prevent the task from satisfying its plan criteria, break nearby behavior, or make the task unsafe to commit.
+- `whole-build` scope: review all selected build changes against the approved spec and implementation plan. Block on missed spec coverage, integration regressions between completed tasks, failed or missing full verification, and contradictions with the planned workflow.
+- `standalone` scope: review the current diff, staged changes, working tree, PR, or user-specified artifact independently. Use this for user-requested `$review`, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
+
+Build-internal reviews and standalone reviews must not use separate review logic. They share this skill's correctness, readability, architecture, security, and performance criteria; scope constrains which evidence matters and which blockers must be fixed before continuing.
+
 ## The Five-Axis Review
 
 Every review evaluates code across these dimensions:
