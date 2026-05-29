@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.5 - 2026-05-29
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.4...v0.5.5)
+
+### Changes
+
+- docs: align MDF workflow review gates ([#15](https://github.com/jjlabsio/midnight-forge/pull/15))
 ## v0.5.4 - 2026-05-28
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.3...v0.5.4)
