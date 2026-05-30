@@ -76,6 +76,7 @@ After all selected tasks complete, run a whole-change verification loop:
 3. Review the full diff against the spec and implementation plan with `code-review-and-quality` in `whole-build` scope
 4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
 5. Save a separate final whole-build artifact to `.mdf/work/{work_id}/build-NNN.md`
+6. If the plan contains any high-risk requirement, or build discovers a new high-risk semantic concern, run the high-risk independent review gate before claiming build completion
 
 The final artifact must contain a `Whole-Build Spec Traceability` matrix. It should compare the final implementation back to the approved spec rather than only to the implementation plan:
 
@@ -83,6 +84,54 @@ The final artifact must contain a `Whole-Build Spec Traceability` matrix. It sho
 | Approved Spec Requirement | Covered Task IDs | Evidence | Integration / Semantic Checks | Status |
 | --- | --- | --- | --- | --- |
 | [spec requirement] | [task ids] | [tests/checks/artifacts] | [cross-task or high-risk semantic review] | pass/fail |
+```
+
+### High-Risk Independent Review Gate
+
+When the plan contains at least one high-risk requirement, or build discovers a new high-risk semantic concern, build completion is blocked until a separate high-risk independent review passes.
+
+Run this gate after:
+
+1. All selected task-level build artifacts are saved
+2. The final whole-build artifact is saved
+3. Whole-build internal review has completed and blocking findings have been fixed
+
+Run it before:
+
+1. `$mdf:build` claims completion
+2. Any final success summary implies the work is done
+
+Scope the review narrowly to high-risk semantic compliance:
+
+- Approved spec high-risk requirement text
+- Plan classification reason and implementation meaning
+- Required scenarios and negative scenarios
+- Task build artifact RED/GREEN/code-path evidence
+- Final whole-build traceability
+- Actual changed code paths
+
+Prefer fresh-context or subagent independent review only when both conditions are true:
+
+1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
+2. The runtime exposes the needed subagent tools.
+
+If fresh-context/subagent review is unavailable or unauthorized, do not skip the gate. Run an inline standalone-like independent pass through `code-review-and-quality`, save a separate `.mdf/work/{work_id}/review-NNN.md`, and record `Freshness: standalone-like inline pass` or equivalent.
+
+The high-risk independent review artifact must include:
+
+```markdown
+## Verdict
+
+## Scope
+
+## Requirement Checks
+
+| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- | --- |
+
+## Findings
+
+## Freshness
 ```
 
 This internal loop does not replace standalone `test`, `review`, or `ship`. Use `test` and `review` independently for manual changes, debugging, PR preparation, or pre-ship checks. Use `ship` as the final GO/NO-GO gate.

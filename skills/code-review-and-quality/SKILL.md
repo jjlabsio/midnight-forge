@@ -70,6 +70,49 @@ Block on:
 - Missing required or negative scenarios for high-risk requirements
 - Contradictions between approved spec, plan, build artifacts, tests, and actual code
 
+## High-Risk Independent Review
+
+Use this review mode when `$mdf:build` reaches the mandatory high-risk independent review gate. The gate applies when the plan contains at least one high-risk requirement or build discovers a new high-risk semantic concern.
+
+Scope this review narrowly to high-risk semantic compliance:
+
+- Approved spec high-risk requirement text
+- Plan classification reason and implementation meaning
+- Required scenarios and negative scenarios
+- Task build artifact RED/GREEN/code-path evidence
+- Final whole-build traceability
+- Actual changed code paths
+
+Prefer fresh-context or subagent review only when the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools. If that is unavailable or unauthorized, run a standalone-like inline pass with this same review engine. Do not skip the gate because fresh-context review is unavailable.
+
+The review artifact must include:
+
+```markdown
+## Verdict
+
+## Scope
+
+## Requirement Checks
+
+| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- | --- |
+
+## Findings
+
+## Freshness
+```
+
+Record freshness explicitly, for example `Freshness: fresh-context subagent` or `Freshness: standalone-like inline pass`.
+
+Block on:
+
+- Missing traceability evidence
+- RED/GREEN evidence that does not test the required behavior
+- Code paths that contradict build claims
+- Missing required or negative scenarios
+- Weakened semantics, such as relying on later external wake-up or recovery for an internal-loop guarantee
+- Any Critical or Important finding
+
 ## Pass 2: Code Quality / Five-Axis Review
 
 Every review evaluates code across these dimensions:

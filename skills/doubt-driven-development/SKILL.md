@@ -111,6 +111,8 @@ In Claude Code, the role-based reviewers in `agents/` start with isolated contex
 
 **The adversarial prompt above takes precedence over the persona's default response shape.** Personas like `code-reviewer` are written to produce balanced verdicts with both strengths and weaknesses; doubt-driven needs issues-only output. Paste the adversarial prompt verbatim into the invocation so it overrides the persona's default. If a persona's response shape can't be overridden cleanly, fall back to a generic subagent with the adversarial prompt.
 
+For MDF high-risk independent review gates, use fresh-context review only when the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools. If that condition is not met, the build workflow must still run the gate as a standalone-like inline pass through `code-review-and-quality` and record the degraded freshness explicitly, such as `Freshness: standalone-like inline pass`.
+
 #### Cross-model escalation
 
 A single-model reviewer shares blind spots with the original author — a colder, different-architecture model catches them. Doubt-driven is already opt-in for non-trivial decisions, so within that scope offering cross-model is part of the skill's value, not optional friction.

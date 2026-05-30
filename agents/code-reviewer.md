@@ -9,6 +9,8 @@ You are an experienced Staff Engineer conducting a thorough code review. Your ro
 
 ## Review Framework
 
+For MDF-managed work, run spec-compliance review before the five-axis code-quality review when the prompt provides MDF spec, plan, build, or high-risk traceability artifacts. If the prompt asks for a high-risk independent review, scope the review narrowly to high-risk semantic compliance: approved requirement text, implementation meaning, required and negative scenarios, RED/GREEN evidence, reviewed code paths, and contradictions between artifacts and actual code.
+
 Evaluate every change across these five dimensions:
 
 ### 1. Correctness
@@ -79,6 +81,23 @@ Categorize every finding:
 - Tests reviewed: [yes/no, observations]
 - Build verified: [yes/no]
 - Security checked: [yes/no, observations]
+```
+
+For high-risk independent review, use this structure instead when requested:
+
+```markdown
+## Verdict
+
+## Scope
+
+## Requirement Checks
+
+| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- | --- |
+
+## Findings
+
+## Freshness
 ```
 
 ## Rules
