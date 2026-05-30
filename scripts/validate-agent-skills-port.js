@@ -304,9 +304,19 @@ for (const text of [
 
 const planningBreakdown = rel("skills", "planning-and-task-breakdown", "SKILL.md");
 for (const text of [
-  "Step 6: Evaluate and Revise",
+  "Step 4: Classify Requirement Risk",
+  "Step 7: Evaluate and Revise",
+  "classify every approved SPEC requirement as `normal` or `high-risk`",
+  "This classification is an AI semantic judgment",
+  "not a keyword classifier",
+  "Implementation meaning",
+  "Required scenario",
+  "Negative scenario",
+  "No high-risk requirements identified because",
   "run an inline blocker-oriented self-review pass",
   "default `$plan` quality gate",
+  "Ordinary tests could pass while a stated semantic requirement remains wrong",
+  "Same-loop, same-invocation, no-stuck, or eventual-completion guarantees",
   "Subagent-assisted plan evaluation may be used only when both conditions are true",
   "The current user request explicitly authorizes subagents, delegation, or parallel agent work",
   "The runtime exposes the needed subagent tools",
@@ -332,6 +342,13 @@ const incrementalImplementation = rel("skills", "incremental-implementation", "S
 for (const text of [
   "every pending task from the current plan",
   "Review the task against its acceptance criteria",
+  "Task Acceptance Traceability",
+  "RED Evidence",
+  "GREEN Evidence",
+  "Code Path Reviewed",
+  "Whole-Build Spec Traceability",
+  "High-Risk Independent Review Gate",
+  "Freshness: standalone-like inline pass",
   "whole-change verification loop",
   "This internal loop does not replace standalone `test`, `review`, or `ship`",
 ]) {
@@ -342,6 +359,13 @@ const readme = rel("README.md");
 for (const text of [
   "spec -> plan -> build -> review -> ship",
   "`spec`, `plan`, and `build` use inline loops by default",
+  "High-risk work has heavier gates by design",
+  "classified as `normal` or `high-risk` by semantic judgment",
+  "Task Acceptance Traceability",
+  "Whole-Build Spec Traceability",
+  "mandatory high-risk independent review",
+  "continued DB-backed job to be reselected within the same bounded scheduler invocation",
+  "persisted `continued` state is insufficient",
   "Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization",
   "runtime tool availability",
   "standalone quality tools",
@@ -376,6 +400,10 @@ for (const text of [
   "no blockers",
   "question needed",
   "Block only on issues likely to cause flawed implementation",
+  "requirement risk classification",
+  "classification of every SPEC requirement as `normal` or `high-risk`",
+  "semantic judgment by meaning",
+  "No high-risk requirements identified because",
   "Do not:",
   "Rewrite the plan",
   "Ask the user directly",
@@ -395,8 +423,42 @@ for (const text of [
   "`whole-build` scope",
   "`standalone` scope",
   "scope constrains which evidence matters",
+  "## Pass 1: Spec Compliance",
+  "## Pass 2: Code Quality / Five-Axis Review",
+  "Distrust implementer and build summaries",
+  "## High-Risk Independent Review",
+  "Freshness: standalone-like inline pass",
+  "Any Critical or Important finding",
 ]) {
   assertContains(codeReviewQuality, text);
+}
+
+const buildSkill = rel("skills", "build", "SKILL.md");
+for (const text of [
+  "Task Acceptance Traceability",
+  "Whole-Build Spec Traceability",
+  "mandatory high-risk independent review",
+  "before `$mdf:build` claims completion",
+  "Freshness: standalone-like inline pass",
+]) {
+  assertContains(buildSkill, text);
+}
+
+const doubtDrivenDevelopment = rel("skills", "doubt-driven-development", "SKILL.md");
+for (const text of [
+  "MDF high-risk independent review gates",
+  "Freshness: standalone-like inline pass",
+]) {
+  assertContains(doubtDrivenDevelopment, text);
+}
+
+const codeReviewer = rel("agents", "code-reviewer.md");
+for (const text of [
+  "high-risk independent review",
+  "Requirement Checks",
+  "Freshness",
+]) {
+  assertContains(codeReviewer, text);
 }
 
 const githubCommit = rel("skills", "github-commit", "SKILL.md");

@@ -95,6 +95,12 @@ spec -> plan -> build -> review -> ship
 
 `spec`, `plan`, and `build` use inline loops by default. `spec` and `plan` draft reviewed workflow artifacts before implementation. `build` processes the approved plan with task-level verification and review loops. `review` remains the independent standalone review step when desired before PR, merge, or ship. `ship` remains the final GO/NO-GO gate. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
 
+High-risk work has heavier gates by design. During `plan`, every approved SPEC requirement is classified as `normal` or `high-risk` by semantic judgment, not by keyword list. High-risk requirements record the implementation meaning, required scenario, negative scenario, and verification before build work starts. During `build`, each completed planned task saves a task-level build artifact with `Task Acceptance Traceability`, and the final build saves a separate `Whole-Build Spec Traceability` artifact against the approved spec. The shared review workflow runs spec-compliance review before the normal five-axis code-quality review for MDF-managed work.
+
+When a plan contains high-risk requirements, or build discovers a new high-risk semantic concern, `build` must pass a mandatory high-risk independent review before claiming completion. Fresh-context or subagent review is used only when the current user explicitly authorizes subagents/delegation/parallel agent work and the runtime exposes the needed tools. Otherwise the gate still runs as a standalone-like inline pass and records its freshness explicitly.
+
+Example: if a spec requires a continued DB-backed job to be reselected within the same bounded scheduler invocation, evidence that only verifies persisted `continued` state is insufficient. The build evidence and independent review must verify the internal continuation loop itself; relying on a later external wake-up or recovery violates the stronger same-invocation guarantee.
+
 ## Task System
 
 Midnight Forge includes a first-pass local task system built from LLM-driven skills:
