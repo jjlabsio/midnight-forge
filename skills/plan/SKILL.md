@@ -13,10 +13,11 @@ Read the existing spec (SPEC.md or equivalent) and the relevant codebase section
 
 1. Enter plan mode — read only, no code changes
 2. Identify the dependency graph between components
-3. Slice work vertically (one complete path per task, not horizontal layers)
-4. Write tasks with acceptance criteria and verification steps
-5. Add checkpoints between phases
-6. Present the plan for human review
+3. Classify every SPEC requirement as `normal` or `high-risk` by semantic judgment before or while finalizing task acceptance criteria
+4. Slice work vertically (one complete path per task, not horizontal layers)
+5. Write tasks with acceptance criteria, high-risk implementation meaning when applicable, and verification steps
+6. Add checkpoints between phases
+7. Present the plan for human review
 
 Before saving or presenting the plan, run the inline blocker-oriented self-review loop from `planning-and-task-breakdown`. Revise only for issues that would cause flawed implementation; do not block on wording polish, stylistic preferences, or nice-to-have additions.
 
