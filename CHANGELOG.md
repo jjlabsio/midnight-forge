@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.6 - 2026-05-30
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.5...v0.5.6)
+
+### Changes
+
+- docs: add high-risk workflow evidence gates ([#16](https://github.com/jjlabsio/midnight-forge/pull/16))
 ## v0.5.5 - 2026-05-29
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.4...v0.5.5)
