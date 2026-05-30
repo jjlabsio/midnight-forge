@@ -11,13 +11,16 @@ Invoke the `code-review-and-quality` skill.
 
 This remains a standalone workflow even though `build` may invoke review logic internally. Use `code-review-and-quality` in `standalone` scope for independent verification, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
 
-Review the current changes (staged or recent commits) across all five axes:
+The shared `code-review-and-quality` workflow owns both spec-compliance review and the five-axis code-quality review. When MDF artifacts are available for the current work item, standalone review uses them for spec-compliance context before applying the five-axis review. When no MDF artifacts are available, standalone review falls back to the existing five-axis behavior.
 
-1. **Correctness** — Does it match the spec? Edge cases handled? Tests adequate?
-2. **Readability** — Clear names? Straightforward logic? Well-organized?
-3. **Architecture** — Follows existing patterns? Clean boundaries? Right abstraction level?
-4. **Security** — Input validated? Secrets safe? Auth checked? (Use security-and-hardening skill)
-5. **Performance** — No N+1 queries? No unbounded ops? (Use performance-optimization skill)
+Review the current changes (staged or recent commits) through the shared workflow:
+
+1. **Spec Compliance** — When MDF artifacts exist, does the change satisfy the approved spec, plan, build evidence, and high-risk implementation meaning?
+2. **Correctness** — Does it match the spec or task? Edge cases handled? Tests adequate?
+3. **Readability** — Clear names? Straightforward logic? Well-organized?
+4. **Architecture** — Follows existing patterns? Clean boundaries? Right abstraction level?
+5. **Security** — Input validated? Secrets safe? Auth checked? (Use security-and-hardening skill)
+6. **Performance** — No N+1 queries? No unbounded ops? (Use performance-optimization skill)
 
 Categorize findings as Critical, Important, or Suggestion.
 Output a structured review with specific file:line references and fix recommendations.

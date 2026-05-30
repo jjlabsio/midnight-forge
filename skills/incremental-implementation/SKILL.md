@@ -11,6 +11,8 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 
 When saving implementation logs or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.build` plus `.mdf/index.jsonl`.
 
+For MDF planned work, save a separate task-level build artifact after each completed planned task before moving to the next task. After all selected tasks are complete, save a separate final whole-build artifact. The most recent artifact updates `item.md` `latest.build` and `.mdf/index.jsonl`; after a complete `$mdf:build` run, that pointer should reference the final whole-build artifact.
+
 ## When to Use
 
 - Implementing any multi-file change
@@ -53,8 +55,19 @@ For each planned task:
 4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
 5. Review the task against its acceptance criteria with `code-review-and-quality` in `task` scope
 6. Fix blocking findings, then rerun the affected verification and `task` scope review
-7. Commit the task-sized change
-8. Continue to the next pending task
+7. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
+8. Commit the task-sized change
+9. Continue to the next pending task
+
+The task-level build artifact must include a `Task Acceptance Traceability` matrix with one row per task acceptance criterion and one row per task-assigned high-risk semantic criterion:
+
+```markdown
+| Criterion | Risk | Verification | RED Evidence | GREEN Evidence | Code Path Reviewed | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [criterion text] | normal or high-risk | [command/check] | [failing evidence or n/a with reason] | [passing evidence] | [file/function/path reviewed] | pass/fail |
+```
+
+High-risk rows are strict. `Verification`, `RED Evidence`, `GREEN Evidence`, and `Code Path Reviewed` must name concrete tests, commands, outputs, and code paths before the row can pass. Normal rows may use lighter evidence. Non-behavioral or documentation-only rows may use `n/a` only with a reason, such as `n/a - Markdown instruction update verified by manual review`.
 
 After all selected tasks complete, run a whole-change verification loop:
 
@@ -62,7 +75,64 @@ After all selected tasks complete, run a whole-change verification loop:
 2. Run build, typecheck, and lint commands where available
 3. Review the full diff against the spec and implementation plan with `code-review-and-quality` in `whole-build` scope
 4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
-5. Save build evidence to `.mdf/work/{work_id}/build-NNN.md`
+5. Save a separate final whole-build artifact to `.mdf/work/{work_id}/build-NNN.md`
+6. If the plan contains any high-risk requirement, or build discovers a new high-risk semantic concern, run the high-risk independent review gate before claiming build completion
+
+The final artifact must contain a `Whole-Build Spec Traceability` matrix. It should compare the final implementation back to the approved spec rather than only to the implementation plan:
+
+```markdown
+| Approved Spec Requirement | Covered Task IDs | Evidence | Integration / Semantic Checks | Status |
+| --- | --- | --- | --- | --- |
+| [spec requirement] | [task ids] | [tests/checks/artifacts] | [cross-task or high-risk semantic review] | pass/fail |
+```
+
+### High-Risk Independent Review Gate
+
+When the plan contains at least one high-risk requirement, or build discovers a new high-risk semantic concern, build completion is blocked until a separate high-risk independent review passes.
+
+Run this gate after:
+
+1. All selected task-level build artifacts are saved
+2. The final whole-build artifact is saved
+3. Whole-build internal review has completed and blocking findings have been fixed
+
+Run it before:
+
+1. `$mdf:build` claims completion
+2. Any final success summary implies the work is done
+
+Scope the review narrowly to high-risk semantic compliance:
+
+- Approved spec high-risk requirement text
+- Plan classification reason and implementation meaning
+- Required scenarios and negative scenarios
+- Task build artifact RED/GREEN/code-path evidence
+- Final whole-build traceability
+- Actual changed code paths
+
+Prefer fresh-context or subagent independent review only when both conditions are true:
+
+1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
+2. The runtime exposes the needed subagent tools.
+
+If fresh-context/subagent review is unavailable or unauthorized, do not skip the gate. Run an inline standalone-like independent pass through `code-review-and-quality`, save a separate `.mdf/work/{work_id}/review-NNN.md`, and record `Freshness: standalone-like inline pass` or equivalent.
+
+The high-risk independent review artifact must include:
+
+```markdown
+## Verdict
+
+## Scope
+
+## Requirement Checks
+
+| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- | --- |
+
+## Findings
+
+## Freshness
+```
 
 This internal loop does not replace standalone `test`, `review`, or `ship`. Use `test` and `review` independently for manual changes, debugging, PR preparation, or pre-ship checks. Use `ship` as the final GO/NO-GO gate.
 

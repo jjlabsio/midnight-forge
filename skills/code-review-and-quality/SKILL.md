@@ -9,7 +9,7 @@ When saving a code review report, resolve the current MDF work item and write `.
 
 ## Overview
 
-Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
+Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. MDF-managed work runs spec-compliance review before code-quality review. Code-quality review covers five axes: correctness, readability, architecture, security, and performance.
 
 Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the user's apparent conversation language for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
 
@@ -25,15 +25,95 @@ Before writing review findings, explanations, or recommendations, follow `../../
 
 ## Review Scopes
 
-Use the same five-axis criteria for every review. The selected scope constrains which evidence matters, which requirements apply, and which findings are blockers.
+Use the same review engine for task, whole-build, and standalone reviews. The selected scope constrains which evidence matters, which requirements apply, and which findings are blockers.
 
-- `task` scope: review the current task-sized diff against that task's acceptance criteria and verification evidence. Block on issues that prevent the task from satisfying its plan criteria, break nearby behavior, or make the task unsafe to commit.
-- `whole-build` scope: review all selected build changes against the approved spec and implementation plan. Block on missed spec coverage, integration regressions between completed tasks, failed or missing full verification, and contradictions with the planned workflow.
-- `standalone` scope: review the current diff, staged changes, working tree, PR, or user-specified artifact independently. Use this for user-requested `$review`, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
+- `task` scope: review the current task-sized diff against that task's acceptance criteria, task build artifact, high-risk implementation meaning, and verification evidence. Block on issues that prevent the task from satisfying its plan criteria, break nearby behavior, contradict actual tests or code paths, or make the task unsafe to commit.
+- `whole-build` scope: review all selected build changes against the approved spec, implementation plan, task artifacts, and final whole-build build artifact. Block on missed spec coverage, integration regressions between completed tasks, missing high-risk evidence, failed or missing full verification, and contradictions with the planned workflow.
+- `standalone` scope: review the current diff, staged changes, working tree, PR, or user-specified artifact independently. When a current MDF work item exists, use available MDF spec, plan, and build artifacts for spec-compliance context. Without MDF artifacts, fall back to the existing five-axis review behavior. Use this for user-requested `$review`, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
 
 Build-internal reviews and standalone reviews must not use separate review logic. They share this skill's correctness, readability, architecture, security, and performance criteria; scope constrains which evidence matters and which blockers must be fixed before continuing.
 
-## The Five-Axis Review
+## Pass 1: Spec Compliance
+
+Run this pass first for MDF-managed work: `task`, `whole-build`, and `standalone` when MDF artifacts are available.
+
+The spec-compliance pass checks whether the implementation actually satisfies the approved requirement, not whether the implementation summary sounds plausible. Distrust implementer and build summaries until actual tests, evidence, and code paths have been inspected.
+
+If Pass 1 finds Critical or Important issues showing that the implementation does not satisfy the spec, task acceptance criteria, high-risk implementation meaning, or required scenarios, stop and report those blockers before continuing to Pass 2. Do not approve code quality while spec compliance is still wrong.
+
+For `task` scope, compare:
+
+- The current task diff
+- The task build artifact and `Task Acceptance Traceability`
+- The task acceptance criteria
+- High-risk implementation meaning, required scenarios, and negative scenarios assigned to the task
+- Task verification evidence, including RED/GREEN evidence and reviewed code paths
+
+For `whole-build` scope, compare:
+
+- All selected build changes
+- The final whole-build build artifact and `Whole-Build Spec Traceability`
+- The approved spec
+- The full implementation plan
+- Task-level build artifacts
+- Integration behavior across completed tasks
+
+For artifact-backed `standalone` scope, use available MDF spec, plan, and build artifacts to run the same compliance checks that fit the current diff or review request. If no MDF artifacts are available, skip Pass 1 and proceed with the existing five-axis review behavior.
+
+Block on:
+
+- Missed spec coverage or missing task acceptance coverage
+- Weakened high-risk semantics, such as relying on later external wake-up or recovery for a same-invocation guarantee
+- Missing high-risk traceability evidence
+- RED/GREEN evidence that does not test the required behavior
+- Code paths that contradict the build artifact or plan claims
+- Missing required or negative scenarios for high-risk requirements
+- Contradictions between approved spec, plan, build artifacts, tests, and actual code
+
+## High-Risk Independent Review
+
+Use this review mode when `$mdf:build` reaches the mandatory high-risk independent review gate. The gate applies when the plan contains at least one high-risk requirement or build discovers a new high-risk semantic concern.
+
+Scope this review narrowly to high-risk semantic compliance:
+
+- Approved spec high-risk requirement text
+- Plan classification reason and implementation meaning
+- Required scenarios and negative scenarios
+- Task build artifact RED/GREEN/code-path evidence
+- Final whole-build traceability
+- Actual changed code paths
+
+Prefer fresh-context or subagent review only when the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools. If that is unavailable or unauthorized, run a standalone-like inline pass with this same review engine. Do not skip the gate because fresh-context review is unavailable.
+
+The review artifact must include:
+
+```markdown
+## Verdict
+
+## Scope
+
+## Requirement Checks
+
+| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- | --- |
+
+## Findings
+
+## Freshness
+```
+
+Record freshness explicitly, for example `Freshness: fresh-context subagent` or `Freshness: standalone-like inline pass`.
+
+Block on:
+
+- Missing traceability evidence
+- RED/GREEN evidence that does not test the required behavior
+- Code paths that contradict build claims
+- Missing required or negative scenarios
+- Weakened semantics, such as relying on later external wake-up or recovery for an internal-loop guarantee
+- Any Critical or Important finding
+
+## Pass 2: Code Quality / Five-Axis Review
 
 Every review evaluates code across these dimensions:
 

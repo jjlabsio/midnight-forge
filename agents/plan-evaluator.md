@@ -18,6 +18,7 @@ The main agent provides:
 
 - The draft implementation plan
 - The approved SPEC
+- The plan's requirement risk classification, including every `normal` and `high-risk` requirement
 - Relevant codebase constraints and file/API names when known
 - The blocker checklist from the planning workflow
 
@@ -48,6 +49,12 @@ Block only on issues likely to cause flawed implementation:
 - Missing tasks or missing implementation steps needed to satisfy the SPEC
 - TODO, TBD, placeholder text, or incomplete task sections
 - Missing coverage for stated SPEC requirements
+- Missing or incomplete classification of every SPEC requirement as `normal` or `high-risk`
+- High-risk classification performed as a keyword list instead of semantic judgment by meaning
+- Any high-risk requirement missing `Classification reason`, `Implementation meaning`, `Required scenario`, `Negative scenario`, or `Verification`
+- Missing explicit `No high-risk requirements identified because ...` when no high-risk requirements are found
+- A plan where ordinary tests could pass while a stated semantic requirement remains wrong
+- Same-loop, same-invocation, no-stuck, or eventual-completion guarantees weakened into later retry or recovery behavior
 - Major scope creep beyond the SPEC
 - Task boundaries that are too vague, too large, or not independently verifiable
 - Steps that would leave an implementer stuck because required context, files, contracts, or decisions are absent

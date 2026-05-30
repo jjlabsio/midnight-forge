@@ -76,7 +76,35 @@ Task 4: User can view task list (query + API + UI for list view)
 
 Each vertical slice delivers working, testable functionality.
 
-### Step 4: Write Tasks
+### Step 4: Classify Requirement Risk
+
+Before or while finalizing task acceptance criteria, classify every approved SPEC requirement as `normal` or `high-risk`.
+
+This classification is an AI semantic judgment. Do not use or preserve a keyword list as the mechanism. Vocabulary can suggest where to look, but the decision is based on meaning: mark a requirement `high-risk` when implementation correctness depends on a non-obvious semantic property that ordinary happy-path tests could pass while the intended requirement remains wrong.
+
+High-risk requirements commonly involve properties such as persisted state transitions, retries, continuation, recovery, ordering, eventual completion, concurrency, locks, leases, cursors, deduplication, idempotency, replacing one execution mechanism with another, no-stuck guarantees, or behavior where a later external retry would not satisfy a same-loop or same-invocation guarantee. These are examples, not a keyword classifier.
+
+For each high-risk requirement, record:
+
+```markdown
+### High-Risk Requirement: [requirement title]
+
+- Classification reason: [one concise sentence explaining why this is high-risk]
+- Implementation meaning: [concrete behavior the implementation must provide]
+- Required scenario: [positive scenario specific enough to become a regression test or agent-executable check]
+- Negative scenario: [failure mode the verification must reject]
+- Verification: [test, command, manual check, or review step that proves the meaning]
+```
+
+If no high-risk requirements are identified, the plan must say:
+
+```markdown
+No high-risk requirements identified because [concise semantic reason].
+```
+
+This statement is required so future reviewers can challenge the omission instead of inferring that no classification pass happened.
+
+### Step 5: Write Tasks
 
 Each task follows this structure:
 
@@ -88,6 +116,8 @@ Each task follows this structure:
 **Acceptance criteria:**
 - [ ] [Specific, testable condition]
 - [ ] [Specific, testable condition]
+
+**High-risk semantic criteria:** [High-risk requirement IDs assigned to this task, with implementation meaning, or "None"]
 
 **Verification:**
 - [ ] Tests pass: `npm test -- --grep "feature-name"`
@@ -103,7 +133,7 @@ Each task follows this structure:
 **Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
 ```
 
-### Step 5: Order and Checkpoint
+### Step 6: Order and Checkpoint
 
 Arrange tasks so that:
 
@@ -122,13 +152,19 @@ Add explicit checkpoints:
 - [ ] Review with human before proceeding
 ```
 
-### Step 6: Evaluate and Revise
+### Step 7: Evaluate and Revise
 
 After drafting the plan, run an inline blocker-oriented self-review pass before saving or presenting it. This is the default `$plan` quality gate. Block only on issues likely to cause flawed implementation:
 
 - Missing tasks or missing implementation steps needed to satisfy the spec
 - TODO, TBD, placeholder text, or incomplete task sections
 - Missing coverage for stated SPEC requirements
+- Missing or incomplete requirement risk classification
+- A high-risk requirement classified by keyword matching instead of semantic judgment
+- A high-risk requirement missing `Classification reason`, `Implementation meaning`, `Required scenario`, `Negative scenario`, or `Verification`
+- Missing explicit `No high-risk requirements identified because ...` when no high-risk requirements are found
+- Ordinary tests could pass while a stated semantic requirement remains wrong
+- Same-loop, same-invocation, no-stuck, or eventual-completion guarantees are weakened into later retry or recovery behavior
 - Major scope creep beyond the SPEC
 - Task boundaries that are too vague, too large, or not independently verifiable
 - Steps that would leave an implementer stuck because required context, files, contracts, or decisions are absent
