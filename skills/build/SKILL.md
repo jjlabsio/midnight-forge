@@ -20,8 +20,9 @@ For each pending task:
 5. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
 6. Invoke the shared `code-review-and-quality` workflow in `task` scope against the plan acceptance criteria
 7. Fix blocking findings, then rerun the relevant verification and `task` scope review
-8. Commit with a descriptive message
-9. Mark the task complete and move to the next one
+8. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
+9. Commit with a descriptive message
+10. Mark the task complete and move to the next one
 
 After all selected tasks complete, run a final whole-build verification:
 
@@ -29,7 +30,7 @@ After all selected tasks complete, run a final whole-build verification:
 2. Run build, typecheck, and lint commands where available
 3. Invoke the shared `code-review-and-quality` workflow in `whole-build` scope against the spec and plan
 4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
-5. Save build evidence to the MDF work item
+5. Save a separate final whole-build `.mdf/work/{work_id}/build-NNN.md` artifact with `Whole-Build Spec Traceability`
 
 If any step fails, follow the `debugging-and-error-recovery` skill.
 
@@ -42,4 +43,6 @@ Subagent-assisted build or review may be used only when both conditions are true
 
 When those conditions are not met, keep implementation, verification, task review, and whole-build review inline in this single `build` workflow.
 
-When saving implementation notes or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Update `item.md` `latest.build` and `.mdf/index.jsonl`.
+Task-level build artifacts must trace each task acceptance criterion and task-assigned high-risk semantic criterion to concrete evidence. The final whole-build artifact must compare the finished implementation back to the approved spec, not only to the possibly weakened plan text.
+
+When saving implementation notes or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Update `item.md` `latest.build` and `.mdf/index.jsonl` after every saved build artifact. After a complete `$mdf:build` run, the latest build pointer should reference the final whole-build artifact.

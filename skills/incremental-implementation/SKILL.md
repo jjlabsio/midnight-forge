@@ -11,6 +11,8 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 
 When saving implementation logs or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.build` plus `.mdf/index.jsonl`.
 
+For MDF planned work, save a separate task-level build artifact after each completed planned task before moving to the next task. After all selected tasks are complete, save a separate final whole-build artifact. The most recent artifact updates `item.md` `latest.build` and `.mdf/index.jsonl`; after a complete `$mdf:build` run, that pointer should reference the final whole-build artifact.
+
 ## When to Use
 
 - Implementing any multi-file change
@@ -53,8 +55,19 @@ For each planned task:
 4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
 5. Review the task against its acceptance criteria with `code-review-and-quality` in `task` scope
 6. Fix blocking findings, then rerun the affected verification and `task` scope review
-7. Commit the task-sized change
-8. Continue to the next pending task
+7. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
+8. Commit the task-sized change
+9. Continue to the next pending task
+
+The task-level build artifact must include a `Task Acceptance Traceability` matrix with one row per task acceptance criterion and one row per task-assigned high-risk semantic criterion:
+
+```markdown
+| Criterion | Risk | Verification | RED Evidence | GREEN Evidence | Code Path Reviewed | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [criterion text] | normal or high-risk | [command/check] | [failing evidence or n/a with reason] | [passing evidence] | [file/function/path reviewed] | pass/fail |
+```
+
+High-risk rows are strict. `Verification`, `RED Evidence`, `GREEN Evidence`, and `Code Path Reviewed` must name concrete tests, commands, outputs, and code paths before the row can pass. Normal rows may use lighter evidence. Non-behavioral or documentation-only rows may use `n/a` only with a reason, such as `n/a - Markdown instruction update verified by manual review`.
 
 After all selected tasks complete, run a whole-change verification loop:
 
@@ -62,7 +75,15 @@ After all selected tasks complete, run a whole-change verification loop:
 2. Run build, typecheck, and lint commands where available
 3. Review the full diff against the spec and implementation plan with `code-review-and-quality` in `whole-build` scope
 4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
-5. Save build evidence to `.mdf/work/{work_id}/build-NNN.md`
+5. Save a separate final whole-build artifact to `.mdf/work/{work_id}/build-NNN.md`
+
+The final artifact must contain a `Whole-Build Spec Traceability` matrix. It should compare the final implementation back to the approved spec rather than only to the implementation plan:
+
+```markdown
+| Approved Spec Requirement | Covered Task IDs | Evidence | Integration / Semantic Checks | Status |
+| --- | --- | --- | --- | --- |
+| [spec requirement] | [task ids] | [tests/checks/artifacts] | [cross-task or high-risk semantic review] | pass/fail |
+```
 
 This internal loop does not replace standalone `test`, `review`, or `ship`. Use `test` and `review` independently for manual changes, debugging, PR preparation, or pre-ship checks. Use `ship` as the final GO/NO-GO gate.
 
