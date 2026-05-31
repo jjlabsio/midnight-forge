@@ -119,7 +119,7 @@ latest: {}
 
 ## Context
 
-2-5 sentences of relevant conversation context.
+Handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already made, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when omitting detail would make later implementation guessy.
 
 ## Files
 
@@ -133,6 +133,8 @@ latest: {}
 
 - 2026-05-08: Created task.
 ```
+
+Task item cards are handoff documents, not just reminders. For `## Context`, preserve the information a later agent or fresh session would need to continue safely without access to the original conversation. Do not compress away important decisions, constraints, rejected alternatives, assumptions, open questions, or verification expectations merely to keep the section short.
 
 Required frontmatter fields are `work_id`, `task_id`, `kind`, `title`, `order`, `status`, and `created`. Optional fields are `due`, `completed`, `worktree`, `branch`, and `latest`.
 
