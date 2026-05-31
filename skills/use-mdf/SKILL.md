@@ -1,6 +1,6 @@
 ---
 name: use-mdf
-description: "Use before software development workflow decisions in Codex or MDF, including use-mdf, spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktrees, commits, GitHub PRs, gone branch cleanup, or general software development workflow decisions."
+description: "Use before software development workflow decisions in Codex or MDF, including use-mdf, auto-workflow, spec, mdf spec, plan, mdf plan, build, test, review, code-simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktrees, commits, GitHub PRs, gone branch cleanup, or general software development workflow decisions."
 ---
 
 # Use MDF
@@ -18,6 +18,7 @@ Task arrives
     │
     ├── Don't know what you want yet? ──────→ interview-me
     ├── Have a rough concept, need variants? → idea-refine
+    ├── Run the full MDF lifecycle automatically? → auto-workflow
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
@@ -49,6 +50,7 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 
 | User intent | Entrypoint skill | Required initial workflow |
 | --- | --- | --- |
+| `auto-workflow`, `mdf auto-workflow`, `$auto-workflow`, run the full MDF lifecycle automatically | `auto-workflow` | delegate to `spec -> plan -> build with subagents -> review -> ship -> github-pr` |
 | `spec`, `mdf spec`, `$spec`, write a spec | `spec` | `spec-driven-development` |
 | `plan`, `mdf plan`, `$plan`, break down SPEC.md | `plan` | `planning-and-task-breakdown` |
 | `build`, `mdf build`, `$build`, implement next task | `build` | `incremental-implementation` plus `test-driven-development` |
@@ -58,7 +60,7 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
 | `migrate-tasks`, `mdf migrate-tasks`, `$migrate-tasks`, legacy task migration | `migrate-tasks` | copy-first migration into canonical `.mdf/work/` storage |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
 
 ## MDF Artifact Storage
 
