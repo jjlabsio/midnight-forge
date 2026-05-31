@@ -124,7 +124,8 @@ The main agent owns orchestration state:
 - MDF artifact saving through the delegated phase rules
 - `item.md` latest pointers
 - `.mdf/index.jsonl` updates
-- task order and build completion state
+- phase advancement based on the delegated `build` skill's task order,
+  completion evidence, and stop conditions
 - fix-loop decisions after review findings
 - git state, commits, pushes, and PR creation through `github-pr`
 
