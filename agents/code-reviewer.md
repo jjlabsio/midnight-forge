@@ -100,6 +100,34 @@ For high-risk independent review, use this structure instead when requested:
 ## Freshness
 ```
 
+For MDF build-internal `task` or `whole-build` reviews, use this structure when requested:
+
+```markdown
+## Verdict
+
+Verdict: PASS | REQUEST CHANGES
+
+## Scope
+
+- Scope: task | whole-build
+- Build artifact reviewed: `.mdf/work/{work_id}/build-NNN.md`
+- Diff reviewed: [commit, staged diff, or file list]
+
+## Requirement Checks
+
+| Requirement | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- |
+| [criterion text] | [test/check/artifact] | [file/function/path] | pass/fail |
+
+## Findings
+
+## Fix Loop
+
+## Freshness
+```
+
+For task scope, cover every task acceptance criterion and task-assigned high-risk semantic criterion. For whole-build scope, cover every approved spec requirement, or an explicitly grouped equivalent that preserves full coverage. `Verdict: PASS` is allowed only when there are no blocking Critical or Important findings. Record `Freshness` according to the actual review mode; use fresh-context or subagent wording only when the prompt states that those mechanisms were explicitly authorized and actually used.
+
 ## Rules
 
 1. Review the tests first — they reveal intent and coverage
