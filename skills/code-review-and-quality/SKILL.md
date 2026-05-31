@@ -33,6 +33,50 @@ Use the same review engine for task, whole-build, and standalone reviews. The se
 
 Build-internal reviews and standalone reviews must not use separate review logic. They share this skill's correctness, readability, architecture, security, and performance criteria; scope constrains which evidence matters and which blockers must be fixed before continuing.
 
+## Build-Internal Review Artifacts
+
+For `$mdf:build` task and whole-build review gates, save a separate `.mdf/work/{work_id}/review-NNN.md` artifact. A review summary inside `build-NNN.md` may link to or summarize the review artifact, but it does not satisfy the review gate.
+
+Task and whole-build review artifacts must use this structure:
+
+```markdown
+## Verdict
+
+Verdict: PASS | REQUEST CHANGES
+
+## Scope
+
+- Scope: task | whole-build
+- Build artifact reviewed: `.mdf/work/{work_id}/build-NNN.md`
+- Diff reviewed: [commit, staged diff, or file list]
+
+## Requirement Checks
+
+| Requirement | Evidence Checked | Code Path Checked | Result |
+| --- | --- | --- | --- |
+| [criterion text] | [test/check/artifact] | [file/function/path] | pass/fail |
+
+## Findings
+
+## Fix Loop
+
+## Freshness
+```
+
+`Verdict: PASS` is allowed only when there are no blocking findings. Critical and Important findings are blocking for build-internal reviews unless the artifact explains why the finding is out of scope for the selected review gate.
+
+Task-scope review artifacts must cover every task acceptance criterion and every task-assigned high-risk semantic criterion. Whole-build review artifacts must cover every approved spec requirement, or an explicitly grouped equivalent that preserves full coverage and makes omitted requirements visible.
+
+`Fix Loop` records the review loop state. If blockers were found, include the blocking review artifact, the fix summary, the verification rerun, any updated build evidence, and the later passing review artifact that references or supersedes the blocking review. If no blockers were found, record that no fix loop was required.
+
+Record freshness honestly:
+
+- `Freshness: same-agent inline review` for ordinary task or whole-build reviews performed by the same agent in the current build flow.
+- `Freshness: standalone-like inline pass` for high-risk independent review when fresh-context or subagent review is unavailable or unauthorized.
+- `Freshness: fresh-context subagent` or another fresh-context/subagent value only when the current user explicitly authorized subagents, delegation, or parallel agent work and the runtime actually used that mechanism.
+
+Do not claim fresh-context, subagent, delegated, or independent freshness because the prompt asked for review. The freshness value must describe what actually happened.
+
 ## Pass 1: Spec Compliance
 
 Run this pass first for MDF-managed work: `task`, `whole-build`, and `standalone` when MDF artifacts are available.
@@ -98,6 +142,8 @@ The review artifact must include:
 | --- | --- | --- | --- | --- |
 
 ## Findings
+
+## Fix Loop
 
 ## Freshness
 ```
