@@ -249,9 +249,9 @@ Create a queued task.
 6. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
 7. Generate a short title from the description.
 8. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
-9. Fill `Context` with a 2-5 sentence summary of relevant conversation.
-10. Fill `Files` only with file paths explicitly mentioned in the conversation.
-11. Fill `Criteria` only with checklist items explicitly stated or clearly implied. Leave it empty when criteria are not known.
+9. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy.
+10. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
+11. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
 12. Append `- YYYY-MM-DD: Created task.` to `Log`.
 13. Append or update the work item's line in `.mdf/index.jsonl`.
 14. Report the task ID, work ID, title, and item file path.
