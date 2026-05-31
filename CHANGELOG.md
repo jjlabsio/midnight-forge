@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.8 - 2026-05-31
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.7...v0.5.8)
+
+### Changes
+
+- docs: clarify task handoff guidance ([#18](https://github.com/jjlabsio/midnight-forge/pull/18))
 ## v0.5.7 - 2026-05-31
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.6...v0.5.7)
