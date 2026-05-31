@@ -133,6 +133,8 @@ The high-risk independent review artifact must include:
 
 ## Findings
 
+## Fix Loop
+
 ## Freshness
 ```
 

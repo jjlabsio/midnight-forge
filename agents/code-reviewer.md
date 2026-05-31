@@ -97,6 +97,8 @@ For high-risk independent review, use this structure instead when requested:
 
 ## Findings
 
+## Fix Loop
+
 ## Freshness
 ```
 
