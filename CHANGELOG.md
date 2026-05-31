@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0 - 2026-05-31
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.8...v0.6.0)
+
+### Changes
+
+- feat(auto-workflow): add lifecycle orchestration ([#19](https://github.com/jjlabsio/midnight-forge/pull/19))
 ## v0.5.8 - 2026-05-31
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.7...v0.5.8)
