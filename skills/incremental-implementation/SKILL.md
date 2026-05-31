@@ -11,7 +11,9 @@ Build in thin vertical slices — implement one piece, test it, verify it, then 
 
 When saving implementation logs or build evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/build-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.build` plus `.mdf/index.jsonl`.
 
-For MDF planned work, save a separate task-level build artifact after each completed planned task before moving to the next task. After all selected tasks are complete, save a separate final whole-build artifact. The most recent artifact updates `item.md` `latest.build` and `.mdf/index.jsonl`; after a complete `$mdf:build` run, that pointer should reference the final whole-build artifact.
+For MDF planned work, save a separate task-level build artifact after each completed planned task before moving to the next task, then save a separate task-scope review artifact. After all selected tasks are complete, save a separate final whole-build artifact, then save a separate whole-build review artifact. Build artifacts update `item.md` `latest.build` plus `.mdf/index.jsonl`; review artifacts update `item.md` `latest.review` plus `.mdf/index.jsonl`. After a complete `$mdf:build` run, the latest build pointer should reference the final whole-build artifact and the latest review pointer should reference the last passing whole-build or high-risk review artifact, whichever is later.
+
+Embedded review summaries inside `build-NNN.md` may exist only as summaries or links. They do not satisfy task, whole-build, or high-risk review gates. The gate is satisfied only by a separate `review-NNN.md` artifact for the relevant scope.
 
 ## When to Use
 
@@ -53,10 +55,10 @@ For each planned task:
 2. Write or identify the task-specific verification before implementation
 3. Implement the smallest complete change for that task
 4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
-5. Review the task against its acceptance criteria with `code-review-and-quality` in `task` scope
-6. Fix blocking findings, then rerun the affected verification and `task` scope review
-7. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
-8. Commit the task-sized change
+5. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
+6. Save a separate task-scope `.mdf/work/{work_id}/review-NNN.md` artifact against the task acceptance criteria
+7. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
+8. Commit the task-sized change only after the task build artifact and a passing task review artifact exist
 9. Continue to the next pending task
 
 The task-level build artifact must include a `Task Acceptance Traceability` matrix with one row per task acceptance criterion and one row per task-assigned high-risk semantic criterion:
@@ -73,9 +75,9 @@ After all selected tasks complete, run a whole-change verification loop:
 
 1. Run the full test suite where available
 2. Run build, typecheck, and lint commands where available
-3. Review the full diff against the spec and implementation plan with `code-review-and-quality` in `whole-build` scope
-4. Fix blocking findings, then rerun the affected verification and `whole-build` scope review
-5. Save a separate final whole-build artifact to `.mdf/work/{work_id}/build-NNN.md`
+3. Save a separate final whole-build artifact to `.mdf/work/{work_id}/build-NNN.md`
+4. Save a separate whole-build `.mdf/work/{work_id}/review-NNN.md` artifact against the spec and implementation plan
+5. If the whole-build review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
 6. If the plan contains any high-risk requirement, or build discovers a new high-risk semantic concern, run the high-risk independent review gate before claiming build completion
 
 The final artifact must contain a `Whole-Build Spec Traceability` matrix. It should compare the final implementation back to the approved spec rather than only to the implementation plan:
