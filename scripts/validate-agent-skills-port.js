@@ -54,6 +54,16 @@ const agents = [
 ];
 
 const entrypoints = {
+  "auto-workflow": [
+    "auto-workflow",
+    "mdf auto-workflow",
+    "spec -> plan -> build with subagents -> review -> ship -> github-pr",
+    "orchestration wrapper and state machine",
+    "Do not inline, summarize, abbreviate, duplicate, or replace",
+    "question needed",
+    "NO-GO",
+    "`github-pr`: do not use a subagent",
+  ],
   spec: [
     "spec",
     "mdf spec",
@@ -202,6 +212,7 @@ assert(
 const useMdf = rel("skills", "use-mdf", "SKILL.md");
 for (const trigger of [
   "use-mdf",
+  "auto-workflow",
   "spec",
   "mdf spec",
   "plan",
