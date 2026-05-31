@@ -123,6 +123,8 @@ Handoff-quality context for a fresh session that cannot see the original convers
 
 ## Files
 
+Directly relevant known files. Include paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
+
 - path/explicitly/mentioned.ts
 
 ## Criteria
