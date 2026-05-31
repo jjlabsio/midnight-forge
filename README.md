@@ -9,7 +9,7 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
 - Included MDF skills: `mdf-handshake`, `task`, `tasks`, `migrate-tasks`
-- Included agent-skills workflows: `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
+- Included agent-skills workflows: `auto-workflow`, `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
 
@@ -45,6 +45,7 @@ Invoke the task skills through Claude Code:
 /mdf:tasks
 /mdf:tasks all
 /mdf:migrate-tasks
+/mdf:auto-workflow
 ```
 
 ### Codex
@@ -71,6 +72,7 @@ $task work 001
 $tasks
 $tasks all
 $migrate-tasks
+$auto-workflow
 ```
 
 Invoke the agent-skills workflow entrypoints through Codex:
@@ -92,6 +94,13 @@ The normal MDF workflow is:
 ```text
 spec -> plan -> build -> review -> ship
 ```
+
+For a successful planned task that should continue through PR preparation
+without manual command handoffs, `auto-workflow` runs the interactive lifecycle
+as `spec -> plan -> build with subagents -> review -> ship -> github-pr`.
+It delegates each phase to the real phase skill and stops whenever a delegated
+phase asks for input, reports review findings, returns NO-GO, or hits a git/PR
+ambiguity.
 
 `spec`, `plan`, and `build` use inline loops by default. `spec` and `plan` draft reviewed workflow artifacts before implementation. `build` processes the approved plan with task-level verification and review loops. Codex may run build-internal reviews inline, but task review and whole-build review still produce separate `.mdf/work/{work_id}/review-NNN.md` artifacts; summaries inside `build-NNN.md` do not satisfy those gates. `review` remains the independent standalone review step when desired before PR, merge, or ship. `ship` remains the final GO/NO-GO gate. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
 
@@ -188,7 +197,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, `test-engineer`, `spec-evaluator`, and `plan-evaluator`
 
-The `use-mdf` meta skill routes development workflow decisions such as spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as auto-workflow, spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 The recommended happy path for planned work is `spec -> plan -> build -> review -> ship` when independent review is desired. `spec`, `plan`, and `build` use inline loops by default: `spec` and `plan` run inline blocker-oriented self-review before saving artifacts, and `build` runs inline implementation, verification, task review, and whole-build review gates.
 
