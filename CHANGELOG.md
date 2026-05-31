@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.7 - 2026-05-31
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.6...v0.5.7)
+
+### Changes
+
+- docs: require build review artifacts ([#17](https://github.com/jjlabsio/midnight-forge/pull/17))
 ## v0.5.6 - 2026-05-30
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.5...v0.5.6)
