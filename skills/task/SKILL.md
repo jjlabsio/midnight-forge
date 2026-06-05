@@ -97,6 +97,14 @@ Task IDs are 4-digit zero-padded strings such as `"0001"`. Work item IDs include
 
 Before creating a task, scan `.mdf/work/*/item.md` for existing `task_id` values and choose one greater than the largest numeric ID. Never choose an ID whose work item directory already exists. Do not overwrite an existing `item.md`.
 
+When a user explicitly names a task ID for work, normalize the requested ID to a 4-digit string before lookup. Examples: `49`, `0049`, `work 49`, `work 0049`, `0049 작업`, and `49 작업` all name `task_id: "0049"`.
+
+Explicit task IDs are exact identifiers, not search hints. Before creating a branch, creating a worktree, creating or replacing a lock, reading implementation files, inspecting code, mutating task state, or modifying project code, resolve exactly one matching item card by `task_id` from the current project's canonical `.mdf/work/*/item.md`.
+
+If no canonical item card matches the normalized explicit task ID, stop immediately and ask the user to confirm the intended project or task ID. Do not infer or substitute another task from similar titles, keywords, branches, worktrees, lock files, current code state, or surrounding natural-language hints. Related tasks may be mentioned only as informational context after stopping.
+
+If multiple item cards claim the same normalized explicit task ID, stop and report the duplicated task state. Do not choose one.
+
 ## Work Item File Format
 
 Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md`:
@@ -271,14 +279,18 @@ Same as `add`, and write a `due` frontmatter field. Parse dates with the current
 Start a specific task.
 
 1. Require a task ID.
-2. Find the matching `.mdf/work/*/item.md` by `task_id`; report a clear error if missing or malformed.
-3. Reject done tasks.
-4. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
-5. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not ignored, offer the setup branch and PR flow from the Worktree Guard section instead of locking the task. Stop without locking the task if worktree setup does not complete.
-6. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
-7. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
-8. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
-9. Print a briefing with task title, work ID, status, canonical root, worktree, branch, context, file summaries, criteria, and recent log entries.
+2. Normalize the requested task ID to a 4-digit string before lookup.
+3. Resolve the canonical project root, then scan only `<canonical-root>/.mdf/work/*/item.md` for item cards whose frontmatter `task_id` exactly equals the normalized ID.
+4. If no item card matches, stop immediately and ask the user to confirm the intended project or task ID. Do not create a branch, create a worktree, create or replace a lock, read implementation files, inspect code to infer likely intent, mutate task state, or modify project code.
+5. If more than one item card matches, stop and report the duplicated task state. Do not choose one.
+6. Do not substitute similar tasks based on title, keywords, branches, worktrees, lock files, current code state, or surrounding natural-language hints. Related tasks may be mentioned only as informational context after stopping.
+7. Reject done tasks.
+8. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
+9. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not ignored, offer the setup branch and PR flow from the Worktree Guard section instead of locking the task. Stop without locking the task if worktree setup does not complete.
+10. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
+11. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
+12. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
+13. Print a briefing with task title, work ID, status, canonical root, worktree, branch, context, file summaries, criteria, and recent log entries.
 
 ### `done`
 
@@ -334,4 +346,4 @@ Delete a task only after explicit user confirmation.
 
 ## Error Handling
 
-Report clear errors for missing task ID, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, attempting `bump` or `top` on active or done tasks, and existing locks without takeover confirmation.
+Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, attempting `bump` or `top` on active or done tasks, and existing locks without takeover confirmation.
