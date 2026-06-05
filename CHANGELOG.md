@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.2 - 2026-06-05
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.1...v0.6.2)
+
+### Changes
+
+- docs(workflow): tighten task and merge workflows ([#21](https://github.com/jjlabsio/midnight-forge/pull/21))
 ## v0.6.1 - 2026-06-05
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.0...v0.6.1)
