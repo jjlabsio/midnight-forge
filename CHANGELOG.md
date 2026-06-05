@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.1 - 2026-06-05
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.0...v0.6.1)
+
+### Changes
+
+- chore: ignore local workflow state ([#20](https://github.com/jjlabsio/midnight-forge/pull/20))
 ## v0.6.0 - 2026-05-31
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.5.8...v0.6.0)
