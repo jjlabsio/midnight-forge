@@ -99,8 +99,11 @@ For a successful planned task that should continue through PR preparation
 without manual command handoffs, `auto-workflow` runs the interactive lifecycle
 as `spec -> plan -> build with subagents -> review -> ship -> github-pr`.
 It delegates each phase to the real phase skill and stops whenever a delegated
-phase asks for input, reports review findings, returns NO-GO, or hits a git/PR
-ambiguity.
+phase asks for input, cannot complete its gate, returns NO-GO, or hits a
+git/PR ambiguity. Standalone review findings that are actionable within the
+approved scope enter an automatic fix, verification, and re-review loop; the
+workflow stops only when a finding needs user judgment, risk acceptance, scope
+expansion, or repeated fix attempts fail.
 
 `spec`, `plan`, and `build` use inline loops by default. `spec` and `plan` draft reviewed workflow artifacts before implementation. `build` processes the approved plan with task-level verification and review loops. Codex may run build-internal reviews inline, but task review and whole-build review still produce separate `.mdf/work/{work_id}/review-NNN.md` artifacts; summaries inside `build-NNN.md` do not satisfy those gates. `review` remains the independent standalone review step when desired before PR, merge, or ship. `ship` remains the final GO/NO-GO gate. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
 
