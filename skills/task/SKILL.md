@@ -29,7 +29,7 @@ Project storage layout:
 └── locks/
 ```
 
-Initialize this layout lazily for write commands. Do not create storage for read-only errors. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored by git.
+Initialize this layout lazily for write commands. Do not create storage for read-only errors. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored by git. Check the directory-form path with a trailing slash, such as `git check-ignore -q "<canonical-root>/.mdf/"`, so a `.gitignore` entry like `.mdf/` is recognized even before the `.mdf` directory exists.
 
 If `.mdf/` is not ignored:
 
