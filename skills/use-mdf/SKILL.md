@@ -37,6 +37,7 @@ Task arrives
     ├── Migrating legacy tasks? ───────→ migrate-tasks
     ├── Creating a commit? ────────────→ github-commit
     ├── Preparing a GitHub PR? ────────→ github-pr
+    ├── PR merged, need local sync? ───→ github-after-merge
     ├── Cleaning gone branches? ───────→ github-clear-gone
     ├── General git workflow? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
@@ -60,7 +61,7 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
 | `migrate-tasks`, `mdf migrate-tasks`, `$migrate-tasks`, legacy task migration | `migrate-tasks` | copy-first migration into canonical `.mdf/work/` storage |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-after-merge` after a PR has been merged to verify the merge, return the canonical checkout to the default branch, fast-forward it, and hand off stale branch/worktree cleanup to `github-clear-gone`; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
 
 ## MDF Artifact Storage
 
@@ -217,6 +218,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Review | performance-optimization | Measure first, optimize only what matters |
 | Ship | github-commit | Create one git commit from the current diff |
 | Ship | github-pr | Complete the current session's MDF task before GitHub PR preparation |
+| Ship | github-after-merge | After a merged PR, return to the default branch, update it, and hand off gone cleanup |
 | Ship | github-clear-gone | Remove stale gone local branches and associated worktrees after confirmation |
 | Ship | git-workflow-and-versioning | General git workflow and versioning guidance |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |

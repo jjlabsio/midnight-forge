@@ -186,3 +186,5 @@ Stop instead of continuing when:
 This skill may complete the current session's MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. This skill may use `github-commit` before PR creation when uncommitted changes exist.
 
 When invoked, push the current branch to `origin` and create a GitHub PR with `gh pr create`. If an open PR already exists for the current branch, report its URL instead of creating a duplicate. Do not require a second explicit confirmation for PR creation.
+
+After the PR is created or reported, stop. PR review, CI, merge, default-branch sync, and stale worktree cleanup happen later. Once the user says the PR has been merged, use `github-after-merge` to verify the merge, return the canonical checkout to the default branch, fast-forward it, and then use `github-clear-gone` for confirmed branch/worktree cleanup.
