@@ -32,10 +32,16 @@ git worktree list
 ```
 
 4. For every `[gone]` branch, identify whether it has an associated worktree. Branches with a `+` prefix in `git branch -v` usually do.
-5. Show the exact branches and worktree paths that would be removed.
-6. Ask for explicit confirmation before deleting anything.
-7. After confirmation, remove associated worktrees first, then delete the local branches.
-8. Report what was removed. If no branches are marked `[gone]`, report that no cleanup was needed.
+5. For every associated worktree, check whether it has uncommitted changes:
+
+```bash
+git -C "<worktree-path>" status --short
+```
+
+6. Show the exact branches and worktree paths that would be removed, including each associated worktree's dirty/clean status. If a worktree is dirty, include the `git status --short` output.
+7. Ask for explicit confirmation before deleting anything. Dirty worktrees require separate explicit confirmation that names the dirty worktree path and acknowledges uncommitted changes will be discarded.
+8. After confirmation, remove associated worktrees first, then delete the local branches. Do not remove a dirty worktree unless the separate dirty-worktree confirmation was given.
+9. Report what was removed. If no branches are marked `[gone]`, report that no cleanup was needed.
 
 ## Deletion Commands
 
@@ -46,8 +52,8 @@ git worktree remove --force "<worktree-path>"
 git branch -D "<branch-name>"
 ```
 
-Only run `git worktree remove` when the worktree path is not the current repository root.
+Only run `git worktree remove` when the worktree path is not the current repository root. Use `--force` only after the clean/dirty status has been shown and the required confirmation has been given.
 
 ## Boundaries
 
-Never delete branches that are not marked `[gone]`. Never delete the current branch. Never delete worktrees or branches without explicit confirmation.
+Never delete branches that are not marked `[gone]`. Never delete the current branch. Never delete worktrees or branches without explicit confirmation. Never delete a dirty worktree without separate explicit confirmation that acknowledges uncommitted changes will be discarded.

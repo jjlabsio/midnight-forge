@@ -57,9 +57,10 @@ For each planned task:
 4. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
 5. Save a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
 6. Save a separate task-scope `.mdf/work/{work_id}/review-NNN.md` artifact against the task acceptance criteria
-7. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
-8. Commit the task-sized change only after the task build artifact and a passing task review artifact exist
-9. Continue to the next pending task
+7. Review the task against its acceptance criteria before moving to the next task
+8. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
+9. Commit the task-sized change only after the task build artifact and a passing task review artifact exist
+10. Continue to the next pending task
 
 The task-level build artifact must include a `Task Acceptance Traceability` matrix with one row per task acceptance criterion and one row per task-assigned high-risk semantic criterion:
 

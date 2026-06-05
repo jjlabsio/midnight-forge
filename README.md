@@ -181,10 +181,13 @@ Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Be
 
 When the session identifies exactly one valid active MDF task, `github-pr` first fetches the remote base branch and verifies that the current branch merges cleanly. It then uses the `task` skill's completion behavior with the log message `Completed task before PR creation.`, pushes the branch, and creates a GitHub PR. If an open PR already exists for the branch, it reports that PR instead of creating a duplicate. If the session task is ambiguous, conflicts with local task/worktree/branch state, or does not merge cleanly into the remote base branch, PR creation stops for user clarification.
 
+After a PR is created, the local session stops until the user reviews, waits for CI, and merges the PR. Once the PR is merged, use `github-after-merge` as a separate follow-up workflow. It verifies the PR is merged, returns the canonical checkout to the default branch, runs `git fetch --prune` and `git pull --ff-only`, then hands stale branch and worktree cleanup to `github-clear-gone`, which still requires explicit confirmation before deletion.
+
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 
 - `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
 - `github-pr`: use `github-commit` when uncommitted changes exist, prepare a Conventional Commit PR title plus a body with summary, test plan, and MDF task note, then push and create the remote PR.
+- `github-after-merge`: after a merged PR, sync the canonical checkout back to the default branch before further code exploration or new task work, then hand off gone cleanup.
 - `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
 
 ## Agent Skills Workflows
@@ -197,7 +200,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 - `references/`: testing, security, performance, accessibility, and orchestration references
 - `agents/`: local persona prompts for `code-reviewer`, `security-auditor`, `test-engineer`, `spec-evaluator`, and `plan-evaluator`
 
-The `use-mdf` meta skill routes development workflow decisions such as auto-workflow, spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
+The `use-mdf` meta skill routes development workflow decisions such as auto-workflow, spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, post-merge sync, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
 The recommended happy path for planned work is `spec -> plan -> build -> review -> ship` when independent review is desired. `spec`, `plan`, and `build` use inline loops by default: `spec` and `plan` run inline blocker-oriented self-review before saving artifacts, and `build` runs inline implementation, verification, task review, and whole-build review gates.
 

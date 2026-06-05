@@ -80,7 +80,7 @@ if [ -z "$default_branch" ]; then
 fi
 git fetch origin "$default_branch"
 git show-ref --verify --quiet "refs/remotes/origin/$default_branch"
-git check-ignore -q "$project_root/.worktrees"
+git check-ignore -q "$project_root/.worktrees/"
 git show-ref --verify --quiet "refs/heads/<branch-name>"
 test -e "$project_root/.worktrees/<branch-name>"
 ```
