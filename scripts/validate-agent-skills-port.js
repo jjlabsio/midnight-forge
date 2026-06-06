@@ -281,11 +281,29 @@ for (const text of [
   "use the `task` skill's `done {id} --message \"message\"` completion behavior",
   "Completed task before PR creation.",
   "Analyze all commits in the branch, not just the latest commit",
+  "## Design",
+  "## Service Impact",
+  "## Operational Checklist",
+  "environment variables or secrets",
+  "QStash",
+  "SQL migrations",
   "## Test Plan",
   "Do not require a second explicit confirmation before pushing or creating the PR",
   "gh pr create",
 ]) {
   assertContains(githubPr, text);
+}
+
+const pullRequestTemplate = rel(".github", "pull_request_template.md");
+for (const text of [
+  "## Summary",
+  "## Design",
+  "## Service Impact",
+  "## Operational Checklist",
+  "## Test Plan",
+  "## MDF",
+]) {
+  assertContains(pullRequestTemplate, text);
 }
 
 const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md");

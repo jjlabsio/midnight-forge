@@ -1,15 +1,18 @@
 ## Summary
 
 
-## Release
+## Design
 
-release: none
 
-<!--
-Required. Choose one:
-- release: major
-- release: minor
-- release: patch
-- release: none
-- release: 0.1.0
--->
+## Service Impact
+
+
+## Operational Checklist
+- [ ]
+
+
+## Test Plan
+- [ ]
+
+
+## MDF

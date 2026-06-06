@@ -137,6 +137,15 @@ Use this simple PR body shape:
 - ...
 - ...
 
+## Design
+- ...
+
+## Service Impact
+- ...
+
+## Operational Checklist
+- [ ] ...
+
 ## Test Plan
 - [ ] ...
 
@@ -144,7 +153,17 @@ Use this simple PR body shape:
 - Completed task: ...
 ```
 
-Keep the summary to 1-3 bullets. Include a test plan checklist even when verification was not run; mark unchecked items honestly.
+Keep the summary to 1-3 bullets focused on what changed at the product or service level. Use `Design` for the large technical shape of the work: architecture boundaries, public interface choices, data flow, compatibility decisions, or why the chosen approach fits the codebase. Do not turn `Design` into a file-by-file implementation log.
+
+Use `Service Impact` for expected user, operator, release, security, performance, data, or compatibility effects. If there is no user-facing or operational impact, say that explicitly.
+
+Use `Operational Checklist` for manual actions required before deployment, during deployment, or after deployment outside the code change. Include environment variables or secrets to add in deployment platforms, third-party integrations such as QStash setup or login, webhook or cron registration, DNS changes, feature flag flips, SQL migrations, data backfills, secret rotation, manual verification in provider dashboards, and rollback or cleanup steps. Keep this section as a checklist. If no manual operational action is required, include:
+
+```markdown
+- [x] No manual operational actions required.
+```
+
+Include a test plan checklist even when verification was not run; mark unchecked items honestly.
 
 For this repository, normal release behavior is derived from the PR title. Use Conventional Commit style:
 
