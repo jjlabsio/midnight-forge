@@ -189,7 +189,7 @@ After a PR is created, the local session stops until the user reviews, waits for
 MDF also includes simple git workflow skills modeled after Claude Code's `commit-commands` plugin:
 
 - `github-commit`: inspect status, diff, branch, and recent commits, then create one commit.
-- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a Conventional Commit PR title plus a body with summary, test plan, and MDF task note, then push and create the remote PR.
+- `github-pr`: use `github-commit` when uncommitted changes exist, prepare a Conventional Commit PR title plus a body with summary, design, service impact, operational checklist, test plan, and MDF task note, then push and create the remote PR.
 - `github-after-merge`: after a merged PR, sync the canonical checkout back to the default branch before further code exploration or new task work, then hand off gone cleanup.
 - `github-clear-gone`: clean local `[gone]` branches and associated worktrees after explicit confirmation.
 
