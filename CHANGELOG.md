@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.4 - 2026-06-06
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.3...v0.6.4)
+
+### Changes
+
+- docs(github-pr): require operational PR context ([#23](https://github.com/jjlabsio/midnight-forge/pull/23))
 ## v0.6.3 - 2026-06-06
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.2...v0.6.3)
