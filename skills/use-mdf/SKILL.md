@@ -78,6 +78,15 @@ When a skill produces a markdown workflow artifact, resolve the current work ite
 
 Do not create a separate `.mdf/` directory inside linked worktrees. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored. If it is not ignored, stop and offer the same setup branch and PR flow used for local workflow state: add `.mdf/` to `.gitignore`, commit with `chore: ignore local mdf state`, optionally open a PR with the `release-none` label, and do not resume the original artifact write until the setup PR is merged. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
 
+Project-level interpretation caches that are not per-work-item artifacts live under `<canonical-root>/.mdf/project/`. The docs taxonomy profile cache uses:
+
+```text
+<canonical-root>/.mdf/project/docs-profile.json
+<canonical-root>/.mdf/project/docs-profile.md
+```
+
+This cache helps agents avoid repeatedly rediscovering docs placement rules, but it is not the source of truth. Tracked docs policy files and existing docs taxonomy remain authoritative. Use the cache only when fresh and high-confidence; otherwise rescan or stop before tracked docs writes when placement is ambiguous. Do not store this cache inside linked worktrees or as primary state under `~/.mdf`.
+
 ## Core Operating Behaviors
 
 These behaviors apply at all times, across all skills. They are non-negotiable.
