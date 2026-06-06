@@ -72,12 +72,31 @@ only stops when a delegated phase asks for input or cannot continue.
 
 After `build`, always run standalone `review`.
 
-If standalone `review` reports any finding of any severity - `Critical`,
-`Important`, or `Suggestion` - stop before `ship`. Preserve or save the review
-artifact according to the review skill, summarize the findings, and ask the
-user whether to fix, accept the risk and continue, or stop.
+If standalone `review` reports findings, classify them before deciding whether
+to stop:
 
-Proceed to `ship` only when standalone `review` returns no findings.
+- **Actionable findings** are findings the agent can fix within the approved
+  spec, plan, and current change scope without user judgment. Fix them
+  automatically, rerun affected verification, update build or debug evidence
+  when needed, and rerun standalone `review`.
+- **Decision-required findings** are findings that require user judgment, risk
+  acceptance, product or API direction, scope expansion, compatibility tradeoffs,
+  data migration decisions, release policy choices, or security/privacy risk
+  acceptance. Stop before `ship`, preserve or save the review artifact according
+  to the review skill, summarize the decision needed, and ask the user how to
+  proceed.
+- **Non-blocking findings** are explicitly optional observations that do not
+  affect correctness, safety, spec compliance, maintainability, or release
+  readiness. Record them in the review artifact and continue only when the
+  review verdict still permits proceeding.
+
+Run at most three standalone review fix-loop attempts for the same review gate.
+If the same finding recurs, new verification fails, or the loop cannot produce a
+passing standalone review within three attempts, stop before `ship` and report
+the remaining findings and attempted fixes.
+
+Proceed to `ship` only when standalone `review` returns no findings, or only
+explicitly non-blocking findings with a passing review verdict.
 
 ### Ship Stop
 
