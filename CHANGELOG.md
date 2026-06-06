@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.3 - 2026-06-06
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.2...v0.6.3)
+
+### Changes
+
+- fix(auto-workflow): loop over actionable review findings ([#22](https://github.com/jjlabsio/midnight-forge/pull/22))
 ## v0.6.2 - 2026-06-05
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.1...v0.6.2)
