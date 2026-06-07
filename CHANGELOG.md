@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.5 - 2026-06-07
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.4...v0.6.5)
+
+### Changes
+
+- docs(workflow): add docs profile cache guidance ([#24](https://github.com/jjlabsio/midnight-forge/pull/24))
 ## v0.6.4 - 2026-06-06
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.3...v0.6.4)
