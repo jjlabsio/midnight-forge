@@ -41,7 +41,11 @@ Once all three reports are back, the main agent (not a sub-persona) synthesizes 
 3. **Performance** — Pull from `code-reviewer`'s performance axis; cross-check Core Web Vitals if applicable.
 4. **Accessibility** — Verify keyboard nav, screen reader support, contrast (not covered by the three personas — handle directly here, or invoke the accessibility checklist).
 5. **Infrastructure** — Env vars, migrations, monitoring, feature flags. Verify directly.
-6. **Documentation** — README, ADRs, changelog. Verify directly.
+6. **Documentation** — README, decision records, changelog. Verify directly.
+   For durable tracked docs, use the docs profile behavior from
+   `skills/documentation-and-adrs/SKILL.md`: existing project docs rules are
+   source of truth, `.mdf/project/docs-profile.*` is only a fresh
+   high-confidence cache, and ambiguous placement stops before tracked writes.
 
 ## Phase C — Decision and rollback
 

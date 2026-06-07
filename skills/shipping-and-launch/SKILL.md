@@ -72,7 +72,8 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 - [ ] README updated with any new setup requirements
 - [ ] API documentation current
-- [ ] ADRs written for any architectural decisions
+- [ ] Durable decision records written for any architectural, product, migration, or launch decisions that project policy requires
+- [ ] Tracked docs placement follows the discovered project docs rules, using a fresh high-confidence `.mdf/project/docs-profile.*` cache only as an interpretation cache
 - [ ] Changelog updated
 - [ ] User-facing documentation updated (if applicable)
 

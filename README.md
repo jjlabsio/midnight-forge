@@ -142,6 +142,31 @@ Cross-project discovery uses a lightweight registry:
 
 Because `.mdf/` is gitignored, task state and workflow artifacts are not committed, pushed, or shared with teammates through PRs unless the user explicitly promotes a document into tracked project files.
 
+## Docs Profile Cache
+
+MDF treats tracked project docs as durable shared documentation and local `.mdf/work/{work_id}/` artifacts as workflow evidence. Before an agent writes durable tracked docs for important architecture, product, migration, operations, or launch decisions, it should discover the project's existing docs rules and taxonomy instead of guessing a destination.
+
+Discovery looks at policy and navigation files such as `docs/AGENTS.md`, `docs/CLAUDE.md`, root `AGENTS.md`, root `CLAUDE.md`, `docs/index.md`, root `README.md`, area indexes, and existing decision docs. Those tracked files remain the source of truth. MDF defaults apply only when no stronger project convention exists.
+
+To avoid repeating that discovery in every session, MDF may cache the interpreted docs profile under the canonical project root:
+
+```text
+<canonical-project-root>/.mdf/project/docs-profile.json
+<canonical-project-root>/.mdf/project/docs-profile.md
+```
+
+This cache is project-local, gitignored, and shared by normal checkouts and project-local linked worktrees. A worktree under `<canonical-project-root>/.worktrees/<branch>` still reads and writes the canonical root `.mdf/project/` cache; it does not create an independent `.mdf` docs profile. The global `~/.mdf/projects.json` file remains only a thin registry of local projects, not the primary store for docs profile data.
+
+The docs profile records the source files inspected, detected taxonomy, decision placement rules, index update rules, confidence, ambiguities, and invalidation inputs such as source file hashes or mtimes. Agents may use it only when it is fresh and high-confidence. If the cache is missing, stale, low-confidence, or ambiguous, the agent rescans the tracked docs rules. If placement is still ambiguous, it stops before writing tracked docs and asks which convention to follow.
+
+For monorepos with no stronger existing convention, durable project-wide docs default to the canonical root `docs/`. The fallback decision convention is:
+
+```text
+docs/decisions/<area-or-design-unit>/<decision-slug>.md
+```
+
+MDF does not default to date-only files, one global numbered ADR sequence, or app/package-local docs for project-wide decisions. Existing feature-local or system-local conventions such as colocated `spec.md` and `decisions.md` remain valid when the project already uses them.
+
 Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:
 
 ```markdown

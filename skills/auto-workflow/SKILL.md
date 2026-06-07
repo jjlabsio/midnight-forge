@@ -53,6 +53,13 @@ Use the delegated skill's own artifact and status rules to decide whether a
 phase completed. When the evidence is ambiguous, stop and report exactly what is
 missing instead of guessing.
 
+When a phase needs to verify durable tracked documentation for architecture,
+product, migration, or launch decisions, delegate placement rules to
+`skills/documentation-and-adrs/SKILL.md`. Use a fresh, high-confidence
+project-local docs profile cache when available; rescan tracked docs policy and
+taxonomy when it is missing or stale; stop before tracked docs writes when the
+destination remains ambiguous.
+
 ## Stop Conditions
 
 Stop immediately when any delegated phase:
