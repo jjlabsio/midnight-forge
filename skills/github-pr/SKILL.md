@@ -55,7 +55,7 @@ Never complete an MDF task solely because it is the only active lock.
 
 Determine whether the current conversation clearly identifies one MDF task as the task for this PR. Valid session signals include:
 
-- The user explicitly named a task ID for this work, such as `002`, `task 002`, `$task work 002`, or "002 작업".
+- The user explicitly named a task ID for this work, such as `002`, `task 002`, `$task work 002`, or `work 002`.
 - The assistant created or replaced `locks/{id}.lock` in this session.
 - The assistant reported a worktree or branch for a specific task in this session.
 - The current work description clearly matches exactly one MDF task title already discussed in this session.

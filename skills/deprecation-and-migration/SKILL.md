@@ -5,7 +5,7 @@ description: Manages deprecation and migration. Use when removing old systems, A
 
 # Deprecation and Migration
 
-When saving migration plans, deprecation notes, or rollout evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/migration-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.migration` plus `.mdf/index.jsonl`.
+When saving migration plans, deprecation notes, or rollout evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/migration-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.migration` plus `.mdf/index.jsonl`.
 
 ## Overview
 

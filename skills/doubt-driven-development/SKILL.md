@@ -5,7 +5,7 @@ description: Subjects every non-trivial decision to a fresh-context adversarial 
 
 # Doubt-Driven Development
 
-When saving doubt cycle reports, adversarial findings, or reconciliation notes, resolve the current MDF work item and write `.mdf/work/{work_id}/doubt-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.doubt` plus `.mdf/index.jsonl`.
+When saving doubt cycle reports, adversarial findings, or reconciliation notes, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/doubt-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.doubt` plus `.mdf/index.jsonl`.
 
 ## Overview
 

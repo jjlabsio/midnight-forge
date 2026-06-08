@@ -74,7 +74,7 @@ Produce a single output:
 - [test-engineer report]
 ```
 
-When saving the ship decision, specialist report merge, or rollback plan, resolve the current MDF work item and write `.mdf/work/{work_id}/ship-NNN.md`. Update `item.md` `latest.ship` and `.mdf/index.jsonl`.
+When saving the ship decision, specialist report merge, or rollback plan, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ship-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.ship` and `.mdf/index.jsonl`.
 
 ## Rules
 

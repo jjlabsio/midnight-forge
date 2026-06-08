@@ -24,23 +24,20 @@ Project storage layout:
 ```text
 <canonical-root>/.mdf/
 ├── project.json
+├── project/init.json
 ├── index.jsonl
 ├── work/
 └── locks/
 ```
 
-Initialize this layout lazily for write commands. Do not create storage for read-only errors. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored by git. Check the directory-form path with a trailing slash, such as `git check-ignore -q "<canonical-root>/.mdf/"`, so a `.gitignore` entry like `.mdf/` is recognized even before the `.mdf` directory exists.
+Before reading or writing MDF task state, verify MDF init state:
 
-If `.mdf/` is not ignored:
+1. User init exists at `~/.mdf/user/init.json`.
+2. `~/.mdf/user/preferences.json` exists and has a non-empty `human_language`.
+3. Project init exists at `<canonical-root>/.mdf/project/init.json`.
+4. The canonical project layout exists.
 
-1. Do not create or write `.mdf/`.
-2. Ask whether to create a setup branch that adds `.mdf/` to `.gitignore` and opens a PR before starting the task.
-3. If the user agrees, perform setup from the normal repository checkout, not from a task worktree. Stop first if the checkout has uncommitted changes.
-4. Create a branch named `chore/ignore-mdf`, or `chore/ignore-local-workflow-state` when adding both `.mdf/` and `.worktrees/`.
-5. Add `.mdf/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
-6. Commit the change with the message `chore: ignore local mdf state`, or `chore: ignore local workflow state` when adding both `.mdf/` and `.worktrees/`.
-7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with the `release-none` label. If pushing or PR creation fails, report the branch, commit, and exact failure.
-8. Do not resume the original task or artifact write until the setup PR has been merged and the command is run again.
+If init state is missing or malformed, stop before reading or writing MDF task state and instruct the user to run `mdf init`. Do not auto-initialize from this skill. Do not edit `.gitignore`, create setup branches, create setup commits, push setup branches, or create setup PRs from this skill; local workflow-state setup belongs only to `mdf init`.
 
 Do not create an independent `.mdf/` directory inside a linked worktree. A task running from `<canonical-root>/.worktrees/<branch>` still reads and writes `<canonical-root>/.mdf/`.
 
@@ -65,7 +62,7 @@ Use the canonical root basename for `name`. Include `remote` when origin exists;
 
 When a task or artifact changes, update or append the corresponding index entry so the latest line for a `work_id` is authoritative.
 
-Whenever `<canonical-root>/.mdf/` is initialized, upsert this project into `~/.mdf/projects.json`. The file must use this schema:
+When `mdf init` initializes `<canonical-root>/.mdf/`, it upserts this project into `~/.mdf/projects.json`. The file must use this schema:
 
 ```json
 {
@@ -97,7 +94,7 @@ Task IDs are 4-digit zero-padded strings such as `"0001"`. Work item IDs include
 
 Before creating a task, scan `.mdf/work/*/item.md` for existing `task_id` values and choose one greater than the largest numeric ID. Never choose an ID whose work item directory already exists. Do not overwrite an existing `item.md`.
 
-When a user explicitly names a task ID for work, normalize the requested ID to a 4-digit string before lookup. Examples: `49`, `0049`, `work 49`, `work 0049`, `0049 작업`, and `49 작업` all name `task_id: "0049"`.
+When a user explicitly names a task ID for work, normalize the requested ID to a 4-digit string before lookup. Examples: `49`, `0049`, `work 49`, `work 0049`, `start 49`, and `task 49` all name `task_id: "0049"`.
 
 Explicit task IDs are exact identifiers, not search hints. Before creating a branch, creating a worktree, creating or replacing a lock, reading implementation files, inspecting code, mutating task state, or modifying project code, resolve exactly one matching item card by `task_id` from the current project's canonical `.mdf/work/*/item.md`.
 
@@ -210,18 +207,7 @@ Use a lowercase ASCII slug for the title, remove punctuation, collapse separator
 
 If the current checkout is already a linked worktree, use it only when the `using-git-worktrees` skill accepts it. If the current checkout is a normal repository checkout on `main` or the default branch, automatically create the task worktree through `using-git-worktrees`.
 
-If `using-git-worktrees` stops because `.worktrees/` is not ignored, handle that as repository setup work before task activation:
-
-1. Do not create or replace `.mdf/locks/{id}.lock`; leave the task queued.
-2. Ask whether to create a setup branch that adds `.worktrees/` to `.gitignore` and opens a PR before starting the task.
-3. If the user agrees, perform the setup from the normal repository checkout, not from a task worktree. Stop first if the checkout has uncommitted changes.
-4. Create a branch named `chore/ignore-worktrees`, or a similarly clear unique branch if that branch already exists.
-5. Add `.worktrees/` to `.gitignore` without changing unrelated ignore rules. Create `.gitignore` if the repository does not have one.
-6. Commit the change with the message `chore: ignore local worktrees`.
-7. If the user agreed to open the PR, push the setup branch and create a GitHub PR with the `release-none` label. If pushing or PR creation fails, report the branch, commit, and exact failure.
-8. Do not resume or lock the original task until the setup PR has been merged and `work {id}` is run again.
-
-If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
+If `using-git-worktrees` stops because `.worktrees/` is not ignored or project init is missing, do not create or replace `.mdf/locks/{id}.lock`; leave the task queued and instruct the user to run `mdf init`. If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
 
 After `using-git-worktrees` succeeds, create `.mdf/locks/{id}.lock` using the canonical root, work ID, resulting worktree path, and branch. Update `item.md` with `status: "active"`, `worktree`, and `branch`. Continue the task briefing from that worktree.
 
@@ -231,17 +217,17 @@ Users do not need to memorize exact command names. Treat the commands below as c
 
 Use these mappings:
 
-- "add this as a task", "create a task", "task로 추가해", or similar -> `add "description"`
-- "put this first", "next task", "다음에 할 일로 추가해", or similar -> `add "description" --next`
-- "add a due date", "due", "마감일", or similar -> `add "description" --due DATE`
-- "work on 0002", "0002 작업할게", "0002 시작", or similar -> `work 0002`
-- "start the next queued task", "다음 작업 시작", or similar -> choose the first queue task by `order` and perform `work {id}`
-- "done", "complete this", "완료", "끝났어", or similar -> `done`
-- "complete 0002", "0002 완료", or similar -> `done 0002`
-- "log this", "note", "메모 남겨", or similar -> `note {id} "message"`
-- "move earlier", "우선순위 올려", or similar -> `bump {id}`
-- "move to top", "맨 위로", or similar -> `top {id}`
-- "delete", "remove", "drop", "삭제", or similar -> `drop {id}`
+- "add this as a task", "create a task", or similar -> `add "description"`
+- "put this first", "next task", or similar -> `add "description" --next`
+- "add a due date", "due", or similar -> `add "description" --due DATE`
+- "work on 0002", "start 0002", or similar -> `work 0002`
+- "start the next queued task" or similar -> choose the first queue task by `order` and perform `work {id}`
+- "done", "complete this", or similar -> `done`
+- "complete 0002" or similar -> `done 0002`
+- "log this", "note", or similar -> `note {id} "message"`
+- "move earlier", "bump this", or similar -> `bump {id}`
+- "move to top", "top this", or similar -> `top {id}`
+- "delete", "remove", "drop", or similar -> `drop {id}`
 
 If the intent maps to exactly one safe command, execute it. If the intent is ambiguous, ask one short clarifying question before changing task state. Keep explicit confirmation for destructive commands such as `drop`.
 
@@ -251,20 +237,19 @@ If the intent maps to exactly one safe command, execute it. If the intent is amb
 
 Create a queued task.
 
-1. Initialize project storage if needed.
-2. Ensure `.mdf/` is ignored by git before writing. If not ignored, follow the `.mdf/` setup branch and PR flow and stop.
-3. Ensure `<canonical-root>/.mdf/` exists with `project.json`, `index.jsonl`, `work/`, and `locks/`, then upsert `~/.mdf/projects.json`.
-4. Scan `.mdf/work/*/item.md` and find the largest existing numeric `task_id`.
-5. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
-6. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
-7. Generate a short title from the description.
-8. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
-9. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy.
-10. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
-11. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
-12. Append `- YYYY-MM-DD: Created task.` to `Log`.
-13. Append or update the work item's line in `.mdf/index.jsonl`.
-14. Report the task ID, work ID, title, and item file path.
+1. Verify MDF user and project init state exists. If it is missing, stop and instruct the user to run `mdf init`.
+2. Ensure `<canonical-root>/.mdf/` exists with `project.json`, `project/init.json`, `index.jsonl`, `work/`, and `locks/`.
+3. Scan `.mdf/work/*/item.md` and find the largest existing numeric `task_id`.
+4. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
+5. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
+6. Generate a short title from the description.
+7. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
+8. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy.
+9. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
+10. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
+11. Append `- YYYY-MM-DD: Created task.` to `Log`.
+12. Append or update the work item's line in `.mdf/index.jsonl`.
+13. Report the task ID, work ID, title, and item file path.
 
 ### `add "description" --next`
 
@@ -286,7 +271,7 @@ Start a specific task.
 6. Do not substitute similar tasks based on title, keywords, branches, worktrees, lock files, current code state, or surrounding natural-language hints. Related tasks may be mentioned only as informational context after stopping.
 7. Reject done tasks.
 8. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
-9. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not ignored, offer the setup branch and PR flow from the Worktree Guard section instead of locking the task. Stop without locking the task if worktree setup does not complete.
+9. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
 10. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
 11. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 12. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.

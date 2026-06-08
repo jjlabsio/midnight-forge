@@ -25,4 +25,4 @@ For bug fixes (Prove-It pattern):
 
 For browser-related issues, also invoke `browser-testing-with-devtools` to verify with Chrome DevTools MCP.
 
-When saving a test plan or test result report, resolve the current MDF work item and write `.mdf/work/{work_id}/test-NNN.md`. Update `item.md` `latest.test` and `.mdf/index.jsonl`.
+When saving a test plan or test result report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/test-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.test` and `.mdf/index.jsonl`.

@@ -44,19 +44,15 @@ Migrate into the canonical project root:
 ```text
 <canonical-root>/.mdf/
   project.json
+  project/init.json
   index.jsonl
   work/{work_id}/item.md
   locks/{task_id}.lock
 ```
 
-Before creating or writing `.mdf/`, verify that `.mdf/` is ignored by git. If `.mdf/` is not ignored, stop without writing and offer the same setup branch and PR flow used by the `task` skill:
+Before creating or writing canonical `.mdf/` migration output, verify MDF user and project init state. If `~/.mdf/user/init.json`, `~/.mdf/user/preferences.json` with `human_language`, or `<canonical-root>/.mdf/project/init.json` is missing or malformed, stop and instruct the user to run `mdf init`. Do not auto-initialize from this skill. Do not edit `.gitignore`, create setup branches, create setup commits, push setup branches, or create setup PRs from this skill.
 
-1. Add `.mdf/` to `.gitignore` on a setup branch such as `chore/ignore-mdf`.
-2. Commit with `chore: ignore local mdf state`.
-3. Optionally open a PR with the `release-none` label.
-4. Do not resume migration until that setup PR is merged and the command is run again.
-
-When initializing `<canonical-root>/.mdf/`, also upsert the project into `~/.mdf/projects.json`. The registry must use this schema:
+`mdf init` upserts the project into `~/.mdf/projects.json`. The registry must use this schema:
 
 ```json
 {
@@ -170,7 +166,7 @@ For `migrate-tasks all`, also summarize all migrated, skipped, and failed projec
 ## Safety Rules
 
 - Never delete, move, or rewrite legacy files.
-- Never write `.mdf/` when `.mdf/` is not gitignored.
+- Never write `.mdf/` when MDF project init is missing.
 - Never create an independent `.mdf/` inside a linked worktree.
 - Never overwrite existing canonical work items or locks.
 - Stop on ambiguous project matching.

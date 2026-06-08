@@ -5,7 +5,7 @@ description: Prepares production launches. Use when preparing to deploy to produ
 
 # Shipping and Launch
 
-When saving launch readiness notes, GO/NO-GO decisions, or rollback plans, resolve the current MDF work item and write `.mdf/work/{work_id}/ship-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.ship` plus `.mdf/index.jsonl`.
+When saving launch readiness notes, GO/NO-GO decisions, or rollback plans, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ship-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.ship` plus `.mdf/index.jsonl`.
 
 ## Overview
 

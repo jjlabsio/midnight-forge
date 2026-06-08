@@ -6,9 +6,8 @@ description: "Use when the user asks MDF to run the full lifecycle automatically
 # auto-workflow
 
 Use this skill when the user invokes `auto-workflow`, `mdf auto-workflow`,
-`$auto-workflow`, `/mdf:auto-workflow`, asks to run the full MDF lifecycle
-automatically, or asks in Korean to run the MDF workflow through PR without
-manual checkpoints.
+`$auto-workflow`, `/mdf:auto-workflow`, or asks to run the full MDF lifecycle
+through PR without manual checkpoints.
 
 This skill is an orchestration wrapper and state machine. It coordinates the
 existing MDF phase skills; it does not replace them.
@@ -36,7 +35,9 @@ and follow that phase skill:
 
 ## Start Point
 
-Before running phases, inspect the current MDF work item artifacts and start
+Before running phases, verify MDF user and project init state. If init state is
+missing, stop and instruct the user to run `mdf init`. Then inspect the current
+MDF work item artifacts and start
 from the first missing or incomplete phase:
 
 1. If no current spec artifact exists, start at `spec`.

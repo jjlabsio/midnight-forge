@@ -5,7 +5,7 @@ description: Guides systematic root-cause debugging. Use when tests fail, builds
 
 # Debugging and Error Recovery
 
-When saving reproduction steps, root-cause notes, or fix evidence, resolve the current MDF work item and write `.mdf/work/{work_id}/debug-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.debug` plus `.mdf/index.jsonl`.
+When saving reproduction steps, root-cause notes, or fix evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/debug-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.debug` plus `.mdf/index.jsonl`.
 
 ## Overview
 

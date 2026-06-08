@@ -5,7 +5,7 @@ description: Builds production-quality UIs. Use when building or modifying user-
 
 # Frontend UI Engineering
 
-When saving UI implementation notes, design decisions, or accessibility checks, resolve the current MDF work item and write `.mdf/work/{work_id}/ui-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.ui` plus `.mdf/index.jsonl`.
+When saving UI implementation notes, design decisions, or accessibility checks, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ui-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.ui` plus `.mdf/index.jsonl`.
 
 ## Overview
 
