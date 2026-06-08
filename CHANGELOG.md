@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.7 - 2026-06-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.6...v0.6.7)
+
+### Changes
+
+- docs: route auto-workflow spec clarity ([#26](https://github.com/jjlabsio/midnight-forge/pull/26))
 ## v0.6.6 - 2026-06-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.5...v0.6.6)
