@@ -27,7 +27,7 @@ and follow that phase skill:
 
 | Phase | Delegate to | Default auto-workflow behavior |
 | --- | --- | --- |
-| `spec` | `skills/spec/SKILL.md` | Create or update the current MDF spec artifact. |
+| `spec` | `skills/spec/SKILL.md` | Delegate initial requirement-clarity preflight to the `spec` entrypoint, then create or update the current MDF spec artifact. |
 | `plan` | `skills/plan/SKILL.md` | Create or update the current MDF plan artifact. |
 | `build with subagents` | `skills/build/SKILL.md` | Build all pending planned tasks with subagent support where the build skill allows it. |
 | `review` | `skills/review/SKILL.md` | Run standalone review after build, even though build has internal review gates. |
@@ -52,6 +52,11 @@ from the first missing or incomplete phase:
 Use the delegated skill's own artifact and status rules to decide whether a
 phase completed. When the evidence is ambiguous, stop and report exactly what is
 missing instead of guessing.
+
+When starting at `spec`, `auto-workflow` must not decide whether the user's
+requirements are clear enough itself. Initial requirement-clarity preflight is
+owned by the `spec` entrypoint, including any routing to `interview-me` before a
+spec is drafted.
 
 When a phase needs to verify durable tracked documentation for architecture,
 product, migration, or launch decisions, delegate placement rules to
