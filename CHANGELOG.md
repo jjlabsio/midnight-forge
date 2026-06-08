@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.0 - 2026-06-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.7...v0.7.0)
+
+### Changes
+
+- feat(init): centralize MDF initialization ([#27](https://github.com/jjlabsio/midnight-forge/pull/27))
 ## v0.6.7 - 2026-06-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.6...v0.6.7)
