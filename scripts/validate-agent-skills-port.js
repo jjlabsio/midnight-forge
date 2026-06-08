@@ -285,14 +285,28 @@ for (const text of [
   "## Service Impact",
   "## Operational Checklist",
   "environment variables or secrets",
-  "QStash",
+  "external operations impact scan",
+  "Before drafting `Service Impact` and `Operational Checklist`",
+  "added, removed, renamed, or no longer read",
+  "deployment platform",
+  "secret-store",
+  "third-party integration dashboards",
+  "webhook, cron, and queue providers",
+  "DNS",
+  "feature flags",
   "SQL migrations",
+  "data backfills",
+  "certificates/keys",
+  "provider-managed credentials",
+  "rollback or cleanup steps",
+  "only after the external operations impact scan finds no required manual action",
   "## Test Plan",
   "Do not require a second explicit confirmation before pushing or creating the PR",
   "gh pr create",
 ]) {
   assertContains(githubPr, text);
 }
+assertNotContains(githubPr, "QStash");
 
 const pullRequestTemplate = rel(".github", "pull_request_template.md");
 for (const text of [
