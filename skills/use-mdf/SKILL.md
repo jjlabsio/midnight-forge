@@ -17,6 +17,7 @@ When a task arrives, identify the development phase and apply the corresponding 
 Task arrives
     │
     ├── Don't know what you want yet? ──────→ interview-me
+    ├── Need MDF setup? ────────────────────→ init
     ├── Have a rough concept, need variants? → idea-refine
     ├── Run the full MDF lifecycle automatically? → auto-workflow
     ├── New project/feature/change? ──→ spec-driven-development
@@ -51,6 +52,7 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 
 | User intent | Entrypoint skill | Required initial workflow |
 | --- | --- | --- |
+| `init`, `mdf init`, `$init`, initialize MDF | `init` | user init, then project init when inside a project |
 | `auto-workflow`, `mdf auto-workflow`, `$auto-workflow`, run the full MDF lifecycle automatically | `auto-workflow` | delegate to `spec -> plan -> build with subagents -> review -> ship -> github-pr` |
 | `spec`, `mdf spec`, `$spec`, write a spec | `spec` | `spec-driven-development` |
 | `plan`, `mdf plan`, `$plan`, break down SPEC.md | `plan` | `planning-and-task-breakdown` |
@@ -61,22 +63,24 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
 | `migrate-tasks`, `mdf migrate-tasks`, `$migrate-tasks`, legacy task migration | `migrate-tasks` | copy-first migration into canonical `.mdf/work/` storage |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-after-merge` after a PR has been merged to verify the merge, return the canonical checkout to the default branch, fast-forward it, and hand off stale branch/worktree cleanup to `github-clear-gone`; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `init` owns MDF setup state and local workflow-state ignore policy. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-after-merge` after a PR has been merged to verify the merge, return the canonical checkout to the default branch, fast-forward it, and hand off stale branch/worktree cleanup to `github-clear-gone`; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
 
 ## MDF Artifact Storage
 
 When a skill produces a markdown workflow artifact, resolve the current work item before writing:
 
 1. Resolve the canonical project root. If running under `<canonical-root>/.worktrees/<branch>`, use `<canonical-root>`, not the linked worktree.
-2. Read `<canonical-root>/.mdf/locks/*.lock`.
-3. If a lock's `worktree` matches the current checkout and includes `work_id`, use that work item.
-4. If there is no matching lock, create an implicit work item under `<canonical-root>/.mdf/work/{work_id}/`.
-5. Write artifacts as `<canonical-root>/.mdf/work/{work_id}/{type}-NNN.md`.
-6. Repeated runs create new revisions such as `spec-001.md`, `spec-002.md`, and `review-001.md`.
-7. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.
-8. When initializing `<canonical-root>/.mdf/`, upsert the project into `~/.mdf/projects.json` keyed by `canonical_root`.
+2. Verify MDF user init exists: `~/.mdf/user/init.json` and `~/.mdf/user/preferences.json` with a non-empty `human_language`.
+3. Verify MDF project init exists: `<canonical-root>/.mdf/project/init.json` plus the canonical `.mdf/` layout.
+4. If user or project init is missing, stop before reading or writing MDF state and instruct the user to run `mdf init`.
+5. Read `<canonical-root>/.mdf/locks/*.lock`.
+6. If a lock's `worktree` matches the current checkout and includes `work_id`, use that work item.
+7. If there is no matching lock, create an implicit work item under `<canonical-root>/.mdf/work/{work_id}/`.
+8. Write artifacts as `<canonical-root>/.mdf/work/{work_id}/{type}-NNN.md`.
+9. Repeated runs create new revisions such as `spec-001.md`, `spec-002.md`, and `review-001.md`.
+10. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.
 
-Do not create a separate `.mdf/` directory inside linked worktrees. Before creating or writing `.mdf/` inside a git repository, verify that `.mdf/` is ignored. If it is not ignored, stop and offer the same setup branch and PR flow used for local workflow state: add `.mdf/` to `.gitignore`, commit with `chore: ignore local mdf state`, optionally open a PR with the `release-none` label, and do not resume the original artifact write until the setup PR is merged. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
+Do not create a separate `.mdf/` directory inside linked worktrees. Do not auto-initialize MDF state from artifact-producing skills. Do not edit `.gitignore`, create setup branches, create setup commits, push setup branches, or create setup PRs from artifact-producing skills; those actions belong only to `mdf init`. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
 
 Project-level interpretation caches that are not per-work-item artifacts live under `<canonical-root>/.mdf/project/`. The docs taxonomy profile cache uses:
 
@@ -207,6 +211,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 
 | Phase | Skill | One-Line Summary |
 |-------|-------|-----------------|
+| Setup | init | Initialize MDF user preferences, project state, registry, and local workflow-state ignore policy |
 | Define | interview-me | Surface what the user actually wants before any plan, spec, or code exists |
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |

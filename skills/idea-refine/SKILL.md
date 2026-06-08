@@ -137,7 +137,7 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md` (or a location of their choosing). Resolve `canonical_root` and `work_id` from the active lock first; if there is no active lock, create an implicit work item. Only promote idea notes into tracked docs such as `docs/ideas/[idea-name].md` when the user explicitly asks.
+Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md` (or a location of their choosing). Before saving to MDF state, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`. Resolve `canonical_root` and `work_id` from the active lock first; if there is no active lock, create an implicit work item. Only promote idea notes into tracked docs such as `docs/ideas/[idea-name].md` when the user explicitly asks.
 
 ### Anti-patterns to Avoid
 

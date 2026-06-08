@@ -5,13 +5,13 @@ description: Conducts multi-axis code review. Use before merging any change. Use
 
 # Code Review and Quality
 
-When saving a code review report, resolve the current MDF work item and write `.mdf/work/{work_id}/review-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.review` plus `.mdf/index.jsonl`.
+When saving a code review report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/review-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.review` plus `.mdf/index.jsonl`.
 
 ## Overview
 
 Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. MDF-managed work runs spec-compliance review before code-quality review. Code-quality review covers five axes: correctness, readability, architecture, security, and performance.
 
-Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the user's apparent conversation language for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
+Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the explicit `human_language` preference for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
 
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 

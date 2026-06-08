@@ -5,7 +5,7 @@ description: Automates CI/CD pipeline setup. Use when setting up or modifying bu
 
 # CI/CD and Automation
 
-When saving CI/CD plans, pipeline findings, or automation verification reports, resolve the current MDF work item and write `.mdf/work/{work_id}/ci-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.ci` plus `.mdf/index.jsonl`.
+When saving CI/CD plans, pipeline findings, or automation verification reports, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ci-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.ci` plus `.mdf/index.jsonl`.
 
 ## Overview
 

@@ -193,7 +193,7 @@ The spec is a living document, not a one-time artifact:
 - **Promote only when needed** — Commit a spec to tracked project docs only when the user explicitly asks or project policy requires it.
 - **Reference the spec in PRs when available** — Link to the tracked spec if promoted; otherwise summarize the relevant MDF spec artifact.
 
-For MDF workflow artifacts, save specs under the current work item by default:
+For MDF workflow artifacts, save specs under the current work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
 
 ```text
 <canonical-root>/.mdf/work/{work_id}/spec-NNN.md

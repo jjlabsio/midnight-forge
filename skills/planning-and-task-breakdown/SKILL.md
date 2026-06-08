@@ -249,7 +249,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 
 ## MDF Artifact Storage
 
-Save implementation plans under the current MDF work item by default:
+Save implementation plans under the current MDF work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
 
 ```text
 <canonical-root>/.mdf/work/{work_id}/plan-NNN.md

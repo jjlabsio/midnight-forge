@@ -5,7 +5,7 @@ description: Records decisions and documentation. Use when making architectural 
 
 # Documentation and ADRs
 
-When saving local decision notes or ADR-style workflow artifacts, resolve the current MDF work item and write `.mdf/work/{work_id}/decision-NNN.md` by default. Only promote a decision into tracked project docs when the user explicitly asks or project policy requires a durable reviewed document.
+When saving local decision notes or ADR-style workflow artifacts, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/decision-NNN.md` by default. If init state is missing, stop and instruct the user to run `mdf init`. Only promote a decision into tracked project docs when the user explicitly asks or project policy requires a durable reviewed document.
 
 Before writing tracked project docs, discover the project's docs rules and taxonomy. Existing tracked docs policy files and structure are the source of truth; MDF defaults apply only when no stronger project convention exists.
 
@@ -44,7 +44,7 @@ To avoid rediscovering the same docs structure on every run, maintain a project-
 <canonical-root>/.mdf/project/docs-profile.md
 ```
 
-Do not create this cache inside linked worktrees. Do not store it as primary state under `~/.mdf`; the global `~/.mdf/projects.json` registry remains only a thin project index. Before writing `.mdf/project/docs-profile.*`, verify that `<canonical-root>/.mdf/` is ignored by git using the same `.mdf/` guard as the task and artifact storage workflows.
+Do not create this cache inside linked worktrees. Do not store it as primary state under `~/.mdf`; the global `~/.mdf/projects.json` registry remains only a thin project index. Before writing `.mdf/project/docs-profile.*`, verify MDF user and project init state. If init is missing, stop and instruct the user to run `mdf init`.
 
 The docs profile cache is an interpretation cache, not the source of truth. Tracked docs policy files and the tracked docs tree remain authoritative. Use the cache only when it is fresh and high-confidence.
 

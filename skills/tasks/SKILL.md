@@ -16,6 +16,7 @@ Current-project state lives under the canonical project root:
 ```text
 <canonical-root>/.mdf/
 ├── project.json
+├── project/init.json
 ├── index.jsonl
 ├── work/
 └── locks/
@@ -53,9 +54,17 @@ The registry file must use this schema:
 }
 ```
 
+Before reading MDF task board state, verify MDF init state:
+
+1. User init exists at `~/.mdf/user/init.json`.
+2. `~/.mdf/user/preferences.json` exists and has a non-empty `human_language`.
+3. Project init exists at `<canonical-root>/.mdf/project/init.json` for current-project board commands.
+
+If init state is missing or malformed, stop before reading MDF board state and instruct the user to run `mdf init`. Do not auto-initialize from this skill.
+
 Read project entries from `projects`, keyed by `canonical_root`. If `~/.mdf/projects.json` exists but is malformed or does not match this schema, report a clear registry error and do not guess another shape.
 
-Do not initialize storage for read-only board commands. If the current project has no MDF storage, show an empty board.
+Do not initialize storage for read-only board commands.
 
 ## Status Rules
 
@@ -87,7 +96,7 @@ Show the current project board. If storage is missing, show empty `Active`, `Que
 
 Show all local project boards.
 
-1. If `~/.mdf/projects.json` does not exist, report that no registered local MDF projects exist.
+1. If `~/.mdf/user/init.json`, `~/.mdf/user/preferences.json`, or `~/.mdf/projects.json` does not exist, stop and instruct the user to run `mdf init`.
 2. Read each entry in `projects` and resolve its canonical root.
 3. For each valid project, read `.mdf/index.jsonl`, `.mdf/work/*/item.md` when needed, and `.mdf/locks/`.
 4. Group output by project name from the registry or `.mdf/project.json`, including canonical root path.

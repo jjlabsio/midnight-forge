@@ -26,4 +26,4 @@ Categorize findings as Critical, Important, or Suggestion.
 Output a structured review with specific file:line references and fix recommendations.
 Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`.
 
-When saving the review report, resolve the current MDF work item and write `.mdf/work/{work_id}/review-NNN.md`. Update `item.md` `latest.review` and `.mdf/index.jsonl`.
+When saving the review report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/review-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.review` and `.mdf/index.jsonl`.

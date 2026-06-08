@@ -80,6 +80,7 @@ if [ -z "$default_branch" ]; then
 fi
 git fetch origin "$default_branch"
 git show-ref --verify --quiet "refs/remotes/origin/$default_branch"
+test -f "$project_root/.mdf/project/init.json"
 git check-ignore -q "$project_root/.worktrees/"
 git show-ref --verify --quiet "refs/heads/<branch-name>"
 test -e "$project_root/.worktrees/<branch-name>"
@@ -87,7 +88,7 @@ test -e "$project_root/.worktrees/<branch-name>"
 
 Stop if the repository does not have an `origin` remote, if the default branch cannot be resolved from `origin/HEAD` or `git remote show origin`, if fetching `origin/<default-branch>` fails, or if `origin/<default-branch>` does not exist.
 
-Stop if `.worktrees/` is not ignored. Do not edit `.gitignore` from this skill.
+Stop if MDF project init is missing or `.worktrees/` is not ignored. Do not edit `.gitignore` from this skill; instruct the user to run `mdf init`.
 
 Stop if the target branch already exists. Ask the user whether to reuse, rename, or delete the existing branch.
 
@@ -169,7 +170,7 @@ Stop instead of warning and continuing when:
 - The current linked worktree does not match the caller's expected MDF task lock path.
 - The repository does not have an `origin` remote.
 - The remote default branch cannot be resolved, fetched, or verified.
-- `.worktrees/` is not ignored.
+- MDF project init is missing or `.worktrees/` is not ignored.
 - The target branch already exists.
 - The target path already exists.
 - `git worktree add` fails.

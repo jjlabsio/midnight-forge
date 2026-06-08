@@ -5,7 +5,7 @@ description: Tests in real browsers via Chrome DevTools MCP. Use when building o
 
 # Browser Testing with DevTools
 
-When saving browser verification reports, console/network findings, or runtime screenshots notes, resolve the current MDF work item and write `.mdf/work/{work_id}/browser-NNN.md`. Repeated saves create new revisions and update `item.md` `latest.browser` plus `.mdf/index.jsonl`.
+When saving browser verification reports, console/network findings, or runtime screenshots notes, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/browser-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.browser` plus `.mdf/index.jsonl`.
 
 ## Overview
 

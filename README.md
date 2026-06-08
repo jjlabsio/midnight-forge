@@ -8,7 +8,7 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included MDF skills: `mdf-handshake`, `task`, `tasks`, `migrate-tasks`
+- Included MDF skills: `mdf-handshake`, `init`, `task`, `tasks`, `migrate-tasks`
 - Included agent-skills workflows: `auto-workflow`, `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
@@ -37,6 +37,12 @@ Invoke the handshake through the Claude command shim:
 /mdf:mdf-handshake
 ```
 
+Initialize MDF before task or workflow commands:
+
+```text
+/mdf:init
+```
+
 Invoke the task skills through Claude Code:
 
 ```text
@@ -62,6 +68,12 @@ Invoke the shared skill through Codex skills:
 
 ```text
 $mdf-handshake
+```
+
+Initialize MDF before task or workflow commands:
+
+```text
+$init
 ```
 
 Invoke the task skills through Codex:
@@ -117,14 +129,22 @@ Example: if a spec requires a continued DB-backed job to be reselected within th
 
 Midnight Forge includes a first-pass local task system built from LLM-driven skills:
 
+- Codex: `$init`
+- Claude Code: `/mdf:init`
 - Codex: `$task`, `$tasks`
 - Claude Code: `/mdf:task`, `/mdf:tasks`
+
+Run `mdf init` before using task or workflow commands. Init has two explicit phases:
+
+- User Init creates or verifies `~/.mdf/`, `~/.mdf/user/preferences.json`, and a required explicit `human_language` preference.
+- Project Init runs when invoked inside a project, prepares canonical project `.mdf/` state, writes a project init marker, upserts `~/.mdf/projects.json`, and owns local workflow-state ignore setup.
 
 Task state is local-only and gitignored under the canonical project root:
 
 ```text
 <canonical-project-root>/.mdf/
   project.json
+  project/init.json
   index.jsonl
   work/
   locks/
@@ -132,7 +152,7 @@ Task state is local-only and gitignored under the canonical project root:
 
 Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
-MDF only writes `.mdf/` after confirming it is ignored by git. If `.mdf/` is not ignored, the task flow stops and offers a setup branch/PR that adds `.mdf/` to `.gitignore` and applies the `release-none` label.
+MDF only writes project `.mdf/` state after `mdf init` confirms `.mdf/` and `.worktrees/` are ignored by git. If either path is not ignored, `mdf init` offers one setup branch/commit/PR flow for both entries together and applies the `release-none` label when a setup PR is opened. Other MDF skills stop and instruct the user to run `mdf init`; they do not edit `.gitignore` or create setup PRs.
 
 Cross-project discovery uses a lightweight registry:
 
@@ -197,11 +217,11 @@ Midnight Forge includes a `using-git-worktrees` skill for implementation work th
 .worktrees/<branch-name>
 ```
 
-The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be ignored by git; the skill does not edit `.gitignore`. New worktrees are created from the fetched remote default branch, not from a potentially stale local default branch. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
+The skill stops on ambiguous state instead of warning and continuing. `.worktrees/` must already be initialized and ignored through `mdf init`; the skill does not edit `.gitignore`. New worktrees are created from the fetched remote default branch, not from a potentially stale local default branch. After creating a worktree, it may copy common local environment files and install dependencies, but it does not run tests, builds, lint checks, write task locks, create commits, or prepare PRs.
 
 `$task work <id>` uses this worktree policy before marking a task active. If worktree setup fails, the task remains queued and no lock is written. When setup succeeds, the task lock records the resulting worktree path and branch. Natural-language requests such as "start the next queued task" are mapped to the first queued task and then use the same `work <id>` behavior.
 
-If task work cannot start because `.worktrees/` is not ignored, `$task work <id>` treats that as repository setup, not task work. It leaves the task queued, asks whether to create a `chore/ignore-worktrees` setup branch, adds `.worktrees/` to `.gitignore`, commits the change, and opens a no-release PR with the `release-none` label when the user agrees. The original task is not locked or resumed until that setup PR has been merged and `work <id>` is run again.
+If task work cannot start because project init or `.worktrees/` ignore setup is missing, `$task work <id>` leaves the task queued and instructs the user to run `mdf init`. The original task is not locked or resumed until init is complete and `work <id>` is run again.
 
 ## PR Policy
 
@@ -234,7 +254,7 @@ The recommended happy path for planned work is `spec -> plan -> build -> review 
 
 Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization for subagents/delegation/parallel agent work and runtime tool availability. When those conditions are met, `agents/spec-evaluator.md` and `agents/plan-evaluator.md` can be used as optional prompt templates for narrow blocker review. Without both conditions, normal workflow gates stay inline. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
 
-Human-facing prose in review and PR workflows follows the user's apparent conversation language. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, and repository conventions are preserved as written.
+Human-facing prose in review and PR workflows follows the explicit `human_language` preference from `~/.mdf/user/preferences.json` when available. Fixed workflow artifacts remain stable: MDF schema keys, task section headings, file paths, commands, code identifiers, branch names, release labels, required PR template headings, Conventional Commit prefixes, and repository conventions are preserved as written.
 
 ## Local Smoke Tests
 

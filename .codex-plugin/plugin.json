@@ -1,7 +1,7 @@
 {
   "name": "mdf",
   "version": "0.6.7",
-  "description": "Midnight Forge ships MDF task skills plus agent-skills workflows for auto-workflow, spec, plan, build, test, review, simplify, and ship.",
+  "description": "Midnight Forge ships MDF init/task skills plus agent-skills workflows for auto-workflow, spec, plan, build, test, review, simplify, and ship.",
   "author": {
     "name": "Jaejin Song"
   },
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Midnight Forge",
-    "shortDescription": "MDF task skills and agent-skills workflows for Codex and Claude Code.",
-    "longDescription": "Midnight Forge exposes local MDF task management plus vendored agent-skills workflows for auto-workflow, spec, plan, build, test, review, code-simplify, and ship. It includes workflow references and specialist persona prompts without requiring a separate agent-skills checkout.",
+    "shortDescription": "MDF init/task skills and agent-skills workflows for Codex and Claude Code.",
+    "longDescription": "Midnight Forge exposes local MDF initialization and task management plus vendored agent-skills workflows for auto-workflow, spec, plan, build, test, review, code-simplify, and ship. It includes workflow references and specialist persona prompts without requiring a separate agent-skills checkout.",
     "developerName": "Jaejin Song",
     "category": "Coding",
     "capabilities": [
@@ -27,7 +27,7 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Use the use-mdf skill to choose the right MDF workflow, run auto-workflow for the full interactive lifecycle, or run task/tasks for local MDF task management."
+      "Use init before MDF workflows, use the use-mdf skill to choose the right MDF workflow, run auto-workflow for the full interactive lifecycle, or run task/tasks for local MDF task management."
     ]
   }
 }

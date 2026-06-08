@@ -5,7 +5,7 @@ description: Optimizes agent context setup. Use when starting a new session, whe
 
 # Context Engineering
 
-When saving context audits, rules-file recommendations, or session maps, resolve the current MDF work item and write `.mdf/work/{work_id}/context-NNN.md`. Actual rules files such as `AGENTS.md` or `CLAUDE.md` remain in their normal project locations when explicitly created.
+When saving context audits, rules-file recommendations, or session maps, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/context-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Actual rules files such as `AGENTS.md` or `CLAUDE.md` remain in their normal project locations when explicitly created.
 
 ## Overview
 
