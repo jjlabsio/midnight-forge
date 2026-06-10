@@ -165,6 +165,28 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 
 This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, setup push, or setup PR flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, pushes, or PRs.
 
+### Optional Docs And Agent Rules Setup
+
+After ignore policy passes, inspect the tracked docs and agent-rule conventions before creating or updating project `.mdf/` state:
+
+- Docs policy files and indexes: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
+- Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
+- Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
+
+If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow. If no agent rules file exists, ask whether that setup branch should add `AGENTS.md` with the project documentation rule. If an agent rules file already exists, ask whether that setup branch should update the existing convention instead.
+
+Only create a setup branch when the user approves at least one tracked docs or agent-rule change. If the user approves a setup branch:
+
+1. Stop first if the current checkout has uncommitted changes.
+2. Perform setup from the normal repository checkout, not from a task worktree.
+3. Create a branch named `chore/mdf-init-docs`, or a similarly clear unique branch if that branch already exists.
+4. Add only the user-approved docs structure and agent-rule changes, preserving existing conventions and unrelated content.
+5. Commit with `chore: set up MDF project documentation`.
+6. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project documentation` with the `release-none` label.
+7. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+
+If the user declines tracked docs and agent-rule setup, or the project already has clear equivalent conventions, continue normal project init.
+
 ### Project Files
 
 After ignore policy passes, create any missing project layout:
