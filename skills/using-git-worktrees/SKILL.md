@@ -88,7 +88,7 @@ test -e "$project_root/.worktrees/<branch-name>"
 
 Stop if the repository does not have an `origin` remote, if the default branch cannot be resolved from `origin/HEAD` or `git remote show origin`, if fetching `origin/<default-branch>` fails, or if `origin/<default-branch>` does not exist.
 
-Stop if MDF project init is missing or `.worktrees/` is not ignored. Do not edit `.gitignore` from this skill; instruct the user to run `mdf init`.
+Stop if MDF project init is missing. Stop if `.worktrees/` is not ignored. Do not edit `.gitignore` from this skill; instruct the user to run `mdf init`.
 
 Stop if the target branch already exists. Ask the user whether to reuse, rename, or delete the existing branch.
 

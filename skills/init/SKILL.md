@@ -131,14 +131,21 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 
    Use `index.md` files for this structure. Do not add placeholder `README.md` files for these docs areas. If equivalent architecture, decisions, or operations directories already exist, do not create duplicate MDF fallback directories; preserve the existing convention instead.
 6. Ask whether the setup PR should add or update a project agent rules file with a documentation rule:
+   - Before asking, inspect existing agent rules for an equivalent instruction to check relevant project docs before starting code or design changes.
+   - Treat equivalent meaning as enough to skip, even when wording differs from MDF's suggested snippet.
+   - Do not require MDF marker comments or exact MDF wording to recognize an existing equivalent rule.
+   - If an equivalent unmarked or human-authored docs-before-work rule already exists, skip the agent-rules setup question and preserve the file unchanged.
    - If no agent rules file exists, ask whether to add `AGENTS.md`.
-   - If `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clear convention exists, ask whether to update that existing file instead of creating a duplicate.
+   - If `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clear convention exists and no equivalent unmarked or human-authored docs-before-work rule exists, ask whether to update that existing file instead of creating a duplicate.
    - If updating an existing file, preserve its style and unrelated content.
    - The rule must require agents to check relevant project docs before starting code or design changes.
+   - When MDF adds a new docs-before-work rule, wrap the inserted block in `<!-- MDF:BEGIN context-check -->` and `<!-- MDF:END context-check -->`.
+   - If an MDF-managed context-check block already exists, update only that block while preserving unrelated content.
 
    Suggested rule for `AGENTS.md` when no stronger project convention exists:
 
    ```markdown
+   <!-- MDF:BEGIN context-check -->
    ## Project Documentation
 
    Before making code or design changes, check the relevant project documentation first.
@@ -149,6 +156,7 @@ If either `.mdf/` or `.worktrees/` is not ignored:
    - `docs/operations/` for deployment, rollback, runbook, and operational guidance
 
    When adding, moving, or deleting tracked docs, update `docs/index.md` and the relevant area `index.md` in the same change.
+   <!-- MDF:END context-check -->
    ```
 
    Adapt paths only when the project already has equivalent docs paths. Keep generated prompt text, docs templates, and agent-rule snippets in English.
@@ -158,7 +166,8 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 10. Add only the user-approved setup changes:
    - Missing `.mdf/` and `.worktrees/` entries in `.gitignore`, preserving unrelated rules. Create `.gitignore` if the repository does not have one.
    - The basic docs structure only when the user approved it and no equivalent project convention exists.
-   - The agent rules addition or update only when the user approved it, preserving existing style and unrelated content.
+   - The agent rules addition or update only when the user approved it, no equivalent unmarked or human-authored docs-before-work rule already exists, and the change preserves existing style and unrelated content.
+   - MDF-created docs-before-work blocks must use `<!-- MDF:BEGIN context-check -->` and `<!-- MDF:END context-check -->`; marker-free human-authored equivalent rules must still be respected and not duplicated.
 11. Commit with `chore: set up MDF project workflow state`.
 12. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project workflow state` with the `release-none` label.
 13. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
@@ -175,7 +184,11 @@ After ignore policy passes, inspect the tracked docs and agent-rule conventions 
 
 If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow.
 
-Independently inspect agent rules. If no agent rules file exists, ask whether to create a setup branch and PR that adds `AGENTS.md` with the project documentation rule. If an agent rules file already exists, ask whether to create a setup branch and PR that updates the existing convention instead. This agent-rules setup question applies even when the project already has a clear docs structure.
+Independently inspect agent rules. Before asking about agent-rules setup, inspect existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clear project agent rules convention for an equivalent instruction to check relevant project docs before starting code or design changes. Treat equivalent meaning as enough to skip, even when wording differs from MDF's suggested snippet, and do not require MDF marker comments or exact MDF wording to recognize an existing equivalent rule. If an equivalent unmarked or human-authored docs-before-work rule already exists, skip the agent-rules setup question and preserve the file unchanged.
+
+If no equivalent unmarked or human-authored docs-before-work rule exists and no agent rules file exists, ask whether to create a setup branch and PR that adds `AGENTS.md` with the project documentation rule. If no equivalent unmarked or human-authored docs-before-work rule exists and an agent rules file already exists, ask whether to create a setup branch and PR that updates the existing convention instead. This agent-rules setup question applies even when the project already has a clear docs structure.
+
+When MDF adds a new docs-before-work rule, wrap the inserted block in `<!-- MDF:BEGIN context-check -->` and `<!-- MDF:END context-check -->`. If an MDF-managed context-check block already exists, update only that block while preserving unrelated content. Marker-free human-authored equivalent rules must still be respected and not duplicated; MDF-managed context-check blocks remain updateable within the marker boundary.
 
 Only create a setup branch when the user approves at least one tracked docs or agent-rule change. If the user approves a setup branch:
 
@@ -183,6 +196,8 @@ Only create a setup branch when the user approves at least one tracked docs or a
 2. Perform setup from the normal repository checkout, not from a task worktree.
 3. Create a branch named `chore/mdf-init-docs`, or a similarly clear unique branch if that branch already exists.
 4. Add only the user-approved docs structure and agent-rule changes, preserving existing conventions and unrelated content.
+   - Add or update agent rules only when no equivalent unmarked or human-authored docs-before-work rule already exists.
+   - Use MDF context-check markers for MDF-created docs-before-work blocks and update only the existing MDF-managed block when present.
 5. Commit with `chore: set up MDF project documentation`.
 6. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project documentation` with the `release-none` label.
 7. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.

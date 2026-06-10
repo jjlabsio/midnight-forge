@@ -239,6 +239,21 @@ for (const trigger of [
   assertContains(useMdf, trigger);
 }
 
+const initSkill = rel("skills", "init", "SKILL.md");
+for (const text of [
+  "equivalent instruction to check relevant project docs before starting code or design changes",
+  "Treat equivalent meaning as enough to skip",
+  "Do not require MDF marker comments or exact MDF wording",
+  "equivalent unmarked or human-authored docs-before-work rule",
+  "no equivalent unmarked or human-authored docs-before-work rule already exists",
+  "<!-- MDF:BEGIN context-check -->",
+  "<!-- MDF:END context-check -->",
+  "update only that block while preserving unrelated content",
+  "MDF-managed context-check blocks remain updateable within the marker boundary",
+]) {
+  assertContains(initSkill, text);
+}
+
 const usingGitWorktrees = rel("skills", "using-git-worktrees", "SKILL.md");
 for (const text of [
   "name: using-git-worktrees",
