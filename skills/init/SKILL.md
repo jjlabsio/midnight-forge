@@ -111,16 +111,83 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 
 1. Do not create or write project `.mdf/`.
 2. Show which entries are missing from ignore coverage.
-3. Ask whether to create one setup branch that handles both local workflow-state ignore entries, and whether to open a setup PR after committing.
-4. If the user agrees, stop first if the current checkout has uncommitted changes.
-5. Perform setup from the normal repository checkout, not from a task worktree.
-6. Create a branch named `chore/mdf-init-local-state`, or a similarly clear unique branch if that branch already exists.
-7. Add only the missing `.mdf/` and `.worktrees/` entries to `.gitignore`, preserving unrelated rules. Create `.gitignore` if the repository does not have one.
-8. Commit with `chore: ignore local MDF workflow state`.
-9. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: ignore local MDF workflow state` with the `release-none` label.
-10. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+3. Inspect the tracked docs and agent-rule conventions before asking setup questions:
+   - Docs policy files and indexes: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
+   - Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
+   - Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
+4. Ask whether to create one setup branch that handles both local workflow-state ignore entries, and whether to open a setup PR after committing.
+5. If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to include the basic docs structure in the same setup PR:
 
-This is the only MDF setup branch, `.gitignore` edit, setup commit, setup push, or setup PR flow for `.mdf/` and `.worktrees/`.
+   ```text
+   This project does not yet have a clear docs structure for MDF design and decision records.
+   Should the setup PR also add the basic docs structure MDF will use?
+
+   Files to add:
+   - docs/index.md
+   - docs/architecture/index.md
+   - docs/decisions/index.md
+   - docs/operations/index.md
+   ```
+
+   Use `index.md` files for this structure. Do not add placeholder `README.md` files for these docs areas. If equivalent architecture, decisions, or operations directories already exist, do not create duplicate MDF fallback directories; preserve the existing convention instead.
+6. Ask whether the setup PR should add or update a project agent rules file with a documentation rule:
+   - If no agent rules file exists, ask whether to add `AGENTS.md`.
+   - If `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clear convention exists, ask whether to update that existing file instead of creating a duplicate.
+   - If updating an existing file, preserve its style and unrelated content.
+   - The rule must require agents to check relevant project docs before starting code or design changes.
+
+   Suggested rule for `AGENTS.md` when no stronger project convention exists:
+
+   ```markdown
+   ## Project Documentation
+
+   Before making code or design changes, check the relevant project documentation first.
+
+   Start with `docs/index.md`, then read any related documents under:
+   - `docs/architecture/` for system design and structural decisions
+   - `docs/decisions/` for accepted or superseded decision records
+   - `docs/operations/` for deployment, rollback, runbook, and operational guidance
+
+   When adding, moving, or deleting tracked docs, update `docs/index.md` and the relevant area `index.md` in the same change.
+   ```
+
+   Adapt paths only when the project already has equivalent docs paths. Keep generated prompt text, docs templates, and agent-rule snippets in English.
+7. If the user agrees, stop first if the current checkout has uncommitted changes.
+8. Perform setup from the normal repository checkout, not from a task worktree.
+9. Create a branch named `chore/mdf-init-local-state`, or a similarly clear unique branch if that branch already exists.
+10. Add only the user-approved setup changes:
+   - Missing `.mdf/` and `.worktrees/` entries in `.gitignore`, preserving unrelated rules. Create `.gitignore` if the repository does not have one.
+   - The basic docs structure only when the user approved it and no equivalent project convention exists.
+   - The agent rules addition or update only when the user approved it, preserving existing style and unrelated content.
+11. Commit with `chore: set up MDF project workflow state`.
+12. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project workflow state` with the `release-none` label.
+13. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+
+This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, setup push, or setup PR flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, pushes, or PRs.
+
+### Optional Docs And Agent Rules Setup
+
+After ignore policy passes, inspect the tracked docs and agent-rule conventions before creating or updating project `.mdf/` state:
+
+- Docs policy files and indexes: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
+- Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
+- Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
+
+If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow.
+
+Independently inspect agent rules. If no agent rules file exists, ask whether to create a setup branch and PR that adds `AGENTS.md` with the project documentation rule. If an agent rules file already exists, ask whether to create a setup branch and PR that updates the existing convention instead. This agent-rules setup question applies even when the project already has a clear docs structure.
+
+Only create a setup branch when the user approves at least one tracked docs or agent-rule change. If the user approves a setup branch:
+
+1. Stop first if the current checkout has uncommitted changes.
+2. Perform setup from the normal repository checkout, not from a task worktree.
+3. Create a branch named `chore/mdf-init-docs`, or a similarly clear unique branch if that branch already exists.
+4. Add only the user-approved docs structure and agent-rule changes, preserving existing conventions and unrelated content.
+5. Commit with `chore: set up MDF project documentation`.
+6. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project documentation` with the `release-none` label.
+7. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+
+If the user declines tracked docs and agent-rule setup, or the project already has clear equivalent conventions, continue normal project init.
 
 ### Project Files
 
