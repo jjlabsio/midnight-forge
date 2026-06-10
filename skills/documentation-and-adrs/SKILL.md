@@ -27,6 +27,19 @@ Before writing or updating tracked project docs:
 
 For monorepos with no stronger existing convention, durable project-wide architecture, product, migration, and operations decisions default to the canonical root `docs/`, not `apps/*/docs` or `packages/*/docs`. App/package-local docs are appropriate only when the existing project convention clearly scopes that documentation to a local feature, package, or system boundary.
 
+When no equivalent project docs convention exists, MDF's basic docs structure is:
+
+```text
+docs/index.md
+docs/architecture/index.md
+docs/decisions/index.md
+docs/operations/index.md
+```
+
+Use `index.md` files for this structure. Do not create placeholder `README.md` files for these docs areas when the files are only standing in until real docs are written.
+
+If the project already has equivalent architecture, decisions, or operations docs, preserve those paths instead of creating duplicate MDF fallback directories. Record the equivalents in `.mdf/project/docs-profile.*` after project init exists, but continue treating tracked docs policy files and the tracked docs tree as the source of truth.
+
 When MDF must apply a fallback decision convention, use root-level `docs/decisions/` organized by area or design unit:
 
 ```text
@@ -34,6 +47,8 @@ docs/decisions/<area-or-design-unit>/<decision-slug>.md
 ```
 
 Avoid date-only filenames, a single global numbered ADR sequence, or placing durable decisions solely near the implementation file unless the project already uses that convention.
+
+When adding, moving, or deleting tracked docs under the basic docs structure, update `docs/index.md` and the relevant area `index.md` in the same change. If the project uses an equivalent structure, update its equivalent root and area indexes instead.
 
 ### Docs Profile Cache
 
@@ -72,14 +87,21 @@ The JSON profile should record enough evidence for future agents to trust or inv
     "decisions": "docs/decisions",
     "operations": "docs/operations"
   },
+  "equivalent_paths": {
+    "architecture": null,
+    "decisions": null,
+    "operations": null,
+    "agent_rules": null
+  },
   "decision_placement": {
     "default": "docs/decisions/<area-or-design-unit>/<decision-slug>.md",
     "monorepo_scope": "canonical-root-docs",
     "preserve_existing_feature_or_system_local_decisions": true
   },
   "index_update_rules": [
-    "Update docs/index.md when adding a new top-level docs area.",
-    "Update area index files when the existing taxonomy uses them."
+    "Update docs/index.md when adding, moving, or deleting tracked docs under the basic docs structure.",
+    "Update the relevant area index.md when adding, moving, or deleting tracked docs under docs/architecture, docs/decisions, or docs/operations.",
+    "Use equivalent project indexes instead when the tracked docs tree has a stronger existing convention."
   ],
   "confidence": "high",
   "ambiguities": []
