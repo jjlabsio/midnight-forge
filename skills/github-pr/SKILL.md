@@ -26,9 +26,28 @@ Before creating or updating a PR:
 5. Confirm the repository has an `origin` remote.
 6. Fetch the remote base branch and run the mergeability preflight below.
 7. Run the MDF task completion guard below.
-8. Summarize relevant commits, changed files, verification evidence, and release signal.
+8. Load the human-facing PR language using the PR language preflight below.
+9. Summarize relevant commits, changed files, verification evidence, release signal, and the selected human-facing PR language.
 
 Do not create a PR from uncommitted changes. Use `github-commit` first.
+
+## PR Language Preflight
+
+Before drafting a PR title or body, read `~/.mdf/user/preferences.json` and use its non-empty `human_language` value for human-facing PR prose. If the file is missing, unreadable, malformed, or `human_language` is empty, continue with English as the fallback language instead of stopping PR creation.
+
+Record the selected language in the PR preflight summary:
+
+```text
+Human-facing PR language: Korean
+```
+
+or, when falling back:
+
+```text
+Human-facing PR language: English (fallback)
+```
+
+Do not infer or write `human_language` during PR creation. This workflow only reads the preference when it exists.
 
 ## Mergeability Preflight
 
@@ -107,14 +126,39 @@ After the MDF task completion guard succeeds or determines there is no MDF task 
 3. Summarize changed files and notable commits.
 4. Include verification commands and outcomes.
 5. Include the completed MDF task ID when one was completed.
-6. Draft a concise Conventional Commit PR title and body.
-7. Include the `release-none` label only when the PR should not release.
-8. Push the current branch to `origin`.
-9. Check whether an open PR already exists for the current branch.
-10. If an open PR exists, report its URL instead of creating a duplicate.
-11. If no open PR exists, create one with `gh pr create`.
+6. Draft a concise Conventional Commit PR title and body using the selected human-facing PR language.
+7. Run the PR language gate below and revise the draft until it passes.
+8. Include the `release-none` label only when the PR should not release.
+9. Push the current branch to `origin`.
+10. Check whether an open PR already exists for the current branch.
+11. If an open PR exists, update it when the current task changed the intended PR title or body; otherwise report its URL instead of creating a duplicate.
+12. If no open PR exists, create one with `gh pr create`.
 
 Before drafting PR title prose or PR body bullet prose, follow `../../references/human-facing-language.md`. Keep required PR template headings, release labels, file paths, commands, and repository conventions exactly as specified.
+
+Use the selected human-facing PR language for:
+
+- The PR title summary prose after the Conventional Commit prefix.
+- PR body bullet prose.
+- `Service Impact` explanatory prose.
+- `Operational Checklist` item prose.
+- `Test Plan` explanatory prose.
+
+Preserve these fixed contract elements exactly as written:
+
+- PR template headings such as `## Summary`, `## Design`, `## Service Impact`, `## Operational Checklist`, `## Test Plan`, and `## MDF`.
+- Conventional Commit type and scope prefixes such as `docs:`, `fix:`, and `feat(github-pr):`.
+- File paths, commands, labels, code identifiers, branch names, task IDs, and repository-required conventions.
+
+### PR Language Gate
+
+Before running `gh pr create` or `gh pr edit`, verify:
+
+- The human-facing PR language was read from `~/.mdf/user/preferences.json`, or English fallback was explicitly selected.
+- Human-facing title and body prose use the selected language.
+- Fixed headings, commands, paths, labels, Conventional Commit prefixes, and repository contracts remain untranslated.
+
+If this gate fails, revise the PR title or body before creating or updating the PR. Do not run `gh pr create` or `gh pr edit` with prose in the wrong language.
 
 Use a Conventional Commit style PR title:
 
