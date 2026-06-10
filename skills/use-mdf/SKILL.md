@@ -80,7 +80,7 @@ When a skill produces a markdown workflow artifact, resolve the current work ite
 9. Repeated runs create new revisions such as `spec-001.md`, `spec-002.md`, and `review-001.md`.
 10. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.
 
-Do not create a separate `.mdf/` directory inside linked worktrees. Do not auto-initialize MDF state from artifact-producing skills. Do not edit `.gitignore`, create setup branches, create setup commits, push setup branches, or create setup PRs from artifact-producing skills; those actions belong only to `mdf init`. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
+Do not create a separate `.mdf/` directory inside linked worktrees. Do not auto-initialize MDF state from artifact-producing skills. Do not edit `.gitignore`, create the basic docs structure, add or update agent rules, create setup branches, create setup commits, push setup branches, or create setup PRs from artifact-producing skills; those setup actions belong only to `mdf init`. Contract-like outputs are local MDF artifacts by default; promote them into tracked project docs only when the user explicitly asks or project policy requires it.
 
 Project-level interpretation caches that are not per-work-item artifacts live under `<canonical-root>/.mdf/project/`. The docs taxonomy profile cache uses:
 
@@ -89,7 +89,7 @@ Project-level interpretation caches that are not per-work-item artifacts live un
 <canonical-root>/.mdf/project/docs-profile.md
 ```
 
-This cache helps agents avoid repeatedly rediscovering docs placement rules, but it is not the source of truth. Tracked docs policy files and existing docs taxonomy remain authoritative. Use the cache only when fresh and high-confidence; otherwise rescan or stop before tracked docs writes when placement is ambiguous. Do not store this cache inside linked worktrees or as primary state under `~/.mdf`.
+This cache helps agents avoid repeatedly rediscovering docs placement rules, but it is not the source of truth. Tracked docs policy files and existing docs taxonomy remain authoritative. When no stronger convention exists, MDF's basic docs structure uses `docs/index.md`, `docs/architecture/index.md`, `docs/decisions/index.md`, and `docs/operations/index.md`; equivalent project paths should be recorded in the profile instead of duplicated. Use the cache only when fresh and high-confidence; otherwise rescan or stop before tracked docs writes when placement is ambiguous. Do not store this cache inside linked worktrees or as primary state under `~/.mdf`.
 
 ## Core Operating Behaviors
 
