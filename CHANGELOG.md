@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.1 - 2026-06-10
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.0...v0.7.1)
+
+### Changes
+
+- docs: MDF init 문서 설정 옵션 추가 ([#28](https://github.com/jjlabsio/midnight-forge/pull/28))
 ## v0.7.0 - 2026-06-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.6.7...v0.7.0)
