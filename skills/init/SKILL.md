@@ -173,7 +173,9 @@ After ignore policy passes, inspect the tracked docs and agent-rule conventions 
 - Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
 - Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
 
-If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow. If no agent rules file exists, ask whether that setup branch should add `AGENTS.md` with the project documentation rule. If an agent rules file already exists, ask whether that setup branch should update the existing convention instead.
+If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow.
+
+Independently inspect agent rules. If no agent rules file exists, ask whether to create a setup branch and PR that adds `AGENTS.md` with the project documentation rule. If an agent rules file already exists, ask whether to create a setup branch and PR that updates the existing convention instead. This agent-rules setup question applies even when the project already has a clear docs structure.
 
 Only create a setup branch when the user approves at least one tracked docs or agent-rule change. If the user approves a setup branch:
 
