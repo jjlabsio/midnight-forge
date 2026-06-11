@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.2 - 2026-06-11
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.1...v0.7.2)
+
+### Changes
+
+- docs: refine MDF init agent rules setup ([#29](https://github.com/jjlabsio/midnight-forge/pull/29))
 ## v0.7.1 - 2026-06-10
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.0...v0.7.1)
