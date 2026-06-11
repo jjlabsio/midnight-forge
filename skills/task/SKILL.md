@@ -207,7 +207,7 @@ Use a lowercase ASCII slug for the title, remove punctuation, collapse separator
 
 If the current checkout is already a linked worktree, use it only when the `using-git-worktrees` skill accepts it. If the current checkout is a normal repository checkout on `main` or the default branch, automatically create the task worktree through `using-git-worktrees`.
 
-If `using-git-worktrees` stops because `.worktrees/` is not ignored or project init is missing, do not create or replace `.mdf/locks/{id}.lock`; leave the task queued and instruct the user to run `mdf init`. If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
+If `using-git-worktrees` stops because `.worktrees/` is not ignored or project init is missing, do not create or replace `.mdf/locks/{id}.lock`; leave the task queued and instruct the user to run `mdf init`. If `mdf init` creates a setup branch for ignored worktrees, it may use `chore/ignore-worktrees` or a similarly clear unique branch. Do not resume or lock the original task until the setup PR has been merged. If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
 
 After `using-git-worktrees` succeeds, create `.mdf/locks/{id}.lock` using the canonical root, work ID, resulting worktree path, and branch. Update `item.md` with `status: "active"`, `worktree`, and `branch`. Continue the task briefing from that worktree.
 
