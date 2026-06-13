@@ -250,8 +250,16 @@ for (const text of [
   "<!-- MDF:END context-check -->",
   "update only that block while preserving unrelated content",
   "MDF-managed context-check blocks remain updateable within the marker boundary",
+  "invoke the `github-pr` skill's MDF init setup PR mode",
+  "Setup PR push/create/update mechanics belong to `github-pr`, not `init`",
 ]) {
   assertContains(initSkill, text);
+}
+for (const text of [
+  "push the branch and create a GitHub PR",
+  "gh pr create",
+]) {
+  assertNotContains(initSkill, text);
 }
 
 const usingGitWorktrees = rel("skills", "using-git-worktrees", "SKILL.md");
@@ -317,6 +325,10 @@ for (const text of [
   "only after the external operations impact scan finds no required manual action",
   "## Test Plan",
   "Do not require a second explicit confirmation before pushing or creating the PR",
+  "MDF Init Setup PR Mode",
+  "Bypass the MDF task completion guard only because `init` is the caller",
+  "PRs are ready for review by default",
+  "Do not pass `--draft`, do not set `draft: true`, and do not report `isDraft=true` unless the user explicitly asks for a draft PR",
   "gh pr create",
 ]) {
   assertContains(githubPr, text);
@@ -418,6 +430,9 @@ for (const text of [
   "spec -> plan -> build -> review -> ship",
   "`spec`, `plan`, and `build` use inline loops by default",
   "High-risk work has heavier gates by design",
+  "delegates setup PR push/create/update mechanics to `github-pr`",
+  "narrow MDF init setup PR mode",
+  "PRs are ready for review by default",
   "classified as `normal` or `high-risk` by semantic judgment",
   "Task Acceptance Traceability",
   "Whole-Build Spec Traceability",

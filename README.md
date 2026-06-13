@@ -152,7 +152,7 @@ Task state is local-only and gitignored under the canonical project root:
 
 Linked worktrees do not get their own `.mdf/` directory. A task running from `<canonical-project-root>/.worktrees/<branch>` still writes MDF state and artifacts to `<canonical-project-root>/.mdf/`.
 
-MDF only writes project `.mdf/` state after `mdf init` confirms `.mdf/` and `.worktrees/` are ignored by git. If either path is not ignored, `mdf init` offers one setup branch/commit/PR flow for both entries together and applies the `release-none` label when a setup PR is opened. Other MDF skills stop and instruct the user to run `mdf init`; they do not edit `.gitignore` or create setup PRs.
+MDF only writes project `.mdf/` state after `mdf init` confirms `.mdf/` and `.worktrees/` are ignored by git. If either path is not ignored, `mdf init` offers one setup branch/commit/PR flow for both entries together, then delegates setup PR push/create/update mechanics to `github-pr` with `release-none` no-release intent. Other MDF skills stop and instruct the user to run `mdf init`; they do not edit `.gitignore` or create setup PRs.
 
 Cross-project discovery uses a lightweight registry:
 
@@ -225,9 +225,11 @@ If task work cannot start because project init or `.worktrees/` ignore setup is 
 
 ## PR Policy
 
-Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Before creating or updating a PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
+Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Before creating or updating a normal task-backed PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
 
 When the session identifies exactly one valid active MDF task, `github-pr` first fetches the remote base branch and verifies that the current branch merges cleanly. It then uses the `task` skill's completion behavior with the log message `Completed task before PR creation.`, pushes the branch, and creates a GitHub PR. If an open PR already exists for the branch, it reports that PR instead of creating a duplicate. If the session task is ambiguous, conflicts with local task/worktree/branch state, or does not merge cleanly into the remote base branch, PR creation stops for user clarification.
+
+`github-pr` also owns a narrow MDF init setup PR mode. `init` may delegate setup branches to this mode after creating the setup commit; that path bypasses task completion because setup PRs are not task-backed work items. PRs are ready for review by default, and `github-pr` must not pass `--draft`, set `draft: true`, or report `isDraft=true` unless the user explicitly asks for a draft PR.
 
 After a PR is created, the local session stops until the user reviews, waits for CI, and merges the PR. Once the PR is merged, use `github-after-merge` as a separate follow-up workflow. It verifies the PR is merged, returns the canonical checkout to the default branch, runs `git fetch --prune` and `git pull --ff-only`, then hands stale branch and worktree cleanup to `github-clear-gone`, which still requires explicit confirmation before deletion.
 
