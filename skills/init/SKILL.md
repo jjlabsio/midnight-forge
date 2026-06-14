@@ -169,10 +169,10 @@ If either `.mdf/` or `.worktrees/` is not ignored:
    - The agent rules addition or update only when the user approved it, no equivalent unmarked or human-authored docs-before-work rule already exists, and the change preserves existing style and unrelated content.
    - MDF-created docs-before-work blocks must use `<!-- MDF:BEGIN context-check -->` and `<!-- MDF:END context-check -->`; marker-free human-authored equivalent rules must still be respected and not duplicated.
 11. Commit with `chore: set up MDF project workflow state`.
-12. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project workflow state` with the `release-none` label.
-13. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+12. If the user agreed to open a PR, invoke the `github-pr` skill's MDF init setup PR mode from the setup branch after the setup commit exists. Provide this setup PR intent to `github-pr`: title `chore: set up MDF project workflow state`, no-release behavior through `release-none`, and body context explaining that MDF setup cannot continue until the setup PR is merged.
+13. Stop after reporting the setup branch, commit, and the PR result returned by `github-pr` when available. The user should rerun `mdf init` after the setup PR is merged.
 
-This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, setup push, or setup PR flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, pushes, or PRs.
+This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, or setup PR delegation flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, or setup PRs. Setup PR push/create/update mechanics belong to `github-pr`, not `init`.
 
 ### Optional Docs And Agent Rules Setup
 
@@ -199,8 +199,8 @@ Only create a setup branch when the user approves at least one tracked docs or a
    - Add or update agent rules only when no equivalent unmarked or human-authored docs-before-work rule already exists.
    - Use MDF context-check markers for MDF-created docs-before-work blocks and update only the existing MDF-managed block when present.
 5. Commit with `chore: set up MDF project documentation`.
-6. If the user agreed to open a PR, push the branch and create a GitHub PR titled `chore: set up MDF project documentation` with the `release-none` label.
-7. Stop after reporting the setup branch, commit, push status, and PR URL when available. The user should rerun `mdf init` after the setup PR is merged.
+6. If the user agreed to open a PR, invoke the `github-pr` skill's MDF init setup PR mode from the setup branch after the setup commit exists. Provide this setup PR intent to `github-pr`: title `chore: set up MDF project documentation`, no-release behavior through `release-none`, and body context explaining that MDF setup cannot continue until the setup PR is merged.
+7. Stop after reporting the setup branch, commit, and the PR result returned by `github-pr` when available. The user should rerun `mdf init` after the setup PR is merged.
 
 If the user declines tracked docs and agent-rule setup, or the project already has clear equivalent conventions, continue normal project init.
 

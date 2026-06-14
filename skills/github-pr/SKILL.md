@@ -9,11 +9,32 @@ description: "Use when creating or updating a GitHub pull request for MDF work; 
 
 Create or update GitHub pull requests for MDF-managed work. Invoking this skill means the user is asking to create or update the remote GitHub PR for the current MDF work. Do not stop after drafting a PR unless a stop condition is hit.
 
-This skill enforces the MDF lifecycle rule that the task for the current session is completed before PR creation continues.
+This skill enforces the MDF lifecycle rule that the task for the current session is completed before PR creation continues, except for the explicit MDF init setup PR mode documented below.
+
+PRs are ready for review by default. Do not pass `--draft`, do not set `draft: true`, and do not report `isDraft=true` unless the user explicitly asks for a draft PR in the current request.
 
 This skill is LLM-driven. Do not use an MCP server, background runner, or network service. Use local files, git state, and GitHub CLI commands.
 
 Do not save PR drafts or PR creation records under `.mdf/`; GitHub is the source of truth for PR state.
+
+## PR Modes
+
+### Normal MDF Task PR Mode
+
+Use this mode for ordinary MDF task-backed work. The MDF task completion guard is required and must complete exactly one session-identified task before pushing or creating/updating a PR.
+
+### MDF Init Setup PR Mode
+
+Use this mode only when `init` delegates setup PR creation/update after it has already created a setup branch and setup commit. This mode is for setup branches such as `chore/mdf-init-local-state` or `chore/mdf-init-docs`, where no task-backed work item should be completed.
+
+In MDF init setup PR mode:
+
+- Bypass the MDF task completion guard only because `init` is the caller and the setup branch flow is not task-backed.
+- Preserve the setup lifecycle: after creating or reporting the PR, stop and tell the user to rerun `mdf init` after the setup PR is merged.
+- Use the setup PR title and body intent provided by `init`; do not duplicate that setup decision logic inside this skill.
+- Apply `release-none` when the repository has that label. If the label is missing, continue without creating a draft PR or changing PR readiness.
+- Keep the PR ready for review unless the user explicitly asked for a draft PR.
+- Do not complete or mutate any `.mdf/work/*/item.md` task state.
 
 ## PR Preflight
 
@@ -25,7 +46,7 @@ Before creating or updating a PR:
 4. Confirm the GitHub CLI is available and authenticated before creating a remote PR.
 5. Confirm the repository has an `origin` remote.
 6. Fetch the remote base branch and run the mergeability preflight below.
-7. Run the MDF task completion guard below.
+7. Run the MDF task completion guard below, except in MDF init setup PR mode.
 8. Load the human-facing PR language using the PR language preflight below.
 9. Summarize relevant commits, changed files, verification evidence, release signal, and the selected human-facing PR language.
 
@@ -119,7 +140,7 @@ Do not complete any other active task.
 
 ## PR Creation
 
-After the MDF task completion guard succeeds or determines there is no MDF task for this PR, create or update the remote PR:
+After the MDF task completion guard succeeds, or after MDF init setup PR mode explicitly bypasses task completion, create or update the remote PR:
 
 1. Summarize the branch and base branch.
 2. Analyze all commits in the branch, not just the latest commit.
@@ -128,11 +149,11 @@ After the MDF task completion guard succeeds or determines there is no MDF task 
 5. Include the completed MDF task ID when one was completed.
 6. Draft a concise Conventional Commit PR title and body using the selected human-facing PR language.
 7. Run the PR language gate below and revise the draft until it passes.
-8. Include the `release-none` label only when the PR should not release.
+8. Include the `release-none` label only when the PR should not release. In MDF init setup PR mode, setup PRs should not release.
 9. Push the current branch to `origin`.
 10. Check whether an open PR already exists for the current branch.
 11. If an open PR exists, update it when the current task changed the intended PR title or body; otherwise report its URL instead of creating a duplicate.
-12. If no open PR exists, create one with `gh pr create`.
+12. If no open PR exists, create one with `gh pr create`. Do not include `--draft` unless the user explicitly asked for a draft PR.
 
 Before drafting PR title prose or PR body bullet prose, follow `../../references/human-facing-language.md`. Keep required PR template headings, release labels, file paths, commands, and repository conventions exactly as specified.
 
@@ -157,6 +178,7 @@ Before running `gh pr create` or `gh pr edit`, verify:
 - The human-facing PR language was read from `~/.mdf/user/preferences.json`, or English fallback was explicitly selected.
 - Human-facing title and body prose use the selected language.
 - Fixed headings, commands, paths, labels, Conventional Commit prefixes, and repository contracts remain untranslated.
+- The PR is ready for review by default; `--draft`, `draft: true`, and `isDraft=true` are absent unless the user explicitly asked for a draft PR.
 
 If this gate fails, revise the PR title or body before creating or updating the PR. Do not run `gh pr create` or `gh pr edit` with prose in the wrong language.
 
@@ -232,7 +254,7 @@ Stop instead of continuing when:
 
 - The current branch is `main` or the repository default branch.
 - `github-commit` cannot create a commit from uncommitted changes.
-- The session does not identify exactly one MDF task and task completion is needed.
+- The session does not identify exactly one MDF task and task completion is needed outside MDF init setup PR mode.
 - The selected task file is missing, malformed, or already completed.
 - The selected lock file is missing, unreadable, or malformed.
 - Session task context conflicts with current worktree or branch.
@@ -246,8 +268,8 @@ Stop instead of continuing when:
 
 ## Boundaries
 
-This skill may complete the current session's MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. This skill may use `github-commit` before PR creation when uncommitted changes exist.
+This skill may complete the current session's MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. This skill may bypass task completion only in MDF init setup PR mode delegated by `init`. This skill may use `github-commit` before PR creation when uncommitted changes exist.
 
-When invoked, push the current branch to `origin` and create a GitHub PR with `gh pr create`. If an open PR already exists for the current branch, report its URL instead of creating a duplicate. Do not require a second explicit confirmation for PR creation.
+When invoked, push the current branch to `origin` and create a ready-for-review GitHub PR with `gh pr create`. If an open PR already exists for the current branch, report its URL instead of creating a duplicate. Do not require a second explicit confirmation for PR creation.
 
 After the PR is created or reported, stop. PR review, CI, merge, default-branch sync, and stale worktree cleanup happen later. Once the user says the PR has been merged, use `github-after-merge` to verify the merge, return the canonical checkout to the default branch, fast-forward it, and then use `github-clear-gone` for confirmed branch/worktree cleanup.
