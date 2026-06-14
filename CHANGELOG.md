@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.3 - 2026-06-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.2...v0.7.3)
+
+### Changes
+
+- docs(github-pr): MDF init 설정 PR 위임 명시 ([#30](https://github.com/jjlabsio/midnight-forge/pull/30))
 ## v0.7.2 - 2026-06-11
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.1...v0.7.2)
