@@ -211,6 +211,8 @@ If `using-git-worktrees` stops because `.worktrees/` is not ignored or project i
 
 After `using-git-worktrees` succeeds, create `.mdf/locks/{id}.lock` using the canonical root, work ID, resulting worktree path, and branch. Update `item.md` with `status: "active"`, `worktree`, and `branch`. Continue the task briefing from that worktree.
 
+`work {id}` prepares and briefs the task. It does not authorize implementation. After printing the briefing, stop. Do not modify project code, run implementation steps, create commits, run tests, or continue into the task unless the user gives a separate explicit implementation instruction.
+
 ## Intent Parsing
 
 Users do not need to memorize exact command names. Treat the commands below as canonical operations, and map clear natural-language requests to the nearest command before acting.
@@ -276,6 +278,7 @@ Start a specific task.
 11. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 12. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
 13. Print a briefing with task title, work ID, status, canonical root, worktree, branch, context, file summaries, criteria, and recent log entries.
+14. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
 
 ### `done`
 
