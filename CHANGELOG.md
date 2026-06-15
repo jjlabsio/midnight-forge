@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.4 - 2026-06-15
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.3...v0.7.4)
+
+### Changes
+
+- docs(task): work 브리핑 후 정지 규칙 추가 ([#31](https://github.com/jjlabsio/midnight-forge/pull/31))
 ## v0.7.3 - 2026-06-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.2...v0.7.3)
