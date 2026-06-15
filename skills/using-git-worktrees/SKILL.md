@@ -17,6 +17,8 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
+This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller workflow and continue only within that workflow's explicit scope.
+
 MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
 
 ## Step 0: Detect Existing Isolation
@@ -154,10 +156,10 @@ Branch: <branch-name>
 Base: origin/<default-branch>
 Canonical root: <project-root>
 Dependency setup: <completed|skipped|failed>
-Ready for caller workflow to continue
+Ready for caller workflow to resume within its requested scope
 ```
 
-The caller workflow should continue from the worktree path.
+The caller workflow should continue from the worktree path only within the scope it already requested.
 
 ## Stop Conditions
 
