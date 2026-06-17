@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.6 - 2026-06-17
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.5...v0.7.6)
+
+### Changes
+
+- docs(task): split task board entrypoints ([#33](https://github.com/jjlabsio/midnight-forge/pull/33))
 ## v0.7.5 - 2026-06-17
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.4...v0.7.5)
