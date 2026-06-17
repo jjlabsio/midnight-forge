@@ -27,7 +27,7 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Use init before MDF workflows, use the use-mdf skill to choose the right MDF workflow, run auto-workflow for the full interactive lifecycle, or run task/tasks for local MDF task management."
+      "Use init before MDF workflows, use the use-mdf skill to choose the right MDF workflow, run auto-workflow for the full interactive lifecycle, or run task, tasks-project, and tasks-user for local MDF task management."
     ]
   }
 }
