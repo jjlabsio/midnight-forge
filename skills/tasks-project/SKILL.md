@@ -1,11 +1,11 @@
 ---
-name: tasks
-description: "Show and clean MDF task boards for the current project or all registered local projects."
+name: tasks-project
+description: "Show and clean the current project's MDF task board."
 ---
 
-# tasks
+# tasks-project
 
-Use this skill when the user invokes `$tasks` in Codex or `/mdf:tasks` in Claude Code.
+Use this skill when the user invokes `$tasks-project` in Codex or `/mdf:tasks-project` in Claude Code.
 
 This skill is LLM-driven. Do not use an MCP server, CLI helper, background runner, event store, or network service. Read local files directly.
 
@@ -28,41 +28,13 @@ Resolve the canonical project root using the same rules as the `task` skill:
 2. Otherwise use `git rev-parse --show-toplevel`.
 3. If not inside a git repository, use the absolute current working directory.
 
-Global discovery uses:
-
-```text
-~/.mdf/projects.json
-```
-
-Each registry entry should include the project name, canonical root path, remote when known, and the relative task index path `.mdf/index.jsonl`.
-
-The registry file must use this schema:
-
-```json
-{
-  "version": 1,
-  "projects": {
-    "/absolute/project/root": {
-      "id": "1d55c7f13adf",
-      "name": "project-basename",
-      "canonical_root": "/absolute/project/root",
-      "remote": "git@github.com:user/project.git",
-      "index": ".mdf/index.jsonl",
-      "last_seen": "2026-05-08T00:00:00Z"
-    }
-  }
-}
-```
-
-Before reading MDF task board state, verify MDF init state:
+Before reading current-project MDF task board state, verify MDF init state:
 
 1. User init exists at `~/.mdf/user/init.json`.
 2. `~/.mdf/user/preferences.json` exists and has a non-empty `human_language`.
-3. Project init exists at `<canonical-root>/.mdf/project/init.json` for current-project board commands.
+3. Project init exists at `<canonical-root>/.mdf/project/init.json`.
 
 If init state is missing or malformed, stop before reading MDF board state and instruct the user to run `mdf init`. Do not auto-initialize from this skill.
-
-Read project entries from `projects`, keyed by `canonical_root`. If `~/.mdf/projects.json` exists but is malformed or does not match this schema, report a clear registry error and do not guess another shape.
 
 Do not initialize storage for read-only board commands.
 
@@ -91,25 +63,6 @@ For malformed item files, show the path and parse problem under a warning sectio
 ### no args
 
 Show the current project board. If storage is missing, show empty `Active`, `Queue`, and `Done` sections and report the expected storage path.
-
-### `all`
-
-Show all local project boards.
-
-1. If `~/.mdf/user/init.json`, `~/.mdf/user/preferences.json`, or `~/.mdf/projects.json` does not exist, stop and instruct the user to run `mdf init`.
-2. Read each entry in `projects` and resolve its canonical root.
-3. For each valid project, read `.mdf/index.jsonl`, `.mdf/work/*/item.md` when needed, and `.mdf/locks/`.
-4. Group output by project name from the registry or `.mdf/project.json`, including canonical root path.
-5. Include Active, Queue, and recent Done summaries for each project.
-6. Add a `Recommendation` section.
-
-Recommendation chooses from all queue tasks:
-
-1. Earliest due date first when due dates are present.
-2. Then lowest `order`.
-3. Then oldest `created`.
-
-Show the recommended project name, task ID, work ID, title, due date when present, and canonical root path. If no queue tasks exist, report that there is no recommended next task.
 
 ### `stale`
 

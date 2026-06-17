@@ -118,6 +118,29 @@ const entrypoints = {
     "test-engineer",
     "Skip the fan-out only if all of the following are true",
   ],
+  "tasks-project": [
+    "tasks-project",
+    "current project's MDF task board",
+    "~/.mdf/user/init.json",
+    "non-empty `human_language`",
+    "<canonical-root>/.mdf/project/init.json",
+    "Active",
+    "Queue",
+    "Done",
+    "stale",
+    "clean",
+  ],
+  "tasks-user": [
+    "tasks-user",
+    "registered local projects",
+    "~/.mdf/user/init.json",
+    "~/.mdf/projects.json",
+    "does not require current project init",
+    "Do not require the current working directory to be inside a git repository",
+    "Hard-stop only for malformed global registry or user state",
+    "warning and skip",
+    "Recommendation",
+  ],
 };
 
 function rel(...parts) {
@@ -190,6 +213,18 @@ for (const [entrypoint, requiredText] of Object.entries(entrypoints)) {
   }
 }
 
+for (const commandName of [
+  "tasks-project",
+  "tasks-user",
+]) {
+  const commandPath = rel("commands", `${commandName}.md`);
+  assertFile(commandPath);
+  assertContains(commandPath, `skills/${commandName}/SKILL.md`);
+}
+
+assert(!exists(rel("skills", "tasks", "SKILL.md")), "skills/tasks/SKILL.md must be removed");
+assert(!exists(rel("commands", "tasks.md")), "commands/tasks.md must be removed");
+
 for (const entrypoint of Object.keys(entrypoints)) {
   const skillPath = rel("skills", entrypoint, "SKILL.md");
   assert(
@@ -230,6 +265,8 @@ for (const trigger of [
   "documentation",
   "migration",
   "task lifecycle",
+  "tasks-project",
+  "tasks-user",
   "worktrees",
   "commits",
   "GitHub PRs",
@@ -427,6 +464,12 @@ for (const text of [
 
 const readme = rel("README.md");
 for (const text of [
+  "`tasks-project`",
+  "`tasks-user`",
+  "$tasks-project",
+  "$tasks-user",
+  "/mdf:tasks-project",
+  "/mdf:tasks-user",
   "spec -> plan -> build -> review -> ship",
   "`spec`, `plan`, and `build` use inline loops by default",
   "High-risk work has heavier gates by design",
@@ -445,6 +488,15 @@ for (const text of [
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
 ]) {
   assertContains(readme, text);
+}
+for (const text of [
+  "$tasks all",
+  "/mdf:tasks all",
+  "`tasks all`",
+  "$tasks\n",
+  "/mdf:tasks\n",
+]) {
+  assertNotContains(readme, text);
 }
 
 const specEvaluator = rel("agents", "spec-evaluator.md");
@@ -598,7 +650,9 @@ for (const [label, value] of [
 }
 assert(
   Array.isArray(codexManifest.interface?.defaultPrompt) &&
-    codexManifest.interface.defaultPrompt.join("\n").includes("use-mdf"),
+    codexManifest.interface.defaultPrompt.join("\n").includes("use-mdf") &&
+    codexManifest.interface.defaultPrompt.join("\n").includes("tasks-project") &&
+    codexManifest.interface.defaultPrompt.join("\n").includes("tasks-user"),
   ".codex-plugin defaultPrompt must route users toward the workflow selector"
 );
 

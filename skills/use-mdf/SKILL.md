@@ -36,6 +36,8 @@ Task arrives
     │   └── Performance concerns? ────→ performance-optimization
     ├── Need isolated worktree? ───────→ using-git-worktrees
     ├── Managing an MDF task? ─────────→ task
+    ├── Viewing project tasks? ────────→ tasks-project
+    ├── Viewing user task board? ──────→ tasks-user
     ├── Migrating legacy tasks? ───────→ migrate-tasks
     ├── Creating a commit? ────────────→ github-commit
     ├── Preparing a GitHub PR? ────────→ github-pr
@@ -63,9 +65,11 @@ When the user names an MDF or Codex workflow entrypoint, route to the matching t
 | `code-simplify`, `mdf code-simplify`, `$code-simplify` | `code-simplify` | `code-simplification` |
 | `ship`, `mdf ship`, `$ship`, launch readiness | `ship` | `shipping-and-launch` |
 | `task`, `mdf task`, `$task`, task lifecycle commands | `task` | task lifecycle command handling |
+| `tasks-project`, `mdf tasks-project`, `$tasks-project`, current project task board | `tasks-project` | current-project MDF task board |
+| `tasks-user`, `mdf tasks-user`, `$tasks-user`, user task board | `tasks-user` | all-project MDF task board from the user registry |
 | `migrate-tasks`, `mdf migrate-tasks`, `$migrate-tasks`, legacy task migration | `migrate-tasks` | copy-first migration into canonical `.mdf/work/` storage |
 
-Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `init` owns MDF setup state and local workflow-state ignore policy. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `task` for MDF task lifecycle commands. `task work {id}` activates and briefs a task, then stops; it is not an implementation instruction. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-after-merge` after a PR has been merged to verify the merge, return the canonical checkout to the default branch, fast-forward it, and hand off stale branch/worktree cleanup to `github-clear-gone`; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
+Do not replace the original workflows with summaries. The entrypoint skills are orchestration wrappers that preserve required initial workflows, conditional escalation, optional checklists, and persona fan-out. `init` owns MDF setup state and local workflow-state ignore policy. `auto-workflow` is a thin lifecycle wrapper over the real phase skills; it must delegate PR behavior to `github-pr` instead of reimplementing git status checks, commit handling, task completion, release signal handling, push, or PR creation. Use `task` for MDF task lifecycle commands, `tasks-project` for the current project's MDF task board, and `tasks-user` for the user-level board across registered local projects. `task work {id}` activates and briefs a task, then stops; it is not an implementation instruction. Use `using-git-worktrees` before implementation work that must not touch `main` or the repository default branch; use `migrate-tasks` for legacy MDF task storage migration; use `github-commit` for simple commit creation; use `github-pr` before preparing or creating GitHub pull requests; use `github-after-merge` after a PR has been merged to verify the merge, return the canonical checkout to the default branch, fast-forward it, and hand off stale branch/worktree cleanup to `github-clear-gone`; use `github-clear-gone` for stale gone branch and worktree cleanup; use `debugging-and-error-recovery` when something broke or a build/test step fails; use `frontend-ui-engineering` for UI work; use `api-and-interface-design` for API/interface design; use `security-and-hardening` for security depth; use `performance-optimization` for performance depth; use `documentation-and-adrs` for documentation decisions; and use `deprecation-and-migration` for product or code migrations.
 
 ## MDF Artifact Storage
 
@@ -226,6 +230,8 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
 | Build | using-git-worktrees | Isolated `.worktrees/` workspace before touching implementation work |
 | Build | task | MDF task lifecycle commands; `work` briefs and stops before implementation |
+| Build | tasks-project | Current-project MDF task board |
+| Build | tasks-user | User-level MDF task board across registered local projects |
 | Build | migrate-tasks | Copy legacy MDF tasks into canonical `.mdf/work/` storage |
 | Verify | test-driven-development | Failing test first, then make it pass |
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |

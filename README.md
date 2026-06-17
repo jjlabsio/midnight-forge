@@ -8,7 +8,7 @@ Midnight Forge (`mdf`) is a harness for solo developers, built to work across Cl
 - Plugin namespace: `mdf`
 - Shared source of truth: root `skills/` directory
 - Supported runtimes: Claude Code and Codex
-- Included MDF skills: `mdf-handshake`, `init`, `task`, `tasks`, `migrate-tasks`
+- Included MDF skills: `mdf-handshake`, `init`, `task`, `tasks-project`, `tasks-user`, `migrate-tasks`
 - Included agent-skills workflows: `auto-workflow`, `spec`, `plan`, `build`, `test`, `review`, `code-simplify`, `ship`, plus the original agent-skills domain skills, references, and specialist persona prompts
 
 ## Intentionally Excluded
@@ -48,8 +48,8 @@ Invoke the task skills through Claude Code:
 ```text
 /mdf:task add "Write the release checklist"
 /mdf:task work 001
-/mdf:tasks
-/mdf:tasks all
+/mdf:tasks-project
+/mdf:tasks-user
 /mdf:migrate-tasks
 /mdf:auto-workflow
 ```
@@ -81,8 +81,8 @@ Invoke the task skills through Codex:
 ```text
 $task add "Write the release checklist"
 $task work 001
-$tasks
-$tasks all
+$tasks-project
+$tasks-user
 $migrate-tasks
 $auto-workflow
 ```
@@ -131,8 +131,8 @@ Midnight Forge includes a first-pass local task system built from LLM-driven ski
 
 - Codex: `$init`
 - Claude Code: `/mdf:init`
-- Codex: `$task`, `$tasks`
-- Claude Code: `/mdf:task`, `/mdf:tasks`
+- Codex: `$task`, `$tasks-project`, `$tasks-user`
+- Claude Code: `/mdf:task`, `/mdf:tasks-project`, `/mdf:tasks-user`
 
 Run `mdf init` before using task or workflow commands. Init has two explicit phases:
 
