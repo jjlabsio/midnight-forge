@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.5 - 2026-06-17
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.4...v0.7.5)
+
+### Changes
+
+- docs(task): add dependency readiness rules ([#32](https://github.com/jjlabsio/midnight-forge/pull/32))
 ## v0.7.4 - 2026-06-15
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.3...v0.7.4)
