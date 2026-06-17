@@ -119,6 +119,7 @@ due: "2026-05-10"
 completed: "2026-05-12"
 worktree: null
 branch: null
+depends_on: ["0002"]
 latest: {}
 ---
 
@@ -143,7 +144,13 @@ Directly relevant known files. Include paths explicitly mentioned by the user an
 
 Task item cards are handoff documents, not just reminders. For `## Context`, preserve the information a later agent or fresh session would need to continue safely without access to the original conversation. Do not compress away important decisions, constraints, rejected alternatives, assumptions, open questions, or verification expectations merely to keep the section short.
 
-Required frontmatter fields are `work_id`, `task_id`, `kind`, `title`, `order`, `status`, and `created`. Optional fields are `due`, `completed`, `worktree`, `branch`, and `latest`.
+Required frontmatter fields are `work_id`, `task_id`, `kind`, `title`, `order`, `status`, and `created`. Optional fields are `due`, `completed`, `worktree`, `branch`, `depends_on`, and `latest`.
+
+`depends_on` is optional machine-readable dependency metadata. When present, it
+must be a list of normalized 4-digit task IDs that are hard blockers for this
+task. Do not add `depends_on` for tasks that are merely related, likely to touch
+the same files, or plausibly useful context but not clearly blocking. Record
+ambiguous or non-blocking relationships in `## Context` instead.
 
 Always keep these English section headers, even when a section is empty:
 
@@ -166,6 +173,28 @@ Store `status` in `item.md` as one of:
 3. `done`
 
 Use locks as active ownership markers. If `locks/{task_id}.lock` exists but `item.md` is not `active`, display the task as active and show a consistency warning. If `item.md` is `done` and a matching lock exists, display it as active and show a consistency warning. Do not silently delete the lock.
+
+## Dependency Readiness
+
+Task dependencies are hard blockers only when listed in `depends_on`. Readiness
+checks must scan canonical `.mdf/work/*/item.md` cards and resolve dependencies
+by exact normalized `task_id`.
+
+A task is ready when all `depends_on` task IDs resolve to exactly one item card
+and each dependency has `status: "done"` with no active consistency warning from
+a matching lock. A task is blocked when any dependency is `queue` or `active`, or
+when any dependency card is `done` but still has a matching lock.
+
+Treat dependency integrity problems as stop conditions, not ordinary blocked
+states:
+
+- missing dependency task ID
+- duplicate item cards for a dependency task ID
+- self-dependency
+- circular dependency, including indirect cycles
+
+Report the task ID, dependency chain when known, and the reason readiness cannot
+be determined. Do not silently ignore malformed dependency state.
 
 ## Lock Files
 
@@ -223,7 +252,7 @@ Use these mappings:
 - "put this first", "next task", or similar -> `add "description" --next`
 - "add a due date", "due", or similar -> `add "description" --due DATE`
 - "work on 0002", "start 0002", or similar -> `work 0002`
-- "start the next queued task" or similar -> choose the first queue task by `order` and perform `work {id}`
+- "start the next queued task" or similar -> choose the first ready queue task by dependency readiness and then `order`, report skipped blocked tasks, and perform `work {id}`
 - "done", "complete this", or similar -> `done`
 - "complete 0002" or similar -> `done 0002`
 - "log this", "note", or similar -> `note {id} "message"`
@@ -245,13 +274,15 @@ Create a queued task.
 4. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
 5. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
 6. Generate a short title from the description.
-7. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, and empty `latest`.
-8. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy.
-9. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
-10. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
-11. Append `- YYYY-MM-DD: Created task.` to `Log`.
-12. Append or update the work item's line in `.mdf/index.jsonl`.
-13. Report the task ID, work ID, title, and item file path.
+7. Inspect existing queue, active, and done task cards for clear blocking dependencies implied by the user's wording, conversation context, and existing task context.
+8. Add optional `depends_on` only when a dependency is clearly blocking. Use normalized 4-digit task IDs. Do not treat shared files alone as a hard dependency signal.
+9. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, optional `depends_on` when clear blockers exist, and empty `latest`.
+10. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy. Record plausible, ambiguous, shared-file-only, or merely related task relationships here instead of in `depends_on`.
+11. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
+12. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
+13. Append `- YYYY-MM-DD: Created task.` to `Log`.
+14. Append or update the work item's line in `.mdf/index.jsonl`.
+15. Report the task ID, work ID, title, item file path, and any hard dependencies recorded. If related tasks were recorded only as context, say so.
 
 ### `add "description" --next`
 
@@ -272,13 +303,16 @@ Start a specific task.
 5. If more than one item card matches, stop and report the duplicated task state. Do not choose one.
 6. Do not substitute similar tasks based on title, keywords, branches, worktrees, lock files, current code state, or surrounding natural-language hints. Related tasks may be mentioned only as informational context after stopping.
 7. Reject done tasks.
-8. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
-9. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
-10. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the worktree guard has succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
-11. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
-12. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
-13. Print a briefing with task title, work ID, status, canonical root, worktree, branch, context, file summaries, criteria, and recent log entries.
-14. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
+8. Validate dependency readiness before creating a branch, creating a worktree, creating or replacing a lock, reading implementation files, inspecting implementation code, mutating task state, or modifying project code.
+9. If dependency integrity is malformed, stop and report the exact problem. Do not offer override for missing, duplicate, self, or circular dependency state until the task metadata is corrected.
+10. If dependencies are unfinished, stop and show task ID, dependency task IDs, dependency statuses, and the side effects that were not performed. Ask whether the user explicitly wants to override dependency readiness. If the user confirms override, append a dated log entry to `item.md` before continuing.
+11. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
+12. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
+13. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the dependency readiness plus worktree guard have succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
+14. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
+15. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
+16. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, context, file summaries, criteria, and recent log entries.
+17. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
 
 ### `done`
 
@@ -328,10 +362,11 @@ Preserve frontmatter and all other sections, then update the matching `.mdf/inde
 Delete a task only after explicit user confirmation.
 
 1. Load the task title.
-2. Show the task ID, title, and whether a matching lock exists.
-3. Ask for confirmation before deleting.
-4. After confirmation, delete `.mdf/work/{work_id}/` and `.mdf/locks/{id}.lock` if present, then append a tombstone entry to `.mdf/index.jsonl`.
+2. Scan canonical task cards for other tasks whose `depends_on` includes this task ID.
+3. Show the task ID, title, whether a matching lock exists, and any dependent task IDs and titles that would be left pointing at a deleted task.
+4. Ask for confirmation before deleting.
+5. After confirmation, delete `.mdf/work/{work_id}/` and `.mdf/locks/{id}.lock` if present, then append a tombstone entry to `.mdf/index.jsonl`.
 
 ## Error Handling
 
-Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, attempting `bump` or `top` on active or done tasks, and existing locks without takeover confirmation.
+Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, attempting `bump` or `top` on active or done tasks, existing locks without takeover confirmation, blocked dependency readiness, missing dependency task IDs, duplicate dependency task IDs, self-dependencies, circular dependencies, and malformed `depends_on` values.
