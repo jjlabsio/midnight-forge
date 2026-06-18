@@ -185,6 +185,33 @@ function assertNotContains(filePath, text) {
   );
 }
 
+function sectionBetween(filePath, startText, endText) {
+  const content = read(filePath);
+  const start = content.indexOf(startText);
+  if (start === -1) {
+    assert(false, `${path.relative(root, filePath)} must include section start ${JSON.stringify(startText)}`);
+    return "";
+  }
+  const end = content.indexOf(endText, start + startText.length);
+  if (end === -1) {
+    assert(false, `${path.relative(root, filePath)} must include section end ${JSON.stringify(endText)} after ${JSON.stringify(startText)}`);
+    return "";
+  }
+  return content.slice(start, end);
+}
+
+function assertOrder(label, text, orderedNeedles) {
+  let previousIndex = -1;
+  for (const needle of orderedNeedles) {
+    const index = text.indexOf(needle);
+    assert(index !== -1, `${label} must include ${JSON.stringify(needle)} for order check`);
+    if (index !== -1) {
+      assert(index > previousIndex, `${label} must place ${JSON.stringify(needle)} after the previous ordered marker`);
+      previousIndex = index;
+    }
+  }
+}
+
 for (const skillName of originalSkillNames) {
   assertFile(rel("skills", skillName, "SKILL.md"));
 }
@@ -327,9 +354,47 @@ for (const text of [
   "Do not resume or lock the original task until the setup PR has been merged",
   "The lock must record the resulting worktree path and branch",
   "done {id} --message \"message\"",
+  "## Staleness Preflight",
+  "before branch creation",
+  "read-only inspection of canonical task cards",
+  "latest spec, plan, build, and review artifacts",
+  "predecessor logs",
+  "relevant current code or skill contracts",
+  "This read-only inspection is not an implementation side effect",
+  "do not broaden dependency readiness into semantic drift detection",
+  "do not treat shared files alone as a hard dependency or stale-task signal",
+  "stale assumption",
+  "required user or replan decision",
+  "dependency readiness, staleness preflight, and the worktree guard have succeeded",
+  "## Downstream Impact Check",
+  "workflow semantics, task boundaries, or shared acceptance assumptions",
+  "unaffected, needs task log/context/criteria update, needs plan revision or",
+  "Do not classify impact from shared files alone",
+  "do not convert semantic impact into `depends_on` unless",
+  "run the downstream impact check",
 ]) {
   assertContains(taskSkill, text);
 }
+assertOrder(
+  "skills/task/SKILL.md work {id} workflow",
+  sectionBetween(taskSkill, "### `work {id}`", "### `done`"),
+  [
+    "Validate dependency readiness",
+    "Run the staleness preflight before branch creation",
+    "If `.mdf/locks/{id}.lock` exists",
+    "Use `using-git-worktrees`",
+    "Create or replace `.mdf/locks/{id}.lock`",
+    "Update `item.md` with `status: \"active\"`",
+  ]
+);
+assertOrder(
+  "skills/task/SKILL.md done workflow",
+  sectionBetween(taskSkill, "### `done`", "### `done {id}`"),
+  [
+    "run the downstream impact check",
+    "Completion means setting `status: \"done\"`",
+  ]
+);
 
 const githubPr = rel("skills", "github-pr", "SKILL.md");
 for (const text of [
@@ -434,6 +499,10 @@ for (const text of [
   "Inconsistent file paths, type names, API names, command names, or dependencies",
   "Do not block on wording polish",
   "ask only the clarifying question or related small set of questions",
+  "preserve the change as a new plan revision",
+  "dated task log/context/criteria update",
+  "clearly linked superseding artifact",
+  "Do not leave later queued task cards relying on obsolete plan text",
 ]) {
   assertContains(planningBreakdown, text);
 }
@@ -458,9 +527,22 @@ for (const text of [
   "Freshness: standalone-like inline pass",
   "whole-change verification loop",
   "This internal loop does not replace standalone `test`, `review`, or `ship`",
+  "run a downstream impact check against remaining planned tasks and queued MDF task cards",
+  "shared files alone are not hard dependencies and must not become `depends_on`",
+  "Confirm downstream impact checks have been recorded",
 ]) {
   assertContains(incrementalImplementation, text);
 }
+assertOrder(
+  "skills/incremental-implementation/SKILL.md planned task loop",
+  sectionBetween(incrementalImplementation, "For each planned task:", "The task-level build artifact must include"),
+  [
+    "Commit the task-sized change only after",
+    "run a downstream impact check against remaining planned tasks and queued MDF task cards",
+    "Classify downstream impact as",
+    "Continue to the next pending task only after",
+  ]
+);
 
 const readme = rel("README.md");
 for (const text of [
@@ -486,6 +568,11 @@ for (const text of [
   "runtime tool availability",
   "standalone quality tools",
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
+  "Queued task cards are checked for semantic drift before work starts",
+  "runs before branch/worktree creation, lock mutation, task state changes",
+  "downstream impact check against remaining planned work and queued task cards",
+  "Shared files alone do not create hard dependencies",
+  "`depends_on` remains only for true hard blockers",
 ]) {
   assertContains(readme, text);
 }
@@ -554,6 +641,10 @@ for (const text of [
   "## High-Risk Independent Review",
   "Freshness: standalone-like inline pass",
   "Any Critical or Important finding",
+  "task card context, criteria, and latest artifact pointers",
+  "Task cards and queued downstream task assumptions",
+  "available MDF task cards, spec, plan, build, and review artifacts",
+  "Contradictions between approved spec, task cards, plan, build artifacts, review artifacts, tests, current code, and current code or skill contracts",
 ]) {
   assertContains(codeReviewQuality, text);
 }
@@ -565,9 +656,23 @@ for (const text of [
   "mandatory high-risk independent review",
   "before `$mdf:build` claims completion",
   "Freshness: standalone-like inline pass",
+  "run a downstream impact check against remaining planned tasks and queued MDF task cards",
+  "needs plan revision or linked superseding artifact",
+  "shared files alone are not hard dependencies",
+  "Downstream impact checks have been recorded",
 ]) {
   assertContains(buildSkill, text);
 }
+assertOrder(
+  "skills/build/SKILL.md pending task loop",
+  sectionBetween(buildSkill, "For each pending task:", "After all selected tasks complete"),
+  [
+    "Commit with a descriptive message only after",
+    "run a downstream impact check against remaining planned tasks and queued MDF task cards",
+    "Classify downstream impact as",
+    "Mark the task complete and move to the next one only after",
+  ]
+);
 
 const doubtDrivenDevelopment = rel("skills", "doubt-driven-development", "SKILL.md");
 for (const text of [

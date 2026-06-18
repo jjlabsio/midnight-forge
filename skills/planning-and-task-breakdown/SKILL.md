@@ -257,6 +257,11 @@ Save implementation plans under the current MDF work item by default. Before sav
 
 Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated planning runs create `plan-001.md`, `plan-002.md`, and so on; update `item.md` `latest.plan` and `.mdf/index.jsonl`. Only create tracked files such as `tasks/plan.md` and `tasks/todo.md` when the user explicitly asks for repo-level planning files.
 
+When earlier task work changes design, architecture, contracts, workflow
+semantics, task boundaries, or shared acceptance assumptions in a way that
+alters future tasks, preserve the change as a new plan revision, a dated task log/context/criteria update, or a clearly linked superseding artifact. Do not leave later queued task cards relying on obsolete plan text. If the right revision requires product, API, migration, release, or architecture judgment,
+surface the decision instead of silently rewriting the plan.
+
 ## Parallelization Opportunities
 
 When multiple agents or sessions are available:

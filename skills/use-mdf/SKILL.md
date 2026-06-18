@@ -127,6 +127,13 @@ When you encounter inconsistencies, conflicting requirements, or unclear specifi
 **Bad:** Silently picking one interpretation and hoping it's right.
 **Good:** "I see X in the spec but Y in the existing code. Which takes precedence?"
 
+For MDF task work, queued task drift is a form of inconsistency. If newer
+specs, plans, build/review artifacts, task logs, or current code or skill
+contracts contradict a queued task card, stop before implementation side
+effects. Preserve the drift as a plan revision, dated task log/context/criteria
+update, or linked superseding artifact, or ask for the user/replan decision when
+the correct revision needs human judgment.
+
 ### 3. Push Back When Warranted
 
 You are not a yes-machine. When an approach has clear problems:
