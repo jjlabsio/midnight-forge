@@ -196,6 +196,46 @@ states:
 Report the task ID, dependency chain when known, and the reason readiness cannot
 be determined. Do not silently ignore malformed dependency state.
 
+## Staleness Preflight
+
+Starting queued task work requires a semantic staleness preflight after exact
+task ID resolution and dependency readiness, but before branch creation,
+worktree creation, lock creation or replacement, task state mutation,
+implementation edits, tests, commits, or other implementation side effects.
+
+The preflight may perform read-only inspection of canonical task cards, latest spec, plan, build, and review artifacts, predecessor logs, and relevant current code or skill contracts when needed to decide whether the queued task card is still valid. This read-only inspection is not an implementation side effect.
+
+Compare the queued task card's context, files, criteria, assumptions, and
+non-blocking related-task notes against newer artifacts and contracts. Treat
+`depends_on` as hard-blocker readiness only; do not broaden dependency readiness into semantic drift detection, and do not treat shared files alone as a hard dependency or stale-task signal.
+
+If the task card is stale, contradicted, or missing a required decision because
+earlier work changed design, architecture, contracts, workflow semantics, task
+boundaries, or shared acceptance assumptions, stop before side effects. Report
+the stale assumption, the impacted context or criteria, the evidence inspected,
+and whether the next step is a user decision, a plan revision, or an update to
+task logs, context, or criteria.
+
+## Downstream Impact Check
+
+When completing a task, or when a task changes design, architecture, contracts,
+workflow semantics, task boundaries, or shared acceptance assumptions, run a
+downstream impact check against queued task cards before treating the workflow
+state as safe to continue.
+
+The downstream impact check classifies queued tasks by semantic effect:
+unaffected, needs task log/context/criteria update, needs plan revision or
+linked superseding artifact, or needs user/replan decision before implementation.
+Use read-only inspection of canonical task cards, latest artifacts, predecessor
+logs, and relevant current code or skill contracts. Do not classify impact from shared files alone, and do not convert semantic impact into `depends_on` unless there is a true hard blocker.
+
+When the current task invalidates a queued task's assumptions, preserve the
+evidence with a dated task log entry, updated task context or criteria, a plan
+revision, or a clearly linked superseding artifact. If the correct change
+requires product, architecture, API, migration, or release judgment, stop and
+ask for the user or replan decision instead of silently rewriting the queued
+task.
+
 ## Lock Files
 
 Starting work creates `.mdf/locks/{task_id}.lock`:
@@ -306,13 +346,15 @@ Start a specific task.
 8. Validate dependency readiness before creating a branch, creating a worktree, creating or replacing a lock, reading implementation files, inspecting implementation code, mutating task state, or modifying project code.
 9. If dependency integrity is malformed, stop and report the exact problem. Do not offer override for missing, duplicate, self, or circular dependency state until the task metadata is corrected.
 10. If dependencies are unfinished, stop and show task ID, dependency task IDs, dependency statuses, and the side effects that were not performed. Ask whether the user explicitly wants to override dependency readiness. If the user confirms override, append a dated log entry to `item.md` before continuing.
-11. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
-12. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
-13. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and the dependency readiness plus worktree guard have succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
-14. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
-15. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
-16. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, context, file summaries, criteria, and recent log entries.
-17. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
+11. Run the staleness preflight before branch creation, worktree creation, lock creation or replacement, task state mutation, implementation edits, tests, commits, or other implementation side effects. Read-only inspection of canonical task cards, latest artifacts, predecessor logs, and relevant current code or skill contracts is allowed for the preflight.
+12. If the staleness preflight finds stale or contradicted task context, files, criteria, assumptions, or related-task notes, stop and report the stale assumption, impacted context or criteria, evidence inspected, and required user or replan decision. Do not create a branch, create a worktree, create or replace a lock, mutate task state, or modify project code.
+13. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
+14. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
+15. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and dependency readiness, staleness preflight, and the worktree guard have succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
+16. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
+17. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
+18. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, context, file summaries, criteria, and recent log entries.
+19. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
 
 ### `done`
 
@@ -322,6 +364,8 @@ Complete the current active task.
 2. If exactly one active task exists for the current project, complete it.
 3. If none exist, ask for a task ID.
 4. If multiple active tasks exist, list them and ask for a task ID.
+
+Before completing a task whose work changed design, architecture, contracts, workflow semantics, task boundaries, or shared acceptance assumptions, run the downstream impact check. Record unaffected/updated/revision-needed/decision-needed results in the current task log or a linked artifact, and stop before completion if a user or replan decision is required.
 
 Completion means setting `status: "done"` and `completed: YYYY-MM-DD` in `item.md`, appending `- YYYY-MM-DD: Completed task.` to `## Log`, updating `.mdf/index.jsonl`, and deleting `.mdf/locks/{id}.lock` if it exists.
 

@@ -209,6 +209,23 @@ Task status is stored in the item card and reconciled with locks:
 
 Legacy task stores under `~/.mdf/projects/{project-hash}` can be copied into canonical `.mdf/work/` storage with `$migrate-tasks` or `/mdf:migrate-tasks`. Migration is dry-run first, requires explicit confirmation before writing, preserves `legacy_id` and `legacy_source`, and never deletes, moves, or rewrites legacy files.
 
+Queued task cards are checked for semantic drift before work starts. The
+staleness preflight may inspect task cards, latest MDF artifacts, predecessor
+logs, and relevant current code or skill contracts in read-only mode, but it
+runs before branch/worktree creation, lock mutation, task state changes,
+implementation edits, tests, commits, or other implementation side effects. If
+the queued task is stale or contradicted, MDF stops and reports the stale
+assumption, affected context or criteria, inspected evidence, and the needed
+user or replan decision.
+
+When completed or in-progress task work changes design, architecture, contracts,
+workflow semantics, task boundaries, or shared acceptance assumptions, MDF runs
+a downstream impact check against remaining planned work and queued task cards.
+Affected tasks are recorded as unaffected, needing task log/context/criteria
+updates, needing a plan revision or linked superseding artifact, or needing a
+user/replan decision. Shared files alone do not create hard dependencies, and
+`depends_on` remains only for true hard blockers.
+
 ## Worktree Policy
 
 Midnight Forge includes a `using-git-worktrees` skill for implementation work that must not touch `main` or the repository default branch. MDF worktrees are always project-local:

@@ -90,6 +90,7 @@ For `task` scope, compare:
 - The current task diff
 - The task build artifact and `Task Acceptance Traceability`
 - The task acceptance criteria
+- The task card context, criteria, and latest artifact pointers when available
 - High-risk implementation meaning, required scenarios, and negative scenarios assigned to the task
 - Task verification evidence, including RED/GREEN evidence and reviewed code paths
 
@@ -100,9 +101,10 @@ For `whole-build` scope, compare:
 - The approved spec
 - The full implementation plan
 - Task-level build artifacts
+- Task cards and queued downstream task assumptions when downstream impact checks are part of the build evidence
 - Integration behavior across completed tasks
 
-For artifact-backed `standalone` scope, use available MDF spec, plan, and build artifacts to run the same compliance checks that fit the current diff or review request. If no MDF artifacts are available, skip Pass 1 and proceed with the existing five-axis review behavior.
+For artifact-backed `standalone` scope, use available MDF task cards, spec, plan, build, and review artifacts to run the same compliance checks that fit the current diff or review request. If no MDF artifacts are available, skip Pass 1 and proceed with the existing five-axis review behavior.
 
 Block on:
 
@@ -112,7 +114,7 @@ Block on:
 - RED/GREEN evidence that does not test the required behavior
 - Code paths that contradict the build artifact or plan claims
 - Missing required or negative scenarios for high-risk requirements
-- Contradictions between approved spec, plan, build artifacts, tests, and actual code
+- Contradictions between approved spec, task cards, plan, build artifacts, review artifacts, tests, current code, and current code or skill contracts
 
 ## High-Risk Independent Review
 

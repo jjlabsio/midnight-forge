@@ -60,7 +60,9 @@ For each planned task:
 7. Review the task against its acceptance criteria before moving to the next task
 8. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
 9. Commit the task-sized change only after the task build artifact and a passing task review artifact exist
-10. Continue to the next pending task
+10. If the task changed design, architecture, contracts, workflow semantics, task boundaries, or shared acceptance assumptions, run a downstream impact check against remaining planned tasks and queued MDF task cards
+11. Classify downstream impact as unaffected, needs task log/context/criteria update, needs plan revision or linked superseding artifact, or needs user/replan decision before implementation; shared files alone are not hard dependencies and must not become `depends_on`
+12. Continue to the next pending task only after required downstream impact updates or revisions are recorded, or stop if a user/replan decision is required
 
 The task-level build artifact must include a `Task Acceptance Traceability` matrix with one row per task acceptance criterion and one row per task-assigned high-risk semantic criterion:
 
@@ -80,6 +82,7 @@ After all selected tasks complete, run a whole-change verification loop:
 4. Save a separate whole-build `.mdf/work/{work_id}/review-NNN.md` artifact against the spec and implementation plan
 5. If the whole-build review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
 6. If the plan contains any high-risk requirement, or build discovers a new high-risk semantic concern, run the high-risk independent review gate before claiming build completion
+7. Confirm downstream impact checks have been recorded for semantic changes that affect remaining planned tasks or queued MDF task cards
 
 The final artifact must contain a `Whole-Build Spec Traceability` matrix. It should compare the final implementation back to the approved spec rather than only to the implementation plan:
 

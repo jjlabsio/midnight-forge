@@ -24,7 +24,9 @@ For each pending task:
 7. Save a separate task-scope `.mdf/work/{work_id}/review-NNN.md` artifact using `code-review-and-quality` in `task` scope against the plan acceptance criteria
 8. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
 9. Commit with a descriptive message only after the task build artifact and a passing task review artifact exist
-10. Mark the task complete and move to the next one
+10. If the task changed design, architecture, contracts, workflow semantics, task boundaries, or shared acceptance assumptions, run a downstream impact check against remaining planned tasks and queued MDF task cards before moving on
+11. Classify downstream impact as unaffected, needs task log/context/criteria update, needs plan revision or linked superseding artifact, or needs user/replan decision before implementation; shared files alone are not hard dependencies and must not be converted into `depends_on`
+12. Mark the task complete and move to the next one only after required downstream impact updates or revisions are recorded, or stop if a user/replan decision is required
 
 After all selected tasks complete, run a final whole-build verification:
 
@@ -64,4 +66,5 @@ Before claiming `$mdf:build` completion, verify:
 - The whole build has a separate passing whole-build `review-NNN.md` artifact.
 - A separate high-risk `review-NNN.md` artifact exists and passes when high-risk requirements exist or are discovered.
 - Every blocking review artifact is preserved, affected verification was rerun after fixes, build evidence was updated when needed, and a later passing review artifact references or clearly supersedes the blocking review.
+- Downstream impact checks have been recorded for semantic changes that affect remaining planned tasks or queued MDF task cards.
 - `item.md` and `.mdf/index.jsonl` have current `latest.build` and `latest.review` pointers.
