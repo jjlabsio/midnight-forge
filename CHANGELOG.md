@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.9 - 2026-06-18
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.8...v0.7.9)
+
+### Changes
+
+- fix(task): 태스크 생성 의도 보존 규칙 추가 ([#36](https://github.com/jjlabsio/midnight-forge/pull/36))
 ## v0.7.8 - 2026-06-18
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.7...v0.7.8)
