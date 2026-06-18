@@ -125,7 +125,7 @@ latest: {}
 
 ## Context
 
-Handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already made, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when omitting detail would make later implementation guessy.
+Handoff-quality context for a fresh session that cannot see the original conversation. Preserve the user's discussed intent, wording, constraints, non-goals, rejected alternatives, and open questions. Keep agent interpretation, assumptions, implementation ideas, and verification expectations clearly labeled and separate from user-confirmed context when they are useful. Do not turn rough, partial, or exploratory user input into finalized requirements or implementation guidance.
 
 ## Files
 
@@ -135,7 +135,7 @@ Directly relevant known files. Include paths explicitly mentioned by the user an
 
 ## Criteria
 
-- [ ] Criterion explicitly stated or clearly implied by the user
+- [ ] Criterion explicitly stated by the user or already agreed in the conversation
 
 ## Log
 
@@ -143,6 +143,8 @@ Directly relevant known files. Include paths explicitly mentioned by the user an
 ```
 
 Task item cards are handoff documents, not just reminders. For `## Context`, preserve the information a later agent or fresh session would need to continue safely without access to the original conversation. Do not compress away important decisions, constraints, rejected alternatives, assumptions, open questions, or verification expectations merely to keep the section short.
+
+Task creation must preserve intent without over-confirming it. When the user is intentionally rough, exploratory, or postponing details until task execution, record that state as such. Do not promote agent-added detail into user-confirmed context, criteria, dependencies, implementation guidance, or scope. If agent interpretation is necessary for handoff quality, label it explicitly as agent interpretation, an assumption, or an open question.
 
 Required frontmatter fields are `work_id`, `task_id`, `kind`, `title`, `order`, `status`, and `created`. Optional fields are `due`, `completed`, `worktree`, `branch`, `depends_on`, and `latest`.
 
@@ -327,13 +329,13 @@ Create a queued task.
 3. Scan `.mdf/work/*/item.md` and find the largest existing numeric `task_id`.
 4. Choose the next 4-digit task ID and derive a work ID from the current date, task ID, and title slug.
 5. Set `order` to one greater than the current maximum order among queue work items, or `1` if no queue items exist.
-6. Generate a short title from the description.
+6. Generate a short title from the description without adding scope that the user did not confirm. If the intent is still rough, use a neutral title rather than an implementation-specific one.
 7. Inspect existing queue, active, and done task cards for clear blocking dependencies implied by the user's wording, conversation context, and existing task context.
 8. Add optional `depends_on` only when a dependency is clearly blocking. Use normalized 4-digit task IDs. Do not treat shared files alone as a hard dependency signal.
 9. Create `.mdf/work/{work_id}/item.md` with `kind: "task"`, `status: "queue"`, optional `depends_on` when clear blockers exist, and empty `latest`.
-10. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Include the user's goal, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, assumptions, open questions, implementation guidance, and verification expectations when known. Prefer complete explicit context over brevity when context loss would make later implementation guessy. Record plausible, ambiguous, shared-file-only, or merely related task relationships here instead of in `depends_on`.
+10. Fill `Context` with handoff-quality context for a fresh session that cannot see the original conversation. Preserve the user's discussed goal, wording, relevant background, decisions already discussed, constraints, non-goals, rejected alternatives, and open questions. Keep user-confirmed context separate from agent interpretation, assumptions, possible implementation guidance, and verification expectations. Do not convert rough, partial, or exploratory user input into finalized requirements, implementation guidance, acceptance criteria, dependencies, or scope. Record plausible, ambiguous, shared-file-only, or merely related task relationships here instead of in `depends_on`.
 11. Fill `Files` with directly relevant known files, including paths explicitly mentioned by the user and paths discovered during task creation when they are clearly tied to the work. Avoid broad directories, unrelated paths, and speculative file lists.
-12. Fill `Criteria` with checklist items explicitly stated or clearly implied by the user, including completion, verification, and handoff expectations when known. Leave it empty when criteria are not known.
+12. Fill `Criteria` with checklist items explicitly stated by the user or already agreed in the conversation, including completion, verification, and handoff expectations when known. Do not invent acceptance criteria from rough notes, agent assumptions, or likely implementation paths. Leave it empty when criteria are not known.
 13. Append `- YYYY-MM-DD: Created task.` to `Log`.
 14. Append or update the work item's line in `.mdf/index.jsonl`.
 15. Report the task ID, work ID, title, item file path, and any hard dependencies recorded. If related tasks were recorded only as context, say so.
