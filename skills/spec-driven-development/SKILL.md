@@ -229,3 +229,11 @@ Before proceeding to implementation, confirm:
 - [ ] Boundaries (Always/Ask First/Never) are defined
 - [ ] The blocker-oriented evaluator loop found no planning-blocking issues
 - [ ] The spec is saved to `.mdf/work/{work_id}/spec-NNN.md`, or to a tracked repository file only when explicitly requested
+
+For `auto-workflow`, human review and approval of a saved spec artifact is a
+manual checkpoint only when a real decision, `question needed`, or missing
+required information remains. If the blocker-oriented evaluator loop found no
+planning-blocking issues and the spec entrypoint is running in auto-workflow
+mode, the workflow may continue to planning without an extra manual approval
+turn. This does not change `interview-me` criteria or its explicit confirmation
+gate.

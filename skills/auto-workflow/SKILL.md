@@ -68,9 +68,25 @@ destination remains ambiguous.
 
 ## Stop Conditions
 
+Classify delegated phase requests before deciding whether to stop:
+
+- **decision required**: stop. This includes product or API direction,
+  risk acceptance, scope expansion, compatibility tradeoffs, release policy,
+  security/privacy acceptance, or any other judgment the agent must not make.
+- **missing required information**: stop. This includes `question needed`,
+  `interview-me` intent confirmation, planning-blocking open questions, or
+  ambiguity that could make later planning or implementation wrong.
+- **review checkpoint only**: auto-proceed only when the delegated phase has
+  produced the required artifact, its blocker-oriented review/evaluator loop
+  passed, and no planning-blocking question remains.
+- **artifact saved confirmation**: auto-proceed only when the delegated phase is
+  merely reporting where it saved a required artifact and is asking for
+  ceremonial review/approval before the next automatic phase.
+
 Stop immediately when any delegated phase:
 
-- asks for user input
+- asks for user input classified as `decision required` or `missing required
+  information`
 - returns `question needed`
 - cannot complete its own gate
 - reports failed verification
@@ -79,7 +95,10 @@ Stop immediately when any delegated phase:
 
 Do not duplicate ambiguity handling in this skill. Ambiguous requirements are
 owned by `interview-me`, `spec`, and `spec-driven-development`; `auto-workflow`
-only stops when a delegated phase asks for input or cannot continue.
+stops when a delegated phase asks for a real decision, reports missing required
+information, returns `question needed`, or cannot continue. It may continue past
+`review checkpoint only` and `artifact saved confirmation` prompts only under
+the narrow conditions above.
 
 ### Standalone Review Stop
 

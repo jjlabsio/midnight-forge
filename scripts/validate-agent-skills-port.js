@@ -61,6 +61,10 @@ const entrypoints = {
     "orchestration wrapper and state machine",
     "Do not inline, summarize, abbreviate, duplicate, or replace",
     "question needed",
+    "decision required",
+    "missing required information",
+    "review checkpoint only",
+    "artifact saved confirmation",
     "NO-GO",
     "`github-pr`: do not use a subagent",
   ],
@@ -68,6 +72,9 @@ const entrypoints = {
     "spec",
     "mdf spec",
     "Invoke the `spec-driven-development` skill.",
+    "Standalone mode",
+    "Auto-workflow mode",
+    "same auto-workflow invocation",
     "inline blocker-oriented self-review loop",
     "SPEC.md",
     "confirm with the user before proceeding",
@@ -239,6 +246,10 @@ for (const [entrypoint, requiredText] of Object.entries(entrypoints)) {
     assertContains(skillPath, text);
   }
 }
+assertNotContains(
+  rel("skills", "auto-workflow", "SKILL.md"),
+  "- asks for user input\n"
+);
 
 for (const commandName of [
   "tasks-project",
@@ -302,6 +313,15 @@ for (const trigger of [
 ]) {
   assertContains(useMdf, trigger);
 }
+for (const text of [
+  "Standalone `task work {id}`",
+  "same user message",
+  "downstream workflow",
+  "separate explicit implementation instruction",
+  "same-turn downstream workflows can continue after setup",
+]) {
+  assertContains(useMdf, text);
+}
 
 const initSkill = rel("skills", "init", "SKILL.md");
 for (const text of [
@@ -346,6 +366,11 @@ for (const text of [
   "## Worktree Guard",
   "use the `using-git-worktrees` skill",
   "work {id}` before creating or replacing `locks/{id}.lock`",
+  "same user message",
+  "explicit downstream workflow",
+  "separate explicit implementation instruction",
+  "standalone `work {id}`",
+  "Do not treat task activation alone as implementation permission",
   "## Intent Parsing",
   "Users do not need to memorize exact command names",
   "If worktree setup fails or stops for any reason, do not create or replace the task lock",
@@ -385,6 +410,7 @@ assertOrder(
     "Use `using-git-worktrees`",
     "Create or replace `.mdf/locks/{id}.lock`",
     "Update `item.md` with `status: \"active\"`",
+    "If the same user message already contains an explicit downstream workflow",
   ]
 );
 assertOrder(
@@ -573,6 +599,11 @@ for (const text of [
   "downstream impact check against remaining planned work and queued task cards",
   "Shared files alone do not create hard dependencies",
   "`depends_on` remains only for true hard blockers",
+  "review checkpoint only",
+  "artifact saved confirmation",
+  "same user message",
+  "explicit downstream workflow",
+  "Standalone `$task work <id>`",
 ]) {
   assertContains(readme, text);
 }

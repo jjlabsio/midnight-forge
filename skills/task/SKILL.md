@@ -280,7 +280,21 @@ If `using-git-worktrees` stops because `.worktrees/` is not ignored or project i
 
 After `using-git-worktrees` succeeds, create `.mdf/locks/{id}.lock` using the canonical root, work ID, resulting worktree path, and branch. Update `item.md` with `status: "active"`, `worktree`, and `branch`. Continue the task briefing from that worktree.
 
-`work {id}` prepares and briefs the task. It does not authorize implementation. After printing the briefing, stop. Do not modify project code, run implementation steps, create commits, run tests, or continue into the task unless the user gives a separate explicit implementation instruction.
+`work {id}` prepares and briefs the task. It does not authorize implementation.
+For standalone `work {id}`, after printing the briefing, stop. Do not modify
+project code, run implementation steps, create commits, run tests, or continue
+into the task unless the user gives a separate explicit implementation
+instruction.
+
+If the same user message already contains an explicit downstream workflow such
+as `auto-workflow`, `build`, `implement`, `continue`, or `proceed`, that
+downstream workflow is the separate explicit implementation instruction. After
+successful dependency readiness, staleness preflight, lock handling, worktree
+guard, task state update, and briefing, continue into the named downstream
+workflow without requiring another user turn. Do not treat task activation alone as implementation permission. Do not bypass any real stop condition such
+as missing or duplicate task IDs, dependency blockers, malformed dependency
+state, lock takeover confirmation, worktree setup ambiguity or failure, or
+missing init state.
 
 ## Intent Parsing
 
@@ -354,7 +368,8 @@ Start a specific task.
 16. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 17. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
 18. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, context, file summaries, criteria, and recent log entries.
-19. Stop after the briefing. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
+19. Stop after the briefing for standalone `work {id}`. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
+20. If the same user message already contains an explicit downstream workflow, treat that workflow as the separate explicit implementation instruction and continue into it after the briefing only when all dependency readiness, staleness preflight, lock handling, worktree, init, and task state requirements above have succeeded.
 
 ### `done`
 
