@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.7 - 2026-06-18
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.6...v0.7.7)
+
+### Changes
+
+- docs(task): add drift guardrails ([#34](https://github.com/jjlabsio/midnight-forge/pull/34))
 ## v0.7.6 - 2026-06-17
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.5...v0.7.6)
