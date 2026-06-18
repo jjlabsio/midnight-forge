@@ -111,8 +111,12 @@ For a successful planned task that should continue through PR preparation
 without manual command handoffs, `auto-workflow` runs the interactive lifecycle
 as `spec -> plan -> build with subagents -> review -> ship -> github-pr`.
 It delegates each phase to the real phase skill and stops whenever a delegated
-phase asks for input, cannot complete its gate, returns NO-GO, or hits a
-git/PR ambiguity. Standalone review findings that are actionable within the
+phase needs a real decision, has missing required information, returns
+`question needed`, cannot complete its gate, returns NO-GO, or hits a git/PR
+ambiguity. Prompts classified as review checkpoint only or artifact saved confirmation
+prompts can be auto-proceeded only after the required artifact exists, the
+blocker-oriented review/evaluator loop has passed, and no planning-blocking
+question remains. Standalone review findings that are actionable within the
 approved scope enter an automatic fix, verification, and re-review loop; the
 workflow stops only when a finding needs user judgment, risk acceptance, scope
 expansion, or repeated fix attempts fail.
@@ -240,6 +244,16 @@ The skill stops on ambiguous state instead of warning and continuing. `.worktree
 
 If task work cannot start because project init or `.worktrees/` ignore setup is missing, `$task work <id>` leaves the task queued and instructs the user to run `mdf init`. The original task is not locked or resumed until init is complete and `work <id>` is run again.
 
+Standalone `$task work <id>` activates and briefs the task, then stops before
+implementation. If the same user message explicitly includes a downstream
+workflow such as `$auto-workflow`, `$build`, "implement", "continue", or
+"proceed", that explicit downstream workflow is the separate proceed
+instruction; after successful task setup and briefing, MDF may continue into
+the named workflow without waiting for another user turn. This does not bypass
+real task stop conditions such as dependency blockers, malformed dependency
+state, lock takeover confirmation, staleness decisions, worktree setup
+failures, or missing init state.
+
 ## PR Policy
 
 Midnight Forge includes a `github-pr` skill for GitHub pull request creation. Before creating or updating a normal task-backed PR, the skill completes the MDF task identified by the current session context. Active lock files validate that selected task; they do not select a task by themselves, and the skill never completes a task solely because it is the only active lock.
@@ -269,7 +283,7 @@ Midnight Forge vendors the original `agent-skills` materials into native plugin 
 
 The `use-mdf` meta skill routes development workflow decisions such as auto-workflow, spec, plan, build, test, review, simplify, ship, debugging, UI, API/interface, security, performance, documentation, migration, task lifecycle, worktree, commit, GitHub PR, post-merge sync, and gone branch cleanup work. The original `test-driven-development` name is preserved; see `references/agent-skills-port-notes.md` for the collision check and fallback strategy.
 
-The recommended happy path for planned work is `spec -> plan -> build -> review -> ship` when independent review is desired. `spec`, `plan`, and `build` use inline loops by default: `spec` and `plan` run inline blocker-oriented self-review before saving artifacts, and `build` runs inline implementation, verification, task review, and whole-build review gates.
+The recommended happy path for planned work is `spec -> plan -> build -> review -> ship` when independent review is desired. `spec`, `plan`, and `build` use inline loops by default: `spec` and `plan` run inline blocker-oriented self-review before saving artifacts, and `build` runs inline implementation, verification, task review, and whole-build review gates. Standalone `$spec` / `mdf spec` still stops after saving the spec for human review, while `auto-workflow` mode may continue to planning automatically after the saved spec has no blocker findings or required questions.
 
 Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization for subagents/delegation/parallel agent work and runtime tool availability. When those conditions are met, `agents/spec-evaluator.md` and `agents/plan-evaluator.md` can be used as optional prompt templates for narrow blocker review. Without both conditions, normal workflow gates stay inline. `build` may invoke test and review logic internally as quality gates, but `$test` and `$review` remain useful on their own for independent verification, manual edits, debugging, PR preparation, and pre-ship checks.
 
