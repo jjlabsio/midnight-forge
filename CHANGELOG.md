@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.8 - 2026-06-18
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.7...v0.7.8)
+
+### Changes
+
+- docs(workflow): 자동 워크플로의 비결정 체크포인트 자동 진행 문서화 ([#35](https://github.com/jjlabsio/midnight-forge/pull/35))
 ## v0.7.7 - 2026-06-18
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.6...v0.7.7)
