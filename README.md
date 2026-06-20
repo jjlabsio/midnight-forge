@@ -189,6 +189,19 @@ For monorepos with no stronger existing convention, durable project-wide docs de
 docs/decisions/<area-or-design-unit>/<decision-slug>.md
 ```
 
+When no stronger convention exists, MDF's basic docs structure also includes product context:
+
+```text
+docs/index.md
+docs/product/index.md
+docs/product/product-brief.md
+docs/architecture/index.md
+docs/decisions/index.md
+docs/operations/index.md
+```
+
+`docs/product/product-brief.md` is the lightweight default product context document for startup, solo-founder, and product-led projects. `docs/product/service-definition.md` remains an optional extension for service-heavy, platform-oriented, B2B/enterprise, or operationally mature projects.
+
 MDF does not default to date-only files, one global numbered ADR sequence, or app/package-local docs for project-wide decisions. Existing feature-local or system-local conventions such as colocated `spec.md` and `decisions.md` remain valid when the project already uses them.
 
 Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:

@@ -113,10 +113,10 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 2. Show which entries are missing from ignore coverage.
 3. Inspect the tracked docs and agent-rule conventions before asking setup questions:
    - Docs policy files and indexes: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
-   - Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
+   - Docs structure: existing product, architecture, decisions, and operations docs directories, including project-specific equivalents.
    - Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
 4. Ask whether to create one setup branch that handles both local workflow-state ignore entries, and whether to open a setup PR after committing.
-5. If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to include the basic docs structure in the same setup PR:
+5. If the project has no docs directory or no clear equivalent product, architecture, decisions, and operations docs structure, ask whether to include the basic docs structure in the same setup PR:
 
    ```text
    This project does not yet have a clear docs structure for MDF design and decision records.
@@ -124,12 +124,14 @@ If either `.mdf/` or `.worktrees/` is not ignored:
 
    Files to add:
    - docs/index.md
+   - docs/product/index.md
+   - docs/product/product-brief.md
    - docs/architecture/index.md
    - docs/decisions/index.md
    - docs/operations/index.md
    ```
 
-   Use `index.md` files for this structure. Do not add placeholder `README.md` files for these docs areas. If equivalent architecture, decisions, or operations directories already exist, do not create duplicate MDF fallback directories; preserve the existing convention instead.
+   Use `index.md` files for this structure. Do not add placeholder `README.md` files for these docs areas. Treat `docs/product/product-brief.md` as the lightweight default product context document for startup, solo-founder, and product-led projects. Do not create `docs/product/service-definition.md` by default; it is an optional extension for service-heavy, platform-oriented, B2B/enterprise, or operationally mature projects. If equivalent product, architecture, decisions, or operations directories already exist, do not create duplicate MDF fallback directories; preserve the existing convention instead.
 6. Ask whether the setup PR should add or update a project agent rules file with a documentation rule:
    - Before asking, inspect existing agent rules for an equivalent instruction to check relevant project docs before starting code or design changes.
    - Treat equivalent meaning as enough to skip, even when wording differs from MDF's suggested snippet.
@@ -151,6 +153,7 @@ If either `.mdf/` or `.worktrees/` is not ignored:
    Before making code or design changes, check the relevant project documentation first.
 
    Start with `docs/index.md`, then read any related documents under:
+   - `docs/product/` for product context, scope, users, workflows, and success signals
    - `docs/architecture/` for system design and structural decisions
    - `docs/decisions/` for accepted or superseded decision records
    - `docs/operations/` for deployment, rollback, runbook, and operational guidance
@@ -179,10 +182,10 @@ This is the only MDF setup branch, `.gitignore` edit, optional basic docs struct
 After ignore policy passes, inspect the tracked docs and agent-rule conventions before creating or updating project `.mdf/` state:
 
 - Docs policy files and indexes: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
-- Docs structure: existing architecture, decisions, and operations docs directories, including project-specific equivalents.
+- Docs structure: existing product, architecture, decisions, and operations docs directories, including project-specific equivalents.
 - Agent rules: existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clearly established project convention.
 
-If the project has no docs directory or no clear equivalent architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow.
+If the project has no docs directory or no clear equivalent product, architecture, decisions, and operations docs structure, ask whether to create a setup branch and PR for the basic docs structure using the same prompt and file list from the ignore-policy setup flow.
 
 Independently inspect agent rules. Before asking about agent-rules setup, inspect existing `AGENTS.md`, `CLAUDE.md`, `docs/AGENTS.md`, `docs/CLAUDE.md`, or another clear project agent rules convention for an equivalent instruction to check relevant project docs before starting code or design changes. Treat equivalent meaning as enough to skip, even when wording differs from MDF's suggested snippet, and do not require MDF marker comments or exact MDF wording to recognize an existing equivalent rule. If an equivalent unmarked or human-authored docs-before-work rule already exists, skip the agent-rules setup question and preserve the file unchanged.
 
