@@ -95,7 +95,7 @@ Project-level interpretation caches that are not per-work-item artifacts live un
 <canonical-root>/.mdf/project/docs-profile.md
 ```
 
-This cache helps agents avoid repeatedly rediscovering docs placement rules, but it is not the source of truth. Tracked docs policy files and existing docs taxonomy remain authoritative. When no stronger convention exists, MDF's basic docs structure uses `docs/index.md`, `docs/architecture/index.md`, `docs/decisions/index.md`, and `docs/operations/index.md`; equivalent project paths should be recorded in the profile instead of duplicated. Use the cache only when fresh and high-confidence; otherwise rescan or stop before tracked docs writes when placement is ambiguous. Do not store this cache inside linked worktrees or as primary state under `~/.mdf`.
+This cache helps agents avoid repeatedly rediscovering docs placement rules, but it is not the source of truth. Tracked docs policy files and existing docs taxonomy remain authoritative. When no stronger convention exists, MDF's basic docs structure uses `docs/index.md`, `docs/product/index.md`, `docs/product/product-brief.md`, `docs/architecture/index.md`, `docs/decisions/index.md`, and `docs/operations/index.md`; equivalent project paths should be recorded in the profile instead of duplicated. `product-brief.md` is the lightweight default product context document for startup, solo-founder, and product-led projects, while `service-definition.md` is only an optional extension for service-heavy or operationally mature projects. Use the cache only when fresh and high-confidence; otherwise rescan or stop before tracked docs writes when placement is ambiguous. Do not store this cache inside linked worktrees or as primary state under `~/.mdf`.
 
 ## Core Operating Behaviors
 

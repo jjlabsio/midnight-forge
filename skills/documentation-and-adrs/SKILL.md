@@ -21,7 +21,7 @@ Before writing or updating tracked project docs:
 
 1. Resolve the canonical project root. If running under `<canonical-root>/.worktrees/<branch>`, use `<canonical-root>` for docs discovery and `.mdf` state.
 2. Read likely docs policy files when present: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
-3. Inspect existing docs taxonomy, especially `docs/index.md`, area indexes, existing `docs/architecture/`, `docs/decisions/`, `docs/operations/`, feature/system-local `spec.md` and `decisions.md`, and any project-specific decision templates.
+3. Inspect existing docs taxonomy, especially `docs/index.md`, area indexes, existing `docs/product/`, `docs/architecture/`, `docs/decisions/`, `docs/operations/`, feature/system-local `spec.md` and `decisions.md`, and any project-specific decision templates.
 4. Prefer the project's existing convention over MDF defaults.
 5. If multiple tracked-doc destinations are plausible, or confidence is not high, stop before writing tracked docs and ask which convention to follow.
 
@@ -31,6 +31,8 @@ When no equivalent project docs convention exists, MDF's basic docs structure is
 
 ```text
 docs/index.md
+docs/product/index.md
+docs/product/product-brief.md
 docs/architecture/index.md
 docs/decisions/index.md
 docs/operations/index.md
@@ -38,7 +40,30 @@ docs/operations/index.md
 
 Use `index.md` files for this structure. Do not create placeholder `README.md` files for these docs areas when the files are only standing in until real docs are written.
 
-If the project already has equivalent architecture, decisions, or operations docs, preserve those paths instead of creating duplicate MDF fallback directories. Record the equivalents in `.mdf/project/docs-profile.*` after project init exists, but continue treating tracked docs policy files and the tracked docs tree as the source of truth.
+Use `docs/product/product-brief.md` as the lightweight default product context document for startup, solo-founder, and product-led projects. It should capture what the product is, who it serves, the core problem, current scope, non-goals, key workflows, success signals, constraints, and open assumptions. Do not require `docs/product/service-definition.md` by default; reserve it as an optional extension for service-heavy, platform-oriented, B2B/enterprise, or operationally mature projects where ownership, interfaces, dependencies, support boundaries, or SLO/SLA expectations are central to implementation decisions.
+
+When creating the fallback product brief, use this section outline unless the project already has a stronger product-doc template:
+
+```markdown
+# Product Brief
+
+## One-Liner
+## Current Stage
+## Target Users
+## Problem
+## Promise
+## Core Use Case
+## Current Scope
+## Out Of Scope
+## Key Workflows
+## Success Signals
+## Differentiation
+## Constraints
+## Open Questions
+## Related Docs
+```
+
+If the project already has equivalent product, architecture, decisions, or operations docs, preserve those paths instead of creating duplicate MDF fallback directories. Record the equivalents in `.mdf/project/docs-profile.*` after project init exists, but continue treating tracked docs policy files and the tracked docs tree as the source of truth.
 
 When MDF must apply a fallback decision convention, use root-level `docs/decisions/` organized by area or design unit:
 
@@ -83,11 +108,13 @@ The JSON profile should record enough evidence for future agents to trust or inv
   ],
   "detected_taxonomy": {
     "docs_root": "docs",
+    "product": "docs/product",
     "architecture": "docs/architecture",
     "decisions": "docs/decisions",
     "operations": "docs/operations"
   },
   "equivalent_paths": {
+    "product": null,
     "architecture": null,
     "decisions": null,
     "operations": null,
@@ -100,7 +127,7 @@ The JSON profile should record enough evidence for future agents to trust or inv
   },
   "index_update_rules": [
     "Update docs/index.md when adding, moving, or deleting tracked docs under the basic docs structure.",
-    "Update the relevant area index.md when adding, moving, or deleting tracked docs under docs/architecture, docs/decisions, or docs/operations.",
+    "Update the relevant area index.md when adding, moving, or deleting tracked docs under docs/product, docs/architecture, docs/decisions, or docs/operations.",
     "Use equivalent project indexes instead when the tracked docs tree has a stronger existing convention."
   ],
   "confidence": "high",
