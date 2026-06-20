@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0 - 2026-06-20
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.9...v0.8.0)
+
+### Changes
+
+- feat(documentation): 제품 브리프 fallback 추가 ([#37](https://github.com/jjlabsio/midnight-forge/pull/37))
 ## v0.7.9 - 2026-06-18
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.8...v0.7.9)
