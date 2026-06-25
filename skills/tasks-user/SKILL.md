@@ -76,7 +76,9 @@ Do not abort the entire user-level board because one registered project store is
 
 ## Status Rules
 
-For each valid project, read status from `.mdf/work/{work_id}/item.md` and reconcile it with locks:
+For each valid project, read `kind` from `.mdf/work/{work_id}/item.md` before deriving status. Existing legacy item cards without `kind` are treated as `kind: "task"`.
+
+For `kind: "task"`, read status from the item card and reconcile it with locks:
 
 1. `.mdf/locks/{task_id}.lock` exists: display as `active`.
 2. Else item frontmatter has `status: "done"` or `completed`: display as `done`.
@@ -84,27 +86,31 @@ For each valid project, read status from `.mdf/work/{work_id}/item.md` and recon
 
 If an item has both a lock and `status: "done"` or `completed`, display it as active and show a consistency warning. Do not delete the lock automatically.
 
+Do not derive `active`, `queue`, or `done` for `kind: "inbox"`, `kind: "routine"`, or `kind: "track"`. These kinds are non-executable context and must not be recommended as next tasks.
+
 ## Board Format
 
 Group output by project name from the registry or `.mdf/project.json`, including canonical root path.
 
 For each valid project, include:
 
-- `Active`: tasks with lock files, showing ID, title, branch, worktree, runtime, and started time when available.
-- `Queue`: work items without locks or completion state, sorted by `order` ascending. Show task ID, work ID, title, due date when present, order, and created date.
-- `Done`: work items with completion state, sorted by completion date descending. Show the most recent five tasks by default.
+- `Active`: task items with lock files, showing ID, title, optional `[track: Track title]`, branch, worktree, runtime, and started time when available.
+- `Queue`: queued task items, sorted by `order` ascending. Show task ID, work ID, title, optional `[track: Track title]`, due date when present, order, and created date.
+- `Done`: completed task items, sorted by completion date descending. Show the most recent five tasks by default.
+- `Tracks`: track items, showing track ID, title, outcome when present, active/queued/done task counts, and next ready executable task when one exists.
+- `Routine Review Prompts`: routine items whose `next_review` is today or earlier, showing item ID, title, optional `[track: Track title]`, project name, canonical root path, and `review_prompt` when present. These are review prompts only; they are not next-task recommendations.
 
 Include a `Warnings` section for skipped projects and malformed items.
 
 Add a `Recommendation` section.
 
-Recommendation chooses from all queue tasks across valid projects:
+Recommendation chooses only executable `kind: "task"` queue items across valid projects. Exclude `kind: "inbox"`, `kind: "routine"`, and `kind: "track"` even when they have `due`, `order`, `next_review`, or other date-like fields.
 
 1. Earliest due date first when due dates are present.
 2. Then lowest `order`.
 3. Then oldest `created`.
 
-Show the recommended project name, task ID, work ID, title, due date when present, and canonical root path. If no queue tasks exist, report that there is no recommended next task.
+Show the recommended project name, task ID, work ID, title, optional `[track: Track title]`, due date when present, and canonical root path. If no queue tasks exist, report that there is no recommended next task. If due routine prompts exist but no executable queue tasks exist, say there are due review prompts but no recommended next task.
 
 ## Commands
 

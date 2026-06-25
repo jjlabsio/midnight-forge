@@ -129,9 +129,9 @@ When a plan contains high-risk requirements, or build discovers a new high-risk 
 
 Example: if a spec requires a continued DB-backed job to be reselected within the same bounded scheduler invocation, evidence that only verifies persisted `continued` state is insufficient. The build evidence and independent review must verify the internal continuation loop itself; relying on a later external wake-up or recovery violates the stronger same-invocation guarantee.
 
-## Task System
+## Work Item System
 
-Midnight Forge includes a first-pass local task system built from LLM-driven skills:
+Midnight Forge includes a first-pass local work item system built from LLM-driven skills. The command names stay task-oriented because executable task work is still the primary flow:
 
 - Codex: `$init`
 - Claude Code: `/mdf:init`
@@ -164,7 +164,7 @@ Cross-project discovery uses a lightweight registry:
 ~/.mdf/projects.json
 ```
 
-Because `.mdf/` is gitignored, task state and workflow artifacts are not committed, pushed, or shared with teammates through PRs unless the user explicitly promotes a document into tracked project files.
+Because `.mdf/` is gitignored, local work item state and workflow artifacts are not committed, pushed, or shared with teammates through PRs unless the user explicitly promotes a document into tracked project files.
 
 ## Docs Profile Cache
 
@@ -204,7 +204,7 @@ docs/operations/index.md
 
 MDF does not default to date-only files, one global numbered ADR sequence, or app/package-local docs for project-wide decisions. Existing feature-local or system-local conventions such as colocated `spec.md` and `decisions.md` remain valid when the project already uses them.
 
-Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:
+Each work item has an item card at `.mdf/work/{work_id}/item.md` with YAML frontmatter plus these fixed English body sections:
 
 ```markdown
 ## Context
@@ -216,13 +216,26 @@ Each task-backed work item has an item card at `.mdf/work/{work_id}/item.md` wit
 ## Log
 ```
 
-Task status is stored in the item card and reconciled with locks:
+MDF recognizes four user-facing work item kinds:
+
+- `task`: finite executable work. This is the only kind with task lifecycle status, locks, worktrees, `depends_on`, and next-task recommendation behavior.
+- `inbox`: raw capture, durable notes, future reminders, ideas, or not-yet-actionable context.
+- `routine`: recurring review/check prompts surfaced when due. Routines do not run in the background and are not executable tasks unless explicitly promoted into a task.
+- `track`: a thin upper-level work stream or outcome that groups related tasks, inbox items, and routines.
+
+The grouping concept is called `track`, not `project`, to avoid confusion with repositories, products, and user projects.
+
+Task status is task-only and is stored in the task item card, then reconciled with locks:
 
 - `.mdf/locks/{task_id}.lock` exists: active
 - Otherwise `status: "done"` or `completed` exists: done
 - Otherwise: queue
 
-`drop` and `clean` require explicit confirmation before deleting work item directories.
+`inbox`, `routine`, and `track` items do not use `queue`, `active`, or `done`, and they are not recommended as next executable tasks. `tasks-project` and `tasks-user` show track context on task rows when a task has `track_id`, summarize tracks separately, and surface due routines as review prompts rather than tasks.
+
+For example, a blog reset can be represented as one `track` for the overall reset, normal `task` items for auditing posts and rewriting specific articles, an `inbox` item for "add real stock case studies later", and a `routine` for reviewing Search Console impressions, CTR, and conversions before changing titles or structure.
+
+`drop` and `clean` require explicit confirmation before deleting task work item directories. Non-task item cleanup must be explicitly requested.
 
 Legacy task stores under `~/.mdf/projects/{project-hash}` can be copied into canonical `.mdf/work/` storage with `$migrate-tasks` or `/mdf:migrate-tasks`. Migration is dry-run first, requires explicit confirmation before writing, preserves `legacy_id` and `legacy_source`, and never deletes, moves, or rewrites legacy files.
 
@@ -237,11 +250,13 @@ user or replan decision.
 
 When completed or in-progress task work changes design, architecture, contracts,
 workflow semantics, task boundaries, or shared acceptance assumptions, MDF runs
-a downstream impact check against remaining planned work and queued task cards.
-Affected tasks are recorded as unaffected, needing task log/context/criteria
-updates, needing a plan revision or linked superseding artifact, or needing a
-user/replan decision. Shared files alone do not create hard dependencies, and
-`depends_on` remains only for true hard blockers.
+a downstream impact check against remaining planned work, queued task cards, and
+related `inbox`, `routine`, and `track` context. Affected tasks are recorded as
+unaffected, needing task log/context/criteria updates, needing a plan revision
+or linked superseding artifact, or needing a user/replan decision. Related
+non-task items can provide evidence for this check, but they do not become
+executable start candidates. Shared files alone do not create hard dependencies,
+and `depends_on` remains only for true hard blockers.
 
 ## Worktree Policy
 
