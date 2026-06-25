@@ -81,7 +81,7 @@ When a skill produces a markdown workflow artifact, resolve the current work ite
 4. If user or project init is missing, stop before reading or writing MDF state and instruct the user to run `mdf init`.
 5. Read `<canonical-root>/.mdf/locks/*.lock`.
 6. If a lock's `worktree` matches the current checkout and includes `work_id`, use that work item.
-7. If there is no matching lock, create an implicit work item under `<canonical-root>/.mdf/work/{work_id}/`.
+7. If there is no matching lock, create an internal `kind: "implicit"` workflow-evidence work item under `<canonical-root>/.mdf/work/{work_id}/`. This is not a user-facing work item kind and must not appear as a task, inbox item, routine, track, or next-task recommendation.
 8. Write artifacts as `<canonical-root>/.mdf/work/{work_id}/{type}-NNN.md`.
 9. Repeated runs create new revisions such as `spec-001.md`, `spec-002.md`, and `review-001.md`.
 10. Update `.mdf/work/{work_id}/item.md` `latest` pointers and append or update `.mdf/index.jsonl`.

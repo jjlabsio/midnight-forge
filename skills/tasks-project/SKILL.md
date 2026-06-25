@@ -40,7 +40,9 @@ Do not initialize storage for read-only board commands.
 
 ## Status Rules
 
-Read status from `.mdf/work/{work_id}/item.md` and reconcile it with locks:
+Read `kind` from `.mdf/work/{work_id}/item.md` before deriving board status. Existing legacy item cards without `kind` are treated as `kind: "task"`.
+
+For `kind: "task"`, read status from the item card and reconcile it with locks:
 
 1. `.mdf/locks/{task_id}.lock` exists: display as `active`.
 2. Else item frontmatter has `status: "done"` or `completed`: display as `done`.
@@ -48,15 +50,22 @@ Read status from `.mdf/work/{work_id}/item.md` and reconcile it with locks:
 
 If an item has both a lock and `status: "done"` or `completed`, display it as active and show a consistency warning. Do not delete the lock automatically.
 
+Do not derive `active`, `queue`, or `done` for `kind: "inbox"`, `kind: "routine"`, or `kind: "track"`. These kinds are non-executable context. They must not appear in the task `Active`, `Queue`, or `Done` sections unless they are malformed legacy cards that cannot be classified.
+
 ## Board Format
 
 Group the current project board into:
 
-- `Active`: tasks with lock files, showing ID, title, branch, worktree, runtime, and started time when available.
-- `Queue`: work items without locks or completion state, sorted by `order` ascending. Show task ID, work ID, title, due date when present, order, and created date.
-- `Done`: work items with completion state, sorted by completion date descending. Show the most recent five tasks by default.
+- `Active`: task items with lock files, showing ID, title, optional `[track: Track title]`, branch, worktree, runtime, and started time when available.
+- `Queue`: queued task items, sorted by `order` ascending. Show task ID, work ID, title, optional `[track: Track title]`, due date when present, order, and created date.
+- `Done`: completed task items, sorted by completion date descending. Show the most recent five tasks by default.
+- `Tracks`: track items, showing track ID, title, outcome when present, active/queued/done task counts, inbox count, routine count, and the next ready executable task in that track when one exists.
+- `Inbox`: inbox items, showing item ID, title, optional `[track: Track title]`, created date, and a short context summary when available.
+- `Routine Review Prompts`: routine items whose `next_review` is today or earlier, showing item ID, title, optional `[track: Track title]`, cadence, next review date, and `review_prompt` when present. Present these as review prompts, not executable tasks; the user may review, promote, or create a concrete task if real work is found.
 
 For malformed item files, show the path and parse problem under a warning section. Do not rewrite malformed files.
+
+Resolve track labels by scanning `kind: "track"` item cards. Task, inbox, and routine `track_id` frontmatter is authoritative for membership. A track's optional `members` list is only display/helping metadata and may be incomplete. If an item has an unresolved `track_id`, keep rendering the item and add a warning for the unresolved track reference.
 
 ## Commands
 
@@ -66,16 +75,17 @@ Show the current project board. If storage is missing, show empty `Active`, `Que
 
 ### `stale`
 
-Review queue work items in the current project whose `created` date is at least 30 days old or whose `expires` date has passed.
+Review queued task items in the current project whose `created` date is at least 30 days old or whose `expires` date has passed.
 
 1. List each stale task with ID, title, created date, and age in days.
 2. Ask the user for each candidate whether to keep, delete, or skip.
 3. Delete only when the user chooses delete for that task.
 4. Do not delete active or done tasks.
+5. Do not include `inbox`, `routine`, or `track` items in task staleness cleanup. They may be shown separately as old context, but deleting or archiving non-task items requires an explicit future command or explicit user instruction.
 
 ### `clean`
 
-Delete done work items completed at least 7 days ago, or expired work items whose `expires` date has passed, only after explicit confirmation.
+Delete done task items completed at least 7 days ago, or expired task items whose `expires` date has passed, only after explicit confirmation.
 
 1. Find work items in the current project with `completed` date at least 7 days old or expired `expires`.
 2. Exclude any work item that also has `.mdf/locks/{task_id}.lock`; because lock plus completed derives to active, report it as a consistency issue and skip it.
@@ -84,6 +94,7 @@ Delete done work items completed at least 7 days ago, or expired work items whos
 5. Ask for explicit confirmation before deleting anything.
 6. After confirmation, delete only the listed work item directories and append tombstone entries to `.mdf/index.jsonl`.
 7. If there are no valid cleanup candidates, report that there is nothing to clean.
+8. Do not clean `inbox`, `routine`, or `track` items by task completion rules.
 
 ## Error Handling
 
