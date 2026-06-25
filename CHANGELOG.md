@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.1 - 2026-06-25
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.0...v0.8.1)
+
+### Changes
+
+- docs(task): add non-executable work item kinds ([#38](https://github.com/jjlabsio/midnight-forge/pull/38))
 ## v0.8.0 - 2026-06-20
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.7.9...v0.8.0)
