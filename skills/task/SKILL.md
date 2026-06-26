@@ -61,7 +61,7 @@ Use the canonical root basename for `name`. Include `remote` when origin exists;
 {"work_id":"2026-05-26-track-0001-blog-reset","kind":"track","item_id":"track-0001","title":"Blog reset","item":".mdf/work/2026-05-26-track-0001-blog-reset/item.md","latest":{}}
 ```
 
-Index entries for task items should include `kind`, `task_id`, `title`, `status`, `track_id` when present, `due` when present, `order` when present, `item`, and `latest`. Index entries for inbox items should include `kind`, `item_id`, `title`, `track_id` when present, `state` when present, `item`, and `latest`. Index entries for routines should include `kind`, `item_id`, `title`, `track_id` when present, `next_review` when present, `item`, and `latest`. Index entries for tracks should include `kind`, `item_id`, `title`, `state` when present, short `outcome` when present, `item`, and `latest`.
+Index entries for task items should include `kind`, `task_id`, `title`, `status`, `track_id` when present, `due` when present, `order` when present, `item`, and `latest`. Index entries for note items should include `kind`, `item_id`, `title`, `track_id` when present, `state` when present, `item`, and `latest`. Index entries for tracks should include `kind`, `item_id`, `title`, `state` when present, short `outcome` when present, `item`, and `latest`.
 
 When a task, non-task work item, or artifact changes, update or append the corresponding index entry so the latest line for a `work_id` is authoritative.
 Existing index entries that do not include `kind` are legacy task entries and must be interpreted as `kind: "task"` for backward compatibility.
@@ -88,12 +88,13 @@ Use `projects[canonical_root]` as the upsert target and preserve unrelated proje
 
 ## Work Items and IDs
 
-A work item is one workflow context. MDF supports these first-class work item kinds:
+A work item is one workflow context. MDF supports these first-class user-facing work item kinds:
 
 1. `task`: finite executable work. This is the only kind that uses the executable lifecycle `queue`, `active`, and `done`.
-2. `inbox`: raw capture, durable notes, future reminders, or not-yet-actionable context. Inbox items are not recommended as next tasks.
-3. `routine`: a recurring review or check prompt with coarse due surfacing. Routines do not run in the background and are not executable tasks unless explicitly promoted into a task.
-4. `track`: a thin upper-level work stream or outcome that groups related tasks, inbox items, and routines.
+2. `note`: durable context, future reminders, or not-yet-actionable material. Note items are not recommended as next tasks.
+3. `track`: a thin upper-level work stream or outcome that groups related tasks and notes.
+
+Legacy item cards with `kind: "inbox"` or `kind: "routine"` may be read for backward compatibility, displayed as non-executable context, and preserved when encountered. Do not create new `inbox` or `routine` items from this skill, do not recommend them as next tasks, and do not expose `routine` as a first-class command.
 
 Do not call the upper-level grouping kind `project`. MDF already uses project terminology for the repository or local product/project context, and users often call repos or products projects. Use `track` for the larger work stream.
 
@@ -109,8 +110,7 @@ Non-task work items use an `item_id` with the kind prefix and a 4-digit counter 
 
 ```text
 track-0001
-inbox-0001
-routine-0001
+note-0001
 ```
 
 Their work item IDs include the date, item ID, and a lowercase slug:
@@ -178,24 +178,13 @@ Task creation must preserve intent without over-confirming it. When the user is 
 
 Required frontmatter fields for `kind: "task"` are `work_id`, `task_id`, `kind`, `title`, `order`, `status`, and `created`. Optional task fields are `due`, `completed`, `worktree`, `branch`, `depends_on`, `track_id`, and `latest`.
 
-Non-task work item cards use the same body section format, but they do not have `task_id`, `order`, `status`, `worktree`, `branch`, or `depends_on` unless a future migration explicitly defines a backward-compatible reason. Required frontmatter fields for `kind: "inbox"`, `kind: "routine"`, and `kind: "track"` are `work_id`, `item_id`, `kind`, `title`, `created`, and `latest`.
+Non-task work item cards use the same body section format, but they do not have `task_id`, `order`, `status`, `worktree`, `branch`, or `depends_on` unless a future migration explicitly defines a backward-compatible reason. Required frontmatter fields for `kind: "note"` and `kind: "track"` are `work_id`, `item_id`, `kind`, `title`, `created`, and `latest`.
 
-Inbox items may include:
-
-```yaml
-state: "open"
-track_id: "track-0001"
-```
-
-Routine items may include:
+Note items may include:
 
 ```yaml
 state: "open"
 track_id: "track-0001"
-cadence: "weekly"
-next_review: "2026-07-02"
-last_reviewed: "2026-06-25"
-review_prompt: "Review Search Console impressions, CTR, and conversions; update titles and structure when evidence supports it."
 ```
 
 Track items may include:
@@ -205,11 +194,10 @@ state: "open"
 outcome: "Reset the blog around a smaller set of search-intent clusters."
 members:
   tasks: ["0001", "0002"]
-  inbox: ["inbox-0001"]
-  routines: ["routine-0001"]
+  notes: ["note-0001"]
 ```
 
-For membership, item-side `track_id` is authoritative for tasks, inbox items, and routines. A track's `members` list is a display convenience and may be incomplete; board commands should derive membership from item-side `track_id` when possible.
+For membership, item-side `track_id` is authoritative for tasks and notes. A track's `members` list is a display convenience and may be incomplete; board commands should derive membership from item-side `track_id` when possible.
 
 `depends_on` is optional machine-readable dependency metadata. When present, it
 must be a list of normalized 4-digit task IDs that are hard blockers for this
@@ -239,7 +227,7 @@ For `kind: "task"`, store `status` in `item.md` as one of:
 
 Use locks as active ownership markers. If `locks/{task_id}.lock` exists but `item.md` is not `active`, display the task as active and show a consistency warning. If `item.md` is `done` and a matching lock exists, display it as active and show a consistency warning. Do not silently delete the lock.
 
-Do not use task lifecycle statuses for `inbox`, `routine`, or `track`. These kinds may use optional `state: "open"` or `state: "archived"` metadata for display and cleanup, but they are not executable queue entries and must not be selected by "next task" logic.
+Do not use task lifecycle statuses for `note` or `track`. These kinds may use optional `state: "open"` or `state: "archived"` metadata for display and cleanup, but they are not executable queue entries and must not be selected by "next task" logic. Legacy `inbox` and `routine` cards follow the same non-executable rule when encountered.
 
 ## Dependency Readiness
 
@@ -277,8 +265,8 @@ Compare the queued task card's context, files, criteria, assumptions, and
 non-blocking related-task notes against newer artifacts and contracts. Treat
 `depends_on` as hard-blocker readiness only; do not broaden dependency readiness into semantic drift detection, and do not treat shared files alone as a hard dependency or stale-task signal.
 
-When the queued task has `track_id`, inspect related `track`, `inbox`, and
-`routine` cards in read-only mode as semantic context for drift. Related
+When the queued task has `track_id`, inspect related `track`, `note`, and
+legacy `inbox` or `routine` cards in read-only mode as semantic context for drift. Related
 non-task cards may reveal stale assumptions or missing decisions, but they are
 not executable start candidates.
 
@@ -299,10 +287,11 @@ state as safe to continue.
 The downstream impact check classifies queued tasks by semantic effect:
 unaffected, needs task log/context/criteria update, needs plan revision or
 linked superseding artifact, or needs user/replan decision before implementation.
-Use read-only inspection of canonical task cards, related `track`, `inbox`, and
-`routine` cards, latest artifacts, predecessor logs, and relevant current code
-or skill contracts. Do not classify impact from shared files alone, and do not
-convert semantic impact into `depends_on` unless there is a true hard blocker.
+Use read-only inspection of canonical task cards, related `track`, `note`, and
+legacy `inbox` or `routine` cards, latest artifacts, predecessor logs, and
+relevant current code or skill contracts. Do not classify impact from shared
+files alone, and do not convert semantic impact into `depends_on` unless there
+is a true hard blocker.
 
 When the current task invalidates a queued task's assumptions, preserve the
 evidence with a dated task log entry, updated task context or criteria, a plan
@@ -377,28 +366,25 @@ Users do not need to memorize exact command names. Treat the commands below as c
 
 Use these mappings:
 
-- "add this as a task", "create a task", or similar -> `add "description"`
-- "put this first", "next task", or similar -> `add "description" --next`
-- "add a due date", "due", or similar -> `add "description" --due DATE`
-- "capture this", "save this note", "remember this", or similar non-actionable context -> `capture "description"`
-- "make this a routine", "review this every week", or similar recurring review prompt -> `routine "description"`
+- "add this as a task", "create a task", "task this", or similar actionable work -> `task "description"`
+- "put this first", "next task", or similar -> `task "description" --next`
+- "add a due date", "due", or similar -> `task "description" --due DATE`
+- "save this note", "remember this", or similar non-actionable context -> `note "description"`
 - "make a track", "group this work", or similar larger work-stream request -> `track "description"`
-- "link this to track", "associate with track", or similar -> `link {item-id} --track {track-id}`
-- "promote this", "turn this into a task", or similar for an inbox/routine item -> `promote {item-id}`
+- "put this in track X", "associate this with track X", or similar -> resolve the target item and track from natural language, set item-side `track_id`, and update `.mdf/index.jsonl`; ask one short question if either side is ambiguous
+- "turn this note into a task" or similar -> create a new task using `task "description"` with relevant context from the note; do not mutate the source note into a task
 - "work on 0002", "start 0002", or similar -> `work 0002`
 - "start the next queued task" or similar -> choose the first ready `kind: "task"` queue item by dependency readiness and then `order`, report skipped blocked tasks, and perform `work {id}`
 - "done", "complete this", or similar -> `done`
 - "complete 0002" or similar -> `done 0002`
-- "log this", "note", or similar -> `note {id} "message"`
-- "move earlier", "bump this", or similar -> `bump {id}`
-- "move to top", "top this", or similar -> `top {id}`
+- "move earlier", "make this higher priority", "move to top", or similar -> resolve the intended queued task from natural language, adjust its `order`, and update `.mdf/index.jsonl`; ask one short question when the target or priority intent is ambiguous
 - "delete", "remove", "drop", or similar -> `drop {id}`
 
 If the intent maps to exactly one safe command, execute it. If the intent is ambiguous, ask one short clarifying question before changing task state. Keep explicit confirmation for destructive commands such as `drop`.
 
 ## Commands
 
-### `add "description"`
+### `task "description"`
 
 Create a queued task.
 
@@ -419,37 +405,25 @@ Create a queued task.
 15. Append or update the work item's line in `.mdf/index.jsonl`.
 16. Report the task ID, work ID, title, item file path, associated track when present, and any hard dependencies recorded. If related tasks or tracks were recorded only as context, say so.
 
-### `add "description" --next`
+### `task "description" --next`
 
-Same as `add`, except set `order` to one less than the current minimum queued task order, or `0` if no queued task items exist.
+Same as `task`, except set `order` to one less than the current minimum queued task order, or `0` if no queued task items exist.
 
-### `add "description" --due DATE`
+### `task "description" --due DATE`
 
-Same as `add`, and write a `due` frontmatter field. Parse dates with the current year when the user omits a year. If the date is invalid or ambiguous, ask for clarification before writing.
+Same as `task`, and write a `due` frontmatter field. Parse dates with the current year when the user omits a year. If the date is invalid or ambiguous, ask for clarification before writing.
 
-### `capture "description"`
+### `note "description"`
 
-Create a non-executable inbox work item for raw notes, durable memory, future reminders, or context that is not ready to become a task.
+Create a non-executable note work item for durable context, future reminders, or material that is not ready to become a task.
 
 1. Verify MDF user and project init state exists.
-2. Choose the next `inbox-0001` style `item_id` and derive a work ID from the current date, item ID, and title slug.
-3. Create `.mdf/work/{work_id}/item.md` with `kind: "inbox"`, `item_id`, `title`, `created`, optional `track_id` when clearly provided, and empty `latest`.
+2. Choose the next `note-0001` style `item_id` and derive a work ID from the current date, item ID, and title slug.
+3. Create `.mdf/work/{work_id}/item.md` with `kind: "note"`, `item_id`, `title`, `created`, optional `track_id` when clearly provided or unambiguous from natural language, and empty `latest`.
 4. Do not write `task_id`, `status`, `order`, `depends_on`, `worktree`, or `branch`.
-5. Fill the standard body sections with handoff-quality context. Criteria may be empty when the inbox item is only a note.
+5. Fill the standard body sections with handoff-quality context. Criteria may be empty when the note is only context.
 6. Append or update the work item's line in `.mdf/index.jsonl`.
-7. Report that the item was captured as non-executable context and will not be recommended as a next task.
-
-### `routine "description"`
-
-Create a non-executable routine review prompt.
-
-1. Verify MDF user and project init state exists.
-2. Ask for clarification before writing if cadence or first review date is required but missing or ambiguous.
-3. Choose the next `routine-0001` style `item_id` and derive a work ID from the current date, item ID, and title slug.
-4. Create `.mdf/work/{work_id}/item.md` with `kind: "routine"`, `item_id`, `title`, `created`, `cadence`, `next_review`, optional `last_reviewed`, optional `review_prompt`, optional `track_id`, and empty `latest`.
-5. Do not write `task_id`, `status`, `order`, `depends_on`, `worktree`, or `branch`.
-6. Append or update the work item's line in `.mdf/index.jsonl`.
-7. Report that due routines surface as review prompts only. If the review creates concrete work, the user or agent should promote it or create a new task.
+7. Report that the note was saved as non-executable context and will not be recommended as a next task.
 
 ### `track "description"`
 
@@ -462,24 +436,9 @@ Create a thin upper-level work stream or outcome. Do not use the name `project` 
 5. Keep the track thin: outcome, scope context, and links to related work. Do not turn it into a replacement for specs, plans, ADRs, or durable tracked docs.
 6. Append or update the work item's line in `.mdf/index.jsonl`.
 
-### `link {item-id} --track {track-id}`
+Track association is handled through natural language instead of a separate user-facing command. Resolve exactly one item by `task_id` or `item_id`, resolve exactly one `kind: "track"` item by `item_id` or unambiguous title, set item-side `track_id`, optionally update the track `members` display list, and update `.mdf/index.jsonl`. Ask one short clarifying question before writing when the item or track is ambiguous.
 
-Associate a task, inbox item, or routine with a track.
-
-1. Resolve exactly one item by `task_id` or `item_id`.
-2. Resolve exactly one `kind: "track"` item by `item_id`.
-3. Set item-side `track_id` on the task, inbox item, or routine. This item-side field is authoritative.
-4. Optionally update the track `members` display list, but do not rely on that list as the source of truth.
-5. Update `.mdf/index.jsonl`.
-
-### `promote {item-id}`
-
-Create a concrete queued task from an inbox or routine item when it becomes actionable.
-
-1. Resolve exactly one `kind: "inbox"` or `kind: "routine"` item by `item_id`.
-2. Create a new task using the same behavior as `add "description"`, carrying over relevant context and `track_id` when present.
-3. Do not mutate the source item into a task. Add a dated log entry to the source item linking the new task ID.
-4. Preserve rough or uncertain source context as context, not finalized criteria, unless it was already explicit.
+When a note becomes actionable, create a new task using `task "description"` and carry over relevant context and `track_id` when present. Do not mutate the source note into a task. Add a dated log entry to the source note linking the new task ID only as an internal bookkeeping step, not as a user-facing command.
 
 ### `work {id}`
 
@@ -533,23 +492,9 @@ Complete the specified task using the same completion behavior as `done`, but ap
 
 Use this form when another MDF workflow completes a task for a specific lifecycle reason, such as PR preparation. Do not change any other completion behavior: still set `status: "done"`, add `completed: YYYY-MM-DD` to frontmatter, update `.mdf/index.jsonl`, and delete `.mdf/locks/{id}.lock` if it exists.
 
-### `bump {id}`
+Priority changes are handled through natural language instead of named priority commands. Resolve exactly one queued task from the request, reject active or done tasks, adjust its `order`, and update `.mdf/index.jsonl`. If the target task or intended ordering is ambiguous, ask one short clarifying question before writing.
 
-Move a queue task one position earlier. Reject active or done tasks. Swap its `order` with the nearest queue task that has a smaller order. If it is already first, report that no change is needed.
-
-### `top {id}`
-
-Move a queue task to the top. Reject active or done tasks. Set its `order` to one less than the current minimum queue order.
-
-### `note {id} "message"`
-
-Append a dated entry to `## Log`:
-
-```markdown
-- YYYY-MM-DD: message
-```
-
-Preserve frontmatter and all other sections, then update the matching `.mdf/index.jsonl` entry if the note changes summary metadata.
+Appending arbitrary log entries is an internal workflow behavior, not a user-facing command. Other MDF workflows may append dated `## Log` entries when they mutate task state, create derived tasks, or complete work for lifecycle reasons.
 
 ### `drop {id}`
 
@@ -563,4 +508,4 @@ Delete a task only after explicit user confirmation.
 
 ## Error Handling
 
-Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, missing non-task `item_id` matches, duplicate non-task `item_id` matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, invalid or ambiguous routine cadence, invalid or ambiguous `next_review`, unresolved `track_id`, attempting `bump` or `top` on active or done tasks, attempting task lifecycle operations on non-task items, existing locks without takeover confirmation, blocked dependency readiness, missing dependency task IDs, duplicate dependency task IDs, self-dependencies, circular dependencies, and malformed `depends_on` values.
+Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, missing non-task `item_id` matches, duplicate non-task `item_id` matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, unresolved `track_id`, ambiguous natural-language track association, ambiguous natural-language priority changes, attempting priority changes on active or done tasks, attempting task lifecycle operations on non-task items, existing locks without takeover confirmation, blocked dependency readiness, missing dependency task IDs, duplicate dependency task IDs, self-dependencies, circular dependencies, and malformed `depends_on` values.
