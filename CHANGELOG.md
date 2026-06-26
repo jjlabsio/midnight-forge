@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.2 - 2026-06-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.1...v0.8.2)
+
+### Changes
+
+- docs(task): simplify task command surface ([#39](https://github.com/jjlabsio/midnight-forge/pull/39))
 ## v0.8.1 - 2026-06-25
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.0...v0.8.1)
