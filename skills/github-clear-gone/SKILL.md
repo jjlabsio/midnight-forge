@@ -1,11 +1,17 @@
 ---
 name: github-clear-gone
-description: "Use when cleaning local git branches marked gone after remote deletion; lists gone branches, removes associated worktrees after confirmation, and deletes stale local branches."
+description: "Use when cleaning local git branches marked gone after remote deletion; lists gone branches, removes clean associated worktrees automatically, and asks before discarding dirty worktrees."
 ---
 
 # GitHub Clear Gone
 
-When saving gone-branch cleanup reports, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/git-cleanup-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. This report is separate from the actual branch or worktree deletions, which still require explicit confirmation.
+When saving gone-branch cleanup reports, verify MDF user and project init state,
+resolve the current MDF work item, and write
+`.mdf/work/{work_id}/git-cleanup-NNN.md`. If init state is missing, stop and
+instruct the user to run `mdf init`. This report is separate from the actual
+branch or worktree deletions. Clean `[gone]` branches and clean associated
+worktrees are removed automatically; dirty worktrees still require explicit
+confirmation before uncommitted changes are discarded.
 
 ## Overview
 
@@ -31,29 +37,53 @@ git branch -v
 git worktree list
 ```
 
-4. For every `[gone]` branch, identify whether it has an associated worktree. Branches with a `+` prefix in `git branch -v` usually do.
+4. For every `[gone]` branch, identify whether it has an associated worktree.
+   Branches with a `+` prefix in `git branch -v` usually do.
 5. For every associated worktree, check whether it has uncommitted changes:
 
 ```bash
 git -C "<worktree-path>" status --short
 ```
 
-6. Show the exact branches and worktree paths that would be removed, including each associated worktree's dirty/clean status. If a worktree is dirty, include the `git status --short` output.
-7. Ask for explicit confirmation before deleting anything. Dirty worktrees require separate explicit confirmation that names the dirty worktree path and acknowledges uncommitted changes will be discarded.
-8. After confirmation, remove associated worktrees first, then delete the local branches. Do not remove a dirty worktree unless the separate dirty-worktree confirmation was given.
-9. Report what was removed. If no branches are marked `[gone]`, report that no cleanup was needed.
+6. Show the exact branches and worktree paths that would be removed, including
+   each associated worktree's dirty/clean status. If a worktree is dirty,
+   include the `git status --short` output.
+7. Split candidates into clean and dirty groups.
+   - Clean candidates are `[gone]` branches with no associated worktree, or
+     `[gone]` branches whose associated worktree has an empty
+     `git status --short`.
+   - Dirty candidates are `[gone]` branches whose associated worktree has any
+     `git status --short` output.
+8. Automatically remove clean associated worktrees first, then delete their
+   local `[gone]` branches.
+9. Ask for explicit confirmation only for dirty worktrees. The confirmation
+   must name the dirty worktree path and acknowledge that uncommitted changes
+   will be discarded.
+10. After dirty-worktree confirmation, remove the dirty associated worktrees
+    first, then delete their local `[gone]` branches. Do not remove a dirty
+    worktree unless the separate dirty-worktree confirmation was given.
+11. Report what was removed automatically, what was removed after dirty
+    confirmation, and what remains waiting for confirmation. If no branches are
+    marked `[gone]`, report that no cleanup was needed.
 
 ## Deletion Commands
 
-For each confirmed gone branch:
+For each gone branch being removed:
 
 ```bash
 git worktree remove --force "<worktree-path>"
 git branch -D "<branch-name>"
 ```
 
-Only run `git worktree remove` when the worktree path is not the current repository root. Use `--force` only after the clean/dirty status has been shown and the required confirmation has been given.
+Only run `git worktree remove` when the worktree path is not the current
+repository root. Use `--force` only after the clean/dirty status has been shown.
+For clean worktrees, the displayed clean status is sufficient. For dirty
+worktrees, the separate dirty-worktree confirmation is required before using
+`--force`.
 
 ## Boundaries
 
-Never delete branches that are not marked `[gone]`. Never delete the current branch. Never delete worktrees or branches without explicit confirmation. Never delete a dirty worktree without separate explicit confirmation that acknowledges uncommitted changes will be discarded.
+Never delete branches that are not marked `[gone]`. Never delete the current
+branch. Never delete the current repository root as a worktree. Never delete a
+dirty worktree without separate explicit confirmation that acknowledges
+uncommitted changes will be discarded.

@@ -62,13 +62,17 @@ delete branches or worktrees.
 worktrees.
    - Follow `github-clear-gone` exactly.
    - Show deletion candidates first.
-   - Require explicit user confirmation before removing any branch or worktree.
+   - Automatically remove clean `[gone]` branches and their clean associated
+     worktrees.
+   - Require explicit user confirmation only for dirty worktrees that would
+     discard uncommitted changes.
    - Never delete branches that are not marked `[gone]`.
 
 8. Report the final state:
    - merged PR URL
    - default branch and latest commit
-   - whether cleanup was completed, skipped, or waiting for confirmation
+   - whether cleanup was completed, skipped, or waiting for dirty-worktree
+     confirmation
    - that subsequent code exploration or task work should start from the
      updated default branch
 
@@ -83,10 +87,11 @@ Stop instead of continuing when:
 - The default branch cannot be resolved.
 - The canonical checkout has uncommitted changes.
 - Checking out or fast-forwarding the default branch fails.
-- `github-clear-gone` requires confirmation and the user has not confirmed.
+- `github-clear-gone` finds dirty worktrees that require confirmation and the
+  user has not confirmed discarding their uncommitted changes.
 
 ## Boundaries
 
 Do not merge PRs. Do not create commits. Do not push. Do not delete current or
-non-gone branches. Do not remove worktrees without explicit confirmation through
-`github-clear-gone`.
+non-gone branches. Do not remove dirty worktrees without explicit confirmation
+through `github-clear-gone`.
