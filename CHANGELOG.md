@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.4 - 2026-07-02
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.3...v0.8.4)
+
+### Changes
+
+- docs(task): 작업 worktree local setup 준비 절차 보강 ([#41](https://github.com/jjlabsio/midnight-forge/pull/41))
 ## v0.8.3 - 2026-07-01
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.2...v0.8.3)
