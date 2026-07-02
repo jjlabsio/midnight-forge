@@ -340,7 +340,9 @@ Use a lowercase ASCII slug for the title, remove punctuation, collapse separator
 
 If the current checkout is already a linked worktree, use it only when the `using-git-worktrees` skill accepts it. If the current checkout is a normal repository checkout on `main` or the default branch, automatically create the task worktree through `using-git-worktrees`.
 
-If `using-git-worktrees` stops because `.worktrees/` is not ignored or project init is missing, do not create or replace `.mdf/locks/{id}.lock`; leave the task queued and instruct the user to run `mdf init`. If `mdf init` creates a setup branch for ignored worktrees, it may use `chore/ignore-worktrees` or a similarly clear unique branch. Do not resume or lock the original task until the setup PR has been merged. If worktree setup fails or stops for any reason, do not create or replace the task lock. Report the worktree issue and leave the task queued.
+If `using-git-worktrees` stops because `.worktrees/` is not ignored or project init is missing, do not create or replace `.mdf/locks/{id}.lock`; leave the task queued and instruct the user to run `mdf init`. If `mdf init` creates a setup branch for ignored worktrees, it may use `chore/ignore-worktrees` or a similarly clear unique branch. Do not resume or lock the original task until the setup PR has been merged.
+
+Treat `using-git-worktrees` as the full worktree readiness gate for task activation: it creates or accepts the isolated worktree, copies root-level `.env*` files, installs dependencies when a recognized manifest exists, and runs Prisma client generation when Prisma is detected. If worktree setup or readiness setup fails or stops for any reason, do not create or replace the task lock. Report the failed setup step and leave the task queued.
 
 After `using-git-worktrees` succeeds, create `.mdf/locks/{id}.lock` using the canonical root, work ID, resulting worktree path, and branch. Update `item.md` with `status: "active"`, `worktree`, and `branch`. Continue the task briefing from that worktree.
 
@@ -354,11 +356,11 @@ If the same user message already contains an explicit downstream workflow such
 as `auto-workflow`, `build`, `implement`, `continue`, or `proceed`, that
 downstream workflow is the separate explicit implementation instruction. After
 successful dependency readiness, staleness preflight, lock handling, worktree
-guard, task state update, and briefing, continue into the named downstream
-workflow without requiring another user turn. Do not treat task activation alone as implementation permission. Do not bypass any real stop condition such
+guard, worktree readiness setup, task state update, and briefing, continue into
+the named downstream workflow without requiring another user turn. Do not treat task activation alone as implementation permission. Do not bypass any real stop condition such
 as missing or duplicate task IDs, dependency blockers, malformed dependency
-state, lock takeover confirmation, worktree setup ambiguity or failure, or
-missing init state.
+state, lock takeover confirmation, worktree setup ambiguity or failure,
+worktree readiness setup failure, or missing init state.
 
 ## Intent Parsing
 
@@ -457,13 +459,13 @@ Start a specific task.
 11. Run the staleness preflight before branch creation, worktree creation, lock creation or replacement, task state mutation, implementation edits, tests, commits, or other implementation side effects. Read-only inspection of canonical task cards, latest artifacts, predecessor logs, and relevant current code or skill contracts is allowed for the preflight.
 12. If the staleness preflight finds stale or contradicted task context, files, criteria, assumptions, or related-task notes, stop and report the stale assumption, impacted context or criteria, evidence inspected, and required user or replan decision. Do not create a branch, create a worktree, create or replace a lock, mutate task state, or modify project code.
 13. If `.mdf/locks/{id}.lock` exists, show lock details and ask whether to take over.
-14. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup does not complete.
-15. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and dependency readiness, staleness preflight, and the worktree guard have succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
+14. Use `using-git-worktrees` to ensure an isolated worktree before creating or replacing a lock. For normal checkouts on `main` or the default branch, create the task worktree automatically. If `.worktrees/` is not initialized and ignored, stop and instruct the user to run `mdf init`. Stop without locking the task if worktree setup or readiness setup does not complete.
+15. Create or replace `.mdf/locks/{id}.lock` only after there is no lock or takeover is confirmed and dependency readiness, staleness preflight, the worktree guard, and worktree readiness setup have succeeded. The lock must record the resulting worktree path and branch, plus `task_id`, `work_id`, `canonical_root`, `started`, and `runtime`.
 16. Read files listed in `## Files` when those paths exist relative to the resulting worktree.
 17. Update `item.md` with `status: "active"`, `worktree`, and `branch`, then update `.mdf/index.jsonl`.
-18. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, context, file summaries, criteria, and recent log entries.
+18. Print a briefing with task title, work ID, status, canonical root, worktree, branch, dependency status, worktree readiness results, context, file summaries, criteria, and recent log entries.
 19. Stop after the briefing for standalone `work {id}`. Do not implement, edit project code, run tests, create commits, or continue into the task unless the user gives a separate explicit implementation instruction after the briefing.
-20. If the same user message already contains an explicit downstream workflow, treat that workflow as the separate explicit implementation instruction and continue into it after the briefing only when all dependency readiness, staleness preflight, lock handling, worktree, init, and task state requirements above have succeeded.
+20. If the same user message already contains an explicit downstream workflow, treat that workflow as the separate explicit implementation instruction and continue into it after the briefing only when all dependency readiness, staleness preflight, lock handling, worktree, worktree readiness setup, init, and task state requirements above have succeeded.
 
 ### `done`
 
@@ -508,4 +510,4 @@ Delete a task only after explicit user confirmation.
 
 ## Error Handling
 
-Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, missing non-task `item_id` matches, duplicate non-task `item_id` matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, unresolved `track_id`, ambiguous natural-language track association, ambiguous natural-language priority changes, attempting priority changes on active or done tasks, attempting task lifecycle operations on non-task items, existing locks without takeover confirmation, blocked dependency readiness, missing dependency task IDs, duplicate dependency task IDs, self-dependencies, circular dependencies, and malformed `depends_on` values.
+Report clear errors for missing task ID, missing explicit task ID matches, duplicate explicit task ID matches, missing non-task `item_id` matches, duplicate non-task `item_id` matches, unknown subcommand, missing item file, malformed frontmatter, invalid due date, ambiguous due date, unresolved `track_id`, ambiguous natural-language track association, ambiguous natural-language priority changes, attempting priority changes on active or done tasks, attempting task lifecycle operations on non-task items, existing locks without takeover confirmation, blocked dependency readiness, missing dependency task IDs, duplicate dependency task IDs, self-dependencies, circular dependencies, malformed `depends_on` values, environment file copy failures during worktree readiness setup, dependency installation failures during worktree readiness setup, and Prisma generation failures during worktree readiness setup.

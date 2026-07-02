@@ -13,7 +13,7 @@ Ensure implementation work happens in an isolated git worktree under the project
 - Stop on ambiguous or conflicting state instead of warning and continuing.
 - Do not use global fallback directories.
 - Do not run tests, builds, or lint checks.
-- Copy local environment files and install dependencies only after the worktree is created.
+- Copy local environment files, install dependencies, and run conventional generated-client setup only after the worktree is created.
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
@@ -112,17 +112,11 @@ If creation fails, stop and report the exact failure. Do not continue in the nor
 
 ## Step 4: Copy Environment Files
 
-After the worktree is created, copy common local environment files from the source project root to the new worktree when they exist in the source and do not already exist in the worktree:
+After the worktree is created, copy every root-level local environment file from the source project root to the new worktree when it exists in the source and does not already exist in the worktree.
 
-```text
-.env
-.env.local
-.env.development
-.env.test
-.envrc
-```
+Root-level environment files are regular files directly under `<project-root>` whose basename starts with `.env`, such as `.env`, `.env.local`, `.env.development`, `.env.development.local`, `.env.test`, and `.env.production.local`.
 
-Do not overwrite existing files in the worktree. Do not copy files outside this explicit list unless the user asks.
+Do not overwrite existing files in the worktree. Do not recursively copy app-level or package-level environment files such as `apps/web/.env.local` or `packages/api/.env`. Do not copy files outside the root-level `.env*` pattern unless the user asks.
 
 ## Step 5: Install Dependencies
 
@@ -146,7 +140,34 @@ Use the package manager implied by lockfiles, in this order:
 
 If dependency installation fails, stop and report the failure. Do not run tests, builds, lint checks, or baseline verification from this skill.
 
-## Step 6: Report
+## Step 6: Generate Prisma Client When Detected
+
+After dependency installation succeeds or is skipped because no recognized dependency manifest exists, run Prisma client generation when the repository or one of its packages appears to use Prisma. Prefer existing `package.json` scripts over direct package-manager commands because project scripts often encode custom schema paths, dotenv loading, or monorepo fan-out.
+
+Scan `package.json` files inside the resulting worktree while excluding `node_modules`, `.git`, and `.worktrees`.
+
+Use the package manager implied by the nearest lockfile when obvious, walking from the package directory up to the worktree root. If no nearer package manager is obvious, reuse the root package manager selected during dependency installation. If no package manager was selected but a `package.json` exists, use `npm`.
+
+Apply this order:
+
+1. If the root `package.json` has any script whose value contains `prisma generate`, run one matching script from the worktree root. Prefer script names in this order when present: `prisma:generate`, `db:generate`, `generate`, then the first matching script in `package.json` order. If the root script succeeds, do not run package-level Prisma generation. If it fails, stop.
+2. If no root script ran, scan non-root `package.json` files. For each package whose scripts contain `prisma generate`, run one matching script from that package directory, using the same script-name preference order. Run at most one matching script per package.
+3. If no matching script ran for a package, including the root package, but that package appears to use Prisma, run a fallback generate command from that package directory. Run at most one fallback per package.
+
+A package appears to use Prisma when its `dependencies` or `devDependencies` include `prisma` or `@prisma/client`, or when `prisma/schema.prisma` exists under that package directory.
+
+Use these commands:
+
+```text
+pnpm: pnpm run <script> / pnpm prisma generate
+npm: npm run <script> / npm exec prisma generate
+yarn: yarn <script> / yarn prisma generate
+bun: bun run <script> / bunx prisma generate
+```
+
+If Prisma generation fails, stop and report the package directory and command that failed. Do not start Docker services automatically from this skill.
+
+## Step 7: Report
 
 Report:
 
@@ -156,6 +177,8 @@ Branch: <branch-name>
 Base: origin/<default-branch>
 Canonical root: <project-root>
 Dependency setup: <completed|skipped|failed>
+Environment setup: <copied|skipped|failed>
+Prisma setup: <completed|skipped|failed>
 Ready for caller workflow to resume within its requested scope
 ```
 
@@ -178,6 +201,7 @@ Stop instead of warning and continuing when:
 - `git worktree add` fails.
 - Environment file copying fails.
 - Dependency installation fails.
+- Prisma generation fails.
 
 ## Caller Responsibilities
 
