@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
 const failures = [];
@@ -251,17 +252,9 @@ assertNotContains(
   "- asks for user input\n"
 );
 
-for (const commandName of [
-  "tasks-project",
-  "tasks-user",
-]) {
-  const commandPath = rel("commands", `${commandName}.md`);
-  assertFile(commandPath);
-  assertContains(commandPath, `skills/${commandName}/SKILL.md`);
-}
-
 assert(!exists(rel("skills", "tasks", "SKILL.md")), "skills/tasks/SKILL.md must be removed");
-assert(!exists(rel("commands", "tasks.md")), "commands/tasks.md must be removed");
+assert(!exists(rel("commands")), "commands/ Claude Code shims must be removed for the Codex-only plugin");
+assert(!exists(rel(".claude-plugin")), ".claude-plugin/ must be removed for the Codex-only plugin");
 
 for (const entrypoint of Object.keys(entrypoints)) {
   const skillPath = rel("skills", entrypoint, "SKILL.md");
@@ -373,7 +366,7 @@ for (const text of [
   "Do not treat task activation alone as implementation permission",
   "## Intent Parsing",
   "Users do not need to memorize exact command names",
-  "If worktree setup fails or stops for any reason, do not create or replace the task lock",
+  "If worktree setup or readiness setup fails or stops for any reason, do not create or replace the task lock",
   "If `using-git-worktrees` stops because `.worktrees/` is not ignored",
   "chore/ignore-worktrees",
   "Do not resume or lock the original task until the setup PR has been merged",
@@ -390,11 +383,11 @@ for (const text of [
   "do not treat shared files alone as a hard dependency or stale-task signal",
   "stale assumption",
   "required user or replan decision",
-  "dependency readiness, staleness preflight, and the worktree guard have succeeded",
+  "dependency readiness, staleness preflight, the worktree guard, and worktree readiness setup have succeeded",
   "## Downstream Impact Check",
   "workflow semantics, task boundaries, or shared acceptance assumptions",
   "unaffected, needs task log/context/criteria update, needs plan revision or",
-  "Do not classify impact from shared files alone",
+  "Do not classify impact from shared",
   "do not convert semantic impact into `depends_on` unless",
   "run the downstream impact check",
 ]) {
@@ -576,8 +569,6 @@ for (const text of [
   "`tasks-user`",
   "$tasks-project",
   "$tasks-user",
-  "/mdf:tasks-project",
-  "/mdf:tasks-user",
   "spec -> plan -> build -> review -> ship",
   "`spec`, `plan`, and `build` use inline loops by default",
   "High-risk work has heavier gates by design",
@@ -596,7 +587,7 @@ for (const text of [
   "independent verification, manual changes, debugging, PR preparation, and pre-ship checks",
   "Queued task cards are checked for semantic drift before work starts",
   "runs before branch/worktree creation, lock mutation, task state changes",
-  "downstream impact check against remaining planned work and queued task cards",
+  "downstream impact check against remaining planned work, queued task cards",
   "Shared files alone do not create hard dependencies",
   "`depends_on` remains only for true hard blockers",
   "review checkpoint only",
@@ -739,7 +730,7 @@ for (const text of [
   "git fetch --prune",
   "git branch -v",
   "git worktree list",
-  "Ask for explicit confirmation before deleting anything",
+  "Ask for explicit confirmation only for dirty worktrees",
   "Never delete branches that are not marked `[gone]`",
 ]) {
   assertContains(githubClearGone, text);
@@ -747,32 +738,24 @@ for (const text of [
 
 for (const manifestPath of [
   rel(".codex-plugin", "plugin.json"),
-  rel(".claude-plugin", "plugin.json"),
   rel(".agents", "plugins", "marketplace.json"),
-  rel(".claude-plugin", "marketplace.json"),
 ]) {
   JSON.parse(read(manifestPath));
 }
 
 const codexManifest = JSON.parse(read(rel(".codex-plugin", "plugin.json")));
-const claudeManifest = JSON.parse(read(rel(".claude-plugin", "plugin.json")));
 assert(codexManifest.skills === "./skills/", ".codex-plugin skills path changed");
-assert(claudeManifest.skills === "./skills/", ".claude-plugin skills path changed");
 assert(
   !Object.prototype.hasOwnProperty.call(codexManifest, "agents"),
   ".codex-plugin/plugin.json must not declare unsupported agents"
 );
 assert(
-  Array.isArray(claudeManifest.agents) &&
-    claudeManifest.agents.includes("./agents/code-reviewer.md") &&
-    claudeManifest.agents.includes("./agents/security-auditor.md") &&
-    claudeManifest.agents.includes("./agents/test-engineer.md") &&
-    claudeManifest.agents.includes("./agents/spec-evaluator.md") &&
-    claudeManifest.agents.includes("./agents/plan-evaluator.md"),
-  ".claude-plugin/plugin.json must expose the vendored specialist and evaluator agents"
+  Array.isArray(codexManifest.keywords) &&
+    codexManifest.keywords.includes("codex") &&
+    !codexManifest.keywords.includes("claude-code"),
+  ".codex-plugin/plugin.json must describe Codex-only support"
 );
 for (const [label, value] of [
-  [".claude-plugin description", claudeManifest.description],
   [".codex-plugin description", codexManifest.description],
   [".codex-plugin shortDescription", codexManifest.interface?.shortDescription],
   [".codex-plugin longDescription", codexManifest.interface?.longDescription],
@@ -785,6 +768,10 @@ for (const [label, value] of [
   );
 }
 assert(
+  !codexManifest.interface?.shortDescription?.includes("Claude Code"),
+  ".codex-plugin shortDescription must not advertise Claude Code support"
+);
+assert(
   Array.isArray(codexManifest.interface?.defaultPrompt) &&
     codexManifest.interface.defaultPrompt.join("\n").includes("use-mdf") &&
     codexManifest.interface.defaultPrompt.join("\n").includes("tasks-project") &&
@@ -792,11 +779,27 @@ assert(
   ".codex-plugin defaultPrompt must route users toward the workflow selector"
 );
 
-const claudeMarketplace = JSON.parse(read(rel(".claude-plugin", "marketplace.json")));
+assertContains(rel("README.md"), "Claude Code plugin support has been intentionally removed");
+assertNotContains(rel("README.md"), "/mdf:");
+assertNotContains(rel("README.md"), "claude --plugin-dir");
+
+for (const text of [
+  "vendor/agent-skills.lock.json",
+  "overlays/mdf/inventory.json",
+  "overlays/mdf/references/artifact-storage-override.md",
+  "scripts/sync-agent-skills.js",
+  "scripts/validate-agent-skills-sync.js",
+]) {
+  assertFile(rel(...text.split("/")));
+}
+
+const syncValidation = spawnSync(process.execPath, [rel("scripts", "validate-agent-skills-sync.js")], {
+  cwd: root,
+  encoding: "utf8",
+});
 assert(
-  claudeMarketplace.plugins?.[0]?.description?.includes("agent-skills") &&
-    !claudeMarketplace.plugins[0].description.includes("skeleton"),
-  ".claude-plugin/marketplace.json description must reflect the agent-skills workflows"
+  syncValidation.status === 0,
+  `scripts/validate-agent-skills-sync.js must pass. stdout: ${syncValidation.stdout.trim()} stderr: ${syncValidation.stderr.trim()}`
 );
 
 if (failures.length > 0) {

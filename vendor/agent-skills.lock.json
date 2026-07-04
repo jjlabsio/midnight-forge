@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/addyosmani/agent-skills.git",
+  "commit": "8c6530305396f341b5da7201cf1f7e390fdb863f",
+  "source": "git archive from /Users/jaejin/code/projects/agent-skills",
+  "recorded": "2026-07-04",
+  "purpose": "PR1 behavior-preserving separation of upstream agent-skills sources from MDF overlays"
+}

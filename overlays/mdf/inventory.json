@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/addyosmani/agent-skills.git",
+    "commit": "8c6530305396f341b5da7201cf1f7e390fdb863f"
+  },
+  "generated": {
+    "clean": [
+      "skills",
+      "references",
+      "agents",
+      "commands",
+      ".codex-plugin",
+      ".claude-plugin",
+      ".agents/plugins",
+      "README.md"
+    ],
+    "entries": [
+      {
+        "output": ".agents/plugins/marketplace.json",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/.agents/plugins/marketplace.json",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": ".codex-plugin/plugin.json",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/.codex-plugin/plugin.json",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "README.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/README.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF plugin packaging or README surface, not generated from upstream packaging."
+      },
+      {
+        "output": "agents/README.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/agents/README.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "agents/code-reviewer.md",
+        "source": "agents/code-reviewer.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/agents/code-reviewer.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "agents/plan-evaluator.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/agents/plan-evaluator.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "agents/security-auditor.md",
+        "source": "agents/security-auditor.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/agents/security-auditor.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "agents/spec-evaluator.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/agents/spec-evaluator.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "agents/test-engineer.md",
+        "source": "agents/test-engineer.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/agents/test-engineer.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "references/accessibility-checklist.md",
+        "source": "references/accessibility-checklist.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "references/agent-skills-port-notes.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/references/agent-skills-port-notes.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "references/human-facing-language.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/references/human-facing-language.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "references/orchestration-patterns.md",
+        "source": "references/orchestration-patterns.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "references/performance-checklist.md",
+        "source": "references/performance-checklist.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "references/security-checklist.md",
+        "source": "references/security-checklist.md",
+        "classification": "upstream-drift-preserved",
+        "overlay": "replacements/references/security-checklist.md",
+        "artifactStorageOverride": false,
+        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2."
+      },
+      {
+        "output": "references/testing-patterns.md",
+        "source": "references/testing-patterns.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/api-and-interface-design/SKILL.md",
+        "source": "skills/api-and-interface-design/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/api-and-interface-design/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/auto-workflow/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/auto-workflow/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/browser-testing-with-devtools/SKILL.md",
+        "source": "skills/browser-testing-with-devtools/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/browser-testing-with-devtools/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/build/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/build/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/ci-cd-and-automation/SKILL.md",
+        "source": "skills/ci-cd-and-automation/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/ci-cd-and-automation/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/code-review-and-quality/SKILL.md",
+        "source": "skills/code-review-and-quality/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/code-review-and-quality/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/code-simplification/SKILL.md",
+        "source": "skills/code-simplification/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/code-simplification/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/code-simplify/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/code-simplify/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/context-engineering/SKILL.md",
+        "source": "skills/context-engineering/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/context-engineering/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/debugging-and-error-recovery/SKILL.md",
+        "source": "skills/debugging-and-error-recovery/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/debugging-and-error-recovery/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/deprecation-and-migration/SKILL.md",
+        "source": "skills/deprecation-and-migration/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/deprecation-and-migration/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/documentation-and-adrs/SKILL.md",
+        "source": "skills/documentation-and-adrs/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/documentation-and-adrs/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/doubt-driven-development/SKILL.md",
+        "source": "skills/doubt-driven-development/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/doubt-driven-development/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/frontend-ui-engineering/SKILL.md",
+        "source": "skills/frontend-ui-engineering/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/frontend-ui-engineering/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/git-workflow-and-versioning/SKILL.md",
+        "source": "skills/git-workflow-and-versioning/SKILL.md",
+        "classification": "upstream-drift-preserved",
+        "overlay": "replacements/skills/git-workflow-and-versioning/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2."
+      },
+      {
+        "output": "skills/github-after-merge/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/github-after-merge/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/github-clear-gone/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/github-clear-gone/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/github-commit/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/github-commit/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/github-pr/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/github-pr/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/idea-refine/SKILL.md",
+        "source": "skills/idea-refine/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/idea-refine/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/idea-refine/examples.md",
+        "source": "skills/idea-refine/examples.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/idea-refine/frameworks.md",
+        "source": "skills/idea-refine/frameworks.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/idea-refine/refinement-criteria.md",
+        "source": "skills/idea-refine/refinement-criteria.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/idea-refine/scripts/idea-refine.sh",
+        "source": "skills/idea-refine/scripts/idea-refine.sh",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/incremental-implementation/SKILL.md",
+        "source": "skills/incremental-implementation/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/incremental-implementation/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/init/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/init/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/interview-me/SKILL.md",
+        "source": "skills/interview-me/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/interview-me/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/mdf-handshake/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/mdf-handshake/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/migrate-tasks/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/migrate-tasks/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/performance-optimization/SKILL.md",
+        "source": "skills/performance-optimization/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/performance-optimization/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/plan/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/plan/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/planning-and-task-breakdown/SKILL.md",
+        "source": "skills/planning-and-task-breakdown/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/planning-and-task-breakdown/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/review/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/review/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/security-and-hardening/SKILL.md",
+        "source": "skills/security-and-hardening/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/security-and-hardening/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/ship/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/ship/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/shipping-and-launch/SKILL.md",
+        "source": "skills/shipping-and-launch/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/shipping-and-launch/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/source-driven-development/SKILL.md",
+        "source": "skills/source-driven-development/SKILL.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": ""
+      },
+      {
+        "output": "skills/spec-driven-development/SKILL.md",
+        "source": "skills/spec-driven-development/SKILL.md",
+        "classification": "mdf-overlay-required",
+        "overlay": "replacements/skills/spec-driven-development/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+      },
+      {
+        "output": "skills/spec/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/spec/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/task/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/task/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/tasks-project/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/tasks-project/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/tasks-user/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/tasks-user/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/test-driven-development/SKILL.md",
+        "source": "skills/test-driven-development/SKILL.md",
+        "classification": "artifact-storage-only",
+        "overlay": "replacements/skills/test-driven-development/SKILL.md",
+        "artifactStorageOverride": true,
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+      },
+      {
+        "output": "skills/test/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/test/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      },
+      {
+        "output": "skills/use-mdf/SKILL.md",
+        "source": "skills/using-agent-skills/SKILL.md",
+        "classification": "mdf-rename-or-adapter",
+        "overlay": "replacements/skills/use-mdf/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF routes the upstream using-agent-skills meta workflow through the use-mdf skill name and expanded MDF routing semantics."
+      },
+      {
+        "output": "skills/using-git-worktrees/SKILL.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "replacements/skills/using-git-worktrees/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF-native file with no direct upstream source in agent-skills."
+      }
+    ],
+    "excludedUpstream": [
+      {
+        "source": "agents/web-performance-auditor.md",
+        "classification": "upstream-missing-in-mdf",
+        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
+      },
+      {
+        "source": "references/definition-of-done.md",
+        "classification": "upstream-missing-in-mdf",
+        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
+      },
+      {
+        "source": "references/observability-checklist.md",
+        "classification": "upstream-missing-in-mdf",
+        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
+      },
+      {
+        "source": "skills/observability-and-instrumentation/SKILL.md",
+        "classification": "upstream-missing-in-mdf",
+        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
+      }
+    ]
+  }
+}
