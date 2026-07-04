@@ -1,0 +1,24 @@
+---
+name: plan
+description: "Use when the user invokes plan, mdf plan, or asks to break SPEC.md into read-only implementation tasks in tasks/plan.md and tasks/todo.md."
+---
+
+# plan
+
+Use this Codex-native entrypoint when the user invokes `plan`, `mdf plan`, `$plan`, or asks to break an existing spec into tasks.
+
+Invoke the `planning-and-task-breakdown` skill.
+
+Read the existing spec (SPEC.md or equivalent) and the relevant codebase sections. Then:
+
+1. Enter plan mode — read only, no code changes
+2. Identify the dependency graph between components
+3. Classify every SPEC requirement as `normal` or `high-risk` by semantic judgment before or while finalizing task acceptance criteria
+4. Slice work vertically (one complete path per task, not horizontal layers)
+5. Write tasks with acceptance criteria, high-risk implementation meaning when applicable, and verification steps
+6. Add checkpoints between phases
+7. Present the plan for human review
+
+Before saving or presenting the plan, run the inline blocker-oriented self-review loop from `planning-and-task-breakdown`. Revise only for issues that would cause flawed implementation; do not block on wording polish, stylistic preferences, or nice-to-have additions.
+
+Save the plan to `.mdf/work/{work_id}/plan-NNN.md` by default, using the current MDF work item resolution rules and init verification. If init state is missing, stop and instruct the user to run `mdf init`. If the user explicitly asks for repo-level planning files, save the plan to tasks/plan.md and task list to tasks/todo.md.
