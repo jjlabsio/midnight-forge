@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.0 - 2026-07-04
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.4...v1.0.0)
+
+### Changes
+
+- refactor!: separate agent skills overlays for Codex ([#42](https://github.com/jjlabsio/midnight-forge/pull/42))
 ## v0.8.4 - 2026-07-02
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.3...v0.8.4)
