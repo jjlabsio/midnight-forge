@@ -5,7 +5,7 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
-When saving API or interface contracts, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/contract-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Promote contracts into tracked project docs only when the user explicitly asks or project policy requires it.
+When saving API or interface contracts, follow the MDF artifact storage override in `references/artifact-storage-override.md`: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/contract-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.contract` plus `.mdf/index.jsonl`. Promote artifacts into tracked project docs only when the user explicitly asks or project policy requires it.
 
 ## Overview
 

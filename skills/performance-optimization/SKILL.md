@@ -5,7 +5,7 @@ description: Optimizes application performance. Use when performance requirement
 
 # Performance Optimization
 
-When saving performance baselines, findings, or optimization reports, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/performance-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.performance` plus `.mdf/index.jsonl`.
+When saving performance baselines, findings, or optimization reports, follow the MDF artifact storage override in `references/artifact-storage-override.md`: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/performance-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.performance` plus `.mdf/index.jsonl`. Promote artifacts into tracked project docs only when the user explicitly asks or project policy requires it.
 
 ## Overview
 

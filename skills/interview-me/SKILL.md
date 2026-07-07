@@ -5,6 +5,8 @@ description: Extracts what the user actually wants instead of what they think th
 
 # Interview Me
 
+When saving confirmed intent handoffs, follow the MDF artifact storage override in `references/artifact-storage-override.md`: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/intent-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.intent` plus `.mdf/index.jsonl`. Promote artifacts into tracked project docs only when the user explicitly asks or project policy requires it.
+
 ## Overview
 
 What people ask for and what they actually want are different things. They ask for "a dashboard" because that's what one asks for, not because a dashboard solves their problem. They say "make it faster" without a number to hit.
@@ -43,10 +45,12 @@ Before asking anything, write down your current best read of what the user wants
 
 ```
 HYPOTHESIS: You want a way to answer "how are we doing?" in standup, and "dashboard" was the convention that came to mind.
-CONFIDENCE: ~30%
+CONFIDENCE: ~30% — missing: who it's for, what "metrics" means in context, and what success looks like
 ```
 
 The number forces honesty. If you wrote down a high number but can't actually predict the user's reactions to the next three questions you'd ask, the number is wrong. Start at the confidence level you can defend.
+
+When confidence is below ~70%, append a brief reason on the same line — what's still unresolved or missing. This tells the user exactly what the interview needs to surface, and prevents the number from being a vague signal.
 
 ### Step 2: Ask one question at a time, each with a guess attached
 
@@ -133,7 +137,7 @@ This is a checkable test, not a vibe. It also has a floor: if you've gone severa
 
 The output of this skill is a **confirmed statement of intent**: the restate from Step 4, with an explicit yes from Step 5. That's the deliverable. Specs, plans, and task lists are downstream; they consume the intent this skill produces.
 
-If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), verify MDF user and project init state, then save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md` after confirmation. If init state is missing, stop and instruct the user to run `mdf init`. Resolve `canonical_root` and `work_id` from the active lock first; if there is no active lock, create an implicit work item. Only promote intent into tracked docs such as `docs/intent/[topic].md` when the user explicitly asks.
+If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md`. Only save if they confirm. Only promote intent into tracked docs such as `docs/intent/[topic].md` when the user explicitly asks.
 
 ## Example
 
@@ -155,7 +159,7 @@ User: build me a dashboard for our metrics
 
 Agent:
 HYPOTHESIS: You want a way to answer "how are we doing?" in standup, and "dashboard" came to mind because that's the conventional answer.
-CONFIDENCE: ~30%
+CONFIDENCE: ~30% — missing: who it's for, what "metrics" are, and what success looks like
 
 Q:     When you say "how are we doing?", who's asking — you alone, the engineering team in standup, or up the chain (e.g., your manager, an exec, a board)?
 GUESS: engineering team in standup, because "we" usually scopes that way and standups are where this question gets asked. If it's for execs the metrics and the framing change a lot.
@@ -163,7 +167,7 @@ GUESS: engineering team in standup, because "we" usually scopes that way and sta
 User: It's actually for me. I keep losing track of which experiments are running and what their early signal looks like.
 
 Agent:
-Updated read: not a team dashboard at all. It's a personal experiment tracker. Confidence: ~60%.
+Updated read: not a team dashboard at all. It's a personal experiment tracker. Confidence: ~60% — still missing: what "early signal" means and what done looks like.
 
 Q:     Is the gap that you don't know which experiments exist, or that you can't see their results in one place?
 GUESS: the second one. You have a list of experiments somewhere, but their results live in five different tools, and reconciling them by hand is what you're tired of.
@@ -205,6 +209,7 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 - Questions framed as "what would be best practice?" instead of "what do you actually want?"
 - The user gives a sophistication-signaling answer ("scalable", "clean", "modern") and you accept it without probing whether it's what they actually want
 - Three or more rounds without your confidence visibly rising: you're asking the wrong questions, step back and reframe
+- A confidence number below ~70% with no reason attached: the user can't help close the gap if they don't know what's missing
 - Saving the intent doc before the user has confirmed (the doc itself implies a yes the user didn't give)
 - Skipping the "Out of scope" line in the restate (silent disagreement about non-goals is half of misalignment)
 
@@ -213,6 +218,7 @@ Two questions in, the agent has discovered the actual ask isn't "a dashboard." I
 After applying interview-me:
 
 - [ ] An explicit hypothesis with a confidence number was stated in the first turn
+- [ ] Every confidence number below ~70% was accompanied by a one-line reason (what's still unresolved or missing)
 - [ ] Questions were asked one at a time, each with the agent's guess attached
 - [ ] At least one "what would you actually want if you didn't have to justify it?" probe ran when the user gave a sophistication-signaling or convention-signaling answer
 - [ ] A concrete restate (Outcome / User / Why now / Success / Constraint / Out of scope) was written back to the user
