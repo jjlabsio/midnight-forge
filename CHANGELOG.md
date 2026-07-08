@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.3 - 2026-07-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.2...v1.0.3)
+
+### Changes
+
+- refactor: harden overlay v2 validation ([#45](https://github.com/jjlabsio/midnight-forge/pull/45))
 ## v1.0.2 - 2026-07-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.1...v1.0.2)
