@@ -26,12 +26,12 @@ and follow that phase skill:
 
 | Phase | Delegate to | Default auto-workflow behavior |
 | --- | --- | --- |
-| `spec` | `skills/spec/SKILL.md` | Delegate initial requirement-clarity preflight to the `spec` entrypoint, then create or update the current MDF spec artifact. |
-| `plan` | `skills/plan/SKILL.md` | Create or update the current MDF plan artifact. |
-| `build with subagents` | `skills/build/SKILL.md` | Build all pending planned tasks with subagent support where the build skill allows it. |
-| `review` | `skills/review/SKILL.md` | Run standalone review after build, even though build has internal review gates. |
-| `ship` | `skills/ship/SKILL.md` | Run the existing GO/NO-GO ship gate. |
-| `github-pr` | `skills/github-pr/SKILL.md` | Delegate all commit, push, task completion, release signal, and PR behavior. |
+| `spec` | `../spec/SKILL.md` | Delegate initial requirement-clarity preflight to the `spec` entrypoint, then create or update the current MDF spec artifact. |
+| `plan` | `../plan/SKILL.md` | Create or update the current MDF plan artifact. |
+| `build with subagents` | `../build/SKILL.md` | Build all pending planned tasks with subagent support where the build skill allows it. |
+| `review` | `../review/SKILL.md` | Run standalone review after build, even though build has internal review gates. |
+| `ship` | `../ship/SKILL.md` | Run the existing GO/NO-GO ship gate. |
+| `github-pr` | `../github-pr/SKILL.md` | Delegate all commit, push, task completion, release signal, and PR behavior. |
 
 ## Start Point
 
@@ -61,7 +61,7 @@ spec is drafted.
 
 When a phase needs to verify durable tracked documentation for architecture,
 product, migration, or launch decisions, delegate placement rules to
-`skills/documentation-and-adrs/SKILL.md`. Use a fresh, high-confidence
+`../documentation-and-adrs/SKILL.md`. Use a fresh, high-confidence
 project-local docs profile cache when available; rescan tracked docs policy and
 taxonomy when it is missing or stale; stop before tracked docs writes when the
 destination remains ambiguous.

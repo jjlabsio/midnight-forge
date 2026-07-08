@@ -60,6 +60,33 @@ function overlayKind(entry) {
   return "copy";
 }
 
+function formatMode(mode) {
+  return (mode & 0o777).toString(8).padStart(3, "0");
+}
+
+function expectedMode(entry, kind) {
+  if (entry.mode !== undefined) {
+    if (typeof entry.mode === "number") return entry.mode;
+    if (typeof entry.mode === "string" && /^[0-7]{3,4}$/.test(entry.mode)) {
+      return parseInt(entry.mode, 8);
+    }
+    assert(false, `${entry.output} has invalid mode ${entry.mode}`);
+    return null;
+  }
+
+  if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
+    if (!entry.overlay) return null;
+    const overlayPath = path.resolve(overlayRoot, entry.overlay);
+    if (!exists(overlayPath)) return null;
+    return fs.statSync(overlayPath).mode & 0o777;
+  }
+
+  if (!entry.source) return null;
+  const sourcePath = path.resolve(vendorRoot, entry.source);
+  if (!exists(sourcePath)) return null;
+  return fs.statSync(sourcePath).mode & 0o777;
+}
+
 function stripFrontmatter(content) {
   if (!content.startsWith("---\n")) return content;
   const end = content.indexOf("\n---\n", 4);
@@ -241,6 +268,16 @@ for (const entry of entries) {
 
   const outputPath = path.join(root, entry.output);
   assert(exists(outputPath), `${entry.output} is missing from generated output`);
+  if (exists(outputPath)) {
+    const mode = expectedMode(entry, kind);
+    if (mode !== null) {
+      const actualMode = fs.statSync(outputPath).mode & 0o777;
+      assert(
+        actualMode === mode,
+        `${entry.output} mode must be ${formatMode(mode)}, found ${formatMode(actualMode)}`
+      );
+    }
+  }
 }
 
 for (const excluded of inventory.generated.excludedUpstream) {

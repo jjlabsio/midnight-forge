@@ -145,6 +145,34 @@ function renderEntry(entry) {
   return Buffer.from(content);
 }
 
+function readMode(baseRoot, relativePath) {
+  return fs.statSync(assertInside(baseRoot, relativePath)).mode & 0o777;
+}
+
+function parseMode(entry) {
+  if (entry.mode === undefined) return null;
+  if (typeof entry.mode === "number") return entry.mode;
+  if (typeof entry.mode === "string" && /^[0-7]{3,4}$/.test(entry.mode)) {
+    return parseInt(entry.mode, 8);
+  }
+  throw new Error(`${entry.output} has invalid mode ${entry.mode}`);
+}
+
+function renderMode(entry) {
+  const explicitMode = parseMode(entry);
+  if (explicitMode !== null) return explicitMode;
+
+  const kind = overlayKind(entry);
+  if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
+    return readMode(overlayRoot, entry.overlay);
+  }
+  return readMode(vendorRoot, entry.source);
+}
+
+function formatMode(mode) {
+  return (mode & 0o777).toString(8).padStart(3, "0");
+}
+
 function renderTo(targetRoot) {
   for (const target of inventory.generated.clean) {
     assertInside(targetRoot, target);
@@ -156,7 +184,7 @@ function renderTo(targetRoot) {
     const outputPath = path.join(targetRoot, entry.output);
     ensureParent(outputPath);
     fs.writeFileSync(outputPath, renderEntry(entry));
-    fs.chmodSync(outputPath, 0o644);
+    fs.chmodSync(outputPath, renderMode(entry));
   }
 }
 
@@ -172,6 +200,13 @@ function compareRendered(renderRoot) {
     const actual = fs.readFileSync(actualPath);
     if (Buffer.compare(rendered, actual) !== 0) {
       mismatches.push(`${entry.output} differs from dry-run render`);
+    }
+    const renderedMode = fs.statSync(path.join(renderRoot, entry.output)).mode & 0o777;
+    const actualMode = fs.statSync(actualPath).mode & 0o777;
+    if (renderedMode !== actualMode) {
+      mismatches.push(
+        `${entry.output} mode differs from dry-run render: expected ${formatMode(renderedMode)}, found ${formatMode(actualMode)}`
+      );
     }
   }
   return mismatches;

@@ -145,7 +145,7 @@ Subagent-assisted SPEC evaluation may be used only when both conditions are true
 1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
 2. The runtime exposes the needed subagent tools.
 
-When those conditions are met, use `agents/spec-evaluator.md` as the prompt template. In Codex, if named plugin agents are not directly available but generic subagents are explicitly authorized and available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
+When those conditions are met, use `agents/spec-evaluator.md` as the prompt template from the plugin-root context. In Codex, if named plugin agents are not directly available but generic subagents are explicitly authorized and available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
 
 The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current SPEC phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 
@@ -181,7 +181,7 @@ Break the plan into discrete, implementable tasks:
 
 ### Phase 4: Implement
 
-Execute tasks one at a time following `skills/incremental-implementation/SKILL.md` (`incremental-implementation`) and `skills/test-driven-development/SKILL.md` (`test-driven-development`). Use `skills/context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
+Execute tasks one at a time following `../incremental-implementation/SKILL.md` (`incremental-implementation`) and `../test-driven-development/SKILL.md` (`test-driven-development`). Use `../context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
 
 ## Keeping the Spec Alive
 
