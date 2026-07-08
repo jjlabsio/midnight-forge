@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.2 - 2026-07-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.1...v1.0.2)
+
+### Changes
+
+- refactor: source release metadata from overlays ([#44](https://github.com/jjlabsio/midnight-forge/pull/44))
 ## v1.0.1 - 2026-07-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.0...v1.0.1)
