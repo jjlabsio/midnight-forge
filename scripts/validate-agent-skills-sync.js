@@ -10,6 +10,7 @@ const vendorRoot = path.join(root, "vendor", "agent-skills");
 const overlayRoot = path.join(root, "overlays", "mdf");
 const inventoryPath = path.join(overlayRoot, "inventory.json");
 const lockPath = path.join(root, "vendor", "agent-skills.lock.json");
+const releaseMetadataPath = path.join(overlayRoot, "release-metadata.json");
 const failures = [];
 
 function readJson(filePath) {
@@ -61,6 +62,7 @@ function overlayKind(entry) {
 
 const inventory = readJson(inventoryPath);
 const lock = readJson(lockPath);
+const releaseMetadata = readJson(releaseMetadataPath);
 const entries = inventory.generated.entries;
 const outputs = new Set(entries.map((entry) => entry.output));
 const outputCounts = new Map();
@@ -75,6 +77,9 @@ const allowedClassifications = new Set([
 ]);
 
 assert(inventory.schemaVersion === 2, "Inventory schemaVersion must be 2 for overlay v2.");
+assert(exists(releaseMetadataPath), "Missing overlays/mdf/release-metadata.json.");
+assert(/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(releaseMetadata.version), "Release metadata version must be semver.");
+assert(releaseMetadata.marketplaceRef === `v${releaseMetadata.version}`, "Release metadata marketplaceRef must match v{version}.");
 for (const kind of ["copy", "mdfOnly", "fragment", "patch", "replacement", "renameAdapter"]) {
   assert(supportedOverlayKinds.has(kind), `Overlay v2 must support ${kind}.`);
 }
@@ -113,6 +118,25 @@ for (const entry of entries) {
     const overlayPath = path.resolve(overlayRoot, entry.overlay);
     assert(exists(overlayPath), `${entry.output} overlay missing: ${entry.overlay}`);
     assert(path.resolve(overlayPath).startsWith(overlayRoot + path.sep), `${entry.output} overlay is outside overlays/mdf`);
+  }
+  for (const mapping of entry.releaseMetadata || []) {
+    assert(Array.isArray(mapping.path) && mapping.path.length > 0, `${entry.output} release metadata mapping must declare a JSON path`);
+    assert(typeof mapping.value === "string" && mapping.value, `${entry.output} release metadata mapping must declare a metadata key`);
+    assert(Object.prototype.hasOwnProperty.call(releaseMetadata, mapping.value), `${entry.output} release metadata references missing key ${mapping.value}`);
+    if (exists(path.join(root, entry.output))) {
+      let generated;
+      try {
+        generated = JSON.parse(readText(path.join(root, entry.output)));
+      } catch (error) {
+        assert(false, `${entry.output} release metadata target must be valid JSON: ${error.message}`);
+        continue;
+      }
+      let node = generated;
+      for (const key of mapping.path) {
+        node = node?.[key];
+      }
+      assert(node === releaseMetadata[mapping.value], `${entry.output} release metadata ${mapping.path.join(".")} must match overlays/mdf/release-metadata.json ${mapping.value}`);
+    }
   }
   if (entry.classification === "artifact-storage-only") {
     assert(entry.artifactStorageOverride === true, `${entry.output} must point at the common artifact storage override`);
@@ -196,6 +220,15 @@ assert(overlayKind(useMdf || {}) === "renameAdapter", "use-mdf must use renameAd
 
 const manual = entries.filter((entry) => entry.classification === "manual-review-required");
 assert(manual.length === 0, `Manual review entries remain: ${manual.map((entry) => entry.output).join(", ")}`);
+
+const releaseMetadataOutputs = new Set(
+  entries
+    .filter((entry) => Array.isArray(entry.releaseMetadata) && entry.releaseMetadata.length > 0)
+    .map((entry) => entry.output)
+);
+for (const output of [".codex-plugin/plugin.json", ".agents/plugins/marketplace.json"]) {
+  assert(releaseMetadataOutputs.has(output), `${output} must render from overlays/mdf/release-metadata.json`);
+}
 
 const syncCheck = spawnSync(process.execPath, [path.join(root, "scripts", "sync-agent-skills.js"), "--dry-run"], {
   cwd: root,

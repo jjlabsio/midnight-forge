@@ -55,8 +55,8 @@ jobs:
           const { execSync } = require("node:child_process");
           const fs = require("node:fs");
 
-          const manifest = JSON.parse(fs.readFileSync(".codex-plugin/plugin.json", "utf8"));
-          const current = manifest.version;
+          const releaseMetadata = JSON.parse(fs.readFileSync("overlays/mdf/release-metadata.json", "utf8"));
+          const current = releaseMetadata.version;
           const inputVersion = process.env.INPUT_VERSION || "";
           const pr = fs.existsSync("pr.json")
             ? JSON.parse(fs.readFileSync("pr.json", "utf8"))
@@ -206,30 +206,21 @@ jobs:
           HEAD_COMMIT: ${{ github.event.head_commit.message }}
           INPUT_VERSION: ${{ github.event.inputs.version }}
 
-      - name: Update plugin manifest versions
+      - name: Update release metadata and generated files
         if: steps.release.outputs.has_changes == 'true'
         run: |
           node <<'NODE'
           const fs = require("node:fs");
           const version = process.env.VERSION;
           const tag = `v${version}`;
-          const files = [
-            ".codex-plugin/plugin.json",
-          ];
-
-          for (const file of files) {
-            const json = JSON.parse(fs.readFileSync(file, "utf8"));
-            json.version = version;
-            fs.writeFileSync(file, JSON.stringify(json, null, 2) + "\n");
-            console.log(`Synced ${file} to ${version}`);
-          }
-
-          const codexMarketplacePath = ".agents/plugins/marketplace.json";
-          const codexMarketplace = JSON.parse(fs.readFileSync(codexMarketplacePath, "utf8"));
-          codexMarketplace.plugins[0].source.ref = tag;
-          fs.writeFileSync(codexMarketplacePath, JSON.stringify(codexMarketplace, null, 2) + "\n");
-          console.log(`Synced ${codexMarketplacePath} to ${tag}`);
+          const metadataPath = "overlays/mdf/release-metadata.json";
+          const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf8"));
+          metadata.version = version;
+          metadata.marketplaceRef = tag;
+          fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + "\n");
+          console.log(`Synced ${metadataPath} to ${tag}`);
           NODE
+          node scripts/sync-agent-skills.js
         env:
           VERSION: ${{ steps.release.outputs.version }}
 
@@ -289,6 +280,10 @@ jobs:
         run: |
           node -e 'JSON.parse(require("fs").readFileSync(".codex-plugin/plugin.json", "utf8"))'
           node -e 'JSON.parse(require("fs").readFileSync(".agents/plugins/marketplace.json", "utf8"))'
+          node -e 'JSON.parse(require("fs").readFileSync("overlays/mdf/release-metadata.json", "utf8"))'
+          node scripts/sync-agent-skills.js --dry-run
+          node scripts/validate-agent-skills-sync.js
+          node scripts/validate-agent-skills-port.js
           test -s CHANGELOG.md
 
       - name: Commit and tag
@@ -297,7 +292,7 @@ jobs:
           VERSION="v${{ steps.release.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .codex-plugin/plugin.json .agents/plugins/marketplace.json CHANGELOG.md
+          git add overlays/mdf/release-metadata.json .codex-plugin/plugin.json .agents/plugins/marketplace.json CHANGELOG.md
           git diff --cached --quiet || git commit -m "chore(release): ${VERSION}"
           git tag -a "${VERSION}" -m "${VERSION}"
           git push origin HEAD:${{ github.ref_name }}
