@@ -5,7 +5,7 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
-When saving API or interface contracts, use the MDF artifact storage rule in `references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/contract-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.contract` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
+When saving API or interface contracts, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/contract-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.contract` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
 
 ## Overview
 

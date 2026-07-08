@@ -60,12 +60,70 @@ function overlayKind(entry) {
   return "copy";
 }
 
+function stripFrontmatter(content) {
+  if (!content.startsWith("---\n")) return content;
+  const end = content.indexOf("\n---\n", 4);
+  if (end === -1) return content;
+  return content.slice(end + "\n---\n".length);
+}
+
+function validateArtifactStoragePlacement(entry, generated) {
+  const body = stripFrontmatter(generated);
+  const lines = body.split(/\r?\n/);
+  const h1Index = lines.findIndex((line) => /^# [^#]/.test(line));
+  assert(h1Index !== -1, `${entry.output} artifact storage injection requires a first H1 after frontmatter`);
+
+  const marker = "MDF artifact storage rule";
+  const markerLines = [];
+  lines.forEach((line, index) => {
+    if (line.includes(marker)) markerLines.push(index);
+  });
+  assert(markerLines.length === 1, `${entry.output} artifact storage policy must appear exactly once; found ${markerLines.length}`);
+  if (h1Index === -1 || markerLines.length !== 1) return;
+
+  const markerIndex = markerLines[0];
+  const firstH2Index = lines.findIndex((line) => /^## [^#]/.test(line));
+  assert(markerIndex > h1Index, `${entry.output} artifact storage policy must render after the first H1`);
+  assert(firstH2Index === -1 || markerIndex < firstH2Index, `${entry.output} artifact storage policy must render before the first H2`);
+
+  const firstContentAfterH1 = lines.findIndex((line, index) => index > h1Index && line.trim() !== "");
+  assert(firstContentAfterH1 === markerIndex, `${entry.output} artifact storage policy must be the first content after the first H1`);
+}
+
+function lineNumberAt(content, index) {
+  return content.slice(0, index).split(/\r?\n/).length;
+}
+
+function warnRuntimeRootReferences(output, content) {
+  if (!/^skills\/[^/]+\/SKILL\.md$/.test(output)) return;
+
+  const runtimeInstructionPattern = /\b(?:read|follow|load|use|delegate(?:s|d)?(?: to)?|execute|run)\b/i;
+  const bareRootPathPattern = /`?(references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/SKILL\.md|scripts\/[A-Za-z0-9._/-]+)`?/g;
+  const pluginRootMarkerPattern = /\bplugin[- ]root\b|\bfrom the plugin root\b/i;
+
+  for (const match of content.matchAll(bareRootPathPattern)) {
+    const preceding = match.index > 0 ? content[match.index - 1] : "";
+    if (preceding === "." || preceding === "/") continue;
+
+    const lineStart = content.lastIndexOf("\n", match.index) + 1;
+    const lineEnd = content.indexOf("\n", match.index);
+    const line = content.slice(lineStart, lineEnd === -1 ? content.length : lineEnd);
+    if (!runtimeInstructionPattern.test(line)) continue;
+    if (pluginRootMarkerPattern.test(line)) continue;
+
+    warnings.push(
+      `${output}:${lineNumberAt(content, match.index)} uses bare plugin-root path ${match[1]} in runtime instruction; prefer a skill-relative path or mark the prose as plugin-root context`
+    );
+  }
+}
+
 const inventory = readJson(inventoryPath);
 const lock = readJson(lockPath);
 const releaseMetadata = readJson(releaseMetadataPath);
 const entries = inventory.generated.entries;
 const outputs = new Set(entries.map((entry) => entry.output));
 const outputCounts = new Map();
+const warnings = [];
 const supportedOverlayKinds = new Set(inventory.overlayV2?.supportedKinds || []);
 const allowedClassifications = new Set([
   "upstream-identical",
@@ -145,6 +203,7 @@ for (const entry of entries) {
     assert(entry.policyInjection, `${entry.output} artifact storage entry must declare a policy injection`);
     if (exists(path.join(root, entry.output))) {
       const generated = readText(path.join(root, entry.output));
+      validateArtifactStoragePlacement(entry, generated);
       for (const forbidden of [/`docs\//, /\bdocs\/[A-Za-z0-9._/-]+/, /`SPEC\.md`/, /`tasks\/plan\.md`/, /`tasks\/todo\.md`/]) {
         assert(!forbidden.test(generated), `${entry.output} retains an upstream tracked artifact storage path matching ${forbidden}`);
       }
@@ -202,6 +261,7 @@ for (const output of generatedMarkdown) {
   const outputPath = path.join(root, output);
   if (!exists(outputPath)) continue;
   const content = readText(outputPath);
+  warnRuntimeRootReferences(output, content);
   for (const match of content.matchAll(referencedPathPattern)) {
     const referenced = match[0].replace(/[).,;:]+$/, "");
     const rootRelative = path.join(root, referenced);
@@ -242,6 +302,11 @@ if (failures.length > 0) {
   console.error("Agent skills sync validation failed:");
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
+}
+
+if (warnings.length > 0) {
+  console.warn("Agent skills sync validation warnings:");
+  for (const warning of warnings) console.warn(`- ${warning}`);
 }
 
 console.log(`Agent skills sync validation passed for ${entries.length} files.`);
