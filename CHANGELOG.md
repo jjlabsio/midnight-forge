@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.1 - 2026-07-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.0...v1.0.1)
+
+### Changes
+
+- refactor: add overlay v2 artifact storage migration ([#43](https://github.com/jjlabsio/midnight-forge/pull/43))
 ## v1.0.0 - 2026-07-04
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v0.8.4...v1.0.0)
