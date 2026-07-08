@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "upstream": {
     "repository": "https://github.com/addyosmani/agent-skills.git",
     "commit": "8c6530305396f341b5da7201cf1f7e390fdb863f"
@@ -22,7 +22,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/.agents/plugins/marketplace.json",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": ".codex-plugin/plugin.json",
@@ -30,7 +31,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/.codex-plugin/plugin.json",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "README.md",
@@ -38,7 +40,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/README.md",
         "artifactStorageOverride": false,
-        "notes": "MDF plugin packaging or README surface, not generated from upstream packaging."
+        "notes": "MDF plugin packaging or README surface, not generated from upstream packaging.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "agents/README.md",
@@ -46,7 +49,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/agents/README.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "agents/code-reviewer.md",
@@ -54,7 +58,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/agents/code-reviewer.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "74667b052cb6a75079791cee8f6e465a248e28fd82178505aaaec8db95c40ccf",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "agents/plan-evaluator.md",
@@ -62,7 +70,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/agents/plan-evaluator.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "agents/security-auditor.md",
@@ -70,7 +79,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/agents/security-auditor.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "66a3f68f1c691b600ddb44e88afb138e239d0572df37be84e1f9a427c887dd0a",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "agents/spec-evaluator.md",
@@ -78,7 +91,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/agents/spec-evaluator.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "agents/test-engineer.md",
@@ -86,7 +100,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/agents/test-engineer.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "c4acde91d6307d88515387344a129a2d0679134e587596c3517d73faffcd5aa6",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "references/accessibility-checklist.md",
@@ -94,7 +112,18 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "61c759d94d52296231f5f310b92b401f56c44e4430dc3cc95ebac5d7b1d5ffac",
+        "overlayKind": "copy"
+      },
+      {
+        "output": "references/artifact-storage-override.md",
+        "source": null,
+        "classification": "mdf-only",
+        "overlay": "references/artifact-storage-override.md",
+        "artifactStorageOverride": false,
+        "notes": "Generated runtime reference for the shared MDF artifact storage policy used by overlay v2 policy injections.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "references/agent-skills-port-notes.md",
@@ -102,7 +131,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/references/agent-skills-port-notes.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "references/human-facing-language.md",
@@ -110,7 +140,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/references/human-facing-language.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "references/orchestration-patterns.md",
@@ -118,7 +149,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "61e543d86f19f86b83074f8c1c769455c7085a2c72dd47b1da21a8c63785be4a",
+        "overlayKind": "copy"
       },
       {
         "output": "references/performance-checklist.md",
@@ -126,7 +159,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "628539583b7f515f84d0b8e4f4210ccdc0449afd31901149a078209f0769e654",
+        "overlayKind": "copy"
       },
       {
         "output": "references/security-checklist.md",
@@ -134,7 +169,11 @@
         "classification": "upstream-drift-preserved",
         "overlay": "replacements/references/security-checklist.md",
         "artifactStorageOverride": false,
-        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2."
+        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+        "baseSha256": "56ffac21ef2226d41a47753ff691633451e313b068ce6020e07a1c9617c421ab",
+        "overlayKind": "replacement",
+        "replacementRationale": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "references/testing-patterns.md",
@@ -142,15 +181,29 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "2502c02eee60a9e97f4256b318cdf2f1e22b045b78c6d9713fcb926b9dfc025e",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/api-and-interface-design/SKILL.md",
         "source": "skills/api-and-interface-design/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/api-and-interface-design/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "293db2903b41316a5109a1e0ce3e1740eeafae31735bc1f9143dafbfd1187363",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "contract",
+          "latestKey": "contract",
+          "summary": "API or interface contracts",
+          "anchor": "# API and Interface Design\n",
+          "anchorSha256": "dac05994d94058de6d518d4b7e4192cea5072e1d40eccbc5c01cec48ddb2ab02",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/auto-workflow/SKILL.md",
@@ -158,7 +211,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/auto-workflow/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/browser-testing-with-devtools/SKILL.md",
@@ -166,7 +220,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/browser-testing-with-devtools/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "4e3aacd6a380cd25bc6c2d67fdd1c926a9b22535b8a62109ecd33cefd909e3d9",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/build/SKILL.md",
@@ -174,15 +232,28 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/build/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/ci-cd-and-automation/SKILL.md",
         "source": "skills/ci-cd-and-automation/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/ci-cd-and-automation/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "a6ed8ed56456b01ff8314c44eefc69897d9905ae4e06bb2b7036286efb79b5f0",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "ci",
+          "latestKey": "ci",
+          "summary": "CI/CD plans, pipeline findings, or automation verification reports",
+          "anchor": "# CI/CD and Automation\n",
+          "anchorSha256": "fcf3ab12c4954145d0fd74770f3c4d03b33600fd8161d0630e4714b2d41827b0",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/code-review-and-quality/SKILL.md",
@@ -190,7 +261,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/code-review-and-quality/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "6d7c7cb43e8eb6727ab72b3baa570d8e8c00f484392cfd07acf4550fed2b6838",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/code-simplification/SKILL.md",
@@ -198,7 +273,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/code-simplification/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "f0c5ed754057eb0c1e027e2587f59de816651feb5e837242296c43ea21cf621d",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/code-simplify/SKILL.md",
@@ -206,7 +285,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/code-simplify/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/context-engineering/SKILL.md",
@@ -214,23 +294,51 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/context-engineering/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "ff9d4e5706bdd2eb7de1bfed569f1f42d28e478979ce6fcc32e617e7861b491d",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/debugging-and-error-recovery/SKILL.md",
         "source": "skills/debugging-and-error-recovery/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/debugging-and-error-recovery/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "927ad6917fa2891827351cfa3470cd715423faaa5c5f27fe74534d9324c35eea",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "debug",
+          "latestKey": "debug",
+          "summary": "reproduction steps, root-cause notes, or fix evidence",
+          "anchor": "# Debugging and Error Recovery\n",
+          "anchorSha256": "b15adece26cb025d44bec14c42b6374b4e2c9beb681047f61294ab06aff5c4ff",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/deprecation-and-migration/SKILL.md",
         "source": "skills/deprecation-and-migration/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/deprecation-and-migration/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "bf2d9b4e3bc635b32e8de70b0ab41e4395d7b585e6474347c53ce89d45fbdb75",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "migration",
+          "latestKey": "migration",
+          "summary": "migration plans, deprecation notes, or rollout evidence",
+          "anchor": "# Deprecation and Migration\n",
+          "anchorSha256": "888baf3b9c01f8cfd3544ece5fb8db1bae7bd3e2ca0b86d5dc4eb1f69bacec57",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/documentation-and-adrs/SKILL.md",
@@ -238,7 +346,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/documentation-and-adrs/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "7fed35f9c5b95d8e3623ad24d78d209c3267ab62d7157fc03954c76a7e58adf4",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/doubt-driven-development/SKILL.md",
@@ -246,15 +358,31 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/doubt-driven-development/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "59aef769adeae40aad67a1d54474aaf914ea7ecdfc2a4752a54840a8d29f80de",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/frontend-ui-engineering/SKILL.md",
         "source": "skills/frontend-ui-engineering/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/frontend-ui-engineering/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "9f9e5b3141c891d866c2a15a11ac3aba4e86ec6c530d054f0534503c2e720cb1",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "ui",
+          "latestKey": "ui",
+          "summary": "UI implementation notes, design decisions, or accessibility checks",
+          "anchor": "# Frontend UI Engineering\n",
+          "anchorSha256": "e17b61388922dbdb9b49a403591976f3a0d3644ef1b6b1f026536719b03b415d",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/git-workflow-and-versioning/SKILL.md",
@@ -262,7 +390,11 @@
         "classification": "upstream-drift-preserved",
         "overlay": "replacements/skills/git-workflow-and-versioning/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2."
+        "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+        "baseSha256": "51677cf03845dd29d08ea4d3125665057b720aea3dccc572f25d8b172409ece6",
+        "overlayKind": "replacement",
+        "replacementRationale": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/github-after-merge/SKILL.md",
@@ -270,7 +402,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/github-after-merge/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/github-clear-gone/SKILL.md",
@@ -278,7 +411,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/github-clear-gone/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/github-commit/SKILL.md",
@@ -286,7 +420,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/github-commit/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/github-pr/SKILL.md",
@@ -294,15 +429,40 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/github-pr/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/idea-refine/SKILL.md",
         "source": "skills/idea-refine/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/idea-refine/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "79e773058963adc7646b0115b4f8a4afc974c5ff95843e4ef1cafff3cb51899e",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "idea",
+          "latestKey": "idea",
+          "summary": "idea one-pagers or refinement notes",
+          "anchor": "# Idea Refine\n",
+          "anchorSha256": "22380ecfed5c31039ad7367ff1a785e0211f06cc724eea98c91ca99d5a1f33d9",
+          "position": "after"
+        },
+        "exactPatches": [
+          {
+            "id": "default-idea-output-location",
+            "search": "The final output is a markdown one-pager saved to `docs/ideas/[idea-name].md` (after user confirmation), containing:",
+            "replace": "The final output is a markdown one-pager saved to `.mdf/work/{work_id}/idea-NNN.md` (after user confirmation), containing:"
+          },
+          {
+            "id": "idea-save-confirmation-location",
+            "search": "Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.",
+            "replace": "Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md`. Only save if they confirm."
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/idea-refine/examples.md",
@@ -310,7 +470,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "563204bfbf2f80a444151695205af4cb759e722b3d1e5460e08f278a69c89ba1",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/idea-refine/frameworks.md",
@@ -318,7 +480,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "161ebc18fdf2d996bc62a87a2d747cf1bf53548354f8925de25c732c27f00309",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/idea-refine/refinement-criteria.md",
@@ -326,7 +490,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "1ca2973a4d01b5cb37ab7ddb2eff77fa4e792634a33d0ce44961c068fc88d51a",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/idea-refine/scripts/idea-refine.sh",
@@ -334,7 +500,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "f02a52408a4218047c032d221483abfbb48d11f090bb4915965c7419bf2e0e47",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/incremental-implementation/SKILL.md",
@@ -342,7 +510,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/incremental-implementation/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "960f2ed08ccdd51527c347d29d2d00c80edb9992e95d67030d8a289ba04eed4e",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/init/SKILL.md",
@@ -350,15 +522,35 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/init/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/interview-me/SKILL.md",
         "source": "skills/interview-me/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/interview-me/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "1d94741d10d2c826cd0c191aea3981ee94c8abb27ef2a166f6a372117d06448f",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "intent",
+          "latestKey": "intent",
+          "summary": "confirmed intent handoffs",
+          "anchor": "# Interview Me\n",
+          "anchorSha256": "40039d9cad3422f438ab2f7de3a129ee7058711c5e9d6b144c27fdbc993e3f0d",
+          "position": "after"
+        },
+        "exactPatches": [
+          {
+            "id": "intent-save-location",
+            "search": "If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.",
+            "replace": "If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md`. Only save if they confirm."
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/mdf-handshake/SKILL.md",
@@ -366,7 +558,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/mdf-handshake/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/migrate-tasks/SKILL.md",
@@ -374,15 +567,28 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/migrate-tasks/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/performance-optimization/SKILL.md",
         "source": "skills/performance-optimization/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/performance-optimization/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "46ebf029d5fe812c312d4c5388ba7f07a076685fd30c7dfa7539c07763f1304e",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "performance",
+          "latestKey": "performance",
+          "summary": "performance baselines, findings, or optimization reports",
+          "anchor": "# Performance Optimization\n",
+          "anchorSha256": "54c90c8a5131e6f6cf6ebdd68ced81c1235bc2258b51d8fcfe4cabd39a2b2b2d",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/plan/SKILL.md",
@@ -390,7 +596,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/plan/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/planning-and-task-breakdown/SKILL.md",
@@ -398,7 +605,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/planning-and-task-breakdown/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "d87ff6bb23aa791f78a504d784e903bb13602975923f884af5d13d5b66b1651a",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/review/SKILL.md",
@@ -406,15 +617,28 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/review/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/security-and-hardening/SKILL.md",
         "source": "skills/security-and-hardening/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/security-and-hardening/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "8fed058a520281384ed1bbfddbfb3d2b12479459231c67ae0d1f0d765bb52f95",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "security",
+          "latestKey": "security",
+          "summary": "security reviews, hardening notes, or threat-model artifacts",
+          "anchor": "# Security and Hardening\n",
+          "anchorSha256": "19b682fc0d79623173de268d1c46e4205955f7bf9cf0a64cba002f23104a3310",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/ship/SKILL.md",
@@ -422,7 +646,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/ship/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/shipping-and-launch/SKILL.md",
@@ -430,7 +655,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/shipping-and-launch/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "efc70a45ad6435d93f2b3cef16c125ff6d75a2383e49f30056fcba04b27d6e4a",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/source-driven-development/SKILL.md",
@@ -438,7 +667,9 @@
         "classification": "upstream-identical",
         "overlay": null,
         "artifactStorageOverride": false,
-        "notes": ""
+        "notes": "",
+        "baseSha256": "b979e7531ea601ed14a090f32a5b135db517c48ab9821c5e8b09efd80f4ff4d8",
+        "overlayKind": "copy"
       },
       {
         "output": "skills/spec-driven-development/SKILL.md",
@@ -446,7 +677,11 @@
         "classification": "mdf-overlay-required",
         "overlay": "replacements/skills/spec-driven-development/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source."
+        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "baseSha256": "af5b873414a8b45b96b0d30d5297400f55eb3a56425161a088e470c14260a1e5",
+        "overlayKind": "replacement",
+        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
       },
       {
         "output": "skills/spec/SKILL.md",
@@ -454,7 +689,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/spec/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/task/SKILL.md",
@@ -462,7 +698,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/task/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/tasks-project/SKILL.md",
@@ -470,7 +707,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/tasks-project/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/tasks-user/SKILL.md",
@@ -478,15 +716,28 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/tasks-user/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/test-driven-development/SKILL.md",
         "source": "skills/test-driven-development/SKILL.md",
         "classification": "artifact-storage-only",
-        "overlay": "replacements/skills/test-driven-development/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": true,
-        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage."
+        "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+        "baseSha256": "6c60e193d77a6c52eb3d9a7ca774f1801b9f798ec34f075720e0425a8094f50e",
+        "overlayKind": "fragment",
+        "policyInjection": {
+          "policy": "artifact-storage",
+          "artifactType": "test",
+          "latestKey": "test",
+          "summary": "test plans, reproduction notes, or test result reports",
+          "anchor": "# Test-Driven Development\n",
+          "anchorSha256": "85c016338e32461a95b243ff262f8a63bc317fc31019ff4405da30ffd4ad9a11",
+          "position": "after"
+        },
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/test/SKILL.md",
@@ -494,7 +745,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/test/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       },
       {
         "output": "skills/use-mdf/SKILL.md",
@@ -502,7 +754,9 @@
         "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/use-mdf/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF routes the upstream using-agent-skills meta workflow through the use-mdf skill name and expanded MDF routing semantics."
+        "notes": "MDF routes the upstream using-agent-skills meta workflow through the use-mdf skill name and expanded MDF routing semantics.",
+        "baseSha256": "a5bf05293cfb67af9c5e21e14023d723d2ac8ca42912cef4cee29fbb07e67d64",
+        "overlayKind": "renameAdapter"
       },
       {
         "output": "skills/using-git-worktrees/SKILL.md",
@@ -510,7 +764,8 @@
         "classification": "mdf-only",
         "overlay": "replacements/skills/using-git-worktrees/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills."
+        "notes": "MDF-native file with no direct upstream source in agent-skills.",
+        "overlayKind": "mdfOnly"
       }
     ],
     "excludedUpstream": [
@@ -535,5 +790,22 @@
         "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
       }
     ]
+  },
+  "overlayV2": {
+    "supportedKinds": [
+      "copy",
+      "mdfOnly",
+      "fragment",
+      "patch",
+      "replacement",
+      "renameAdapter"
+    ],
+    "policyModules": [
+      {
+        "id": "artifact-storage",
+        "path": "references/artifact-storage-override.md"
+      }
+    ],
+    "diffReport": "reports/overlay-v2-artifact-storage-migration.md"
   }
 }

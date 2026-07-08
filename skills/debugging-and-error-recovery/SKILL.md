@@ -5,7 +5,7 @@ description: Guides systematic root-cause debugging. Use when tests fail, builds
 
 # Debugging and Error Recovery
 
-When saving reproduction steps, root-cause notes, or fix evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/debug-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.debug` plus `.mdf/index.jsonl`.
+When saving reproduction steps, root-cause notes, or fix evidence, use the MDF artifact storage rule in `references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/debug-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.debug` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
 
 ## Overview
 
@@ -33,7 +33,7 @@ When anything unexpected happens:
 6. RESUME only after verification passes
 ```
 
-**Don't push past a failing test or broken build to work on the next feature.** Errors compound. A bug in Step 3 that goes unfixed makes Steps 4-10 wrong.
+**Don't push past a failing test or broken build to work on the next feature.** Errors compound. A bug in Step 3 that goes unfixed makes Steps 4-6 wrong.
 
 ## The Triage Checklist
 

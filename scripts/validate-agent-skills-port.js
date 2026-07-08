@@ -163,6 +163,21 @@ function read(filePath) {
   return fs.readFileSync(filePath, "utf8");
 }
 
+function readMarkdownTree(relativePath) {
+  const absolutePath = rel(relativePath);
+  if (!exists(absolutePath)) return "";
+  const result = [];
+  function visit(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const child = path.join(dir, entry.name);
+      if (entry.isDirectory()) visit(child);
+      else if (entry.isFile() && child.endsWith(".md")) result.push(read(child));
+    }
+  }
+  visit(absolutePath);
+  return result.join("\n");
+}
+
 function assert(condition, message) {
   if (!condition) failures.push(message);
 }
@@ -564,6 +579,7 @@ assertOrder(
 );
 
 const readme = rel("README.md");
+const trackedDocsCorpus = `${read(readme)}\n${readMarkdownTree("docs")}`;
 for (const text of [
   "`tasks-project`",
   "`tasks-user`",
@@ -596,7 +612,10 @@ for (const text of [
   "explicit downstream workflow",
   "Standalone `$task work <id>`",
 ]) {
-  assertContains(readme, text);
+  assert(
+    trackedDocsCorpus.includes(text),
+    `README.md or docs/**/*.md must include ${JSON.stringify(text)}`
+  );
 }
 for (const text of [
   "$tasks all",
