@@ -55,6 +55,7 @@ Midnight Forge commits complete generated runtime files so Codex can read ordina
 ```text
 vendor/agent-skills/          # pinned upstream source
 overlays/mdf/                 # MDF overlay inputs
+overlays/mdf/release-metadata.json
 scripts/sync-agent-skills.js  # generated surface renderer
 skills/ references/ agents/   # generated runtime surface
 ```

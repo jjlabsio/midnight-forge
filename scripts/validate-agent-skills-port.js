@@ -805,6 +805,7 @@ assertNotContains(rel("README.md"), "claude --plugin-dir");
 for (const text of [
   "vendor/agent-skills.lock.json",
   "overlays/mdf/inventory.json",
+  "overlays/mdf/release-metadata.json",
   "overlays/mdf/references/artifact-storage-override.md",
   "scripts/sync-agent-skills.js",
   "scripts/validate-agent-skills-sync.js",

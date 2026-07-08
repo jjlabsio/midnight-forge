@@ -23,7 +23,13 @@
         "overlay": "replacements/.agents/plugins/marketplace.json",
         "artifactStorageOverride": false,
         "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "overlayKind": "mdfOnly",
+        "releaseMetadata": [
+          {
+            "path": ["plugins", 0, "source", "ref"],
+            "value": "marketplaceRef"
+          }
+        ]
       },
       {
         "output": ".codex-plugin/plugin.json",
@@ -32,7 +38,13 @@
         "overlay": "replacements/.codex-plugin/plugin.json",
         "artifactStorageOverride": false,
         "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "overlayKind": "mdfOnly",
+        "releaseMetadata": [
+          {
+            "path": ["version"],
+            "value": "version"
+          }
+        ]
       },
       {
         "output": "README.md",

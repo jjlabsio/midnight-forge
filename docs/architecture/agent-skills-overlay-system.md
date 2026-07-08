@@ -10,6 +10,7 @@ Midnight Forge preserves upstream `agent-skills` source while keeping MDF-specif
 vendor/agent-skills/                 # pinned immutable upstream source
 vendor/agent-skills.lock.json        # upstream repository and commit
 overlays/mdf/inventory.json          # generated output inventory and overlay metadata
+overlays/mdf/release-metadata.json   # plugin version and marketplace release ref source
 overlays/mdf/                        # MDF overlay inputs
 scripts/sync-agent-skills.js         # renderer
 scripts/validate-agent-skills-sync.js
@@ -57,7 +58,9 @@ Generated artifact-storage-only skills must not retain upstream tracked storage 
 
 ## Release Metadata
 
-Plugin manifests are generated output. Their overlay source files must match checked-in generated files so sync does not revert release metadata.
+Plugin manifests are generated output. The release version and marketplace ref come from `overlays/mdf/release-metadata.json`; sync renders those values into `.codex-plugin/plugin.json` and `.agents/plugins/marketplace.json`.
+
+The release workflow updates `overlays/mdf/release-metadata.json`, runs `node scripts/sync-agent-skills.js`, and then runs the generated-surface validators before committing the release. Do not update root generated manifests as the independent source of truth.
 
 ## Tradeoffs
 

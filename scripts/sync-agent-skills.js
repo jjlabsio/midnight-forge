@@ -9,6 +9,7 @@ const root = path.resolve(__dirname, "..");
 const vendorRoot = path.join(root, "vendor", "agent-skills");
 const overlayRoot = path.join(root, "overlays", "mdf");
 const inventoryPath = path.join(overlayRoot, "inventory.json");
+const releaseMetadataPath = path.join(overlayRoot, "release-metadata.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -87,12 +88,45 @@ function applyPolicyInjection(content, entry) {
 }
 
 const inventory = readJson(inventoryPath);
+const releaseMetadata = readJson(releaseMetadataPath);
+
+function setJsonPath(target, pathParts, value) {
+  let node = target;
+  for (let index = 0; index < pathParts.length - 1; index += 1) {
+    const key = pathParts[index];
+    if (node[key] === undefined) {
+      throw new Error(`Release metadata target path does not exist: ${pathParts.join(".")}`);
+    }
+    node = node[key];
+  }
+
+  const key = pathParts[pathParts.length - 1];
+  if (node[key] === undefined) {
+    throw new Error(`Release metadata target path does not exist: ${pathParts.join(".")}`);
+  }
+  node[key] = value;
+}
+
+function applyReleaseMetadata(content, entry) {
+  if (!entry.releaseMetadata) return content;
+
+  const json = JSON.parse(content);
+  for (const mapping of entry.releaseMetadata) {
+    if (!Object.prototype.hasOwnProperty.call(releaseMetadata, mapping.value)) {
+      throw new Error(`${entry.output} references missing release metadata key: ${mapping.value}`);
+    }
+    setJsonPath(json, mapping.path, releaseMetadata[mapping.value]);
+  }
+  return JSON.stringify(json, null, 2) + "\n";
+}
 
 function renderEntry(entry) {
   const kind = overlayKind(entry);
+  let content;
 
   if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
-    return fs.readFileSync(assertInside(overlayRoot, entry.overlay));
+    content = readText(assertInside(overlayRoot, entry.overlay));
+    return Buffer.from(applyReleaseMetadata(content, entry));
   }
 
   if (!entry.source) {
@@ -100,13 +134,14 @@ function renderEntry(entry) {
   }
 
   const sourcePath = assertInside(vendorRoot, entry.source);
-  let content = readText(sourcePath);
+  content = readText(sourcePath);
   if (entry.baseSha256 && sha256(content) !== entry.baseSha256) {
     throw new Error(`${entry.output} source hash changed; refresh the overlay base metadata`);
   }
 
   content = applyExactPatches(content, entry);
   content = applyPolicyInjection(content, entry);
+  content = applyReleaseMetadata(content, entry);
   return Buffer.from(content);
 }
 
