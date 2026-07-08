@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.4 - 2026-07-08
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.3...v1.0.4)
+
+### Changes
+
+- refactor: 생성 파일 모드 보존 ([#46](https://github.com/jjlabsio/midnight-forge/pull/46))
 ## v1.0.3 - 2026-07-08
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.2...v1.0.3)
