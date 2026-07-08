@@ -203,7 +203,7 @@
           "anchorSha256": "dac05994d94058de6d518d4b7e4192cea5072e1d40eccbc5c01cec48ddb2ab02",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/auto-workflow/SKILL.md",
@@ -253,7 +253,7 @@
           "anchorSha256": "fcf3ab12c4954145d0fd74770f3c4d03b33600fd8161d0630e4714b2d41827b0",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/code-review-and-quality/SKILL.md",
@@ -318,7 +318,7 @@
           "anchorSha256": "b15adece26cb025d44bec14c42b6374b4e2c9beb681047f61294ab06aff5c4ff",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/deprecation-and-migration/SKILL.md",
@@ -338,7 +338,7 @@
           "anchorSha256": "888baf3b9c01f8cfd3544ece5fb8db1bae7bd3e2ca0b86d5dc4eb1f69bacec57",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/documentation-and-adrs/SKILL.md",
@@ -382,7 +382,7 @@
           "anchorSha256": "e17b61388922dbdb9b49a403591976f3a0d3644ef1b6b1f026536719b03b415d",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/git-workflow-and-versioning/SKILL.md",
@@ -459,10 +459,10 @@
           {
             "id": "idea-save-confirmation-location",
             "search": "Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.",
-            "replace": "Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md` (or a location of their choosing). Only save if they confirm. Only promote idea notes into tracked docs such as `docs/ideas/[idea-name].md` when the user explicitly asks."
+            "replace": "Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md`. Only save if they confirm."
           }
         ],
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/idea-refine/examples.md",
@@ -547,10 +547,10 @@
           {
             "id": "intent-save-location",
             "search": "If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.",
-            "replace": "If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md`. Only save if they confirm. Only promote intent into tracked docs such as `docs/intent/[topic].md` when the user explicitly asks."
+            "replace": "If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md`. Only save if they confirm."
           }
         ],
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/mdf-handshake/SKILL.md",
@@ -588,7 +588,7 @@
           "anchorSha256": "54c90c8a5131e6f6cf6ebdd68ced81c1235bc2258b51d8fcfe4cabd39a2b2b2d",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/plan/SKILL.md",
@@ -638,7 +638,7 @@
           "anchorSha256": "19b682fc0d79623173de268d1c46e4205955f7bf9cf0a64cba002f23104a3310",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/ship/SKILL.md",
@@ -737,7 +737,7 @@
           "anchorSha256": "85c016338e32461a95b243ff262f8a63bc317fc31019ff4405da30ffd4ad9a11",
           "position": "after"
         },
-        "normalizedDifferences": "Rendered from the pinned upstream source plus the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+        "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
         "output": "skills/test/SKILL.md",

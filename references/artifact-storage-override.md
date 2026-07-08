@@ -1,8 +1,8 @@
 # MDF Artifact Storage Override
 
-Preserve the upstream artifact content, structure, review criteria, and workflow intent. Override only the default persistence location for workflow artifacts.
+Preserve the upstream artifact content, structure, review criteria, and workflow intent. Replace upstream persistence instructions for workflow artifacts with this MDF storage rule.
 
-When a skill would normally save tracked repository files such as `SPEC.md`, `tasks/plan.md`, `tasks/todo.md`, `docs/`, or other workflow notes, MDF stores those artifacts under the current MDF work item by default:
+When a skill would normally save workflow notes, plans, reports, contracts, or other generated artifacts, MDF stores those artifacts under the current MDF work item:
 
 ```text
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
@@ -10,4 +10,4 @@ When a skill would normally save tracked repository files such as `SPEC.md`, `ta
 
 Resolve the canonical root from the active checkout. If the checkout is under `<canonical-root>/.worktrees/<branch>`, use `<canonical-root>` for MDF state. Verify user and project init state before reading or writing MDF state. If init state is missing, stop and instruct the user to run `mdf init`.
 
-Only promote an artifact into tracked repository documentation when the user explicitly asks for a tracked document or the project policy requires durable reviewed docs.
+Do not preserve upstream tracked-file storage instructions inside artifact-storage overlays. If a future workflow needs tracked repository documentation, model that as a separate explicit overlay or MDF-native workflow rule instead of leaving the upstream storage path in place.

@@ -5,7 +5,7 @@ description: Manages deprecation and migration. Use when removing old systems, A
 
 # Deprecation and Migration
 
-When saving migration plans, deprecation notes, or rollout evidence, follow the MDF artifact storage override in `references/artifact-storage-override.md`: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/migration-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.migration` plus `.mdf/index.jsonl`. Promote artifacts into tracked project docs only when the user explicitly asks or project policy requires it.
+When saving migration plans, deprecation notes, or rollout evidence, use the MDF artifact storage rule in `references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/migration-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.migration` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
 
 ## Overview
 

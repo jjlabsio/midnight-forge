@@ -119,6 +119,12 @@ for (const entry of entries) {
     assert(kind === "fragment" || kind === "patch", `${entry.output} artifact storage entry must use fragment or patch overlay v2`);
     assert(!entry.overlay, `${entry.output} artifact storage entry must not use a full replacement overlay`);
     assert(entry.policyInjection, `${entry.output} artifact storage entry must declare a policy injection`);
+    if (exists(path.join(root, entry.output))) {
+      const generated = readText(path.join(root, entry.output));
+      for (const forbidden of [/`docs\//, /\bdocs\/[A-Za-z0-9._/-]+/, /`SPEC\.md`/, /`tasks\/plan\.md`/, /`tasks\/todo\.md`/]) {
+        assert(!forbidden.test(generated), `${entry.output} retains an upstream tracked artifact storage path matching ${forbidden}`);
+      }
+    }
   }
   if (kind === "fragment") {
     assert(entry.source, `${entry.output} fragment overlay must have a source`);

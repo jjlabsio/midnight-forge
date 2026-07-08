@@ -17,7 +17,7 @@ This report documents the first overlay v2 migration. The migrated entries rende
 
 ## Intentional Normalization
 
-These targets no longer use full-file replacements. Their generated files now start from upstream and add only MDF artifact storage instructions through exact anchors and exact patches recorded in `overlays/mdf/inventory.json`.
+These targets no longer use full-file replacements. Their generated files now start from upstream and replace upstream artifact persistence instructions with MDF artifact storage instructions through exact anchors and exact patches recorded in `overlays/mdf/inventory.json`.
 
 Previous replacement files also contained a few non-storage differences in `debugging-and-error-recovery`, `interview-me`, and `security-and-hardening`. Those differences are intentionally normalized back to upstream so the first v2 migration proves the narrow policy-injection path rather than preserving unrelated drift in an artifact-storage overlay.
 
@@ -26,5 +26,6 @@ Previous replacement files also contained a few non-storage differences in `debu
 - Every migrated target records `baseSha256` for the pinned upstream source.
 - Every policy injection records a unique heading anchor and `anchorSha256`.
 - Exact patches must match the pinned upstream source exactly once.
+- Generated artifact-storage-only skills must not retain upstream tracked artifact storage paths such as `docs/`, `SPEC.md`, `tasks/plan.md`, or `tasks/todo.md`.
 - `node scripts/sync-agent-skills.js --dry-run` must render to a temporary directory and byte-compare against checked-in generated files.
 - `node scripts/validate-agent-skills-sync.js` must fail if a migrated target falls back to a full replacement.
