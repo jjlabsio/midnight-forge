@@ -683,23 +683,26 @@ assertNotContains(planEvaluator, "Use internally from the plan workflow");
 
 const codeReviewQuality = rel("skills", "code-review-and-quality", "SKILL.md");
 for (const text of [
-  "## Review Scopes",
-  "`task` scope",
-  "`whole-build` scope",
-  "`standalone` scope",
-  "scope constrains which evidence matters",
-  "## Pass 1: Spec Compliance",
-  "## Pass 2: Code Quality / Five-Axis Review",
-  "Distrust implementer and build summaries",
-  "## High-Risk Independent Review",
-  "Freshness: standalone-like inline pass",
-  "Any Critical or Important finding",
-  "task card context, criteria, and latest artifact pointers",
-  "Task cards and queued downstream task assumptions",
-  "available MDF task cards, spec, plan, build, and review artifacts",
-  "Contradictions between approved spec, task cards, plan, build artifacts, review artifacts, tests, current code, and current code or skill contracts",
+  "write `.mdf/work/{work_id}/review-NNN.md`",
+  "follow `../../references/human-facing-language.md`",
+  "MDF-managed reviews may also use task cards, spec artifacts, plan artifacts, build artifacts, review artifacts, and acceptance criteria supplied by the calling workflow as review context",
+  "the technical review method remains the five-axis review below",
+  "## The Five-Axis Review",
+  "## Structural Remedies",
+  "Watch file size, not just diff size",
+  "Lead with what matters",
+  "When an MDF caller expects severity labels `Critical`, `Important`, and `Suggestion`",
+  "Presumptive blockers",
 ]) {
   assertContains(codeReviewQuality, text);
+}
+for (const text of [
+  "## Review Scopes",
+  "## Build-Internal Review Artifacts",
+  "## Pass 1: Spec Compliance",
+  "## High-Risk Independent Review",
+]) {
+  assertNotContains(codeReviewQuality, text);
 }
 
 const buildSkill = rel("skills", "build", "SKILL.md");

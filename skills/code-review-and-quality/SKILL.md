@@ -7,11 +7,11 @@ description: Conducts multi-axis code review. Use before merging any change. Use
 
 When saving a code review report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/review-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.review` plus `.mdf/index.jsonl`.
 
+Before writing MDF review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the explicit `human_language` preference for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
+
 ## Overview
 
-Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. MDF-managed work runs spec-compliance review before code-quality review. Code-quality review covers five axes: correctness, readability, architecture, security, and performance.
-
-Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the explicit `human_language` preference for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
+Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance. MDF-managed reviews may also use task cards, spec artifacts, plan artifacts, build artifacts, review artifacts, and acceptance criteria supplied by the calling workflow as review context; those artifacts provide scope and evidence, but the technical review method remains the five-axis review below.
 
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 
@@ -23,145 +23,7 @@ Before writing review findings, explanations, or recommendations, follow `../../
 - When refactoring existing code
 - After any bug fix (review both the fix and the regression test)
 
-## Review Scopes
-
-Use the same review engine for task, whole-build, and standalone reviews. The selected scope constrains which evidence matters, which requirements apply, and which findings are blockers.
-
-- `task` scope: review the current task-sized diff against that task's acceptance criteria, task build artifact, high-risk implementation meaning, and verification evidence. Block on issues that prevent the task from satisfying its plan criteria, break nearby behavior, contradict actual tests or code paths, or make the task unsafe to commit.
-- `whole-build` scope: review all selected build changes against the approved spec, implementation plan, task artifacts, and final whole-build build artifact. Block on missed spec coverage, integration regressions between completed tasks, missing high-risk evidence, failed or missing full verification, and contradictions with the planned workflow.
-- `standalone` scope: review the current diff, staged changes, working tree, PR, or user-specified artifact independently. When a current MDF work item exists, use available MDF spec, plan, and build artifacts for spec-compliance context. Without MDF artifacts, fall back to the existing five-axis review behavior. Use this for user-requested `$review`, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
-
-Build-internal reviews and standalone reviews must not use separate review logic. They share this skill's correctness, readability, architecture, security, and performance criteria; scope constrains which evidence matters and which blockers must be fixed before continuing.
-
-## Build-Internal Review Artifacts
-
-For `$mdf:build` task and whole-build review gates, save a separate `.mdf/work/{work_id}/review-NNN.md` artifact. A review summary inside `build-NNN.md` may link to or summarize the review artifact, but it does not satisfy the review gate.
-
-Task and whole-build review artifacts must use this structure:
-
-```markdown
-## Verdict
-
-Verdict: PASS | REQUEST CHANGES
-
-## Scope
-
-- Scope: task | whole-build
-- Build artifact reviewed: `.mdf/work/{work_id}/build-NNN.md`
-- Diff reviewed: [commit, staged diff, or file list]
-
-## Requirement Checks
-
-| Requirement | Evidence Checked | Code Path Checked | Result |
-| --- | --- | --- | --- |
-| [criterion text] | [test/check/artifact] | [file/function/path] | pass/fail |
-
-## Findings
-
-## Fix Loop
-
-## Freshness
-```
-
-`Verdict: PASS` is allowed only when there are no blocking findings. Critical and Important findings are blocking for build-internal reviews unless the artifact explains why the finding is out of scope for the selected review gate.
-
-Task-scope review artifacts must cover every task acceptance criterion and every task-assigned high-risk semantic criterion. Whole-build review artifacts must cover every approved spec requirement, or an explicitly grouped equivalent that preserves full coverage and makes omitted requirements visible.
-
-`Fix Loop` records the review loop state. If blockers were found, include the blocking review artifact, the fix summary, the verification rerun, any updated build evidence, and the later passing review artifact that references or supersedes the blocking review. If no blockers were found, record that no fix loop was required.
-
-Record freshness honestly:
-
-- `Freshness: same-agent inline review` for ordinary task or whole-build reviews performed by the same agent in the current build flow.
-- `Freshness: standalone-like inline pass` for high-risk independent review when fresh-context or subagent review is unavailable.
-- `Freshness: fresh-context subagent` or another fresh-context/subagent value when the runtime actually used that mechanism.
-
-Do not claim fresh-context, subagent, delegated, or independent freshness because the prompt asked for review. The freshness value must describe what actually happened.
-
-## Pass 1: Spec Compliance
-
-Run this pass first for MDF-managed work: `task`, `whole-build`, and `standalone` when MDF artifacts are available.
-
-The spec-compliance pass checks whether the implementation actually satisfies the approved requirement, not whether the implementation summary sounds plausible. Distrust implementer and build summaries until actual tests, evidence, and code paths have been inspected.
-
-If Pass 1 finds Critical or Important issues showing that the implementation does not satisfy the spec, task acceptance criteria, high-risk implementation meaning, or required scenarios, stop and report those blockers before continuing to Pass 2. Do not approve code quality while spec compliance is still wrong.
-
-For `task` scope, compare:
-
-- The current task diff
-- The task build artifact and `Task Acceptance Traceability`
-- The task acceptance criteria
-- The task card context, criteria, and latest artifact pointers when available
-- High-risk implementation meaning, required scenarios, and negative scenarios assigned to the task
-- Task verification evidence, including RED/GREEN evidence and reviewed code paths
-
-For `whole-build` scope, compare:
-
-- All selected build changes
-- The final whole-build build artifact and `Whole-Build Spec Traceability`
-- The approved spec
-- The full implementation plan
-- Task-level build artifacts
-- Task cards and queued downstream task assumptions when downstream impact checks are part of the build evidence
-- Integration behavior across completed tasks
-
-For artifact-backed `standalone` scope, use available MDF task cards, spec, plan, build, and review artifacts to run the same compliance checks that fit the current diff or review request. If no MDF artifacts are available, skip Pass 1 and proceed with the existing five-axis review behavior.
-
-Block on:
-
-- Missed spec coverage or missing task acceptance coverage
-- Weakened high-risk semantics, such as relying on later external wake-up or recovery for a same-invocation guarantee
-- Missing high-risk traceability evidence
-- RED/GREEN evidence that does not test the required behavior
-- Code paths that contradict the build artifact or plan claims
-- Missing required or negative scenarios for high-risk requirements
-- Contradictions between approved spec, task cards, plan, build artifacts, review artifacts, tests, current code, and current code or skill contracts
-
-## High-Risk Independent Review
-
-Use this review mode when `$mdf:build` reaches the mandatory high-risk independent review gate. The gate applies when the plan contains at least one high-risk requirement or build discovers a new high-risk semantic concern.
-
-Scope this review narrowly to high-risk semantic compliance:
-
-- Approved spec high-risk requirement text
-- Plan classification reason and implementation meaning
-- Required scenarios and negative scenarios
-- Task build artifact RED/GREEN/code-path evidence
-- Final whole-build traceability
-- Actual changed code paths
-
-Prefer fresh-context or subagent review when it would add signal and the runtime exposes the needed tools. If that is unavailable, run a standalone-like inline pass with this same review engine. Do not skip the gate because fresh-context review is unavailable.
-
-The review artifact must include:
-
-```markdown
-## Verdict
-
-## Scope
-
-## Requirement Checks
-
-| Requirement | Implementation Meaning | Evidence Checked | Code Path Checked | Result |
-| --- | --- | --- | --- | --- |
-
-## Findings
-
-## Fix Loop
-
-## Freshness
-```
-
-Record freshness explicitly, for example `Freshness: fresh-context subagent` or `Freshness: standalone-like inline pass`.
-
-Block on:
-
-- Missing traceability evidence
-- RED/GREEN evidence that does not test the required behavior
-- Code paths that contradict build claims
-- Missing required or negative scenarios
-- Weakened semantics, such as relying on later external wake-up or recovery for an internal-loop guarantee
-- Any Critical or Important finding
-
-## Pass 2: Code Quality / Five-Axis Review
+## The Five-Axis Review
 
 Every review evaluates code across these dimensions:
 
@@ -187,6 +49,8 @@ Can another engineer (or agent) understand this code without the author explaini
 - **Are abstractions earning their complexity?** (Don't generalize until the third use case)
 - Would comments help clarify non-obvious intent? (But don't comment obvious code.)
 - Are there dead code artifacts: no-op variables (`_unused`), backwards-compat shims, or `// removed` comments?
+- **Is a new conditional bolted onto an unrelated flow?** That's a design smell, not a nit — push the logic into its own helper, state, or policy instead of tangling an existing path.
+- **Do repeated conditionals on the same shape appear?** They signal a missing model or dispatcher. A "temporary" branch is usually permanent debt.
 
 ### 3. Architecture
 
@@ -197,6 +61,9 @@ Does the change fit the system's design?
 - Is there code duplication that should be shared?
 - Are dependencies flowing in the right direction (no circular dependencies)?
 - Is the abstraction level appropriate (not over-engineered, not too coupled)?
+- **Does this refactor reduce complexity or just relocate it?** Count the concepts a reader must hold to follow the change. If a "cleaner" version leaves that count unchanged, it isn't cleaner — prefer the restructuring that makes whole branches, modes, or layers disappear over one that re-centralizes the same logic. Prefer deleting an abstraction to polishing it.
+- **Is feature-specific logic leaking into a shared or general-purpose module?** Keep logic in its owning layer, reuse the existing canonical helper instead of a near-duplicate, and don't normalize architectural drift.
+- **Are type boundaries explicit?** Question gratuitous `any`/`unknown`/optional/casts and silent fallbacks that paper over an unclear invariant — making the boundary explicit often makes the surrounding control flow simpler.
 
 ### 4. Security
 
@@ -222,6 +89,21 @@ For detailed profiling and optimization, see `performance-optimization`. Does th
 - Any missing pagination on list endpoints?
 - Any large objects created in hot paths?
 
+## Structural Remedies
+
+When you flag a structural problem, propose the move — not just the problem. A review that only says "this is complex" leaves the author guessing. Reach for a named restructuring:
+
+- **Replace a chain of conditionals** with a typed model or an explicit dispatcher.
+- **Collapse duplicate branches** into a single clearer flow.
+- **Separate orchestration from business logic** so each reads on its own.
+- **Move feature-specific logic** out of a shared module into the package that owns the concept.
+- **Reuse the canonical helper** instead of a bespoke near-duplicate.
+- **Make a type boundary explicit** so downstream branching disappears.
+- **Delete a pass-through wrapper** that adds indirection without clarifying the API.
+- **Extract a helper, or split a large file** into focused modules.
+
+Prefer the remedy that removes moving pieces over one that spreads the same complexity around.
+
 ## Change Sizing
 
 Small, focused changes are easier to review, faster to merge, and safer to deploy. Target these sizes:
@@ -231,6 +113,8 @@ Small, focused changes are easier to review, faster to merge, and safer to deplo
 ~300 lines changed   → Acceptable if it's a single logical change.
 ~1000 lines changed  → Too large. Split it.
 ```
+
+**Watch file size, not just diff size.** A small diff can still push a file past a healthy boundary — around 1000 *total* lines in a single file (distinct from the ~1000 *changed*-lines threshold above) is a common inspection signal, not a hard cap. When a change materially grows an already-large file, ask whether to extract helpers, subcomponents, or modules *first*, before piling more on. Decompose, then add.
 
 **What counts as "one change":** A single self-contained modification that addresses one thing, includes related tests, and keeps the system functional after submission. One part of a feature — not the whole feature.
 
@@ -269,6 +153,8 @@ Before looking at code, understand the intent:
 - What is the expected behavior change?
 ```
 
+For MDF-managed work, use caller-supplied `.mdf/work/{work_id}/` artifacts and task criteria as context when they are available. Do not invent missing MDF artifacts or broaden the requested review scope just because the repository contains other workflow state.
+
 ### Step 2: Review the Tests First
 
 Tests reveal intent and coverage:
@@ -306,7 +192,11 @@ Label every comment with its severity so the author knows what's required vs opt
 | **Optional:** / **Consider:** | Suggestion | Worth considering but not required |
 | **FYI** | Informational only | No action needed — context for future reference |
 
+When an MDF caller expects severity labels `Critical`, `Important`, and `Suggestion`, keep upstream semantics: map `Critical` to `Critical`, required no-prefix findings to `Important`, and `Optional` / `Consider` to `Suggestion`. Preserve fixed labels requested by the caller, but do not weaken required findings into optional ones.
+
 This prevents authors from treating all feedback as mandatory and wasting time on optional suggestions.
+
+**Lead with what matters.** Order findings by leverage: correctness and security first, then structural regressions and missed simplifications, then everything else. Don't bury a real issue under cosmetic nits — a few high-conviction comments beat a long list. If you have one structural problem and ten nits, the structural problem *is* the review.
 
 ### Step 5: Verify the Verification
 
@@ -343,7 +233,7 @@ This catches issues that a single model might miss — different models have dif
 ```
 Review this code change for correctness, security, and adherence to
 our project conventions. The spec says [X]. The change should [Y].
-Flag any issues as Critical, Important, or Suggestion.
+Flag any issues as Critical, Required, Optional, or Nit.
 ```
 
 ## Dead Code Hygiene
@@ -430,6 +320,8 @@ Part of code review is dependency review:
 - [ ] Follows existing patterns
 - [ ] No unnecessary coupling or dependencies
 - [ ] Appropriate abstraction level
+- [ ] Refactors reduce complexity rather than relocate it
+- [ ] No feature logic in shared modules; file stays within a healthy size
 
 ### Security
 - [ ] No secrets in code
@@ -466,6 +358,8 @@ Part of code review is dependency review:
 | "We'll clean it up later" | Later never comes. The review is the quality gate — use it. Require cleanup before merge, not after. |
 | "AI-generated code is probably fine" | AI code needs more scrutiny, not less. It's confident and plausible, even when wrong. |
 | "The tests pass, so it's good" | Tests are necessary but not sufficient. They don't catch architecture problems, security issues, or readability concerns. |
+| "The refactor makes it cleaner" | Relocating complexity isn't reducing it. If the reader still holds the same number of concepts, the structure didn't improve — look for the version where branches disappear. |
+| "It's only a small addition to this file" | Small diffs still push files past a healthy size and bolt branches onto unrelated flows. Judge the resulting structure, not the diff size. |
 
 ## Red Flags
 
@@ -477,13 +371,19 @@ Part of code review is dependency review:
 - No regression tests with bug fix PRs
 - Review comments without severity labels — makes it unclear what's required vs optional
 - Accepting "I'll fix it later" — it never happens
+- A refactor that moves code around without reducing the number of concepts a reader must hold
+- A change that grows an already-large file instead of decomposing it
+- New conditionals scattered into unrelated code paths (a missing abstraction)
+- A bespoke helper that duplicates an existing canonical one, or feature logic placed in a shared module
 
 ## Verification
 
 After review is complete:
 
 - [ ] All Critical issues are resolved
-- [ ] All Important issues are resolved or explicitly deferred with justification
+- [ ] All Required (no-prefix) changes are resolved or explicitly deferred with justification
 - [ ] Tests pass
 - [ ] Build succeeds
 - [ ] The verification story is documented (what changed, how it was verified)
+
+**Presumptive blockers:** surface and propose the simpler design for each of these; escalate to Required only when the change actively makes structure worse: a refactor that relocates complexity instead of reducing it; a change that pushes a file past the size boundary with no decomposition; feature logic added to a shared module; a near-duplicate of an existing canonical helper; a silent fallback that hides an unclear invariant.
