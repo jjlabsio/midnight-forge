@@ -7,7 +7,9 @@ description: "Show and clean the current project's MDF task board."
 
 Use this skill when the user invokes `$tasks-project` in Codex.
 
-This skill is LLM-driven. Do not use an MCP server, CLI helper, background runner, event store, or network service. Read local files directly.
+This skill is LLM-orchestrated. From the plugin root, use the deterministic local script `scripts/mdf-task-state.js board --project --json` for mechanical current-project board state when available, then render the human-facing board from that JSON. Do not use an MCP server, background runner, event store, or network service.
+
+The LLM remains responsible for concise presentation, warnings, cleanup confirmation prompts, and judgment-heavy stale/clean decisions. If the script returns a typed JSON error, report it clearly and stop unless this skill explicitly permits continuing around a malformed item.
 
 ## Storage
 

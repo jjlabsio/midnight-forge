@@ -2,7 +2,9 @@
 
 ## Purpose
 
-MDF provides a local, LLM-driven work item system for Codex workflows. It records task state, locks, and workflow artifacts without requiring an MCP server, CLI helper, event store, background runner, or hosted service.
+MDF provides a local, LLM-orchestrated work item system for Codex workflows. It records task state, locks, and workflow artifacts without requiring an MCP server, event store, background runner, or hosted service.
+
+Mechanical task-state operations are moving into the deterministic local script `scripts/mdf-task-state.js`. The LLM keeps responsibility for user intent, handoff-quality context and criteria, semantic staleness checks, downstream impact checks, and user-facing explanation.
 
 ## Storage Model
 
@@ -32,6 +34,19 @@ Legacy `inbox` and `routine` items may be read for compatibility but are not fir
 The task board entrypoints are `tasks-project` for the current project and `tasks-user` for registered local projects.
 
 ## Task Lifecycle
+
+The first deterministic CLI slice supports:
+
+```text
+scripts/mdf-task-state.js validate --json
+scripts/mdf-task-state.js board --project --json
+scripts/mdf-task-state.js board --user --json
+scripts/mdf-task-state.js resolve --task-id <id> --json
+scripts/mdf-task-state.js add --kind task --title <title> --context-file <file> --json
+scripts/mdf-task-state.js done <id> --message <message> --json
+```
+
+The CLI treats `item.md` as the source of truth, appends `index.jsonl` entries, keeps lock files as ownership markers, emits typed JSON errors, and uses low-risk atomic writes for item cards.
 
 `task work {id}` resolves an exact task ID, validates dependencies, runs staleness preflight, prepares an isolated worktree, writes a lock, and updates the task card to active.
 
