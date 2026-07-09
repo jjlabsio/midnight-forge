@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.7 - 2026-07-09
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.6...v1.0.7)
+
+### Changes
+
+- refactor: migrate code review overlay to patches ([#49](https://github.com/jjlabsio/midnight-forge/pull/49))
 ## v1.0.6 - 2026-07-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.5...v1.0.6)
