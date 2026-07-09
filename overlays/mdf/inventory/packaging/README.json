@@ -1,0 +1,9 @@
+{
+  "output": "README.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/README.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF plugin packaging or README surface, not generated from upstream packaging.",
+  "overlayKind": "mdfOnly"
+}

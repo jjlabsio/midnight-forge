@@ -1,0 +1,32 @@
+{
+  "output": "skills/idea-refine/SKILL.md",
+  "source": "skills/idea-refine/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "79e773058963adc7646b0115b4f8a4afc974c5ff95843e4ef1cafff3cb51899e",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "idea",
+    "latestKey": "idea",
+    "summary": "idea one-pagers or refinement notes",
+    "anchor": "# Idea Refine\n",
+    "anchorSha256": "22380ecfed5c31039ad7367ff1a785e0211f06cc724eea98c91ca99d5a1f33d9",
+    "position": "after"
+  },
+  "exactPatches": [
+    {
+      "id": "default-idea-output-location",
+      "search": "The final output is a markdown one-pager saved to `docs/ideas/[idea-name].md` (after user confirmation), containing:",
+      "replace": "The final output is a markdown one-pager saved to `.mdf/work/{work_id}/idea-NNN.md` (after user confirmation), containing:"
+    },
+    {
+      "id": "idea-save-confirmation-location",
+      "search": "Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.",
+      "replace": "Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md`. Only save if they confirm."
+    }
+  ],
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}

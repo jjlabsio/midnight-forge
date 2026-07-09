@@ -1,0 +1,10 @@
+{
+  "output": "skills/git-workflow-and-versioning/SKILL.md",
+  "source": "skills/git-workflow-and-versioning/SKILL.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "Restored to the pinned upstream skill; MDF does not need a git workflow overlay.",
+  "baseSha256": "51677cf03845dd29d08ea4d3125665057b720aea3dccc572f25d8b172409ece6",
+  "overlayKind": "copy"
+}

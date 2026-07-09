@@ -1,0 +1,10 @@
+{
+  "output": "skills/source-driven-development/SKILL.md",
+  "source": "skills/source-driven-development/SKILL.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "b979e7531ea601ed14a090f32a5b135db517c48ab9821c5e8b09efd80f4ff4d8",
+  "overlayKind": "copy"
+}

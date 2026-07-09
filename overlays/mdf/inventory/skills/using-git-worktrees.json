@@ -1,0 +1,9 @@
+{
+  "output": "skills/using-git-worktrees/SKILL.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/using-git-worktrees/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "overlayKind": "mdfOnly"
+}

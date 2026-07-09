@@ -1,0 +1,20 @@
+{
+  "output": "skills/api-and-interface-design/SKILL.md",
+  "source": "skills/api-and-interface-design/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "293db2903b41316a5109a1e0ce3e1740eeafae31735bc1f9143dafbfd1187363",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "contract",
+    "latestKey": "contract",
+    "summary": "API or interface contracts",
+    "anchor": "# API and Interface Design\n",
+    "anchorSha256": "dac05994d94058de6d518d4b7e4192cea5072e1d40eccbc5c01cec48ddb2ab02",
+    "position": "after"
+  },
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}

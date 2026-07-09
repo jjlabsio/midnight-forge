@@ -1,0 +1,12 @@
+{
+  "output": "skills/planning-and-task-breakdown/SKILL.md",
+  "source": "skills/planning-and-task-breakdown/SKILL.md",
+  "classification": "mdf-overlay-required",
+  "overlay": "replacements/skills/planning-and-task-breakdown/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+  "baseSha256": "d87ff6bb23aa791f78a504d784e903bb13602975923f884af5d13d5b66b1651a",
+  "overlayKind": "replacement",
+  "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+  "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+}

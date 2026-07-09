@@ -1,0 +1,10 @@
+{
+  "output": "skills/idea-refine/refinement-criteria.md",
+  "source": "skills/idea-refine/refinement-criteria.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "1ca2973a4d01b5cb37ab7ddb2eff77fa4e792634a33d0ce44961c068fc88d51a",
+  "overlayKind": "copy"
+}

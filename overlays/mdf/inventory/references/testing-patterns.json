@@ -1,0 +1,10 @@
+{
+  "output": "references/testing-patterns.md",
+  "source": "references/testing-patterns.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "2502c02eee60a9e97f4256b318cdf2f1e22b045b78c6d9713fcb926b9dfc025e",
+  "overlayKind": "copy"
+}

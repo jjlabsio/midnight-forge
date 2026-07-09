@@ -1,0 +1,9 @@
+{
+  "output": "references/artifact-storage-override.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "references/artifact-storage-override.md",
+  "artifactStorageOverride": false,
+  "notes": "Generated runtime reference for the shared MDF artifact storage policy used by overlay v2 policy injections.",
+  "overlayKind": "mdfOnly"
+}

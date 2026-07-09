@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { spawnSync } = require("child_process");
+const { loadInventory } = require("./overlay-inventory");
 
 const root = path.resolve(__dirname, "..");
 const vendorRoot = path.join(root, "vendor", "agent-skills");
@@ -144,7 +145,8 @@ function warnRuntimeRootReferences(output, content) {
   }
 }
 
-const inventory = readJson(inventoryPath);
+const inventoryRoot = readJson(inventoryPath);
+const inventory = loadInventory(inventoryPath);
 const lock = readJson(lockPath);
 const releaseMetadata = readJson(releaseMetadataPath);
 const entries = inventory.generated.entries;
@@ -162,6 +164,21 @@ const allowedClassifications = new Set([
 ]);
 
 assert(inventory.schemaVersion === 2, "Inventory schemaVersion must be 2 for overlay v2.");
+assert(!Array.isArray(inventoryRoot.generated?.entries), "Inventory root must load generated entries from shards, not generated.entries.");
+assert(
+  Array.isArray(inventoryRoot.generated?.entryFiles) && inventoryRoot.generated.entryFiles.length > 0,
+  "Inventory root must declare generated.entryFiles."
+);
+const entryFileCounts = new Map();
+for (const entryFile of inventoryRoot.generated?.entryFiles || []) {
+  entryFileCounts.set(entryFile, (entryFileCounts.get(entryFile) || 0) + 1);
+  const shardPath = path.resolve(overlayRoot, entryFile);
+  assert(shardPath.startsWith(path.join(overlayRoot, "inventory") + path.sep), `${entryFile} must live under overlays/mdf/inventory`);
+  assert(exists(shardPath), `${entryFile} inventory shard is missing`);
+}
+for (const [entryFile, count] of entryFileCounts) {
+  assert(count === 1, `${entryFile} appears ${count} times in generated.entryFiles`);
+}
 assert(exists(releaseMetadataPath), "Missing overlays/mdf/release-metadata.json.");
 assert(/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(releaseMetadata.version), "Release metadata version must be semver.");
 assert(releaseMetadata.marketplaceRef === `v${releaseMetadata.version}`, "Release metadata marketplaceRef must match v{version}.");

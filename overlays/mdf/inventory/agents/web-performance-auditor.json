@@ -1,0 +1,22 @@
+{
+  "output": "agents/web-performance-auditor.md",
+  "source": "agents/web-performance-auditor.md",
+  "classification": "mdf-overlay-required",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "MDF keeps the composition link pointed at the generated agents README instead of upstream docs.",
+  "baseSha256": "0928b1cf8103262a364bce0c1fc689a918852e2275441f1b2e687adfa1e607e9",
+  "overlayKind": "patch",
+  "exactPatches": [
+    {
+      "id": "mdf-agents-readme-link",
+      "search": "See [docs/agents.md](../docs/agents.md).",
+      "replace": "See [agents/README.md](README.md)."
+    },
+    {
+      "id": "mdf-webperf-entrypoint-naming",
+      "search": "- **Invoke via:** `/webperf` (dedicated performance audit command). Not included in `/ship` fan-out",
+      "replace": "- **Invoke via:** `$webperf` (dedicated performance audit entrypoint). Not included in `$ship` fan-out"
+    }
+  ]
+}

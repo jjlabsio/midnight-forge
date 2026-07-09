@@ -1,0 +1,12 @@
+{
+  "output": "references/security-checklist.md",
+  "source": "references/security-checklist.md",
+  "classification": "upstream-drift-preserved",
+  "overlay": "replacements/references/security-checklist.md",
+  "artifactStorageOverride": false,
+  "notes": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+  "baseSha256": "56ffac21ef2226d41a47753ff691633451e313b068ce6020e07a1c9617c421ab",
+  "overlayKind": "replacement",
+  "replacementRationale": "Upstream has changed since the MDF port; PR1 preserves current MDF output and leaves update adoption for PR2.",
+  "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+}
