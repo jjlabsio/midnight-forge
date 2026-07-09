@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.0 - 2026-07-09
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.8...v1.1.0)
+
+### Changes
+
+- feat: add deterministic MDF task-state CLI ([#51](https://github.com/jjlabsio/midnight-forge/pull/51))
 ## v1.0.8 - 2026-07-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.7...v1.0.8)
