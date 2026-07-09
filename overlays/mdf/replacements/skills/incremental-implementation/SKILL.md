@@ -116,12 +116,9 @@ Scope the review narrowly to high-risk semantic compliance:
 - Final whole-build traceability
 - Actual changed code paths
 
-Prefer fresh-context or subagent independent review only when both conditions are true:
+Prefer fresh-context or subagent independent review when it would add signal and the runtime exposes the needed subagent tools.
 
-1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
-2. The runtime exposes the needed subagent tools.
-
-If fresh-context/subagent review is unavailable or unauthorized, do not skip the gate. Run an inline standalone-like independent pass through `code-review-and-quality`, save a separate `.mdf/work/{work_id}/review-NNN.md`, and record `Freshness: standalone-like inline pass` or equivalent.
+If fresh-context/subagent review is unavailable, do not skip the gate. Run an inline standalone-like independent pass through `code-review-and-quality`, save a separate `.mdf/work/{work_id}/review-NNN.md`, and record `Freshness: standalone-like inline pass` or equivalent.
 
 The high-risk independent review artifact must include:
 

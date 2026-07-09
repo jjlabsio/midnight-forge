@@ -140,12 +140,9 @@ This lets you loop, retry, and problem-solve toward a clear goal rather than gue
 
 Revise the SPEC and repeat the inline self-review until there are no blockers or a focused user question is required. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
 
-Subagent-assisted SPEC evaluation may be used only when both conditions are true:
+Subagent-assisted SPEC evaluation may be used when a fresh-context pass would add signal and the runtime exposes the needed subagent tools.
 
-1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
-2. The runtime exposes the needed subagent tools.
-
-When those conditions are met, use `agents/spec-evaluator.md` as the prompt template from the plugin-root context. In Codex, if named plugin agents are not directly available but generic subagents are explicitly authorized and available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
+When those conditions are met, use `agents/spec-evaluator.md` as the prompt template from the plugin-root context. In Codex, if named plugin agents are not directly available but generic subagents are available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
 
 The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current SPEC phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 

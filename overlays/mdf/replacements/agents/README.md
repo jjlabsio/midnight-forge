@@ -7,6 +7,7 @@ Specialist personas that play a single role with a single perspective. In Midnig
 | [code-reviewer](code-reviewer.md) | Senior Staff Engineer | Five-axis review before merge |
 | [security-auditor](security-auditor.md) | Security Engineer | Vulnerability detection, OWASP-style audit |
 | [test-engineer](test-engineer.md) | QA Engineer | Test strategy, coverage analysis, Prove-It pattern |
+| [web-performance-auditor](web-performance-auditor.md) | Web Performance Engineer | Core Web Vitals audit, loading/rendering/network analysis |
 | [spec-evaluator](spec-evaluator.md) | SPEC Evaluator | Fresh-context SPEC review |
 | [plan-evaluator](plan-evaluator.md) | Plan Evaluator | Fresh-context plan review |
 
@@ -31,6 +32,7 @@ Pick this when you want one perspective on the current change and the user is in
 - "Review this PR" -> invoke `code-reviewer` directly
 - "Are there security issues in `auth.ts`?" -> invoke `security-auditor` directly
 - "What tests are missing for the checkout flow?" -> invoke `test-engineer` directly
+- "Audit Core Web Vitals on the product page" -> invoke `web-performance-auditor` directly
 - "Does this SPEC cover the intended behavior?" -> invoke `spec-evaluator` directly
 - "Does this plan preserve the approved SPEC?" -> invoke `plan-evaluator` directly
 
@@ -40,6 +42,7 @@ Pick this when there's a repeatable workflow you'd otherwise re-explain every ti
 
 - `$review` -> wraps `code-reviewer` with the project's review skill
 - `$test` -> wraps `test-engineer` with TDD or standalone verification guidance
+- `$webperf` -> wraps `web-performance-auditor` for performance-focused audits on web apps
 - `$spec` -> creates and evaluates a SPEC through the MDF spec workflow
 - `$plan` -> creates and evaluates implementation tasks through the MDF planning workflow
 
