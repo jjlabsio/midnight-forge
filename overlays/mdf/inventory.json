@@ -293,14 +293,12 @@
       {
         "output": "skills/code-simplification/SKILL.md",
         "source": "skills/code-simplification/SKILL.md",
-        "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/code-simplification/SKILL.md",
+        "classification": "upstream-identical",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "",
         "baseSha256": "f0c5ed754057eb0c1e027e2587f59de816651feb5e837242296c43ea21cf621d",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "copy"
       },
       {
         "output": "skills/code-simplify/SKILL.md",
@@ -318,13 +316,19 @@
         "output": "skills/context-engineering/SKILL.md",
         "source": "skills/context-engineering/SKILL.md",
         "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/context-engineering/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "MDF redirects saved context audits, rules-file recommendations, and session maps into current work item artifact storage while leaving actual rules files in normal project locations.",
         "baseSha256": "ff9d4e5706bdd2eb7de1bfed569f1f42d28e478979ce6fcc32e617e7861b491d",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-context-artifact-storage",
+            "search": "# Context Engineering\n\n## Overview",
+            "replace": "# Context Engineering\n\nWhen saving context audits, rules-file recommendations, or session maps, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/context-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Actual rules files such as `AGENTS.md` or `CLAUDE.md` remain in their normal project locations when explicitly created.\n\n## Overview"
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with only MDF context artifact storage guidance inserted. Previous AGENTS.md example substitutions are intentionally normalized back to upstream because the upstream file already lists AGENTS.md as the OpenAI Codex equivalent rules file."
       },
       {
         "output": "skills/debugging-and-error-recovery/SKILL.md",

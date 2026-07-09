@@ -294,12 +294,27 @@ for (const cleanTarget of inventory.generated.clean) {
 
 const generatedMarkdown = [...outputs].filter((output) => output.endsWith(".md"));
 const referencedPathPattern = /\b(?:references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/SKILL\.md|scripts\/[A-Za-z0-9._/-]+)/g;
+function isExternalUrlPath(content, index) {
+  const tokenStart = Math.max(
+    content.lastIndexOf(" ", index),
+    content.lastIndexOf("\n", index),
+    content.lastIndexOf("\t", index),
+    content.lastIndexOf("(", index),
+    content.lastIndexOf("<", index),
+    content.lastIndexOf("\"", index),
+    content.lastIndexOf("'", index),
+    content.lastIndexOf("`", index)
+  ) + 1;
+  return content.slice(tokenStart, index).includes("://");
+}
+
 for (const output of generatedMarkdown) {
   const outputPath = path.join(root, output);
   if (!exists(outputPath)) continue;
   const content = readText(outputPath);
   warnRuntimeRootReferences(output, content);
   for (const match of content.matchAll(referencedPathPattern)) {
+    if (isExternalUrlPath(content, match.index)) continue;
     const referenced = match[0].replace(/[).,;:]+$/, "");
     const rootRelative = path.join(root, referenced);
     const outputRelative = path.join(path.dirname(outputPath), referenced);
