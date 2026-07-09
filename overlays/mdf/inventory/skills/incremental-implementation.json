@@ -1,0 +1,12 @@
+{
+  "output": "skills/incremental-implementation/SKILL.md",
+  "source": "skills/incremental-implementation/SKILL.md",
+  "classification": "mdf-overlay-required",
+  "overlay": "replacements/skills/incremental-implementation/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+  "baseSha256": "960f2ed08ccdd51527c347d29d2d00c80edb9992e95d67030d8a289ba04eed4e",
+  "overlayKind": "replacement",
+  "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+  "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+}

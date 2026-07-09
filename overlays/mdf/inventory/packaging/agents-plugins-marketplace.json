@@ -1,0 +1,20 @@
+{
+  "output": ".agents/plugins/marketplace.json",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/.agents/plugins/marketplace.json",
+  "artifactStorageOverride": false,
+  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "overlayKind": "mdfOnly",
+  "releaseMetadata": [
+    {
+      "path": [
+        "plugins",
+        0,
+        "source",
+        "ref"
+      ],
+      "value": "marketplaceRef"
+    }
+  ]
+}

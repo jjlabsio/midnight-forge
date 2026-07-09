@@ -1,0 +1,20 @@
+{
+  "output": "skills/performance-optimization/SKILL.md",
+  "source": "skills/performance-optimization/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "46ebf029d5fe812c312d4c5388ba7f07a076685fd30c7dfa7539c07763f1304e",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "performance",
+    "latestKey": "performance",
+    "summary": "performance baselines, findings, or optimization reports",
+    "anchor": "# Performance Optimization\n",
+    "anchorSha256": "54c90c8a5131e6f6cf6ebdd68ced81c1235bc2258b51d8fcfe4cabd39a2b2b2d",
+    "position": "after"
+  },
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}

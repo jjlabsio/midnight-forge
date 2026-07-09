@@ -1,0 +1,10 @@
+{
+  "output": "skills/idea-refine/frameworks.md",
+  "source": "skills/idea-refine/frameworks.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "161ebc18fdf2d996bc62a87a2d747cf1bf53548354f8925de25c732c27f00309",
+  "overlayKind": "copy"
+}

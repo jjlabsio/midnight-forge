@@ -1,0 +1,10 @@
+{
+  "output": "skills/observability-and-instrumentation/SKILL.md",
+  "source": "skills/observability-and-instrumentation/SKILL.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "40c59a0c3ba28f5697600add521e38f81f880f986317628cdc0df9bdb8acf126",
+  "overlayKind": "copy"
+}

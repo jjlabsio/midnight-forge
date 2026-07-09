@@ -1,0 +1,10 @@
+{
+  "output": "references/observability-checklist.md",
+  "source": "references/observability-checklist.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "28659e0a4b9625a434285fa9ede632802afa909f768d0f8d839dca227e53d8fe",
+  "overlayKind": "copy"
+}

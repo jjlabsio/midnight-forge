@@ -1,0 +1,10 @@
+{
+  "output": "skills/idea-refine/examples.md",
+  "source": "skills/idea-refine/examples.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "563204bfbf2f80a444151695205af4cb759e722b3d1e5460e08f278a69c89ba1",
+  "overlayKind": "copy"
+}

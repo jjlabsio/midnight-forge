@@ -1,0 +1,10 @@
+{
+  "output": "references/performance-checklist.md",
+  "source": "references/performance-checklist.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "628539583b7f515f84d0b8e4f4210ccdc0449afd31901149a078209f0769e654",
+  "overlayKind": "copy"
+}

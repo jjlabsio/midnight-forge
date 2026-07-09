@@ -1,0 +1,20 @@
+{
+  "output": "skills/ci-cd-and-automation/SKILL.md",
+  "source": "skills/ci-cd-and-automation/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "a6ed8ed56456b01ff8314c44eefc69897d9905ae4e06bb2b7036286efb79b5f0",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "ci",
+    "latestKey": "ci",
+    "summary": "CI/CD plans, pipeline findings, or automation verification reports",
+    "anchor": "# CI/CD and Automation\n",
+    "anchorSha256": "fcf3ab12c4954145d0fd74770f3c4d03b33600fd8161d0630e4714b2d41827b0",
+    "position": "after"
+  },
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}

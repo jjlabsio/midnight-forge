@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const crypto = require("crypto");
+const { loadInventory } = require("./overlay-inventory");
 
 const root = path.resolve(__dirname, "..");
 const vendorRoot = path.join(root, "vendor", "agent-skills");
@@ -87,7 +88,7 @@ function applyPolicyInjection(content, entry) {
   return content.replace(anchor, `${anchor}\n${injection}\n`);
 }
 
-const inventory = readJson(inventoryPath);
+const inventory = loadInventory(inventoryPath);
 const releaseMetadata = readJson(releaseMetadataPath);
 
 function setJsonPath(target, pathParts, value) {

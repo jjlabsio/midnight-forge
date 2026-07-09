@@ -1,0 +1,12 @@
+{
+  "output": "agents/README.md",
+  "source": "docs/agents.md",
+  "classification": "mdf-overlay-required",
+  "overlay": "replacements/agents/README.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF adapts the upstream agent persona guide for the generated agents/ surface and Codex prompt-template semantics.",
+  "baseSha256": "e03481592a725146ed48ee22010086dcfebd1faf1373cb99e7f2ed4d2100275c",
+  "overlayKind": "replacement",
+  "replacementRationale": "MDF changes the output path, exposed persona set, command naming, and runtime guidance enough that this is currently a full documentation adaptation rather than a narrow patch.",
+  "reviewRisk": "Full-file replacement can hide upstream changes to agent persona guidance; validation pins the upstream docs/agents.md hash and requires explicit review when it changes."
+}

@@ -1,0 +1,12 @@
+{
+  "output": "skills/webperf/SKILL.md",
+  "source": "commands/webperf.toml",
+  "classification": "mdf-rename-or-adapter",
+  "overlay": "replacements/skills/webperf/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF adapts the upstream webperf command into a Codex-native web performance audit entrypoint skill.",
+  "baseSha256": "7b254b0678a324321cb94ead01163139c934a4db6658aaa40f5c4ffe9d78555d",
+  "overlayKind": "renameAdapter",
+  "adapterRationale": "The upstream webperf command is converted from a command prompt into an MDF skill while preserving the web-performance-auditor entrypoint intent.",
+  "reviewRisk": "Full adapter replacement can hide upstream webperf command changes; validation pins the upstream command hash and requires explicit review when it changes."
+}

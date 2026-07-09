@@ -1,0 +1,20 @@
+{
+  "output": "skills/test-driven-development/SKILL.md",
+  "source": "skills/test-driven-development/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "6c60e193d77a6c52eb3d9a7ca774f1801b9f798ec34f075720e0425a8094f50e",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "test",
+    "latestKey": "test",
+    "summary": "test plans, reproduction notes, or test result reports",
+    "anchor": "# Test-Driven Development\n",
+    "anchorSha256": "85c016338e32461a95b243ff262f8a63bc317fc31019ff4405da30ffd4ad9a11",
+    "position": "after"
+  },
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}

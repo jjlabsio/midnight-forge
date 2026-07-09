@@ -1,0 +1,10 @@
+{
+  "output": "references/accessibility-checklist.md",
+  "source": "references/accessibility-checklist.md",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "61c759d94d52296231f5f310b92b401f56c44e4430dc3cc95ebac5d7b1d5ffac",
+  "overlayKind": "copy"
+}

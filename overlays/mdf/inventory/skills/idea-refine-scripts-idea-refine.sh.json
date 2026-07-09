@@ -1,0 +1,10 @@
+{
+  "output": "skills/idea-refine/scripts/idea-refine.sh",
+  "source": "skills/idea-refine/scripts/idea-refine.sh",
+  "classification": "upstream-identical",
+  "overlay": null,
+  "artifactStorageOverride": false,
+  "notes": "",
+  "baseSha256": "f02a52408a4218047c032d221483abfbb48d11f090bb4915965c7419bf2e0e47",
+  "overlayKind": "copy"
+}

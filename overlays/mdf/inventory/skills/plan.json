@@ -1,0 +1,12 @@
+{
+  "output": "skills/plan/SKILL.md",
+  "source": "commands/planning.toml",
+  "classification": "mdf-rename-or-adapter",
+  "overlay": "replacements/skills/plan/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF adapts the upstream planning command into a Codex-native plan entrypoint skill.",
+  "baseSha256": "0be6342ddff35204095b23c64a389323185624418c365390955c3c716eba4d85",
+  "overlayKind": "renameAdapter",
+  "adapterRationale": "The upstream planning command is converted from a command prompt into an MDF skill with MDF artifact storage and task-board semantics.",
+  "reviewRisk": "Full adapter replacement can hide upstream planning command changes; validation pins the upstream command hash and requires explicit review when it changes."
+}

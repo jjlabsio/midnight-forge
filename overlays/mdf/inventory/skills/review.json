@@ -1,0 +1,12 @@
+{
+  "output": "skills/review/SKILL.md",
+  "source": "commands/review.toml",
+  "classification": "mdf-rename-or-adapter",
+  "overlay": "replacements/skills/review/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF adapts the upstream review command into a Codex-native review entrypoint skill.",
+  "baseSha256": "a7ae7259a9e080731e0dd91368da728b89919d31488192e067b751cf472d5a8d",
+  "overlayKind": "renameAdapter",
+  "adapterRationale": "The upstream review command is converted from a command prompt into an MDF skill with MDF review artifact and five-axis review semantics.",
+  "reviewRisk": "Full adapter replacement can hide upstream review command changes; validation pins the upstream command hash and requires explicit review when it changes."
+}

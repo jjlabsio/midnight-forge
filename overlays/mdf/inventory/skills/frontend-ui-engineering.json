@@ -1,0 +1,20 @@
+{
+  "output": "skills/frontend-ui-engineering/SKILL.md",
+  "source": "skills/frontend-ui-engineering/SKILL.md",
+  "classification": "artifact-storage-only",
+  "overlay": null,
+  "artifactStorageOverride": true,
+  "notes": "Current MDF behavior only redirects workflow artifact persistence into MDF work item storage.",
+  "baseSha256": "9f9e5b3141c891d866c2a15a11ac3aba4e86ec6c530d054f0534503c2e720cb1",
+  "overlayKind": "fragment",
+  "policyInjection": {
+    "policy": "artifact-storage",
+    "artifactType": "ui",
+    "latestKey": "ui",
+    "summary": "UI implementation notes, design decisions, or accessibility checks",
+    "anchor": "# Frontend UI Engineering\n",
+    "anchorSha256": "e17b61388922dbdb9b49a403591976f3a0d3644ef1b6b1f026536719b03b415d",
+    "position": "after"
+  },
+  "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
+}
