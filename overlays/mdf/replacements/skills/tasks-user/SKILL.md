@@ -7,7 +7,9 @@ description: "Show MDF task boards across registered local projects."
 
 Use this skill when the user invokes `$tasks-user` in Codex.
 
-This skill is LLM-driven. Do not use an MCP server, CLI helper, background runner, event store, or network service. Read local files directly.
+This skill is LLM-orchestrated. From the plugin root, use the deterministic local script `scripts/mdf-task-state.js board --user --json` for mechanical user-level board state when available, then render the human-facing multi-project board from that JSON. Do not use an MCP server, background runner, event store, or network service.
+
+The LLM remains responsible for concise presentation, recommendation wording, and deciding how to explain warnings. If the script returns a typed JSON error for global user state or registry state, report it clearly and stop.
 
 ## Storage
 

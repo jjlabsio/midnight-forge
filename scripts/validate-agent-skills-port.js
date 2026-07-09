@@ -259,6 +259,10 @@ for (const agent of agents) {
   assertFile(rel("agents", agent));
 }
 
+assertFile(rel("scripts", "mdf-task-state.js"));
+assertFile(rel("scripts", "validate-mdf-task-state-cli.js"));
+assertContains(rel("docs", "architecture", "mdf-task-system.md"), "scripts/mdf-task-state.js");
+
 assertFile(rel("references", "agent-skills-port-notes.md"));
 assertContains(
   rel("references", "agent-skills-port-notes.md"),
@@ -385,6 +389,9 @@ for (const text of [
 
 const taskSkill = rel("skills", "task", "SKILL.md");
 for (const text of [
+  "From the plugin root, use the deterministic local script `scripts/mdf-task-state.js`",
+  "The LLM remains responsible for natural-language intent",
+  "For covered mechanical operations, prefer the plugin-root script `scripts/mdf-task-state.js` over ad hoc file edits",
   "## Worktree Guard",
   "use the `using-git-worktrees` skill",
   "work {id}` before creating or replacing `locks/{id}.lock`",

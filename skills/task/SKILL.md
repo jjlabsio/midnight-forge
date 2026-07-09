@@ -7,9 +7,13 @@ description: "Manage one local MDF task lifecycle from any worktree using canoni
 
 Use this skill when the user invokes `$task` in Codex.
 
-This skill is LLM-driven. Do not use an MCP server, CLI helper, background runner, event store, or network service. Read and write files directly with the available local tools.
+This skill is LLM-orchestrated. From the plugin root, use the deterministic local script `scripts/mdf-task-state.js` for mechanical MDF state operations when the command covers the needed behavior, including `validate`, `board --project --json`, `board --user --json`, `resolve --task-id <id> --json`, `add --kind task --title ... --context-file ... --json`, and `done <id> --message ... --json`. Do not use an MCP server, background runner, event store, or network service for task state.
+
+The LLM remains responsible for natural-language intent, handoff-quality context and criteria, semantic staleness preflight, downstream impact checks, user-facing explanation, and decisions that require judgment. Do not push semantic decisions into the deterministic CLI.
 
 ## Storage Model
+
+For covered mechanical operations, prefer the plugin-root script `scripts/mdf-task-state.js` over ad hoc file edits. The script treats `item.md` as the source of truth, resolves canonical project-root storage, normalizes exact 4-digit task IDs, parses frontmatter, reconciles locks for board output, appends `.mdf/index.jsonl`, and performs low-risk atomic writes. If the script returns a typed JSON error, report that error clearly and stop unless the workflow instructions explicitly allow a fallback.
 
 The authoritative MDF state for a project lives in the canonical project root, not inside linked worktrees and not as the primary source under `~/.mdf/projects/{project-hash}`.
 
