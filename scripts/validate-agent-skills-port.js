@@ -717,10 +717,16 @@ assertOrder(
 
 const doubtDrivenDevelopment = rel("skills", "doubt-driven-development", "SKILL.md");
 for (const text of [
+  "where Claude Code prevents nested subagent spawn",
+  "role-based reviewers in `agents/` start with isolated context by design",
+]) {
+  assertContains(doubtDrivenDevelopment, text);
+}
+for (const text of [
   "MDF high-risk independent review gates",
   "Freshness: standalone-like inline pass",
 ]) {
-  assertContains(doubtDrivenDevelopment, text);
+  assertNotContains(doubtDrivenDevelopment, text);
 }
 
 const codeReviewer = rel("agents", "code-reviewer.md");
