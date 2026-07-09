@@ -15,13 +15,13 @@ Invoke the `shipping-and-launch` skill.
 
 ## Phase A — Parallel fan-out
 
-Spawn three subagents concurrently only when the current user explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed subagent tools. **Issue all three subagent calls in a single assistant turn so they execute in parallel** — sequential calls defeat the purpose of this command.
+Spawn three subagents concurrently. **Issue all three subagent calls in a single assistant turn so they execute in parallel** — sequential calls defeat the purpose of this command.
 
 1. **`code-reviewer`** — Run a five-axis review (correctness, readability, architecture, security, performance) on the staged changes or recent commits. Output the standard review template.
 2. **`security-auditor`** — Run a vulnerability and threat-model pass. Check OWASP Top 10, secrets handling, auth/authz, dependency CVEs. Output the standard audit report.
 3. **`test-engineer`** — Analyze test coverage for the change. Identify gaps in happy path, edge cases, error paths, and concurrency scenarios. Output the standard coverage analysis.
 
-If subagent tools are unavailable or unauthorized, invoke each persona prompt sequentially in the main session and treat their outputs as standalone review passes — the merge phase still works.
+If subagent tools are unavailable, invoke each persona prompt sequentially in the main session and treat their outputs as standalone review passes — the merge phase still works.
 
 Constraints:
 - Subagents cannot spawn other subagents — do not let one persona delegate to another.

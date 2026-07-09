@@ -72,8 +72,8 @@ Task-scope review artifacts must cover every task acceptance criterion and every
 Record freshness honestly:
 
 - `Freshness: same-agent inline review` for ordinary task or whole-build reviews performed by the same agent in the current build flow.
-- `Freshness: standalone-like inline pass` for high-risk independent review when fresh-context or subagent review is unavailable or unauthorized.
-- `Freshness: fresh-context subagent` or another fresh-context/subagent value only when the current user explicitly authorized subagents, delegation, or parallel agent work and the runtime actually used that mechanism.
+- `Freshness: standalone-like inline pass` for high-risk independent review when fresh-context or subagent review is unavailable.
+- `Freshness: fresh-context subagent` or another fresh-context/subagent value when the runtime actually used that mechanism.
 
 Do not claim fresh-context, subagent, delegated, or independent freshness because the prompt asked for review. The freshness value must describe what actually happened.
 
@@ -129,7 +129,7 @@ Scope this review narrowly to high-risk semantic compliance:
 - Final whole-build traceability
 - Actual changed code paths
 
-Prefer fresh-context or subagent review only when the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools. If that is unavailable or unauthorized, run a standalone-like inline pass with this same review engine. Do not skip the gate because fresh-context review is unavailable.
+Prefer fresh-context or subagent review when it would add signal and the runtime exposes the needed tools. If that is unavailable, run a standalone-like inline pass with this same review engine. Do not skip the gate because fresh-context review is unavailable.
 
 The review artifact must include:
 

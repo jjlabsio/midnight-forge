@@ -9,7 +9,7 @@ Use this Codex-native entrypoint when the user invokes `build`, `mdf build`, `$b
 
 Invoke the `incremental-implementation` skill alongside the `test-driven-development` skill.
 
-For review gates, load and apply the shared `code-review-and-quality` instructions. In Codex, skills are instruction documents rather than callable functions, so do not describe same-agent review as a separate invoked workflow. Use fresh-context or subagent review only when the current user explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed tools.
+For review gates, load and apply the shared `code-review-and-quality` instructions. In Codex, skills are instruction documents rather than callable functions, so do not describe same-agent review as a separate invoked workflow. Use fresh-context or subagent review when it would add signal and the runtime exposes the needed tools.
 
 By default, process every pending task from the current plan in dependency order. If the user explicitly asks for only the next task or a specific task, process only that requested task.
 
@@ -41,12 +41,9 @@ If any step fails, follow the `debugging-and-error-recovery` skill.
 
 `build` may invoke test and review logic internally as quality gates, but `test` and `review` remain standalone workflows for independent verification, manual changes, debugging, PR preparation, and pre-ship checks. `ship` remains the final GO/NO-GO workflow.
 
-Subagent-assisted build or review may be used only when both conditions are true:
+Subagent-assisted build or review may be used when fresh-context or parallel review would add signal and the runtime exposes the needed subagent tools.
 
-1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
-2. The runtime exposes the needed subagent tools.
-
-When those conditions are not met, keep implementation, verification, task review, and whole-build review inline in this single `build` workflow.
+When subagent execution is unavailable or would not add signal, keep implementation, verification, task review, and whole-build review inline in this single `build` workflow.
 
 Task-level build artifacts must trace each task acceptance criterion and task-assigned high-risk semantic criterion to concrete evidence. The final whole-build artifact must compare the finished implementation back to the approved spec, not only to the possibly weakened plan text.
 
@@ -54,7 +51,7 @@ Embedded `Task-Scope Review`, `Whole-Build Review`, or similar sections inside `
 
 The high-risk independent review gate is required whenever high-risk requirements exist or are discovered. Run it after task-level build artifacts, task-level review artifacts, the final whole-build artifact, and whole-build review artifact have completed, but before `$mdf:build` claims completion. Scope it narrowly to high-risk semantic compliance: approved spec requirement text, plan classification and implementation meaning, task build artifact RED/GREEN/code-path evidence, final whole-build traceability, actual changed code paths, required scenarios, and negative scenarios. Save the result as a separate `.mdf/work/{work_id}/review-NNN.md` artifact.
 
-Prefer fresh-context or subagent independent review only when both conditions are true: the current user request explicitly authorizes subagents, delegation, or parallel agent work, and the runtime exposes the needed tools. If fresh-context/subagent review is unavailable or unauthorized, do not skip the gate; run an inline standalone-like independent pass through `code-review-and-quality` and record `Freshness: standalone-like inline pass` or equivalent in the review artifact.
+Prefer fresh-context or subagent independent review when it would add signal and the runtime exposes the needed tools. If fresh-context/subagent review is unavailable, do not skip the gate; run an inline standalone-like independent pass through `code-review-and-quality` and record `Freshness: standalone-like inline pass` or equivalent in the review artifact.
 
 When saving implementation notes or build evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/build-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.build` and `.mdf/index.jsonl` after every saved build artifact. When saving review evidence, write `.mdf/work/{work_id}/review-NNN.md` and update `item.md` `latest.review` plus `.mdf/index.jsonl`. After a complete `$mdf:build` run, the latest build pointer should reference the final whole-build artifact and the latest review pointer should reference the last passing whole-build or high-risk review artifact, whichever is later.
 

@@ -46,6 +46,7 @@ $test
 $review
 $code-simplify
 $ship
+$webperf
 ```
 
 ## Architecture

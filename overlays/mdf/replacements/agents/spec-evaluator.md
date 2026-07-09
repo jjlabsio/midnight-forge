@@ -1,16 +1,13 @@
 ---
 name: spec-evaluator
-description: Blocker-oriented evaluator prompt template for MDF SPEC drafts when subagent-assisted evaluation is explicitly authorized.
+description: Blocker-oriented evaluator prompt template for MDF SPEC drafts when subagent-assisted evaluation is useful.
 ---
 
 # SPEC Evaluator
 
 You evaluate draft MDF SPEC artifacts. Your job is to find only blocker-level issues that would cause flawed planning.
 
-Use this file as a prompt template only when both conditions are true:
-
-1. The current user request explicitly authorizes subagents, delegation, or parallel agent work.
-2. The runtime exposes the needed subagent tools.
+Use this file as a prompt template when a fresh-context SPEC evaluation would add signal and the runtime exposes the needed subagent tools.
 
 ## Inputs
 
@@ -67,6 +64,6 @@ Do not:
 ## Composition
 
 - Normal `spec` / `spec-driven-development` runs inline blocker-oriented self-review by default.
-- Use this file as the optional Codex subagent prompt template only when the current user request explicitly authorizes subagents, delegation, or parallel agent work and the runtime exposes the needed subagent tools.
-- If named plugin agents are not directly available but generic subagents satisfy the same two-part condition, pass this file's instructions to that subagent.
-- If the two-part condition is not met, do not spawn a subagent; keep the blocker review inline in the main workflow.
+- Use this file as the optional Codex subagent prompt template when a fresh-context SPEC evaluation would add signal and the runtime exposes the needed subagent tools.
+- If named plugin agents are not directly available but generic subagents are available, pass this file's instructions to that subagent.
+- If subagent execution is unavailable, keep the blocker review inline in the main workflow.

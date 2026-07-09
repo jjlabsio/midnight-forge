@@ -57,12 +57,15 @@
       },
       {
         "output": "agents/README.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "docs/agents.md",
+        "classification": "mdf-overlay-required",
         "overlay": "replacements/agents/README.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream agent persona guide for the generated agents/ surface and Codex prompt-template semantics.",
+        "baseSha256": "e03481592a725146ed48ee22010086dcfebd1faf1373cb99e7f2ed4d2100275c",
+        "overlayKind": "replacement",
+        "replacementRationale": "MDF changes the output path, exposed persona set, command naming, and runtime guidance enough that this is currently a full documentation adaptation rather than a narrow patch.",
+        "reviewRisk": "Full-file replacement can hide upstream changes to agent persona guidance; validation pins the upstream docs/agents.md hash and requires explicit review when it changes."
       },
       {
         "output": "agents/code-reviewer.md",
@@ -110,13 +113,40 @@
         "output": "agents/test-engineer.md",
         "source": "agents/test-engineer.md",
         "classification": "mdf-overlay-required",
-        "overlay": "replacements/agents/test-engineer.md",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "MDF keeps the composition link pointed at the generated agents README instead of upstream docs.",
         "baseSha256": "c4acde91d6307d88515387344a129a2d0679134e587596c3517d73faffcd5aa6",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-agents-readme-link",
+            "search": "See [docs/agents.md](../docs/agents.md).",
+            "replace": "See [agents/README.md](README.md)."
+          }
+        ]
+      },
+      {
+        "output": "agents/web-performance-auditor.md",
+        "source": "agents/web-performance-auditor.md",
+        "classification": "mdf-overlay-required",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": "MDF keeps the composition link pointed at the generated agents README instead of upstream docs.",
+        "baseSha256": "0928b1cf8103262a364bce0c1fc689a918852e2275441f1b2e687adfa1e607e9",
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-agents-readme-link",
+            "search": "See [docs/agents.md](../docs/agents.md).",
+            "replace": "See [agents/README.md](README.md)."
+          },
+          {
+            "id": "mdf-webperf-entrypoint-naming",
+            "search": "- **Invoke via:** `/webperf` (dedicated performance audit command). Not included in `/ship` fan-out",
+            "replace": "- **Invoke via:** `$webperf` (dedicated performance audit entrypoint). Not included in `$ship` fan-out"
+          }
+        ]
       },
       {
         "output": "references/accessibility-checklist.md",
@@ -126,6 +156,16 @@
         "artifactStorageOverride": false,
         "notes": "",
         "baseSha256": "61c759d94d52296231f5f310b92b401f56c44e4430dc3cc95ebac5d7b1d5ffac",
+        "overlayKind": "copy"
+      },
+      {
+        "output": "references/definition-of-done.md",
+        "source": "references/definition-of-done.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": "",
+        "baseSha256": "d1c75d2ae65d2c7a9cd01f93fa8de63e00e75f2fe5d08be224d576157054dcee",
         "overlayKind": "copy"
       },
       {
@@ -163,6 +203,16 @@
         "artifactStorageOverride": false,
         "notes": "",
         "baseSha256": "61e543d86f19f86b83074f8c1c769455c7085a2c72dd47b1da21a8c63785be4a",
+        "overlayKind": "copy"
+      },
+      {
+        "output": "references/observability-checklist.md",
+        "source": "references/observability-checklist.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": "",
+        "baseSha256": "28659e0a4b9625a434285fa9ede632802afa909f768d0f8d839dca227e53d8fe",
         "overlayKind": "copy"
       },
       {
@@ -240,12 +290,15 @@
       },
       {
         "output": "skills/build/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/build.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/build/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream build command into a Codex-native entrypoint skill.",
+        "baseSha256": "e25857cf424905bceea7f1250903eb801a8e79ed62ec67c2fd4d785969e47e62",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream command is converted from a command prompt into an MDF skill with task artifact, review gate, high-risk review, and MDF workflow-state semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream build command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/ci-cd-and-automation/SKILL.md",
@@ -282,35 +335,42 @@
       {
         "output": "skills/code-simplification/SKILL.md",
         "source": "skills/code-simplification/SKILL.md",
-        "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/code-simplification/SKILL.md",
+        "classification": "upstream-identical",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "",
         "baseSha256": "f0c5ed754057eb0c1e027e2587f59de816651feb5e837242296c43ea21cf621d",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "copy"
       },
       {
         "output": "skills/code-simplify/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/code-simplify.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/code-simplify/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream code-simplify command into a Codex-native entrypoint skill.",
+        "baseSha256": "640cdd34c26a04cabe6d3ea64ba5aad91bb68b16c8f7619a9e5fae6fe0a37ec8",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream command is converted from a command prompt into an MDF skill while preserving the code-simplify entrypoint intent.",
+        "reviewRisk": "Full adapter replacement can hide upstream code-simplify command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/context-engineering/SKILL.md",
         "source": "skills/context-engineering/SKILL.md",
         "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/context-engineering/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "MDF redirects saved context audits, rules-file recommendations, and session maps into current work item artifact storage while leaving actual rules files in normal project locations.",
         "baseSha256": "ff9d4e5706bdd2eb7de1bfed569f1f42d28e478979ce6fcc32e617e7861b491d",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-context-artifact-storage",
+            "search": "# Context Engineering\n\n## Overview",
+            "replace": "# Context Engineering\n\nWhen saving context audits, rules-file recommendations, or session maps, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/context-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Actual rules files such as `AGENTS.md` or `CLAUDE.md` remain in their normal project locations when explicitly created.\n\n## Overview"
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with only MDF context artifact storage guidance inserted. Previous AGENTS.md example substitutions are intentionally normalized back to upstream because the upstream file already lists AGENTS.md as the OpenAI Codex equivalent rules file."
       },
       {
         "output": "skills/debugging-and-error-recovery/SKILL.md",
@@ -368,13 +428,19 @@
         "output": "skills/doubt-driven-development/SKILL.md",
         "source": "skills/doubt-driven-development/SKILL.md",
         "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/doubt-driven-development/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "MDF redirects saved doubt cycle reports, adversarial findings, and reconciliation notes into current work item artifact storage.",
         "baseSha256": "59aef769adeae40aad67a1d54474aaf914ea7ecdfc2a4752a54840a8d29f80de",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior includes Codex-only plugin guidance or non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-doubt-artifact-storage",
+            "search": "# Doubt-Driven Development\n\n## Overview",
+            "replace": "# Doubt-Driven Development\n\nWhen saving doubt cycle reports, adversarial findings, or reconciliation notes, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/doubt-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.doubt` plus `.mdf/index.jsonl`.\n\n## Overview"
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with only MDF doubt artifact storage guidance inserted. Previous subagent authorization restrictions are intentionally normalized back to upstream so fresh-context review remains available from the main-session orchestrator."
       },
       {
         "output": "skills/frontend-ui-engineering/SKILL.md",
@@ -603,13 +669,26 @@
         "normalizedDifferences": "Rendered from the pinned upstream source with upstream artifact persistence instructions replaced by the MDF artifact-storage policy. Non-storage drift in the previous full replacement is intentionally normalized back to upstream and documented in the overlay v2 migration report."
       },
       {
+        "output": "skills/observability-and-instrumentation/SKILL.md",
+        "source": "skills/observability-and-instrumentation/SKILL.md",
+        "classification": "upstream-identical",
+        "overlay": null,
+        "artifactStorageOverride": false,
+        "notes": "",
+        "baseSha256": "40c59a0c3ba28f5697600add521e38f81f880f986317628cdc0df9bdb8acf126",
+        "overlayKind": "copy"
+      },
+      {
         "output": "skills/plan/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/planning.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/plan/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream planning command into a Codex-native plan entrypoint skill.",
+        "baseSha256": "0be6342ddff35204095b23c64a389323185624418c365390955c3c716eba4d85",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream planning command is converted from a command prompt into an MDF skill with MDF artifact storage and task-board semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream planning command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/planning-and-task-breakdown/SKILL.md",
@@ -625,12 +704,15 @@
       },
       {
         "output": "skills/review/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/review.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/review/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream review command into a Codex-native review entrypoint skill.",
+        "baseSha256": "a7ae7259a9e080731e0dd91368da728b89919d31488192e067b751cf472d5a8d",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream review command is converted from a command prompt into an MDF skill with MDF review artifact and five-axis review semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream review command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/security-and-hardening/SKILL.md",
@@ -654,24 +736,38 @@
       },
       {
         "output": "skills/ship/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/ship.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/ship/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream ship command into a Codex-native shipping entrypoint skill.",
+        "baseSha256": "a067c5c4ea484609ceb530b908c7fb707f184abae839826012ddca653517c1c5",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream ship command is converted from a command prompt into an MDF skill with Codex/MDF fan-out, evidence, and GO/NO-GO semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream ship command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/shipping-and-launch/SKILL.md",
         "source": "skills/shipping-and-launch/SKILL.md",
         "classification": "mdf-overlay-required",
-        "overlay": "replacements/skills/shipping-and-launch/SKILL.md",
+        "overlay": null,
         "artifactStorageOverride": false,
-        "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
+        "notes": "MDF redirects saved launch readiness notes, GO/NO-GO decisions, and rollback plans into current work item artifact storage and keeps project docs placement aligned with MDF docs-profile policy.",
         "baseSha256": "efc70a45ad6435d93f2b3cef16c125ff6d75a2383e49f30056fcba04b27d6e4a",
-        "overlayKind": "replacement",
-        "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-        "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+        "overlayKind": "patch",
+        "exactPatches": [
+          {
+            "id": "mdf-ship-artifact-storage",
+            "search": "# Shipping and Launch\n\n## Overview",
+            "replace": "# Shipping and Launch\n\nWhen saving launch readiness notes, GO/NO-GO decisions, or rollback plans, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ship-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.ship` plus `.mdf/index.jsonl`.\n\n## Overview"
+          },
+          {
+            "id": "mdf-documentation-checklist",
+            "search": "- [ ] ADRs written for any architectural decisions",
+            "replace": "- [ ] Durable decision records written for any architectural, product, migration, or launch decisions that project policy requires\n- [ ] Tracked docs placement follows the discovered project docs rules, using a fresh high-confidence `.mdf/project/docs-profile.*` cache only as an interpretation cache"
+          }
+        ],
+        "normalizedDifferences": "Rendered from the pinned upstream source with MDF ship artifact storage guidance and docs-profile-aware durable decision record wording. Other previous wording drift is intentionally normalized back to upstream."
       },
       {
         "output": "skills/source-driven-development/SKILL.md",
@@ -697,12 +793,15 @@
       },
       {
         "output": "skills/spec/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/spec.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/spec/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream spec command into a Codex-native spec entrypoint skill.",
+        "baseSha256": "e964ec1155154d9f2f83dbd4c7a6e030ec19aec1fdc5060176c7c255d4695577",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream spec command is converted from a command prompt into an MDF skill with MDF spec artifact and workflow-state semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream spec command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/task/SKILL.md",
@@ -753,12 +852,15 @@
       },
       {
         "output": "skills/test/SKILL.md",
-        "source": null,
-        "classification": "mdf-only",
+        "source": "commands/test.toml",
+        "classification": "mdf-rename-or-adapter",
         "overlay": "replacements/skills/test/SKILL.md",
         "artifactStorageOverride": false,
-        "notes": "MDF-native file with no direct upstream source in agent-skills.",
-        "overlayKind": "mdfOnly"
+        "notes": "MDF adapts the upstream test command into a Codex-native test entrypoint skill.",
+        "baseSha256": "c54f004d67f9fd4f8a5c9ab753ef99d3dd3d12cdc304473ea61db8c8680fe84d",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream test command is converted from a command prompt into an MDF skill with MDF test artifact and standalone verification semantics.",
+        "reviewRisk": "Full adapter replacement can hide upstream test command changes; validation pins the upstream command hash and requires explicit review when it changes."
       },
       {
         "output": "skills/use-mdf/SKILL.md",
@@ -778,30 +880,21 @@
         "artifactStorageOverride": false,
         "notes": "MDF-native file with no direct upstream source in agent-skills.",
         "overlayKind": "mdfOnly"
+      },
+      {
+        "output": "skills/webperf/SKILL.md",
+        "source": "commands/webperf.toml",
+        "classification": "mdf-rename-or-adapter",
+        "overlay": "replacements/skills/webperf/SKILL.md",
+        "artifactStorageOverride": false,
+        "notes": "MDF adapts the upstream webperf command into a Codex-native web performance audit entrypoint skill.",
+        "baseSha256": "7b254b0678a324321cb94ead01163139c934a4db6658aaa40f5c4ffe9d78555d",
+        "overlayKind": "renameAdapter",
+        "adapterRationale": "The upstream webperf command is converted from a command prompt into an MDF skill while preserving the web-performance-auditor entrypoint intent.",
+        "reviewRisk": "Full adapter replacement can hide upstream webperf command changes; validation pins the upstream command hash and requires explicit review when it changes."
       }
     ],
-    "excludedUpstream": [
-      {
-        "source": "agents/web-performance-auditor.md",
-        "classification": "upstream-missing-in-mdf",
-        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
-      },
-      {
-        "source": "references/definition-of-done.md",
-        "classification": "upstream-missing-in-mdf",
-        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
-      },
-      {
-        "source": "references/observability-checklist.md",
-        "classification": "upstream-missing-in-mdf",
-        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
-      },
-      {
-        "source": "skills/observability-and-instrumentation/SKILL.md",
-        "classification": "upstream-missing-in-mdf",
-        "notes": "Upstream file is not exposed by the current MDF plugin-facing surface. PR1 preserves current behavior; PR2 should decide whether to expose upstream additions."
-      }
-    ]
+    "excludedUpstream": []
   },
   "overlayV2": {
     "supportedKinds": [

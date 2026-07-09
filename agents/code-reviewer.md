@@ -128,7 +128,7 @@ Verdict: PASS | REQUEST CHANGES
 ## Freshness
 ```
 
-For task scope, cover every task acceptance criterion and task-assigned high-risk semantic criterion. For whole-build scope, cover every approved spec requirement, or an explicitly grouped equivalent that preserves full coverage. `Verdict: PASS` is allowed only when there are no blocking Critical or Important findings. Record `Freshness` according to the actual review mode; use fresh-context or subagent wording only when the prompt states that those mechanisms were explicitly authorized and actually used.
+For task scope, cover every task acceptance criterion and task-assigned high-risk semantic criterion. For whole-build scope, cover every approved spec requirement, or an explicitly grouped equivalent that preserves full coverage. `Verdict: PASS` is allowed only when there are no blocking Critical or Important findings. Record `Freshness` according to the actual review mode; use fresh-context or subagent wording only when that mechanism was actually used.
 
 ## Rules
 

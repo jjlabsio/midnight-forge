@@ -26,6 +26,7 @@ const originalSkillNames = [
   "idea-refine",
   "incremental-implementation",
   "interview-me",
+  "observability-and-instrumentation",
   "performance-optimization",
   "planning-and-task-breakdown",
   "security-and-hardening",
@@ -39,6 +40,8 @@ const originalSkillNames = [
 
 const references = [
   "accessibility-checklist.md",
+  "definition-of-done.md",
+  "observability-checklist.md",
   "orchestration-patterns.md",
   "performance-checklist.md",
   "security-checklist.md",
@@ -50,6 +53,7 @@ const agents = [
   "code-reviewer.md",
   "security-auditor.md",
   "test-engineer.md",
+  "web-performance-auditor.md",
   "spec-evaluator.md",
   "plan-evaluator.md",
 ];
@@ -125,6 +129,14 @@ const entrypoints = {
     "security-auditor",
     "test-engineer",
     "Skip the fan-out only if all of the following are true",
+  ],
+  webperf: [
+    "webperf",
+    "Spawn the `web-performance-auditor` subagent.",
+    "Deep mode",
+    "Quick mode",
+    "not measured",
+    "potential impact",
   ],
   "tasks-project": [
     "tasks-project",
@@ -303,11 +315,13 @@ for (const trigger of [
   "review",
   "code-simplify",
   "ship",
+  "webperf",
   "debugging",
   "UI",
   "API/interface",
   "security",
   "performance",
+  "observability",
   "documentation",
   "migration",
   "task lifecycle",
@@ -487,9 +501,8 @@ const specDrivenDevelopment = rel("skills", "spec-driven-development", "SKILL.md
 for (const text of [
   "Run an inline blocker-oriented self-review loop after drafting",
   "default `$spec` quality gate",
-  "Subagent-assisted SPEC evaluation may be used only when both conditions are true",
-  "The current user request explicitly authorizes subagents, delegation, or parallel agent work",
-  "The runtime exposes the needed subagent tools",
+  "Subagent-assisted SPEC evaluation may be used when a fresh-context pass would add signal",
+  "runtime exposes the needed subagent tools",
   "use `agents/spec-evaluator.md` as the prompt template",
   "The main agent owns revisions, user questions, artifact saving",
   "TODO, TBD, placeholder text",
@@ -523,9 +536,8 @@ for (const text of [
   "default `$plan` quality gate",
   "Ordinary tests could pass while a stated semantic requirement remains wrong",
   "Same-loop, same-invocation, no-stuck, or eventual-completion guarantees",
-  "Subagent-assisted plan evaluation may be used only when both conditions are true",
-  "The current user request explicitly authorizes subagents, delegation, or parallel agent work",
-  "The runtime exposes the needed subagent tools",
+  "Subagent-assisted plan evaluation may be used when a fresh-context pass would add signal",
+  "runtime exposes the needed subagent tools",
   "use `agents/plan-evaluator.md` as the prompt template",
   "The main agent owns revisions, user questions, artifact saving",
   "Missing tasks or missing implementation steps",
@@ -638,7 +650,7 @@ for (const text of [
   "Rewrite the SPEC",
   "Ask the user directly",
   "prompt template",
-  "explicitly authorizes subagents, delegation, or parallel agent work",
+  "fresh-context SPEC evaluation would add signal",
   "runtime exposes the needed subagent tools",
 ]) {
   assertContains(specEvaluator, text);
@@ -661,7 +673,7 @@ for (const text of [
   "Rewrite the plan",
   "Ask the user directly",
   "prompt template",
-  "explicitly authorizes subagents, delegation, or parallel agent work",
+  "fresh-context plan evaluation would add signal",
   "runtime exposes the needed subagent tools",
 ]) {
   assertContains(planEvaluator, text);
@@ -717,10 +729,16 @@ assertOrder(
 
 const doubtDrivenDevelopment = rel("skills", "doubt-driven-development", "SKILL.md");
 for (const text of [
+  "where Claude Code prevents nested subagent spawn",
+  "role-based reviewers in `agents/` start with isolated context by design",
+]) {
+  assertContains(doubtDrivenDevelopment, text);
+}
+for (const text of [
   "MDF high-risk independent review gates",
   "Freshness: standalone-like inline pass",
 ]) {
-  assertContains(doubtDrivenDevelopment, text);
+  assertNotContains(doubtDrivenDevelopment, text);
 }
 
 const codeReviewer = rel("agents", "code-reviewer.md");
