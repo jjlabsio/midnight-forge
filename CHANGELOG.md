@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.8 - 2026-07-09
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.7...v1.0.8)
+
+### Changes
+
+- refactor: shard overlay inventory entries ([#50](https://github.com/jjlabsio/midnight-forge/pull/50))
 ## v1.0.7 - 2026-07-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.6...v1.0.7)
