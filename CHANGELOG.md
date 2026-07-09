@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.6 - 2026-07-09
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.5...v1.0.6)
+
+### Changes
+
+- refactor: overlay replacement 후보를 inventory 렌더링으로 이전 ([#48](https://github.com/jjlabsio/midnight-forge/pull/48))
 ## v1.0.5 - 2026-07-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.4...v1.0.5)
