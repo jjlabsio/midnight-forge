@@ -5,15 +5,15 @@ description: Delivers changes incrementally. Use when implementing any feature o
 
 # Incremental Implementation
 
-## Overview
-
-Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
-
 When saving implementation logs or build evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/build-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.build` plus `.mdf/index.jsonl`.
 
 For MDF planned work, save a separate task-level build artifact after each completed planned task before moving to the next task, then save a separate task-scope review artifact. After all selected tasks are complete, save a separate final whole-build artifact, then save a separate whole-build review artifact. Build artifacts update `item.md` `latest.build` plus `.mdf/index.jsonl`; review artifacts update `item.md` `latest.review` plus `.mdf/index.jsonl`. After a complete `$mdf:build` run, the latest build pointer should reference the final whole-build artifact and the latest review pointer should reference the last passing whole-build or high-risk review artifact, whichever is later.
 
 Embedded review summaries inside `build-NNN.md` may exist only as summaries or links. They do not satisfy task, whole-build, or high-risk review gates. The gate is satisfied only by a separate `review-NNN.md` artifact for the relevant scope.
+
+## Overview
+
+Build in thin vertical slices — implement one piece, test it, verify it, then expand. Avoid implementing an entire feature in one pass. Each increment should leave the system in a working, testable state. This is the execution discipline that makes large features manageable.
 
 ## When to Use
 
@@ -345,3 +345,7 @@ After completing all increments for a task:
 - [ ] The task-level review found no blocking issues
 - [ ] The whole-change verification loop has run after all selected tasks
 - [ ] No uncommitted changes remain
+
+## See Also
+
+Per-increment verification is the local check. Before declaring a task done, apply the project-wide Definition of Done as the final gate, the standing bar every increment clears regardless of the task. See `references/definition-of-done.md`.
