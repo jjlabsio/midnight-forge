@@ -65,11 +65,13 @@ Midnight Forge treats skill instructions themselves as the product surface, whil
 - The generated runtime surface must stay complete and directly consumable by Codex.
 - `.mdf/` state is local and gitignored.
 - Upstream-derived behavior must be traceable to pinned vendor source and overlay metadata.
-- Existing full replacements remain supported only with explicit rationale and validation.
+- Protected agent-skills surfaces remain byte-identical; MDF owns separate
+  runtime controllers rather than semantic overlays.
 
 ## Open Questions
 
-- How far overlay v2 should migrate beyond artifact-storage-only skills.
+- How future upstream additions should be classified into protected primitives
+  or MDF-native controllers.
 - Whether release metadata should eventually move to a dedicated generated version source.
 - Which upstream additions should be adopted in the next upstream update workflow.
 

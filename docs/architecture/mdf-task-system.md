@@ -64,15 +64,26 @@ The normal MDF workflow is:
 spec -> plan -> build -> review -> ship
 ```
 
-`spec`, `plan`, and `build` use inline loops by default. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+`spec`, `plan`, and `review` are standalone one-phase workflows. A standalone
+`build` processes exactly one selected or next pending approved plan task.
+`build auto` and `build all` are routed to the flat root lifecycle controller,
+which processes every approved plan task and preserves clean-baseline,
+task-only-staging, focused-commit, resume, and upstream sign-off rules.
 
-`auto-workflow` delegates each phase and stops when a delegated phase needs a real decision, returns a blocking question, cannot complete its gate, returns NO-GO, or hits a git/PR ambiguity. Prompts classified as review checkpoint only or artifact saved confirmation can be auto-proceeded only after the required artifact exists, the blocker-oriented review loop has passed, and no planning-blocking question remains.
+`auto-workflow` stops after spec and plan until the user explicitly approves the
+exact canonical artifact revision/hash. Revisions invalidate approval. It is
+the single writer and root-only synthesizer; persona or generic-subagent work is
+bounded reporting, selected by verified capability with an honest root fallback.
 
-High-risk work has heavier gates by design. During planning, every approved SPEC requirement is classified as `normal` or `high-risk` by semantic judgment. During build, task artifacts include Task Acceptance Traceability and final build artifacts include Whole-Build Spec Traceability. When a plan contains high-risk requirements, build must pass a mandatory high-risk independent review before claiming completion.
+Every task uses applicable upstream TDD/verification and then a fresh-context
+upstream review of the full canonical context. Actionable findings are fixed and
+re-reviewed while progress is material; repeated blockers, regressions,
+no-progress, or required user judgment stop the loop. Whole-build verification
+and review occur only after every task in the approved plan revision completes.
 
-Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization and runtime tool availability.
-
-Example: if a spec requires a continued DB-backed job to be reselected within the same bounded scheduler invocation, evidence that only verifies persisted `continued` state is insufficient.
+MDF preserves upstream risk matrices, doubt-driven review, Definition of Done,
+and irreversible-work sign-off. It has no separate evaluator personas or MDF
+semantic high-risk protocol.
 
 ## Init and PR Preparation
 

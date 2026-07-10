@@ -32,14 +32,18 @@ skills/ references/ agents/          # generated runtime surface
 
 Each file under `overlays/mdf/inventory/` records generated output entries for one reviewable surface. Skill entries live in `overlays/mdf/inventory/skills/{skill}.json` so a reviewer can inspect a specific skill's upstream relationship without scanning one large manifest. Non-skill generated outputs use namespace shards such as `agents/`, `references/`, `commands/`, and `packaging/` instead of being forced into a skill-only model.
 
-Each generated output entry records one overlay kind:
+Each generated output entry records one overlay kind. Protected upstream
+primitives, personas, guides, and security references use only `copy`:
 
 - `copy`: copy a pinned upstream file.
 - `mdfOnly`: copy an MDF-native file with no upstream source.
-- `fragment`: render from upstream and inject a narrow MDF policy fragment.
-- `patch`: render from upstream and apply exact patches.
-- `replacement`: use a full MDF replacement with rationale, risk, and upstream base hash.
-- `renameAdapter`: adapt an upstream skill to an MDF name or route.
+- `mdfOnly`: render a controller, task, packaging, or adapter file that has no
+  upstream counterpart.
+- `renameAdapter`: expose an MDF public controller for a command name.
+
+Semantic fragment, patch, and source-backed replacement entries are not valid
+in the current generated-surface contract. The port validator owns the explicit
+immutable equality matrix and rejects preserved upstream drift.
 
 ## Sync Flow
 
@@ -48,26 +52,33 @@ Each generated output entry records one overlay kind:
 3. Clean generated output targets.
 4. For each entry, read the pinned upstream source or MDF overlay source.
 5. Verify base hashes when present.
-6. Apply exact patches and policy injections when declared.
+6. Render the declared copy or MDF-owned controller.
 7. Write complete generated files to root `skills/`, `references/`, `agents/`, manifests, and README.
 
 Dry-run mode renders to a temporary directory and byte-compares the result against checked-in generated output.
 
 ## Validation Flow
 
-`scripts/validate-agent-skills-sync.js` checks inventory schema, shard path safety, duplicate shard references, duplicate outputs, unsafe paths, stale hashes, replacement metadata, fragment anchors, exact patch matches, generated file coverage, and generated path references.
+`scripts/validate-agent-skills-sync.js` checks inventory schema, shard path
+safety, duplicate shard references, duplicate outputs, unsafe paths, generated
+coverage, and generated path references. `scripts/validate-agent-skills-port.js`
+enforces byte equality for the protected matrix, deletes evaluator surfaces,
+and exercises controller contracts for approvals, build modes, review freshness,
+DDD parity, persona loading, and one-writer orchestration.
 
-`scripts/validate-agent-skills-port.js` checks runtime skill presence and important MDF workflow semantics.
+## Controller Policy
 
-## Artifact Storage Policy
-
-Artifact-storage-only skills render from upstream plus the MDF artifact storage policy. Upstream persistence instructions for tracked files are replaced with MDF storage under:
+MDF never injects artifact storage or lifecycle behavior into upstream
+primitives. MDF controllers apply canonical artifact storage under:
 
 ```text
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
 ```
 
-Generated artifact-storage-only skills must not retain upstream tracked storage paths such as `docs/`, `SPEC.md`, `tasks/plan.md`, or `tasks/todo.md`.
+Controllers record spec and plan approval against the exact canonical artifact
+revision/hash and invalidate it on revision. They resolve skill, persona,
+reference, documentation, and supporting-script paths from the installed plugin
+root, not the user project's working directory or a fixed cache path.
 
 ## Release Metadata
 
@@ -79,8 +90,10 @@ The release workflow updates `overlays/mdf/release-metadata.json`, runs `node sc
 
 - Generated runtime files duplicate source-derived content, but normal Codex execution stays simple.
 - Sharded inventory files add one extra load step, but skill-specific changes are easier to review and non-skill generated surfaces keep their own namespaces.
-- Full replacements are still allowed for complex MDF behavior, but they must be explicitly risky and hash-pinned.
-- Fragment overlays are safer for narrow policies, but require stable anchors and validation.
+- Upstream content is easy to update and audit because protected outputs remain
+  byte-identical to the pinned source.
+- MDF controllers are intentionally small: they adapt runtime and lifecycle
+  state without redefining upstream workflow success criteria.
 
 ## Related Decisions
 
