@@ -1,193 +1,65 @@
 ---
 name: auto-workflow
-description: "Use when the user asks MDF to run the full lifecycle automatically through PR preparation."
+description: "Use when the user asks MDF to run the approved lifecycle automatically through PR preparation."
 ---
 
 # auto-workflow
 
-Use this skill when the user invokes `auto-workflow`, `mdf auto-workflow`,
-`$auto-workflow`, or asks to run the full MDF lifecycle through PR without
-manual checkpoints.
-
-This skill is an orchestration wrapper and state machine. It coordinates the
-existing MDF phase skills; it does not replace them.
-
-## Core Rule
-
-Use the actual phase skill for every phase:
+`auto-workflow` is a flat root orchestrator. Resolve the installed plugin root
+before every delegated path, and hand each phase canonical artifacts rather
+than a paraphrased handoff. It delegates to the actual controllers and their
+exact upstream primitives:
 
 ```text
-spec -> plan -> build with subagents -> review -> ship -> github-pr
+spec -> plan -> build all approved plan tasks -> review -> ship -> github-pr
 ```
 
-Do not inline, summarize, abbreviate, duplicate, or replace the instructions of
-the delegated phase skills inside this workflow. If a phase needs to run, load
-and follow that phase skill:
+The root owns phase state, artifact pointers, approvals, synthesis, and the
+one-writer serialization in the shared worktree. Personas and generic subagents are
+read-only reporters: they never invoke one another, write shared artifacts, or
+advance the lifecycle. Select a model/executor by capability when the runtime
+can verify that capability; otherwise use root fallback for quality-critical
+work and record the fallback.
 
-| Phase | Delegate to | Default auto-workflow behavior |
-| --- | --- | --- |
-| `spec` | `../spec/SKILL.md` | Delegate initial requirement-clarity preflight to the `spec` entrypoint, then create or update the current MDF spec artifact. |
-| `plan` | `../plan/SKILL.md` | Create or update the current MDF plan artifact. |
-| `build with subagents` | `../build/SKILL.md` | Build all pending planned tasks with subagent support where the build skill allows it. |
-| `review` | `../review/SKILL.md` | Run standalone review after build, even though build has internal review gates. |
-| `ship` | `../ship/SKILL.md` | Run the existing GO/NO-GO ship gate. |
-| `github-pr` | `../github-pr/SKILL.md` | Delegate all commit, push, task completion, release signal, and PR behavior. |
+## Required stop and progression rules
 
-## Start Point
+- Stop after `spec` until explicit spec approval is recorded for its exact
+  revision/hash.
+- Stop after `plan` until explicit plan approval is recorded for its exact
+  revision/hash.
+- An artifact revision invalidates prior approval.
+- Run every task in the exact approved plan revision, in order, with build's
+  task verification, fresh review, downstream-impact, and focused-commit gate.
+- Run whole-build verification and review only after all approved plan tasks
+  complete; a selected task cannot create completion evidence.
+- Preserve upstream clean-baseline, resume, task-only staging, and
+  high-risk/irreversible sign-off stops for autonomous work.
+- Fix actionable review findings and re-review while progress is material;
+  stop for repeats, regressions, no-progress, or a human decision.
 
-Before running phases, verify MDF user and project init state. If init state is
-missing, stop and instruct the user to run `mdf init`. Then inspect the current
-MDF work item artifacts and start
-from the first missing or incomplete phase:
+The root-only synthesis produces the final decision. `ship` retains the
+upstream persona fan-out and `github-pr` retains its own git/PR behavior.
 
-1. If no current spec artifact exists, start at `spec`.
-2. Else if no current plan artifact exists, start at `plan`.
-3. Else if build evidence is missing or the plan still has pending selected
-   tasks, start at `build with subagents`.
-4. Else if standalone review has not passed with no findings after the latest
-   build, start at `review`.
-5. Else if no GO ship decision exists after the passing standalone review,
-   start at `ship`.
-6. Else start at `github-pr`.
+For autonomous task work, first verify matching `approval-NNN.md` records using
+`../../references/approval-evidence.md`, then run `git status --porcelain` and
+stop on unrelated dirt. Commit any promoted tracked planning artifact before
+task work; local `.mdf` evidence is not staged. Before each task, recheck the
+baseline, stage only enumerated task files with `git add -- <paths>`, commit one
+passed task, and resume from the next canonical pending task after a blocker.
 
-Use the delegated skill's own artifact and status rules to decide whether a
-phase completed. When the evidence is ambiguous, stop and report exactly what is
-missing instead of guessing.
+## Controller algorithm
 
-When starting at `spec`, `auto-workflow` must not decide whether the user's
-requirements are clear enough itself. Initial requirement-clarity preflight is
-owned by the `spec` entrypoint, including any routing to `interview-me` before a
-spec is drafted.
-
-When a phase needs to verify durable tracked documentation for architecture,
-product, migration, or launch decisions, delegate placement rules to
-`../documentation-and-adrs/SKILL.md`. Use a fresh, high-confidence
-project-local docs profile cache when available; rescan tracked docs policy and
-taxonomy when it is missing or stale; stop before tracked docs writes when the
-destination remains ambiguous.
-
-## Stop Conditions
-
-Classify delegated phase requests before deciding whether to stop:
-
-- **decision required**: stop. This includes product or API direction,
-  risk acceptance, scope expansion, compatibility tradeoffs, release policy,
-  security/privacy acceptance, or any other judgment the agent must not make.
-- **missing required information**: stop. This includes `question needed`,
-  `interview-me` intent confirmation, planning-blocking open questions, or
-  ambiguity that could make later planning or implementation wrong.
-- **review checkpoint only**: auto-proceed only when the delegated phase has
-  produced the required artifact, its blocker-oriented review/evaluator loop
-  passed, and no planning-blocking question remains.
-- **artifact saved confirmation**: auto-proceed only when the delegated phase is
-  merely reporting where it saved a required artifact and is asking for
-  ceremonial review/approval before the next automatic phase.
-
-Stop immediately when any delegated phase:
-
-- asks for user input classified as `decision required` or `missing required
-  information`
-- returns `question needed`
-- cannot complete its own gate
-- reports failed verification
-- encounters malformed or conflicting MDF state
-- reaches a git, release, mergeability, or PR ambiguity owned by `github-pr`
-
-Do not duplicate ambiguity handling in this skill. Ambiguous requirements are
-owned by `interview-me`, `spec`, and `spec-driven-development`; `auto-workflow`
-stops when a delegated phase asks for a real decision, reports missing required
-information, returns `question needed`, or cannot continue. It may continue past
-`review checkpoint only` and `artifact saved confirmation` prompts only under
-the narrow conditions above.
-
-### Standalone Review Stop
-
-After `build`, always run standalone `review`.
-
-If standalone `review` reports findings, classify them before deciding whether
-to stop:
-
-- **Actionable findings** are findings the agent can fix within the approved
-  spec, plan, and current change scope without user judgment. Fix them
-  automatically, rerun affected verification, update build or debug evidence
-  when needed, and rerun standalone `review`.
-- **Decision-required findings** are findings that require user judgment, risk
-  acceptance, product or API direction, scope expansion, compatibility tradeoffs,
-  data migration decisions, release policy choices, or security/privacy risk
-  acceptance. Stop before `ship`, preserve or save the review artifact according
-  to the review skill, summarize the decision needed, and ask the user how to
-  proceed.
-- **Non-blocking findings** are explicitly optional observations that do not
-  affect correctness, safety, spec compliance, maintainability, or release
-  readiness. Record them in the review artifact and continue only when the
-  review verdict still permits proceeding.
-
-Run at most three standalone review fix-loop attempts for the same review gate.
-If the same finding recurs, new verification fails, or the loop cannot produce a
-passing standalone review within three attempts, stop before `ship` and report
-the remaining findings and attempted fixes.
-
-Proceed to `ship` only when standalone `review` returns no findings, or only
-explicitly non-blocking findings with a passing review verdict.
-
-### Ship Stop
-
-Proceed to `github-pr` only when `ship` returns GO.
-
-If `ship` returns NO-GO, stop before `github-pr` and report the ship blockers
-or risks. Do not create or update a PR while the ship decision is NO-GO.
-
-## Subagent Policy
-
-Invoking `auto-workflow` is explicit authorization for subagent use only where
-the delegated phase skill supports subagents and the current runtime exposes the
-needed tools.
-
-- `spec`: use `spec`; when subagents are available, use `spec-evaluator` only
-  for blocker evaluation of the draft spec. The subagent must not write the
-  spec, revise it, save artifacts, or ask the user directly.
-- `plan`: use `plan`; when subagents are available, use `plan-evaluator` only
-  for blocker evaluation of the draft plan. The subagent must not write the
-  plan, revise it, save artifacts, or ask the user directly.
-- `build with subagents`: the main agent remains the build orchestrator. Do not
-  delegate the entire build phase to one subagent. Subagents may be used only at
-  task implementation, task-scope review, whole-build review, or high-risk
-  independent review boundaries allowed by `build`, `incremental-implementation`,
-  and `code-review-and-quality`.
-- `review`: prefer fresh-context or subagent review when available. The subagent
-  returns a review report only; the main agent saves artifacts, decides whether
-  the workflow stops, and communicates with the user.
-- `ship`: use the existing `ship` behavior, including its code-reviewer,
-  security-auditor, and test-engineer fan-out. Do not invent another ship
-  subagent policy here.
-- `github-pr`: do not use a subagent. The main agent owns git status, task
-  completion, commit handling, push, release signal handling, and PR creation.
-
-If subagent tooling is unavailable in a phase, fall back to that delegated
-phase's existing inline behavior and record unavailable subagent execution
-where the phase artifact has a freshness or evidence field.
-
-## Main-Agent Responsibilities
-
-The main agent owns orchestration state:
-
-- current phase selection
-- MDF artifact saving through the delegated phase rules
-- `item.md` latest pointers
-- `.mdf/index.jsonl` updates
-- phase advancement based on the delegated `build` skill's task order,
-  completion evidence, and stop conditions
-- fix-loop decisions after review findings
-- git state, commits, pushes, and PR creation through `github-pr`
-
-Do not imply that `auto-workflow` runs in the background. It is an interactive
-workflow that continues automatically only while delegated phases complete
-successfully and do not require a user decision.
-
-## Completion
-
-The automatic workflow is complete only after `github-pr` reports that a remote
-PR was created or that an open PR already exists for the current branch.
-
-Report the completed phases, final PR URL when available, and any verification
-or ship evidence produced by delegated phases.
+1. Verify MDF user/project initialization and resolve the current canonical
+   work item and its latest artifacts. Stop on malformed or conflicting state.
+2. Select the first incomplete phase: no approved spec -> `spec`; no approved
+   plan -> `plan`; pending approved plan task -> build loop; no passing
+   whole-build evidence -> whole-build verification/review; no passing
+   standalone review -> `review`; no GO -> `ship`; otherwise `github-pr`.
+3. Load the selected controller from the resolved plugin root and follow it;
+   do not inline its upstream primitive or rewrite its result.
+4. Stop immediately for `question needed`, missing information, a user
+   decision, failed verification, stale approval, failed fresh-review gate,
+   NO-GO, or a git/PR ambiguity. Do not infer a phase result from an artifact's
+   existence alone.
+5. Resume only from canonical evidence that satisfies the selected phase's
+   approval, verification, and review contract.

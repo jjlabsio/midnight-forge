@@ -1,17 +1,6 @@
 {
   "output": "agents/test-engineer.md",
   "source": "agents/test-engineer.md",
-  "classification": "mdf-overlay-required",
-  "overlay": null,
-  "artifactStorageOverride": false,
-  "notes": "MDF keeps the composition link pointed at the generated agents README instead of upstream docs.",
-  "baseSha256": "c4acde91d6307d88515387344a129a2d0679134e587596c3517d73faffcd5aa6",
-  "overlayKind": "patch",
-  "exactPatches": [
-    {
-      "id": "mdf-agents-readme-link",
-      "search": "See [docs/agents.md](../docs/agents.md).",
-      "replace": "See [agents/README.md](README.md)."
-    }
-  ]
+  "classification": "upstream-identical",
+  "overlayKind": "copy"
 }

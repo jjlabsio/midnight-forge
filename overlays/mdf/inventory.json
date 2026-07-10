@@ -20,14 +20,14 @@
       "inventory/packaging/agents-plugins-marketplace.json",
       "inventory/packaging/codex-plugin-plugin.json",
       "inventory/packaging/README.json",
+      "inventory/docs-agents.json",
       "inventory/agents/README.json",
       "inventory/agents/code-reviewer.json",
-      "inventory/agents/plan-evaluator.json",
       "inventory/agents/security-auditor.json",
-      "inventory/agents/spec-evaluator.json",
       "inventory/agents/test-engineer.json",
       "inventory/agents/web-performance-auditor.json",
       "inventory/references/accessibility-checklist.json",
+      "inventory/references/approval-evidence.json",
       "inventory/references/definition-of-done.json",
       "inventory/references/artifact-storage-override.json",
       "inventory/references/agent-skills-port-notes.json",
@@ -83,6 +83,7 @@
       "inventory/skills/test-driven-development.json",
       "inventory/skills/test.json",
       "inventory/skills/use-mdf.json",
+      "inventory/skills/using-agent-skills.json",
       "inventory/skills/using-git-worktrees.json",
       "inventory/skills/webperf.json"
     ]
@@ -91,15 +92,12 @@
     "supportedKinds": [
       "copy",
       "mdfOnly",
-      "fragment",
-      "patch",
-      "replacement",
       "renameAdapter"
     ],
     "policyModules": [
       {
-        "id": "artifact-storage",
-        "path": "references/artifact-storage-override.md"
+        "id": "controller-runtime",
+        "path": "references/agent-skills-port-notes.md"
       }
     ],
     "diffReport": "reports/overlay-v2-artifact-storage-migration.md"

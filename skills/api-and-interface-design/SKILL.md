@@ -5,8 +5,6 @@ description: Guides stable API and interface design. Use when designing APIs, mo
 
 # API and Interface Design
 
-When saving API or interface contracts, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/contract-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.contract` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
-
 ## Overview
 
 Design stable, well-documented interfaces that are hard to misuse. Good interfaces make the right thing easy and the wrong thing hard. This applies to REST APIs, GraphQL schemas, module boundaries, component props, and any surface where one piece of code talks to another.

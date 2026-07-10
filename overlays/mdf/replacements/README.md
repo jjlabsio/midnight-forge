@@ -1,6 +1,9 @@
 # Midnight Forge
 
-Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It combines local MDF task workflows with a generated skill surface built from vendored `agent-skills` plus MDF overlays.
+Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It keeps
+agent-skills workflow primitives byte-identical to their pinned upstream source
+and adds MDF-only controllers for canonical task artifacts and Codex runtime
+orchestration.
 
 ## Scope
 
@@ -55,7 +58,7 @@ Midnight Forge commits complete generated runtime files so Codex can read ordina
 
 ```text
 vendor/agent-skills/          # pinned upstream source
-overlays/mdf/                 # MDF overlay inputs
+overlays/mdf/                 # MDF controller and packaging inputs
 overlays/mdf/release-metadata.json
 scripts/sync-agent-skills.js  # generated surface renderer
 skills/ references/ agents/   # generated runtime surface

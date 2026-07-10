@@ -128,24 +128,6 @@ REFRAMED SUCCESS CRITERIA:
 
 This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
 
-**Run an inline blocker-oriented self-review loop after drafting.** Once the SPEC draft covers the required sections, evaluate it before saving or presenting it. This is the default `$spec` quality gate. Block only on issues likely to cause flawed planning:
-
-- TODO, TBD, placeholder text, or incomplete required sections
-- Internal contradictions between objective, scope, commands, testing, boundaries, or success criteria
-- Ambiguity that could lead the planner to design the wrong implementation
-- Scope too broad for one coherent implementation plan
-- Unrequested features, speculative architecture, or over-engineering beyond the user's request
-- Success criteria that are too abstract to verify
-- Necessary unresolved questions that are missing from `Open Questions`
-
-Revise the SPEC and repeat the inline self-review until there are no blockers or a focused user question is required. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
-
-Subagent-assisted SPEC evaluation may be used when a fresh-context pass would add signal and the runtime exposes the needed subagent tools.
-
-When those conditions are met, use `agents/spec-evaluator.md` as the prompt template from the plugin-root context. In Codex, if named plugin agents are not directly available but generic subagents are available, pass the evaluator prompt template with the draft SPEC, the original request and relevant conversation constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the SPEC or ask the user directly.
-
-The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current SPEC phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
-
 ### Phase 2: Plan
 
 With the validated spec, generate a technical implementation plan:
@@ -155,6 +137,10 @@ With the validated spec, generate a technical implementation plan:
 3. Note risks and mitigation strategies
 4. Identify what can be built in parallel vs. what must be sequential
 5. Define verification checkpoints between phases
+
+> Follow `planning-and-task-breakdown` for the dependency-graph mapping and vertical-slicing mechanics behind these steps; it is the canonical source. The bullets above are a lightweight summary; if they ever diverge, `planning-and-task-breakdown` takes precedence.
+>
+> **Output convention:** Save the plan to `tasks/plan.md` and the task list to `tasks/todo.md`, per the `/plan` command convention. Create `tasks/` if it does not exist. Downstream commands (`/build`, etc.) expect these paths.
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
@@ -168,6 +154,8 @@ Break the plan into discrete, implementable tasks:
 - Tasks are ordered by dependency, not by perceived importance
 - No task should require changing more than ~5 files
 
+> Follow `planning-and-task-breakdown` for the full task-sizing and dependency-ordering mechanics; it is the canonical source. The template below is a lightweight inline form; if they ever diverge, `planning-and-task-breakdown` takes precedence.
+
 **Task template:**
 ```markdown
 - [ ] Task: [Description]
@@ -178,7 +166,7 @@ Break the plan into discrete, implementable tasks:
 
 ### Phase 4: Implement
 
-Execute tasks one at a time following `../incremental-implementation/SKILL.md` (`incremental-implementation`) and `../test-driven-development/SKILL.md` (`test-driven-development`). Use `../context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
+Execute tasks one at a time following `skills/incremental-implementation/SKILL.md` (`incremental-implementation`) and `skills/test-driven-development/SKILL.md` (`test-driven-development`). Use `skills/context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
 
 ## Keeping the Spec Alive
 
@@ -186,17 +174,8 @@ The spec is a living document, not a one-time artifact:
 
 - **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
 - **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Keep the spec discoverable** — MDF workflow specs live under `.mdf/work/{work_id}/` by default and are indexed in `.mdf/index.jsonl`.
-- **Promote only when needed** — Commit a spec to tracked project docs only when the user explicitly asks or project policy requires it.
-- **Reference the spec in PRs when available** — Link to the tracked spec if promoted; otherwise summarize the relevant MDF spec artifact.
-
-For MDF workflow artifacts, save specs under the current work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
-
-```text
-<canonical-root>/.mdf/work/{work_id}/spec-NNN.md
-```
-
-Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated spec runs create `spec-001.md`, `spec-002.md`, and so on; update `item.md` `latest.spec` and `.mdf/index.jsonl`. Only promote a spec into tracked project docs, such as `SPEC.md`, when the user explicitly asks or project policy requires it.
+- **Commit the spec** — The spec belongs in version control alongside the code.
+- **Reference the spec in PRs** — Link back to the spec section that each PR implements.
 
 ## Common Rationalizations
 
@@ -224,13 +203,4 @@ Before proceeding to implementation, confirm:
 - [ ] The human has reviewed and approved the spec
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The blocker-oriented evaluator loop found no planning-blocking issues
-- [ ] The spec is saved to `.mdf/work/{work_id}/spec-NNN.md`, or to a tracked repository file only when explicitly requested
-
-For `auto-workflow`, human review and approval of a saved spec artifact is a
-manual checkpoint only when a real decision, `question needed`, or missing
-required information remains. If the blocker-oriented evaluator loop found no
-planning-blocking issues and the spec entrypoint is running in auto-workflow
-mode, the workflow may continue to planning without an extra manual approval
-turn. This does not change `interview-me` criteria or its explicit confirmation
-gate.
+- [ ] The spec is saved to a file in the repository

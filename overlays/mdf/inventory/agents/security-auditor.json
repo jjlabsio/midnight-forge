@@ -1,12 +1,6 @@
 {
   "output": "agents/security-auditor.md",
   "source": "agents/security-auditor.md",
-  "classification": "mdf-overlay-required",
-  "overlay": "replacements/agents/security-auditor.md",
-  "artifactStorageOverride": false,
-  "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-  "baseSha256": "66a3f68f1c691b600ddb44e88afb138e239d0572df37be84e1f9a427c887dd0a",
-  "overlayKind": "replacement",
-  "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-  "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+  "classification": "upstream-identical",
+  "overlayKind": "copy"
 }

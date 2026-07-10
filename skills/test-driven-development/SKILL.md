@@ -5,8 +5,6 @@ description: Drives development with tests. Use when implementing any logic, fix
 
 # Test-Driven Development
 
-When saving test plans, reproduction notes, or test result reports, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/test-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.test` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
-
 ## Overview
 
 Write a failing test before writing the code that makes it pass. For bug fixes, reproduce the bug with a test before attempting a fix. Tests are proof — "seems right" is not done. A codebase with good tests is an AI agent's superpower; a codebase without tests is a liability.

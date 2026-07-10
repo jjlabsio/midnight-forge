@@ -5,8 +5,6 @@ description: Extracts what the user actually wants instead of what they think th
 
 # Interview Me
 
-When saving confirmed intent handoffs, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/intent-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.intent` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
-
 ## Overview
 
 What people ask for and what they actually want are different things. They ask for "a dashboard" because that's what one asks for, not because a dashboard solves their problem. They say "make it faster" without a number to hit.
@@ -137,7 +135,7 @@ This is a checkable test, not a vibe. It also has a floor: if you've gone severa
 
 The output of this skill is a **confirmed statement of intent**: the restate from Step 4, with an explicit yes from Step 5. That's the deliverable. Specs, plans, and task lists are downstream; they consume the intent this skill produces.
 
-If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to the current MDF work item as `.mdf/work/{work_id}/intent-NNN.md`. Only save if they confirm.
+If the user wants the intent to persist (a multi-session project, a handoff to another collaborator), offer to save it to `docs/intent/[topic].md`. Only save if they confirm.
 
 ## Example
 

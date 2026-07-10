@@ -1,81 +1,20 @@
 ---
 name: ship
-description: "Use when the user invokes ship, mdf ship, or asks for pre-launch GO/NO-GO review with code-reviewer, security-auditor, and test-engineer fan-out."
+description: "Use when the user invokes ship, mdf ship, or asks for the upstream GO/NO-GO launch gate."
 ---
 
 # ship
 
-Use this Codex-native entrypoint when the user invokes `ship`, `mdf ship`, `$ship`, or asks to prepare current changes for launch.
+Resolve the installed plugin root, load and follow the exact upstream
+`../shipping-and-launch/SKILL.md`, and preserve its GO/NO-GO criteria. For its
+parallel fan-out, load the exact upstream persona files from the resolved
+plugin root: `agents/code-reviewer.md`, `agents/security-auditor.md`, and
+`agents/test-engineer.md`. A generic subagent receives the exact selected
+persona prompt; the root validates capability, owns synthesis, and is the only
+writer. If capability cannot be verified, use root fallback or report the
+upstream-defined degraded status; never claim an unavailable persona ran.
 
-Invoke the `shipping-and-launch` skill.
-
-`ship` remains the final GO/NO-GO gate after planned work has been built and verified. Do not collapse this behavior into `build`.
-
-`ship` is a **fan-out orchestrator**. It runs three specialist personas in parallel against the current change, then merges their reports into a single go/no-go decision with a rollback plan. The personas operate independently — no shared state, no ordering — which is what makes parallel execution safe and useful here.
-
-## Phase A — Parallel fan-out
-
-Spawn three subagents concurrently. **Issue all three subagent calls in a single assistant turn so they execute in parallel** — sequential calls defeat the purpose of this command.
-
-1. **`code-reviewer`** — Run a five-axis review (correctness, readability, architecture, security, performance) on the staged changes or recent commits. Output the standard review template.
-2. **`security-auditor`** — Run a vulnerability and threat-model pass. Check OWASP Top 10, secrets handling, auth/authz, dependency CVEs. Output the standard audit report.
-3. **`test-engineer`** — Analyze test coverage for the change. Identify gaps in happy path, edge cases, error paths, and concurrency scenarios. Output the standard coverage analysis.
-
-If subagent tools are unavailable, invoke each persona prompt sequentially in the main session and treat their outputs as standalone review passes — the merge phase still works.
-
-Constraints:
-- Subagents cannot spawn other subagents — do not let one persona delegate to another.
-- Each subagent gets its own context window and returns only its report to this main session.
-- If reviewers need to talk to each other instead of just reporting back, do not force that into `ship`; use an explicitly authorized multi-agent workflow outside this plugin entrypoint.
-
-## Phase B — Merge in main context
-
-Once all three reports are back, the main agent (not a sub-persona) synthesizes them:
-
-1. **Code Quality** — Aggregate Critical/Important findings from `code-reviewer` and any failing tests, lint, or build output. Resolve duplicates between reviewers.
-2. **Security** — Promote any Critical/High `security-auditor` findings to launch blockers. Cross-reference with `code-reviewer`'s security axis.
-3. **Performance** — Pull from `code-reviewer`'s performance axis; cross-check Core Web Vitals if applicable.
-4. **Accessibility** — Verify keyboard nav, screen reader support, contrast (not covered by the three personas — handle directly here, or invoke the accessibility checklist).
-5. **Infrastructure** — Env vars, migrations, monitoring, feature flags. Verify directly.
-6. **Documentation** — README, decision records, changelog. Verify directly.
-   For durable tracked docs, use the docs profile behavior from
-   `skills/documentation-and-adrs/SKILL.md`: existing project docs rules are
-   source of truth, `.mdf/project/docs-profile.*` is only a fresh
-   high-confidence cache, and ambiguous placement stops before tracked writes.
-
-## Phase C — Decision and rollback
-
-Produce a single output:
-
-```markdown
-## Ship Decision: GO | NO-GO
-
-### Blockers (must fix before ship)
-- [Source persona: Critical finding + file:line]
-
-### Recommended fixes (should fix before ship)
-- [Source persona: Important finding + file:line]
-
-### Acknowledged risks (shipping anyway)
-- [Risk + mitigation]
-
-### Rollback plan
-- Trigger conditions: [what signals would prompt rollback]
-- Rollback procedure: [exact steps]
-- Recovery time objective: [target]
-
-### Specialist reports (full)
-- [code-reviewer report]
-- [security-auditor report]
-- [test-engineer report]
-```
-
-When saving the ship decision, specialist report merge, or rollback plan, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ship-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.ship` and `.mdf/index.jsonl`.
-
-## Rules
-
-1. The three Phase A personas run in parallel — never sequentially.
-2. Personas do not call each other. The main agent merges in Phase B.
-3. The rollback plan is mandatory before any GO decision.
-4. If any persona returns a Critical finding, the default verdict is NO-GO unless the user explicitly accepts the risk.
-5. **Skip the fan-out only if all of the following are true:** the change touches 2 files or fewer, the diff is under 50 lines, and it does not touch auth, payments, data access, or config/env. Otherwise, default to fan-out. `/ship` is designed for production-bound changes — when the blast radius is non-trivial, run the parallel review even if the diff looks small.
+Preserve the upstream ship command's parallel `code-reviewer`,
+`security-auditor`, and `test-engineer` fan-out, its merge in root context, and
+its GO/NO-GO and rollback decision. Do not replace that command behavior with a
+new persona protocol.

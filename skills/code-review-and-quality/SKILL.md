@@ -5,13 +5,9 @@ description: Conducts multi-axis code review. Use before merging any change. Use
 
 # Code Review and Quality
 
-When saving a code review report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/review-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.review` plus `.mdf/index.jsonl`.
-
-Before writing MDF review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`. Use the explicit `human_language` preference for human-facing prose while preserving fixed labels, file paths, code identifiers, commands, and MDF artifact paths.
-
 ## Overview
 
-Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance. MDF-managed reviews may also use task cards, spec artifacts, plan artifacts, build artifacts, review artifacts, and acceptance criteria supplied by the calling workflow as review context; those artifacts provide scope and evidence, but the technical review method remains the five-axis review below.
+Multi-dimensional code review with quality gates. Every change gets reviewed before merge — no exceptions. Review covers five axes: correctness, readability, architecture, security, and performance.
 
 **The approval standard:** Approve a change when it definitely improves overall code health, even if it isn't perfect. Perfect code doesn't exist — the goal is continuous improvement. Don't block a change because it isn't exactly how you would have written it. If it improves the codebase and follows the project's conventions, approve it.
 
@@ -153,8 +149,6 @@ Before looking at code, understand the intent:
 - What is the expected behavior change?
 ```
 
-For MDF-managed work, use caller-supplied `.mdf/work/{work_id}/` artifacts and task criteria as context when they are available. Do not invent missing MDF artifacts or broaden the requested review scope just because the repository contains other workflow state.
-
 ### Step 2: Review the Tests First
 
 Tests reveal intent and coverage:
@@ -191,8 +185,6 @@ Label every comment with its severity so the author knows what's required vs opt
 | **Nit:** | Minor, optional | Author may ignore — formatting, style preferences |
 | **Optional:** / **Consider:** | Suggestion | Worth considering but not required |
 | **FYI** | Informational only | No action needed — context for future reference |
-
-When an MDF caller expects severity labels `Critical`, `Important`, and `Suggestion`, keep upstream semantics: map `Critical` to `Critical`, required no-prefix findings to `Important`, and `Optional` / `Consider` to `Suggestion`. Preserve fixed labels requested by the caller, but do not weaken required findings into optional ones.
 
 This prevents authors from treating all feedback as mandatory and wasting time on optional suggestions.
 
