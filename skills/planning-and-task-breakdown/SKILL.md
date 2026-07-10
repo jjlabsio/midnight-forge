@@ -30,7 +30,7 @@ Before writing any code, operate in read-only mode:
 - Map dependencies between components
 - Note risks and unknowns
 
-**Do NOT write code during planning.** The output is a plan document, not implementation.
+**Do NOT write code during planning.** The output is a plan artifact, not implementation. Save tracked `tasks/plan.md` and `tasks/todo.md` files only when the user explicitly asks for repo-level planning files.
 
 ### Step 2: Identify the Dependency Graph
 
@@ -199,6 +199,22 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - It touches two or more independent subsystems (e.g., auth and billing)
 - You find yourself writing "and" in the task title (a sign it is two tasks)
 
+## MDF Artifact Storage
+
+Save implementation plans under the current MDF work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
+
+```text
+<canonical-root>/.mdf/work/{work_id}/plan-NNN.md
+```
+
+Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated planning runs create `plan-001.md`, `plan-002.md`, and so on; update `item.md` `latest.plan` and `.mdf/index.jsonl`. Only create tracked files such as `tasks/plan.md` and `tasks/todo.md` when the user explicitly asks for repo-level planning files.
+
+When earlier task work changes design, architecture, contracts, workflow
+semantics, task boundaries, or shared acceptance assumptions in a way that
+alters future tasks, preserve the change as a new plan revision, a dated task log/context/criteria update, or a clearly linked superseding artifact. Do not leave later queued task cards relying on obsolete plan text. If the right revision requires product, API, migration, release, or architecture judgment,
+surface the decision instead of silently rewriting the plan.
+
+
 ## Plan Document Template
 
 ```markdown
@@ -244,21 +260,6 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - [Question needing human input]
 ```
 
-## MDF Artifact Storage
-
-Save implementation plans under the current MDF work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
-
-```text
-<canonical-root>/.mdf/work/{work_id}/plan-NNN.md
-```
-
-Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated planning runs create `plan-001.md`, `plan-002.md`, and so on; update `item.md` `latest.plan` and `.mdf/index.jsonl`. Only create tracked files such as `tasks/plan.md` and `tasks/todo.md` when the user explicitly asks for repo-level planning files.
-
-When earlier task work changes design, architecture, contracts, workflow
-semantics, task boundaries, or shared acceptance assumptions in a way that
-alters future tasks, preserve the change as a new plan revision, a dated task log/context/criteria update, or a clearly linked superseding artifact. Do not leave later queued task cards relying on obsolete plan text. If the right revision requires product, API, migration, release, or architecture judgment,
-surface the decision instead of silently rewriting the plan.
-
 ## Parallelization Opportunities
 
 When multiple agents or sessions are available:
@@ -296,3 +297,7 @@ Before starting implementation, confirm:
 - [ ] Checkpoints exist between major phases
 - [ ] The blocker-oriented evaluator loop found no implementation-blocking issues
 - [ ] The human has reviewed and approved the plan
+
+## See Also
+
+Acceptance criteria are per-task and answer "did we build the right thing?". They sit on top of the project-wide Definition of Done, the standing bar every task clears before it counts as done. See `references/definition-of-done.md`.

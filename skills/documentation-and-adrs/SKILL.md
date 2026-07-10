@@ -148,11 +148,11 @@ Invalidate or rescan the profile when any recorded source file changes by hash o
 
 **When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.
 
-## Decision Records
+## Decision Records and ADRs
 
-Decision records capture the reasoning behind significant technical and product decisions. They're the highest-value documentation you can write.
+Decision records and ADRs capture the reasoning behind significant technical and product decisions. They're the highest-value documentation you can write.
 
-### When to Write a Decision Record
+### When to Write an ADR
 
 - Choosing a framework, library, or major dependency
 - Designing a data model or database schema
