@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.1 - 2026-07-10
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.1.0...v1.1.1)
+
+### Changes
+
+- refactor: remaining skill overlays patch 마이그레이션 ([#52](https://github.com/jjlabsio/midnight-forge/pull/52))
 ## v1.1.0 - 2026-07-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.0.8...v1.1.0)
