@@ -5,7 +5,10 @@ const { recordDecision, recordInteraction, verifySidecar } = require("./evidence
 const { current, recordEvent, transitionEvidence } = require("./lifecycle");
 
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
-const excluded = (file) => !file.startsWith("scripts/controller-runtime/") || /(^|\/)(__tests__|tests?)(\/|$)|\.(test|spec)\./.test(file);
+const excluded = (file) =>
+  /(^|\/)(__tests__|tests?|fixtures?|snapshots?|migrations?|vendor|node_modules|generated)(\/|$)|\.(test|spec)\.|\.snap$/.test(file)
+  || /(^|\/)(skills|references|agents|commands)(\/|$)|^overlays\/mdf\/replacements\/(skills|references|agents)\//.test(file)
+  || /(^|\/)(package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|composer\.lock|Gemfile\.lock|Cargo\.lock|poetry\.lock|uv\.lock)$/.test(file);
 function git(context, args) { const result = spawnSync("git", args, { cwd: context.worktree, encoding: "utf8" }); if (result.status !== 0) throw new ControllerError("MDF_SIMPLIFY_GIT_FAILED", "Could not compute simplification Git facts."); return result.stdout.trim(); }
 
 function stableRecord(context, file) {
