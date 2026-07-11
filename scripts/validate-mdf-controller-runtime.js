@@ -954,13 +954,15 @@ function runShipTests() {
 }
 
 function runGithubPrTests() {
-  const setup = ({ disposition = "GO", dirty = false, auto_review: autoReview = false } = {}) => {
+  const setup = ({ disposition = "GO", dirty = false, auto_review: autoReview = false, github_mode: githubMode = "ok", upstream = true } = {}) => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
     fs.writeFileSync(path.join(fixture.worktree, "src.js"), "ready\n");
     spawnSync("git", ["add", "."], { cwd: fixture.worktree });
     spawnSync("git", ["commit", "--quiet", "-m", "feat: ready"], { cwd: fixture.worktree });
     spawnSync("git", ["branch", "-m", "codex/task-0032"], { cwd: fixture.worktree });
+    const remote = path.join(fixture.temporaryRoot, "remote.git"); spawnSync("git", ["init", "--quiet", "--bare", remote]); spawnSync("git", ["remote", "add", "origin", remote], { cwd: fixture.worktree }); spawnSync("git", ["push", "--quiet", "-u", "origin", "codex/task-0032"], { cwd: fixture.worktree }); if (!upstream) spawnSync("git", ["branch", "--unset-upstream"], { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, ".git", "mdf-gh-mode"), `${githubMode}\n`); const bin = path.join(fixture.temporaryRoot, "bin"); fs.mkdirSync(bin); const gh = path.join(bin, "gh"); fs.writeFileSync(gh, `#!/bin/sh\nmode=$(cat .git/mdf-gh-mode)\nif [ "$mode" = "fail" ]; then exit 1; fi\nif [ "$1 $2" = "repo view" ]; then printf '%s\\n' '{"defaultBranchRef":{"name":"main"}}'; exit 0; fi\nif [ "$1 $2" = "pr list" ]; then if [ "$mode" = "conflict" ]; then printf '%s\\n' '[{"url":"one","state":"OPEN"},{"url":"two","state":"OPEN"}]'; else printf '%s\\n' '[]'; fi; exit 0; fi\nexit 1\n`); fs.chmodSync(gh, 0o755); process.env.PATH = `${bin}:${process.env.PATH}`;
     const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
     fs.writeFileSync(path.join(context.work_item.path, "seed.md"), "seed\n");
     fs.writeFileSync(path.join(context.work_item.path, "user-authority.md"), "run auto-workflow through PR preparation\n");
@@ -995,7 +997,8 @@ function runGithubPrTests() {
   };
   const ready = setup();
   try {
-    const observation = observeGithubPrBoundary(ready.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 2, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: ready.refs.authority });
+    expectCode(() => observeGithubPrBoundary(ready.context, { default_branch: "main", authority_file: ready.refs.authority }), "MDF_GITHUB_PR_CALLER_FACTS_FORBIDDEN");
+    const observation = observeGithubPrBoundary(ready.context, { authority_file: ready.refs.authority });
     const handoff = prepareGithubPrHandoff(ready.context, { observation_file: observation.observation_file });
     assert.strictEqual(handoff.action, "github-pr", JSON.stringify(verifySidecar(ready.context, observation.observation_file, { fresh: false }).conclusion));
     assert.strictEqual(handoff.mutation_performed, false);
@@ -1006,32 +1009,31 @@ function runGithubPrTests() {
   } finally { fs.rmSync(ready.fixture.temporaryRoot, { recursive: true, force: true }); }
   const automatic = setup({ auto_review: true });
   try {
-    const observation = observeGithubPrBoundary(automatic.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 1, open_prs: [], release_signal: { state: "known", value: "patch" }, authority_file: automatic.refs.authority });
+    const observation = observeGithubPrBoundary(automatic.context, { authority_file: automatic.refs.authority });
     assert.strictEqual(prepareGithubPrHandoff(automatic.context, { observation_file: observation.observation_file }).references.review_file, automatic.refs.review);
   } finally { fs.rmSync(automatic.fixture.temporaryRoot, { recursive: true, force: true }); }
   for (const scenario of [
-    { name: "dirty", setup: { dirty: true }, external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" } } },
-    { name: "unpushed-unknown", external: { default_branch: "main", upstream_state: "ambiguous", unpushed_commits: null, open_prs: [], release_signal: { state: "known", value: "minor" } } },
-    { name: "conflicting-pr", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [{ url: "one", state: "open" }, { url: "two", state: "open" }], release_signal: { state: "known", value: "minor" } } },
-    { name: "release", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "ambiguous", value: null } } },
-    { name: "unsupported-release", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "banana" } } },
-    { name: "authority", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" } } },
+    { name: "dirty", setup: { dirty: true } },
+    { name: "upstream", setup: { upstream: false } },
+    { name: "conflicting-pr", setup: { github_mode: "conflict" } },
+    { name: "github", setup: { github_mode: "fail" } },
+    { name: "authority", setup: {} },
   ]) {
     const value = setup(scenario.setup);
-    try { const observation = observeGithubPrBoundary(value.context, { ...scenario.external, ...(scenario.name === "authority" ? {} : { authority_file: value.refs.authority }) }); const result = prepareGithubPrHandoff(value.context, { observation_file: observation.observation_file }); assert.strictEqual(result.action, "stop", scenario.name); assert.strictEqual(result.stop.reason, "ambiguous", scenario.name); assert.strictEqual(result.mutation_performed, false); }
+    try { const observation = observeGithubPrBoundary(value.context, scenario.name === "authority" ? {} : { authority_file: value.refs.authority }); const result = prepareGithubPrHandoff(value.context, { observation_file: observation.observation_file }); assert.strictEqual(result.action, "stop", scenario.name); assert.strictEqual(result.stop.reason, "ambiguous", scenario.name); assert.strictEqual(result.mutation_performed, false); }
     finally { fs.rmSync(value.fixture.temporaryRoot, { recursive: true, force: true }); }
   }
   const invalidAuthority = setup();
   try {
     const fakeInteraction = recordInteraction(invalidAuthority.context, { invocation: { agent_id: "caller", invocation_id: "self-attested-authority", executor: "deterministic-runtime" }, input_paths: ["item.md", "user-authority.md"] });
     const fakeDecision = recordDecision(invalidAuthority.context, { interaction_file: fakeInteraction.file, conclusion: { kind: "github-pr-authority", affirmative: true, push: true, pull_request: true, user_message_path: "user-authority.md" } });
-    const observation = observeGithubPrBoundary(invalidAuthority.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: fakeDecision.file });
+    const observation = observeGithubPrBoundary(invalidAuthority.context, { authority_file: fakeDecision.file });
     const result = prepareGithubPrHandoff(invalidAuthority.context, { observation_file: observation.observation_file });
     assert.strictEqual(result.action, "stop");
     assert.strictEqual(result.stop.reason, "ambiguous");
   } finally { fs.rmSync(invalidAuthority.fixture.temporaryRoot, { recursive: true, force: true }); }
   const noGo = setup({ disposition: "NO-GO" });
-  try { const observation = observeGithubPrBoundary(noGo.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: noGo.refs.authority }); expectCode(() => prepareGithubPrHandoff(noGo.context, { observation_file: observation.observation_file }), "MDF_GITHUB_PR_SHIP_INVALID"); }
+  try { const observation = observeGithubPrBoundary(noGo.context, { authority_file: noGo.refs.authority }); expectCode(() => prepareGithubPrHandoff(noGo.context, { observation_file: observation.observation_file }), "MDF_GITHUB_PR_SHIP_INVALID"); }
   finally { fs.rmSync(noGo.fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 

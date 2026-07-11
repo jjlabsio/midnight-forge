@@ -24,11 +24,15 @@ Do not save PR drafts or PR creation records under `.mdf/`; GitHub is the source
 When `auto-workflow` reaches `github-pr`, first use the production MDF controller
 to observe the external boundary and prepare the handoff. The handoff must carry
 the canonical task, spec, plan, build, review, and current-tree ship GO references.
-It does not commit, push, inspect remote state by itself, or create a pull request;
-the behavior in this skill remains authoritative for those operations.
+The controller computes the local branch, HEAD, dirty state, upstream, and ahead
+count directly and performs read-only `gh repo view` and `gh pr list` observations.
+Callers pass only the optional canonical mutation-authority file; never pass
+asserted Git/GitHub facts. The controller records raw command outputs and command
+sidecars but does not commit, push, label, or create a pull request. Release
+selection and all external mutations remain authoritative in this skill.
 
 If the controller returns a typed stop because the worktree, upstream state,
-existing pull requests, release signal, or mutation authority is ambiguous, stop
+GitHub observation, existing pull requests, or mutation authority is ambiguous, stop
 before any external mutation. Otherwise continue with the normal MDF task PR mode
 and the preflight below. Do not reconstruct or bypass controller evidence from
 artifact presence or caller assertions.

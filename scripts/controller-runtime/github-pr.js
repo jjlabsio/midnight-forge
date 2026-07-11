@@ -1,10 +1,11 @@
 const { spawnSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 const { ControllerError } = require("./context");
-const { recordDecision, recordInteraction, verifySidecar } = require("./evidence");
-const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { recordCommand, recordDecision, recordInteraction, verifySidecar } = require("./evidence");
+const { activePlanFile, current, recordEvent, transitionEvidence } = require("./lifecycle");
 
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
-const RELEASES = new Set(["major", "minor", "patch", "none"]);
 
 function git(context, args) {
   const result = spawnSync("git", args, { cwd: context.worktree, encoding: "utf8" });
@@ -19,13 +20,22 @@ function recordGithubPrAuthority(context, { user_message_path: userMessagePath, 
   return { authority_file: decision.file };
 }
 
+function observeCommand(context, command, name) {
+  const result = spawnSync(command[0], command.slice(1), { cwd: context.worktree, encoding: "utf8" });
+  const exitCode = Number.isInteger(result.status) ? result.status : 1;
+  const outputPath = `github-pr-observation-${name}-${Date.now()}-${Math.random().toString(16).slice(2)}.log`;
+  fs.writeFileSync(path.join(context.work_item.path, outputPath), `${result.stdout || ""}${result.stderr || ""}`);
+  const record = recordCommand(context, { command, output_path: outputPath, exit_code: exitCode });
+  return { exit_code: exitCode, stdout: result.stdout || "", output_path: outputPath, command_file: record.file };
+}
+
+function parseJson(value) { try { return JSON.parse(value); } catch (_error) { return null; } }
+
 function observeGithubPrBoundary(context, external) {
   if (current(context).phase !== "github-pr") throw new ControllerError("MDF_GITHUB_PR_PHASE_INVALID", "GitHub PR observation requires github-pr phase.");
-  if (!external || typeof external !== "object" || Array.isArray(external)) throw new ControllerError("MDF_GITHUB_PR_OBSERVATION_INVALID", "GitHub PR external observation must be structured.");
-  const { default_branch: defaultBranch = null, upstream_state: upstreamState, unpushed_commits: unpushedCommits, open_prs: openPrs, release_signal: releaseSignal, authority_file: authorityFile = null } = external;
-  if ((defaultBranch !== null && !nonempty(defaultBranch)) || !new Set(["known", "ambiguous"]).has(upstreamState) || (unpushedCommits !== null && (!Number.isInteger(unpushedCommits) || unpushedCommits < 0)) || !Array.isArray(openPrs) || openPrs.some((pr) => !pr || !nonempty(pr.url) || !new Set(["open", "closed", "merged"]).has(pr.state)) || !releaseSignal || typeof releaseSignal !== "object" || Array.isArray(releaseSignal) || !new Set(["known", "ambiguous"]).has(releaseSignal.state) || (releaseSignal.value !== null && releaseSignal.value !== undefined && !nonempty(releaseSignal.value)) || (authorityFile !== null && !nonempty(authorityFile))) {
-    throw new ControllerError("MDF_GITHUB_PR_OBSERVATION_INVALID", "GitHub PR external observation fields are malformed.");
-  }
+  if (!external || typeof external !== "object" || Array.isArray(external) || Object.keys(external).some((key) => key !== "authority_file")) throw new ControllerError("MDF_GITHUB_PR_CALLER_FACTS_FORBIDDEN", "GitHub PR observation does not accept caller-asserted Git or GitHub facts.");
+  const { authority_file: authorityFile = null } = external;
+  if (authorityFile !== null && !nonempty(authorityFile)) throw new ControllerError("MDF_GITHUB_PR_OBSERVATION_INVALID", "GitHub PR authority reference is malformed.");
   let authority = null;
   if (authorityFile) {
     try {
@@ -41,19 +51,32 @@ function observeGithubPrBoundary(context, external) {
       authority = { file: authorityFile, push: false, pull_request: false, status: "invalid" };
     }
   }
+  const branch = git(context, ["branch", "--show-current"]);
+  const upstream = observeCommand(context, ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], "upstream");
+  const ahead = upstream.exit_code === 0 ? observeCommand(context, ["git", "rev-list", "--count", "@{upstream}..HEAD"], "ahead") : null;
+  const repo = observeCommand(context, ["gh", "repo", "view", "--json", "defaultBranchRef"], "repo");
+  const prs = observeCommand(context, ["gh", "pr", "list", "--state", "all", "--head", branch, "--json", "url,state"], "prs");
+  const repoJson = repo.exit_code === 0 ? parseJson(repo.stdout) : null;
+  const prsJson = prs.exit_code === 0 ? parseJson(prs.stdout) : null;
+  const repoValid = nonempty(repoJson?.defaultBranchRef?.name);
+  const prsValid = Array.isArray(prsJson) && prsJson.every((pr) => pr && nonempty(pr.url) && new Set(["open", "closed", "merged"]).has(String(pr.state || "").toLowerCase()));
+  const openPrs = prsValid ? prsJson.map((pr) => ({ url: pr.url, state: pr.state.toLowerCase() })) : [];
+  const defaultBranch = repoValid ? repoJson.defaultBranchRef.name : null;
+  const unpushedCommits = ahead?.exit_code === 0 && /^\d+$/.test(ahead.stdout.trim()) ? Number(ahead.stdout.trim()) : null;
+  const observationInputs = [upstream, ...(ahead ? [ahead] : []), repo, prs].flatMap((record) => [record.output_path, `evidence/${record.command_file}`]);
   const facts = {
     kind: "github-pr-external-state",
     head: git(context, ["rev-parse", "HEAD"]),
-    branch: git(context, ["branch", "--show-current"]),
+    branch,
     dirty: Boolean(git(context, ["status", "--porcelain"])),
     default_branch: defaultBranch,
-    upstream_state: upstreamState,
+    upstream_state: upstream.exit_code === 0 && ahead?.exit_code === 0 ? "known" : "ambiguous",
     unpushed_commits: unpushedCommits,
     open_prs: openPrs,
-    release_signal: { state: releaseSignal.state, value: releaseSignal.value ?? null },
+    github_state: repoValid && prsValid ? "known" : "ambiguous",
     authority,
   };
-  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-github-pr-observer", invocation_id: `github-pr-observe-${facts.head}-${Date.now()}`, executor: "external-boundary-adapter", observation: facts }, input_paths: ["item.md", ...(authorityFile ? [`evidence/${authorityFile}`] : [])] });
+  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-github-pr-observer", invocation_id: `github-pr-observe-${facts.head}-${Date.now()}`, executor: "external-boundary-adapter", observation: facts }, input_paths: ["item.md", ...observationInputs, ...(authorityFile ? [`evidence/${authorityFile}`] : [])] });
   const decision = recordDecision(context, { interaction_file: interaction.file, conclusion: facts });
   return { observation_file: decision.file, mutation_performed: false };
 }
@@ -71,7 +94,8 @@ function unwrapInteraction(context, file) {
 }
 
 function canonicalReferences(context) {
-  const planFile = transitionFile(context, "plan", "build-task", (_value, candidate) => unwrapInteraction(context, candidate)?.invocation?.agent_id === "mdf-plan", "MDF_GITHUB_PR_PLAN_MISSING");
+  const planFile = activePlanFile(context);
+  if (!planFile) throw new ControllerError("MDF_GITHUB_PR_PLAN_MISSING", "GitHub PR handoff is missing the active canonical plan.");
   const plan = unwrapInteraction(context, planFile);
   const specFile = plan.invocation.spec_registration_file;
   if (!nonempty(specFile)) throw new ControllerError("MDF_GITHUB_PR_SPEC_MISSING", "GitHub PR handoff plan does not reference a canonical spec.");
@@ -95,7 +119,7 @@ function canonicalReferences(context) {
 
 function ambiguous(context, observation) {
   const open = observation.open_prs.filter((pr) => pr.state === "open");
-  return observation.dirty || !nonempty(observation.branch) || observation.branch !== context.lock.branch || !nonempty(observation.default_branch) || observation.branch === observation.default_branch || observation.upstream_state !== "known" || !Number.isInteger(observation.unpushed_commits) || open.length > 1 || observation.release_signal?.state !== "known" || !RELEASES.has(observation.release_signal?.value) || observation.authority?.status !== "valid" || observation.authority?.push !== true || observation.authority?.pull_request !== true;
+  return observation.dirty || !nonempty(observation.branch) || observation.branch !== context.lock.branch || !nonempty(observation.default_branch) || observation.branch === observation.default_branch || observation.upstream_state !== "known" || observation.github_state !== "known" || !Number.isInteger(observation.unpushed_commits) || open.length > 1 || observation.authority?.status !== "valid" || observation.authority?.push !== true || observation.authority?.pull_request !== true;
 }
 
 function prepareGithubPrHandoff(context, { observation_file: observationFile }) {

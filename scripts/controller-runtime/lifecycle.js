@@ -56,7 +56,9 @@ function activePlanFile(context) {
     for (const input of value.inputs || []) {
       if (!input.path.startsWith("evidence/")) continue;
       const file = input.path.slice(9);
-      if (verifySidecar(context, file, { fresh: false }).invocation?.agent_id === "mdf-plan") return file;
+      const evidence = verifySidecar(context, file, { fresh: false });
+      const interaction = evidence.kind === "decision" ? verifySidecar(context, evidence.interaction?.file, { fresh: false }) : evidence;
+      if (interaction.invocation?.agent_id === "mdf-plan") return file;
     }
   }
   return null;

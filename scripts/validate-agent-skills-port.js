@@ -154,6 +154,7 @@ assertNotContains("skills/code-simplify/SKILL.md", "Read CLAUDE.md and study pro
 for (const needle of ["parallel", "code-reviewer", "security-auditor", "test-engineer", "GO/NO-GO"]) {
   assertContains("skills/ship/SKILL.md", needle);
 }
+for (const needle of ["Callers pass only", "raw command outputs", "never pass", "Release selection"]) assertContains("skills/github-pr/SKILL.md", needle);
 for (const needle of ["test-driven-development", "browser-testing-with-devtools"]) assertContains("skills/test/SKILL.md", needle);
 for (const needle of ["web-performance-auditor", "exact selected persona prompt", "capability", "root fallback"]) {
   assertContains("skills/webperf/SKILL.md", needle);
