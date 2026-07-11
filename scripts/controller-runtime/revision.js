@@ -1,7 +1,7 @@
 const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordArtifact, recordDecision, recordInteraction, verifyInputs, verifySidecar } = require("./evidence");
-const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { activePlanFile, current, recordEvent } = require("./lifecycle");
 
 function artifactPath(context, file) {
   const artifact = verifySidecar(context, file, { fresh: false });
@@ -13,10 +13,13 @@ function registerTechnicalRevision(context, { recovery_file: recoveryFile, origi
   if (![recoveryFile, intentPath, priorSpecFile, newSpecPath, reviewPath, reviewFile].every((value) => typeof value === "string" && value)) throw new ControllerError("MDF_REVISION_INPUT_INVALID", "Technical revision requires exact intent, recovery, spec, and review evidence.");
   const recovery = verifySidecar(context, recoveryFile);
   const recoveryInteraction = verifySidecar(context, recovery.interaction?.file);
-  if (recovery.conclusion?.kind !== "recovery-decision" || recovery.conclusion.disposition !== "technical-revision" || recoveryInteraction.invocation?.agent_id !== "mdf-recovery" || recoveryInteraction.invocation.attempt_file !== recovery.conclusion.attempt_file) throw new ControllerError("MDF_REVISION_RECOVERY_INVALID", "Technical revision requires a current technical-revision recovery decision.");
-  const attempt = verifySidecar(context, recovery.conclusion.attempt_file, { fresh: false });
-  if (!transitionEvidence(context, "plan", "build-task").at(-1)?.evidence_files.includes(attempt.invocation?.plan_registration_file)) throw new ControllerError("MDF_REVISION_GENERATION_INVALID", "Recovery attempt does not belong to the active definition generation.");
-  const plan = verifySidecar(context, attempt.invocation?.plan_registration_file, { fresh: false });
+  const wholeRecovery = recovery.conclusion?.whole_build === true && recoveryInteraction.invocation?.agent_id === "mdf-whole-recovery";
+  const taskRecovery = recoveryInteraction.invocation?.agent_id === "mdf-recovery" && recoveryInteraction.invocation.attempt_file === recovery.conclusion?.attempt_file;
+  if (recovery.conclusion?.kind !== "recovery-decision" || recovery.conclusion.disposition !== "technical-revision" || (!wholeRecovery && !taskRecovery)) throw new ControllerError("MDF_REVISION_RECOVERY_INVALID", "Technical revision requires a current technical-revision recovery decision.");
+  const attempt = taskRecovery ? verifySidecar(context, recovery.conclusion.attempt_file, { fresh: false }) : null;
+  const planFile = wholeRecovery ? recovery.conclusion.plan_registration_file : attempt.invocation?.plan_registration_file;
+  if (activePlanFile(context) !== planFile) throw new ControllerError("MDF_REVISION_GENERATION_INVALID", "Recovery does not belong to the active definition generation.");
+  const plan = verifySidecar(context, planFile, { fresh: false });
   const priorSpec = verifySidecar(context, priorSpecFile, { fresh: false });
   verifyInputs(context, priorSpec);
   if (plan.invocation?.agent_id !== "mdf-plan" || plan.invocation.spec_registration_file !== priorSpecFile || priorSpec.invocation?.agent_id !== "mdf-spec") throw new ControllerError("MDF_REVISION_SPEC_INVALID", "Revision prior spec does not match the failed approved plan.");

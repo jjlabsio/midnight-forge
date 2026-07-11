@@ -5,7 +5,7 @@ const { spawnSync } = require("child_process");
 const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordCommand, recordDecision, recordInteraction, verifyInputs, verifySidecar } = require("./evidence");
-const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { activePlanFile, current, recordEvent, transitionEvidence } = require("./lifecycle");
 const { validateMetadata } = require("./plan");
 
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
@@ -76,9 +76,10 @@ function runVerification(context, { attempt_file: attemptFile, command, output_p
   return { verification_file: verification.file, command_file: evidence.file, exit_code: exitCode };
 }
 
-function completedTasks(context, planFile) {
+function completedTasks(context, planFile, carriedFiles = []) {
   const referenced = transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files);
-  return new Set(referenced.map((file) => verifySidecar(context, file, { fresh: false })).filter((value) => value.kind === "decision" && value.conclusion?.kind === "build-task-complete" && value.conclusion?.plan_registration_file === planFile).map((value) => value.conclusion.task_id));
+  const carried = new Set(carriedFiles);
+  return new Set(referenced.map((file) => ({ file, value: verifySidecar(context, file, { fresh: false }) })).filter(({ file, value }) => value.kind === "decision" && value.conclusion?.kind === "build-task-complete" && (value.conclusion?.plan_registration_file === planFile || carried.has(file))).map(({ value }) => value.conclusion.task_id));
 }
 
 function selectBuildTask(context, { plan_registration_file: planFile, selected_task_id: selectedId = null, writer_id: writerId }) {
@@ -87,12 +88,11 @@ function selectBuildTask(context, { plan_registration_file: planFile, selected_t
   const dirty = statusPaths(context);
   if (dirty.length) throw new ControllerError("MDF_BUILD_BASELINE_DIRTY", "Task selection requires a clean baseline.", { paths: dirty });
   const registration = planRegistration(context, planFile);
-  const activeTransition = transitionEvidence(context, "plan", "build-task").at(-1);
-  if (!activeTransition?.evidence_files.includes(planFile)) throw new ControllerError("MDF_BUILD_PLAN_NOT_APPROVED", "Build plan must be the active plan-to-build generation.");
+  if (activePlanFile(context) !== planFile) throw new ControllerError("MDF_BUILD_PLAN_NOT_APPROVED", "Build plan must be the active canonical plan generation.");
   const head = git(context, ["rev-parse", "HEAD"]).trim();
   const active = evidence(context).find(({ value }) => value.kind === "interaction" && value.invocation?.agent_id === "mdf-build-task-select" && value.invocation?.base_head === head && value.invocation.plan_registration_file === planFile);
   if (active) throw new ControllerError("MDF_BUILD_MULTI_WRITER", "A task attempt already owns this baseline.", { attempt_file: active.file });
-  const complete = completedTasks(context, planFile);
+  const complete = completedTasks(context, planFile, registration.invocation.carried_completion_files || []);
   const ready = registration.invocation.metadata.tasks.filter((task) => !complete.has(task.id) && task.depends_on.every((id) => complete.has(id)));
   const task = selectedId ? ready.find((candidate) => candidate.id === selectedId) : ready[0];
   if (!task) throw new ControllerError("MDF_BUILD_TASK_NOT_READY", "Selected or next task is not uniquely ready.", { selected_task_id: selectedId });

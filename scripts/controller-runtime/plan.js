@@ -10,11 +10,12 @@ function validateMetadata(metadata) {
   const ids = metadata.tasks.map((task) => task.id);
   if (ids.some((id) => typeof id !== "string" || !id) || new Set(ids).size !== ids.length) throw new ControllerError("MDF_PLAN_TASK_IDS_INVALID", "Plan task IDs must be unique non-empty strings.");
   const known = new Set(ids);
-  const allOwnedPaths = new Set();
+  const pathOwners = new Map();
   for (const task of metadata.tasks) {
     const paths = task.owned_paths;
-    if (!Array.isArray(task.depends_on) || new Set(task.depends_on).size !== task.depends_on.length || task.depends_on.some((id) => !known.has(id) || id === task.id) || !Array.isArray(paths) || paths.length === 0 || new Set(paths).size !== paths.length || paths.some((value) => typeof value !== "string" || !value || value.startsWith("/") || value.endsWith("/") || value.includes("\\") || value.split("/").includes("..") || path.posix.normalize(value) !== value || allOwnedPaths.has(value)) || !Array.isArray(task.acceptance) || task.acceptance.length === 0 || task.acceptance.some((value) => typeof value !== "string" || !value.trim())) throw new ControllerError("MDF_PLAN_TASK_MAPPING_INVALID", "Every plan task needs safe globally unique dependencies, owned paths, and non-empty acceptance mapping.");
-    paths.forEach((value) => allOwnedPaths.add(value));
+    const repairs = task.repair_of || [];
+    if (!Array.isArray(task.depends_on) || new Set(task.depends_on).size !== task.depends_on.length || task.depends_on.some((id) => !known.has(id) || id === task.id) || !Array.isArray(repairs) || new Set(repairs).size !== repairs.length || repairs.some((id) => !known.has(id) || id === task.id || !task.depends_on.includes(id)) || !Array.isArray(paths) || paths.length === 0 || new Set(paths).size !== paths.length || paths.some((value) => typeof value !== "string" || !value || value.startsWith("/") || value.endsWith("/") || value.includes("\\") || value.split("/").includes("..") || path.posix.normalize(value) !== value || (pathOwners.has(value) && !repairs.includes(pathOwners.get(value)))) || !Array.isArray(task.acceptance) || task.acceptance.length === 0 || task.acceptance.some((value) => typeof value !== "string" || !value.trim())) throw new ControllerError("MDF_PLAN_TASK_MAPPING_INVALID", "Every plan task needs safe dependencies, repair ownership, paths, and non-empty acceptance mapping.");
+    paths.forEach((value) => pathOwners.set(value, task.id));
   }
   const visiting = new Set(); const visited = new Set();
   const visit = (id) => { if (visiting.has(id)) throw new ControllerError("MDF_PLAN_DEPENDENCY_CYCLE", "Plan task dependencies contain a cycle."); if (visited.has(id)) return; visiting.add(id); metadata.tasks.find((task) => task.id === id).depends_on.forEach(visit); visiting.delete(id); visited.add(id); };

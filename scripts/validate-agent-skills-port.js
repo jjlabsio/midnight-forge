@@ -141,6 +141,8 @@ for (const needle of [
   "flat root orchestrator", "explicit spec approval", "explicit plan approval",
   "one-writer", "root-only synthesis", "all approved plan tasks",
   "do not run a duplicate standalone review", "whole-build review -> simplify -> ship",
+  "Do not reopen a completed task", "new canonical plan revision", "ordinary task workflow",
+  "There is no fixed repair-count limit", "no-progress",
 ]) assertContains("skills/auto-workflow/SKILL.md", needle);
 for (const needle of [
   "generic subagent", "exact selected persona prompt", "capability", "root fallback",

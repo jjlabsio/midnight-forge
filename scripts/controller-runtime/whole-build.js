@@ -4,7 +4,7 @@ const { spawnSync } = require("child_process");
 const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordCommand, recordDecision, recordInteraction, verifyInputs, verifySidecar } = require("./evidence");
-const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { activePlanFile, current, recordEvent, transitionEvidence } = require("./lifecycle");
 const { selectBuildTask } = require("./build-task");
 
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
@@ -24,7 +24,7 @@ function allEvidence(context) {
 function plan(context, file) {
   const value = verifySidecar(context, file, { fresh: false });
   verifyInputs(context, value);
-  if (value.invocation?.agent_id !== "mdf-plan" || !Array.isArray(value.invocation.metadata?.tasks) || !transitionEvidence(context, "plan", "build-task").at(-1)?.evidence_files.includes(file)) throw new ControllerError("MDF_WHOLE_BUILD_PLAN_INVALID", "Whole build requires the active approved plan generation.");
+  if (value.invocation?.agent_id !== "mdf-plan" || !Array.isArray(value.invocation.metadata?.tasks) || activePlanFile(context) !== file) throw new ControllerError("MDF_WHOLE_BUILD_PLAN_INVALID", "Whole build requires the active canonical plan generation.");
   return value;
 }
 
@@ -51,16 +51,18 @@ function validateCompletion(context, record, planFile) {
 
 function progress(context, planFile) {
   const registration = plan(context, planFile);
-  const records = completions(context, planFile);
+  const carried = new Set(registration.invocation.carried_completion_files || []);
+  const records = transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files.map((file) => ({ event_file: event.file, event: verifySidecar(context, event.file, { fresh: false }), file, value: verifySidecar(context, file, { fresh: false }) }))).filter(({ file, value }) => new Set(["build-task-complete", "build-task-repair-complete", "build-task-simplification-complete", "build-task-review-repair-complete"]).has(value.conclusion?.kind) && (value.conclusion.plan_registration_file === planFile || carried.has(file)));
   const expected = registration.invocation.metadata.tasks.map((task) => task.id);
   const baseRecords = records.filter(({ value }) => value.conclusion.kind === "build-task-complete");
   const actual = baseRecords.map(({ value }) => value.conclusion.task_id);
   if (new Set(actual).size !== actual.length || actual.some((id) => !expected.includes(id))) throw new ControllerError("MDF_WHOLE_BUILD_TASK_SET_INVALID", "Canonical task completion set contains duplicates or unknown tasks.");
-  const planTransition = transitionEvidence(context, "plan", "build-task").find((event) => event.evidence_files.includes(planFile));
+  const anchorPlanFile = registration.invocation.prior_plan_registration_file || planFile;
+  const planTransition = transitionEvidence(context, "plan", "build-task").find((event) => event.evidence_files.includes(anchorPlanFile));
   const anchor = verifySidecar(context, planTransition.file, { fresh: false }).git.head;
   const seen = new Set();
   for (const record of records) {
-    validateCompletion(context, record, planFile);
+    validateCompletion(context, record, record.value.conclusion.plan_registration_file);
     const task = registration.invocation.metadata.tasks.find((candidate) => candidate.id === record.value.conclusion.task_id);
     const commit = record.value.conclusion.commit;
     const repeated = record.value.conclusion.kind !== "build-task-complete";

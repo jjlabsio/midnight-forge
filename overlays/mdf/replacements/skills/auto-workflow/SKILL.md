@@ -94,3 +94,38 @@ From the resolved plugin root, drive autonomous build state through production
 
 Any pending/duplicate/unknown task, conflicting writer, partial or reordered
 matrix, stale tree/report, failed command, or review mismatch is a typed stop.
+
+## Whole-build recovery loop
+
+Do not reopen a completed task or repair directly from its old plan text. On a
+whole-build command failure or an actionable whole-build-review finding:
+
+1. Preserve the exact baseline, failure/finding, and reproduction or validation
+   evidence. Validate a review finding against the approved spec before treating
+   it as a defect; optional clarity/style suggestions wait for simplification.
+2. Run fresh-context diagnosis, then have the root orchestrator synthesize the
+   evidence and classify it as implementation, plan, spec, environment, or
+   ambiguous. The root may resolve reviewer disagreement when the evidence is
+   clear, but records the rejected view and rationale; otherwise stop.
+   Submit those exact artifacts through `mdf-controller.js recovery whole-build`.
+3. For an implementation defect or intent-preserving technical plan defect,
+   create a new canonical plan revision that preserves completed tasks and
+   appends stable repair task IDs. Split independently verifiable scopes; never
+   create one catch-all repair task. A product, public-contract, architecture,
+   material-trade-off, unclear, external, or high-risk decision stops for the
+   user. Freshly review the exact appended plan and register it through
+   `mdf-controller.js recovery plan`.
+4. Execute each repair task through the ordinary task workflow without a
+   shortcut: TDD for behavioral code (or the normal documented exception),
+   verification, acceptance, downstream impact, fresh task review, finding
+   repair loop, and one focused commit.
+5. Rerun the complete whole-build matrix and fresh whole-build review from the
+   start. A production-code repair invalidates prior simplification and scans the
+   new stable tree again; documentation/config-only repair may reuse
+   simplification only when production scope is proven identical.
+
+There is no fixed repair-count limit. Continue only when the root records
+material progress, a distinct evidence-backed root cause, unchanged approved
+scope, and no unexplained regression or scope expansion. The same substantive
+failure/finding, worsening verification, or absent material progress is a
+`no-progress` stop even if wording or surface symptoms differ.

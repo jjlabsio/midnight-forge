@@ -8,7 +8,7 @@ const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
 const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
-const { decideRecovery } = require("./controller-runtime/recovery");
+const { decideRecovery, decideWholeBuildRecovery, registerRepairPlan } = require("./controller-runtime/recovery");
 const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 const { createReviewContext, registerReview } = require("./controller-runtime/review");
@@ -102,11 +102,13 @@ try {
     console.log(JSON.stringify({ ok: true, whole_build: result }, null, 2));
     process.exit(0);
   } else if (command === "recovery") {
-    const context = resolveControllerContext(parseContextArgs(args));
+    const operation = new Set(["task", "whole-build", "plan"]).has(args[0]) ? args[0] : "task";
+    const context = resolveControllerContext(parseContextArgs(operation === "task" && args[0] !== "task" ? args : args.slice(1)));
     let request;
     try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Recovery command requires JSON stdin."); }
-    console.log(JSON.stringify({ ok: true, recovery: decideRecovery(context, request) }, null, 2));
+    const result = operation === "task" ? decideRecovery(context, request) : operation === "whole-build" ? decideWholeBuildRecovery(context, request) : registerRepairPlan(context, request);
+    console.log(JSON.stringify({ ok: true, recovery: result }, null, 2));
     process.exit(0);
   } else if (command === "technical-revision") {
     const context = resolveControllerContext(parseContextArgs(args));

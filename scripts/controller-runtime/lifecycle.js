@@ -51,6 +51,17 @@ function transitionEvidence(context, from, to) {
   return chain(context).filter(({ value }) => value.invocation.from === from && value.invocation.to === to).map(({ file, value }) => ({ file, evidence_files: value.inputs.map((input) => input.path).filter((input) => input.startsWith("evidence/")).map((input) => input.slice(9)) }));
 }
 
+function activePlanFile(context) {
+  for (const { value } of [...chain(context)].reverse()) {
+    for (const input of value.inputs || []) {
+      if (!input.path.startsWith("evidence/")) continue;
+      const file = input.path.slice(9);
+      if (verifySidecar(context, file, { fresh: false }).invocation?.agent_id === "mdf-plan") return file;
+    }
+  }
+  return null;
+}
+
 function next(context) {
   try {
     const state = current(context);
@@ -82,4 +93,4 @@ function recordEvent(context, request) {
   return { file: event.file, ...next(context) };
 }
 
-module.exports = { EDGES, current, next, recordEvent, transitionEvidence, validateEdge };
+module.exports = { EDGES, activePlanFile, current, next, recordEvent, transitionEvidence, validateEdge };
