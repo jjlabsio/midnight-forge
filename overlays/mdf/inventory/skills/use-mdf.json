@@ -1,10 +1,8 @@
 {
   "output": "skills/use-mdf/SKILL.md",
-  "source": "skills/using-agent-skills/SKILL.md",
-  "classification": "mdf-rename-or-adapter",
+  "classification": "mdf-only",
   "overlay": "replacements/skills/use-mdf/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF routes the upstream using-agent-skills meta workflow through the use-mdf skill name and expanded MDF routing semantics.",
-  "baseSha256": "a5bf05293cfb67af9c5e21e14023d723d2ac8ca42912cef4cee29fbb07e67d64",
-  "overlayKind": "renameAdapter"
+  "notes": "MDF-only router for selecting MDF lifecycle and engineering workflow skills.",
+  "overlayKind": "mdfOnly"
 }

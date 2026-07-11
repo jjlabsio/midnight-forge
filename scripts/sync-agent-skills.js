@@ -41,51 +41,7 @@ function assertInside(baseRoot, relativePath) {
 }
 
 function overlayKind(entry) {
-  if (entry.overlayKind) return entry.overlayKind;
-  if (!entry.source && entry.overlay) return "mdfOnly";
-  if (entry.classification === "mdf-rename-or-adapter") return "renameAdapter";
-  if (entry.source && entry.overlay) return "replacement";
-  return "copy";
-}
-
-function artifactStorageParagraph(policy) {
-  return [
-    `When saving ${policy.summary}, use the MDF artifact storage rule in \`../../references/artifact-storage-override.md\` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write \`.mdf/work/{work_id}/${policy.artifactType}-NNN.md\`.`,
-    "If init state is missing, stop and instruct the user to run `mdf init`.",
-    `Repeated saves create new revisions and update \`item.md\` \`latest.${policy.latestKey}\` plus \`.mdf/index.jsonl\`.`,
-    "Do not save this artifact to upstream tracked documentation paths by default.",
-  ].join(" ");
-}
-
-function applyExactPatches(content, entry) {
-  let next = content;
-  for (const patch of entry.exactPatches || []) {
-    const matches = next.split(patch.search).length - 1;
-    if (matches !== 1) {
-      throw new Error(`${entry.output} patch ${patch.id} expected one match, found ${matches}`);
-    }
-    next = next.replace(patch.search, patch.replace);
-  }
-  return next;
-}
-
-function applyPolicyInjection(content, entry) {
-  if (!entry.policyInjection) return content;
-
-  const injection = artifactStorageParagraph(entry.policyInjection);
-  const anchor = entry.policyInjection.anchor;
-  const matches = content.split(anchor).length - 1;
-  if (matches !== 1) {
-    throw new Error(`${entry.output} policy anchor expected one match, found ${matches}`);
-  }
-  if (entry.policyInjection.anchorSha256 && sha256(anchor) !== entry.policyInjection.anchorSha256) {
-    throw new Error(`${entry.output} policy anchor hash is stale`);
-  }
-
-  if (entry.policyInjection.position === "before") {
-    return content.replace(anchor, `${injection}\n\n${anchor}`);
-  }
-  return content.replace(anchor, `${anchor}\n${injection}\n`);
+  return entry.overlayKind || "copy";
 }
 
 const inventory = loadInventory(inventoryPath);
@@ -123,11 +79,13 @@ function applyReleaseMetadata(content, entry) {
 
 function renderEntry(entry) {
   const kind = overlayKind(entry);
-  let content;
 
-  if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
-    content = readText(assertInside(overlayRoot, entry.overlay));
+  if (kind === "mdfOnly" || kind === "renameAdapter") {
+    const content = readText(assertInside(overlayRoot, entry.overlay));
     return Buffer.from(applyReleaseMetadata(content, entry));
+  }
+  if (kind !== "copy") {
+    throw new Error(`${entry.output} has unsupported overlayKind ${kind}`);
   }
 
   if (!entry.source) {
@@ -135,15 +93,12 @@ function renderEntry(entry) {
   }
 
   const sourcePath = assertInside(vendorRoot, entry.source);
-  content = readText(sourcePath);
+  const content = readText(sourcePath);
   if (entry.baseSha256 && sha256(content) !== entry.baseSha256) {
     throw new Error(`${entry.output} source hash changed; refresh the overlay base metadata`);
   }
 
-  content = applyExactPatches(content, entry);
-  content = applyPolicyInjection(content, entry);
-  content = applyReleaseMetadata(content, entry);
-  return Buffer.from(content);
+  return Buffer.from(applyReleaseMetadata(content, entry));
 }
 
 function readMode(baseRoot, relativePath) {
@@ -164,9 +119,10 @@ function renderMode(entry) {
   if (explicitMode !== null) return explicitMode;
 
   const kind = overlayKind(entry);
-  if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
+  if (kind === "mdfOnly" || kind === "renameAdapter") {
     return readMode(overlayRoot, entry.overlay);
   }
+  if (kind !== "copy") throw new Error(`${entry.output} has unsupported overlayKind ${kind}`);
   return readMode(vendorRoot, entry.source);
 }
 
