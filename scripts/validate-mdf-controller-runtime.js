@@ -7,8 +7,9 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { resolveControllerContext, resolvePluginPath } = require("./controller-runtime/context");
 const { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar } = require("./controller-runtime/evidence");
-const { issueAction, issueCapability, prepareAdapter } = require("./controller-runtime/adapter");
+const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
 const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
+const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -216,7 +217,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -359,15 +360,55 @@ function runLifecycleTests() {
   }
 }
 
+function runSpecTests() {
+  const fixture = createFixture();
+  try {
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "x\n"); spawnSync("git", ["add", "tracked.txt"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["spec-001.md", "exact spec\n"], ["review.md", "DDD review\n"], ["other-review.md", "other\n"], ["user.md", "yes\n"], ["spec-002.md", "revised spec\n"], ["spec-mutate.md", "before\n"], ["spec-cli.md", "cli spec\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    fs.writeFileSync(path.join(context.work_item.path, "review-capability.json"), "{}\n");
+    const reviewFor = (specPath, id, outputPath = "review.md", actionName = "ddd-review") => {
+      const action = issueAction(context, { action_id: id, action: actionName, skill_path: "skills/doubt-driven-development/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: [specPath, "review.md"] });
+      const invocation = { agent_id: "reviewer", invocation_id: `${id}-inv`, executor: "subagent", model_capability: "independent-review-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+      const capability = issueCapability(context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "review-capability.json" });
+      const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
+      return submitOutcome(context, { action_id: id, interaction_file: prepared.interaction_file, output_path: outputPath, outcome: { disposition: "pass" } }).decision_file;
+    };
+    const review001 = reviewFor("spec-001.md", "review-spec-001");
+    const before = fs.readFileSync(path.join(context.work_item.path, "spec-001.md"));
+    expectCode(() => registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", mode: "standalone" }), "MDF_SPEC_REVIEW_REQUIRED");
+    expectCode(() => registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-001.md", "wrong-output", "other-review.md"), mode: "standalone" }), "MDF_ADAPTER_DECISION_MISMATCH");
+    expectCode(() => registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-001.md", "wrong-action", "review.md", "other-review"), mode: "standalone" }), "MDF_ADAPTER_DECISION_MISMATCH");
+    const standalone = registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: review001, mode: "standalone" });
+    assert.deepStrictEqual(fs.readFileSync(path.join(context.work_item.path, "spec-001.md")), before);
+    assert.strictEqual(advanceSpec(context, { registration_file: standalone.registration_file }).action, "stop");
+    const auto = registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: review001, mode: "auto" });
+    assert.strictEqual(advanceSpec(context, { registration_file: auto.registration_file }).stop.code, "MDF_SPEC_APPROVAL_REQUIRED");
+    const approval = approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-1" });
+    const mutation = registerSpec(context, { artifact_path: "spec-mutate.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-mutate.md", "review-mutation"), mode: "auto" });
+    fs.writeFileSync(path.join(context.work_item.path, "spec-mutate.md"), "after\n");
+    expectCode(() => approveSpec(context, { registration_file: mutation.registration_file, user_message_path: "user.md", invocation_id: "user-mutation" }), "MDF_EVIDENCE_STALE");
+    const revised = registerSpec(context, { artifact_path: "spec-002.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-002.md", "review-spec-002"), mode: "auto" });
+    expectCode(() => advanceSpec(context, { registration_file: revised.registration_file, approval_file: approval.approval_file }), "MDF_SPEC_APPROVAL_INVALID");
+    const result = advanceSpec(context, { registration_file: auto.registration_file, approval_file: approval.approval_file });
+    assert.strictEqual(result.state.phase, "plan");
+    const cli = spawnSync(process.execPath, [cliPath, "spec", "register", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ artifact_path: "spec-cli.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-cli.md", "review-cli"), mode: "standalone" }) });
+    assert.strictEqual(cli.status, 0, cli.stderr);
+    assert.strictEqual(JSON.parse(cli.stdout).spec.action, "stop");
+  } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec");
   process.exit(1);
 }
 
 if (group === "context") runContextTests();
 else if (group === "evidence") runEvidenceTests();
 else if (group === "adapter") runAdapterTests();
-else runLifecycleTests();
+else if (group === "lifecycle") runLifecycleTests();
+else runSpecTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);

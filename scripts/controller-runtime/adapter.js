@@ -86,9 +86,21 @@ function submitOutcome(context, request) {
   if (capability.integrity_sha256 !== interaction.invocation.capability_integrity_sha256) throw new ControllerError("MDF_ADAPTER_CAPABILITY_MISMATCH", "Prepared capability provenance changed.");
   if (action.invocation.action_id !== request.action_id || interaction.invocation.skill_sha256 !== action.invocation.skill_sha256 || interaction.invocation.persona_sha256 !== action.invocation.persona_sha256) throw new ControllerError("MDF_ADAPTER_PRIMITIVE_STALE", "Outcome provenance no longer matches runtime action.");
   const dependencyPaths = [request.output_path, ...action.inputs.map((input) => input.path), ...capability.inputs.map((input) => input.path), `evidence/${request.interaction_file}`, `evidence/${interaction.invocation.action_file}`, `evidence/${interaction.invocation.capability_file}`];
-  const execution = recordInteraction(context, { invocation: { ...invocationClaim(interaction.invocation), adapter_stage: "executed", prepared_interaction_file: request.interaction_file, action_file: interaction.invocation.action_file, capability_file: interaction.invocation.capability_file, action_id: request.action_id, skill_sha256: interaction.invocation.skill_sha256, persona_sha256: interaction.invocation.persona_sha256 }, input_paths: [...new Set(dependencyPaths)] });
+  const execution = recordInteraction(context, { invocation: { ...invocationClaim(interaction.invocation), adapter_stage: "executed", prepared_interaction_file: request.interaction_file, action_file: interaction.invocation.action_file, capability_file: interaction.invocation.capability_file, action_id: request.action_id, output_path: request.output_path, skill_sha256: interaction.invocation.skill_sha256, persona_sha256: interaction.invocation.persona_sha256 }, input_paths: [...new Set(dependencyPaths)] });
   const decision = recordDecision(context, { interaction_file: execution.file, conclusion: { ...request.outcome, action_id: request.action_id } });
   return { version: 1, action_id: request.action_id, interaction_file: request.interaction_file, execution_file: execution.file, decision_file: decision.file };
 }
 
-module.exports = { issueAction, issueCapability, prepareAdapter, submitOutcome };
+function verifyAdapterDecision(context, decisionFile, expected) {
+  const decision = verifySidecar(context, decisionFile);
+  const execution = verifySidecar(context, decision.interaction?.file);
+  if (decision.kind !== "decision" || execution.invocation?.adapter_stage !== "executed") throw new ControllerError("MDF_ADAPTER_DECISION_INVALID", "Decision is not an adapter execution result.");
+  const prepared = verifySidecar(context, execution.invocation.prepared_interaction_file);
+  if (prepared.kind !== "interaction" || prepared.invocation?.adapter_stage !== "prepared") throw new ControllerError("MDF_ADAPTER_DECISION_INVALID", "Adapter prepared provenance is missing.");
+  const { action } = actionRecord(context, execution.invocation.action_file);
+  capabilityRecord(context, execution.invocation.capability_file, execution.invocation, action.invocation.persona_path, execution.invocation.persona_sha256);
+  if (action.invocation.action !== expected.action || action.invocation.skill_path !== expected.skill_path || action.invocation.persona_path !== expected.persona_path || execution.invocation.output_path !== expected.output_path) throw new ControllerError("MDF_ADAPTER_DECISION_MISMATCH", "Adapter decision does not match expected action, primitives, or output.");
+  return { decision, execution, action };
+}
+
+module.exports = { issueAction, issueCapability, prepareAdapter, submitOutcome, verifyAdapterDecision };
