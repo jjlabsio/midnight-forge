@@ -17,6 +17,7 @@ const { decideRecovery, recoveryDisposition } = require("./controller-runtime/re
 const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 const { createReviewContext, registerReview } = require("./controller-runtime/review");
+const { createShipContext, recordRiskAcceptance, registerShip } = require("./controller-runtime/ship");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -224,7 +225,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js", "scripts/controller-runtime/review.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js", "scripts/controller-runtime/review.js", "scripts/controller-runtime/ship.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -868,10 +869,57 @@ function runReviewTests() {
   } finally { fs.rmSync(findings.fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runShipTests() {
+  const setup = (fileCount) => {
+    const fixture = createFixture();
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    for (let index = 0; index < fileCount; index += 1) fs.writeFileSync(path.join(fixture.worktree, `file-${index}.js`), "0\n"); spawnSync("git", ["add", "."], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["plan.md", "plan\n"], ["seed.md", "seed\n"], ["user.md", "accept risks\n"], ["cap.json", "{}\n"], ["code-report.md", "code raw\n"], ["security-report.md", "security raw\n"], ["empty-risk-report.md", "empty risk raw\n"], ["test-report.md", "test raw\n"], ["ship.md", "ship raw\n"], ["ship-accepted.md", "ship accepted raw\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    const seed = recordInteraction(context, { invocation: { agent_id: "seed", invocation_id: "ship-seed", executor: "deterministic-runtime" }, input_paths: ["seed.md"] });
+    recordEvent(context, { event_id: "ship-spec-plan", from: "spec", to: "plan", evidence_files: [seed.file] });
+    const planArtifact = recordArtifact(context, "plan.md"); const tasks = [{ id: "T1", depends_on: [], owned_paths: Array.from({ length: fileCount }, (_, index) => `file-${index}.js`), acceptance: ["works"] }]; const plan = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "ship-plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: seed.file, metadata: { tasks, whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] } }, input_paths: ["plan.md", `evidence/${seed.file}`] });
+    recordEvent(context, { event_id: "ship-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
+    for (let index = 0; index < fileCount; index += 1) fs.writeFileSync(path.join(fixture.worktree, `file-${index}.js`), "1\n"); spawnSync("git", ["add", "."], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "feat: ship change"], { cwd: fixture.worktree });
+    const phase = recordInteraction(context, { invocation: { agent_id: "phase", invocation_id: "ship-phase", executor: "deterministic-runtime" }, input_paths: ["seed.md"] });
+    recordEvent(context, { event_id: "ship-whole", from: "build-task", to: "whole-build", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-simplify", from: "whole-build", to: "simplify", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-review", from: "simplify", to: "review", evidence_files: [phase.file] });
+    const currentHead = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim(); const reviewInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-standalone-review", invocation_id: "ship-review-pass", executor: "deterministic-runtime" }, input_paths: ["seed.md"] }); const review = recordDecision(context, { interaction_file: reviewInteraction.file, conclusion: { kind: "standalone-review", disposition: "pass", head: currentHead } }); recordEvent(context, { event_id: "ship-phase-enter", from: "review", to: "ship", evidence_files: [review.file] });
+    const shipCli = spawnSync(process.execPath, [cliPath, "ship", "context", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: "{}" }); assert.strictEqual(shipCli.status, 0, shipCli.stderr); const shipContext = JSON.parse(shipCli.stdout).ship;
+    const runAdapter = (id, actionName, personaPath, inputs, output, outcome, rootMode = false) => {
+      const action = issueAction(context, { action_id: id, action: actionName, skill_path: "skills/shipping-and-launch/SKILL.md", persona_path: personaPath, input_paths: inputs });
+      const invocation = rootMode ? { agent_id: "root", invocation_id: `${id}-inv`, executor: "root", model_capability: "root-reasoning", freshness: "root-fallback", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: false, source: "root-observed" }, fallback: { source: "runtime-limited", reason: "root synthesis is required" } } : { agent_id: id, invocation_id: `${id}-inv`, executor: "subagent", model_capability: "specialist-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+      const capability = issueCapability(context, { ...invocation, persona_path: personaPath, evidence_path: "cap.json" }); const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation }); return submitOutcome(context, { action_id: id, interaction_file: prepared.interaction_file, output_path: output, outcome });
+    };
+    return { fixture, context, shipContext, runAdapter };
+  };
+  const full = setup(3);
+  try {
+    assert.deepStrictEqual(full.shipContext.required_personas, ["code-reviewer", "security-auditor", "test-engineer"]);
+    const code = full.runAdapter("ship-code", "ship-persona", "agents/code-reviewer.md", full.shipContext.persona_input_paths, "code-report.md", { disposition: "pass", critical: false, risk_ids: [] }); const security = full.runAdapter("ship-security", "ship-persona", "agents/security-auditor.md", full.shipContext.persona_input_paths, "security-report.md", { disposition: "block", critical: true, risk_ids: ["SEC-1"] }); const test = full.runAdapter("ship-test", "ship-persona", "agents/test-engineer.md", full.shipContext.persona_input_paths, "test-report.md", { disposition: "pass", critical: false, risk_ids: [] });
+    const reports = [{ persona: "code-reviewer", output_path: "code-report.md", decision_file: code.decision_file }, { persona: "security-auditor", output_path: "security-report.md", decision_file: security.decision_file }, { persona: "test-engineer", output_path: "test-report.md", decision_file: test.decision_file }];
+    const emptyRisk = full.runAdapter("ship-empty-risk", "ship-persona", "agents/security-auditor.md", full.shipContext.persona_input_paths, "empty-risk-report.md", { disposition: "block", critical: true, risk_ids: [] });
+    const rollback = { trigger_conditions: "alert", procedure: "revert commit", recovery_time_objective: "15m" };
+    const synthesisInputs = [`evidence/${full.shipContext.context_file}`, ...reports.flatMap((report) => [report.output_path, `evidence/${report.decision_file}`])].sort(); const synthesis = full.runAdapter("ship-synthesis", "ship-synthesis", "agents/code-reviewer.md", synthesisInputs, "ship.md", { disposition: "GO", rollback }, true);
+    expectCode(() => registerShip(full.context, { context_file: full.shipContext.context_file, reports: [reports[0], { persona: "security-auditor", output_path: "empty-risk-report.md", decision_file: emptyRisk.decision_file }, reports[2]], output_path: "ship.md", decision_file: synthesis.decision_file }), "MDF_SHIP_REPORTS_INVALID");
+    expectCode(() => registerShip(full.context, { context_file: full.shipContext.context_file, reports: reports.slice(0, 2), output_path: "ship.md", decision_file: synthesis.decision_file }), "MDF_SHIP_REPORTS_INVALID");
+    fs.writeFileSync(path.join(full.context.work_item.path, "code-report.md"), "stale\n"); expectCode(() => registerShip(full.context, { context_file: full.shipContext.context_file, reports, output_path: "ship.md", decision_file: synthesis.decision_file }), "MDF_EVIDENCE_STALE"); fs.writeFileSync(path.join(full.context.work_item.path, "code-report.md"), "code raw\n");
+    expectCode(() => registerShip(full.context, { context_file: full.shipContext.context_file, reports, output_path: "ship.md", decision_file: synthesis.decision_file }), "MDF_SHIP_RISK_ACCEPTANCE_REQUIRED");
+    const acceptance = recordRiskAcceptance(full.context, { context_file: full.shipContext.context_file, user_message_path: "user.md", report_decision_files: reports.map((report) => report.decision_file), risk_ids: ["SEC-1"], affirmative: true });
+    const acceptedInputs = [...synthesisInputs, `evidence/${acceptance.acceptance_file}`].sort(); const accepted = full.runAdapter("ship-synthesis-accepted", "ship-synthesis", "agents/code-reviewer.md", acceptedInputs, "ship-accepted.md", { disposition: "GO", rollback }, true);
+    assert.strictEqual(registerShip(full.context, { context_file: full.shipContext.context_file, reports, output_path: "ship-accepted.md", decision_file: accepted.decision_file, risk_acceptance_file: acceptance.acceptance_file }).state.phase, "github-pr");
+  } finally { fs.rmSync(full.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const small = setup(1);
+  try {
+    assert.strictEqual(small.shipContext.small_change_exception, true); const rollback = { trigger_conditions: "failure", procedure: "revert", recovery_time_objective: "5m" }; const inputs = [`evidence/${small.shipContext.context_file}`]; const synthesis = small.runAdapter("small-synthesis", "ship-synthesis", "agents/code-reviewer.md", inputs, "ship.md", { disposition: "GO", rollback, small_change_direct_review: true }, true); assert.strictEqual(registerShip(small.context, { context_file: small.shipContext.context_file, reports: [], output_path: "ship.md", decision_file: synthesis.decision_file }).state.phase, "github-pr");
+  } finally { fs.rmSync(small.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const noGo = setup(1);
+  try { const rollback = { trigger_conditions: "failure", procedure: "do not launch", recovery_time_objective: "0m" }; const synthesis = noGo.runAdapter("nogo-synthesis", "ship-synthesis", "agents/code-reviewer.md", [`evidence/${noGo.shipContext.context_file}`], "ship.md", { disposition: "NO-GO", rollback, small_change_direct_review: true }, true); const result = registerShip(noGo.context, { context_file: noGo.shipContext.context_file, reports: [], output_path: "ship.md", decision_file: synthesis.decision_file }); assert.strictEqual(result.action, "stop"); assert.strictEqual(result.stop.code, "MDF_STOP_HUMAN_REQUIRED"); } finally { fs.rmSync(noGo.fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review", "ship"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review|ship");
   process.exit(1);
 }
 
@@ -886,5 +934,6 @@ else if (group === "whole-build") runWholeBuildTests();
 else if (group === "recovery") runRecoveryTests();
 else if (group === "technical-revision") runTechnicalRevisionTests();
 else if (group === "simplify") runSimplifyTests();
-else runReviewTests();
+else if (group === "review") runReviewTests();
+else runShipTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);

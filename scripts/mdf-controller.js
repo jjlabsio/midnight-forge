@@ -12,6 +12,7 @@ const { decideRecovery } = require("./controller-runtime/recovery");
 const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 const { createReviewContext, registerReview } = require("./controller-runtime/review");
+const { createShipContext, recordRiskAcceptance, registerShip } = require("./controller-runtime/ship");
 
 function fail(error) {
   const response = {
@@ -137,6 +138,16 @@ try {
     const result = operation === "context" ? createReviewContext(context) : operation === "register" ? registerReview(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller review context|register [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, review: result }, null, 2));
+    process.exit(0);
+  } else if (command === "ship") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request = {};
+    try { request = JSON.parse(fs.readFileSync(0, "utf8") || "{}"); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Ship command requires JSON stdin."); }
+    const result = operation === "context" ? createShipContext(context) : operation === "risk" ? recordRiskAcceptance(context, request) : operation === "register" ? registerShip(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller ship context|risk|register [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, ship: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");
