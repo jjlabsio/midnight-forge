@@ -16,6 +16,8 @@ overlays/mdf/                        # MDF overlay inputs
 scripts/sync-agent-skills.js         # renderer
 scripts/validate-agent-skills-sync.js
 scripts/validate-agent-skills-port.js
+scripts/mdf-controller.js            # production lifecycle CLI
+scripts/controller-runtime/          # production enforcement modules
 skills/ references/ agents/          # generated runtime surface
 ```
 
@@ -66,10 +68,17 @@ enforces byte equality for the protected matrix, deletes evaluator surfaces,
 and exercises controller contracts for approvals, build modes, review freshness,
 DDD parity, persona loading, and one-writer orchestration.
 
-## Controller Policy
+## Runtime and Controller Policy
 
 MDF never injects artifact storage or lifecycle behavior into upstream
-primitives. MDF controllers apply canonical artifact storage under:
+primitives. Generated public skills are thin entrypoints: they select the exact
+applicable upstream primitive, while lifecycle permission, evidence validation,
+and next-action selection come from `scripts/mdf-controller.js` and the modules
+under `scripts/controller-runtime/`. The runtime exercised by validators is the
+same production runtime used by these entrypoints; there is no validator-only
+state-machine model.
+
+MDF controllers apply canonical artifact storage under:
 
 ```text
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
@@ -79,6 +88,47 @@ Controllers record spec and plan approval against the exact canonical artifact
 revision/hash and invalidate it on revision. They resolve skill, persona,
 reference, documentation, and supporting-script paths from the installed plugin
 root, not the user project's working directory or a fixed cache path.
+
+The production runtime owns context resolution, append-only evidence sidecars,
+adapter handshakes, typed lifecycle edges, task and whole-build gates, bounded
+recovery, technical revision invalidation, simplification, standalone review,
+ship, and the terminal `github-pr` handoff. Existing upstream skills remain
+authoritative for how implementation, review, simplification, shipping, and PR
+creation are performed. The handoff never reimplements commit, push, or
+pull-request mechanics.
+
+## Evidence Trust Boundary
+
+Canonical project files and the in-process production runtime are trusted to
+write MDF state. CLI JSON, external command output, user or subagent artifacts,
+raw review reports, external GitHub observations, and old or replayed sidecars
+are untrusted inputs. The runtime computes mechanical Git and file facts,
+binds semantic decisions to exact input bytes and invocation provenance, and
+rejects stale, malformed, replayed, or fabricated evidence. It preserves raw
+upstream output and never parses natural-language reports to manufacture a pass.
+
+Sidecars prove which bytes, tree, executor, capability, and decision were used;
+they do not claim that an agent's semantic judgment is mechanically true. Human
+authority such as initial approvals, risk acceptance, or PR mutation permission
+must be explicit and bound to the corresponding user-message artifact.
+
+## Intentional MDF Workflow Exceptions
+
+MDF preserves upstream workflow intent and result contracts, with two explicit
+composition exceptions for the harness:
+
+- After exact spec and plan approval, `auto-workflow` may continue through
+  obvious, reproducible, reversible, spec-covered technical repair without
+  pausing at every ordinary agent decision. It still stops for changed intent,
+  ambiguity, high-risk or irreversible judgment, no progress, risk acceptance,
+  ship NO-GO, and GitHub or PR ambiguity.
+- Code simplification stays inside the same MDF task and feature PR after a
+  stable whole-build baseline. It is isolated in candidate-scoped verification
+  and `refactor:` commits; changed code must pass whole-build again before the
+  separate standalone review and ship gates.
+
+These exceptions change orchestration timing, not the internal rules or output
+shape of an upstream primitive.
 
 ## Release Metadata
 
@@ -92,8 +142,8 @@ The release workflow updates `overlays/mdf/release-metadata.json`, runs `node sc
 - Sharded inventory files add one extra load step, but skill-specific changes are easier to review and non-skill generated surfaces keep their own namespaces.
 - Upstream content is easy to update and audit because protected outputs remain
   byte-identical to the pinned source.
-- MDF controllers are intentionally small: they adapt runtime and lifecycle
-  state without redefining upstream workflow success criteria.
+- Public MDF entrypoints stay thin; production enforcement is decomposed into
+  focused runtime modules without redefining upstream workflow success criteria.
 
 ## Related Decisions
 

@@ -66,6 +66,13 @@ skills/ references/ agents/   # generated runtime surface
 
 See [docs/architecture/agent-skills-overlay-system.md](docs/architecture/agent-skills-overlay-system.md) for the full overlay model.
 
+Public skill files are thin entrypoints over a production controller runtime in
+`scripts/controller-runtime/`. That runtime binds lifecycle decisions to exact
+canonical artifacts and current Git evidence while preserving upstream workflow
+behavior and raw results. The architecture document is the source of truth for
+the sidecar trust boundary and MDF's intentional automation and same-task
+simplification exceptions.
+
 ## Work Items
 
 MDF task state and workflow artifacts are local by default:
@@ -95,4 +102,6 @@ Run the generated surface checks before PRs:
 node scripts/sync-agent-skills.js --dry-run
 node scripts/validate-agent-skills-sync.js
 node scripts/validate-agent-skills-port.js
+node scripts/validate-mdf-controller-runtime.js
+node scripts/validate-mdf-task-state-cli.js
 ```

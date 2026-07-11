@@ -226,7 +226,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js", "scripts/controller-runtime/review.js", "scripts/controller-runtime/ship.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js", "scripts/controller-runtime/review.js", "scripts/controller-runtime/ship.js", "scripts/controller-runtime/github-pr.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -989,25 +989,20 @@ function runGithubPrTests() {
   finally { fs.rmSync(noGo.fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
-const args = new Set(process.argv.slice(2));
+const groups = new Map([
+  ["context", runContextTests], ["evidence", runEvidenceTests], ["adapter", runAdapterTests], ["lifecycle", runLifecycleTests],
+  ["spec", runSpecTests], ["plan", runPlanTests], ["build-task", runBuildTaskTests], ["whole-build", runWholeBuildTests],
+  ["recovery", runRecoveryTests], ["technical-revision", runTechnicalRevisionTests], ["simplify", runSimplifyTests],
+  ["review", runReviewTests], ["ship", runShipTests], ["github-pr", runGithubPrTests],
+]);
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review", "ship", "github-pr"].includes(group)) {
+if (!(process.argv.length === 2 || (process.argv.length === 4 && process.argv[2] === "--group" && groups.has(group)))) {
   console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review|ship|github-pr");
   process.exit(1);
 }
 
-if (group === "context") runContextTests();
-else if (group === "evidence") runEvidenceTests();
-else if (group === "adapter") runAdapterTests();
-else if (group === "lifecycle") runLifecycleTests();
-else if (group === "spec") runSpecTests();
-else if (group === "plan") runPlanTests();
-else if (group === "build-task") runBuildTaskTests();
-else if (group === "whole-build") runWholeBuildTests();
-else if (group === "recovery") runRecoveryTests();
-else if (group === "technical-revision") runTechnicalRevisionTests();
-else if (group === "simplify") runSimplifyTests();
-else if (group === "review") runReviewTests();
-else if (group === "ship") runShipTests();
-else runGithubPrTests();
-console.log(`MDF controller runtime validation passed for ${group}.`);
+const selected = group ? [[group, groups.get(group)]] : [...groups];
+for (const [name, validate] of selected) {
+  validate();
+  console.log(`MDF controller runtime validation passed for ${name}.`);
+}
