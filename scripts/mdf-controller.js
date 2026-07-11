@@ -5,6 +5,7 @@ const fs = require("fs");
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
 const { next, recordEvent } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
+const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 
 function fail(error) {
   const response = {
@@ -66,6 +67,16 @@ try {
     const result = operation === "register" ? registerSpec(context, request) : operation === "approve" ? approveSpec(context, request) : operation === "advance" ? advanceSpec(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller spec register|approve|advance [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, spec: result }, null, 2));
+    process.exit(0);
+  } else if (command === "plan") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Plan command requires JSON stdin."); }
+    const result = operation === "metadata" ? createPlanMetadata(context, request) : operation === "register" ? registerPlan(context, request) : operation === "approve" ? approvePlan(context, request) : operation === "advance" ? advancePlan(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller plan metadata|register|approve|advance [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, plan: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

@@ -10,6 +10,7 @@ const { recordArtifact, recordCommand, recordInteraction, recordDecision, record
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
 const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
+const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -217,7 +218,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -399,10 +400,59 @@ function runSpecTests() {
   } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runPlanTests() {
+  const fixture = createFixture();
+  try {
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "x\n"); spawnSync("git", ["add", "tracked.txt"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["spec.md", "spec\n"], ["plan.md", "raw plan without MDF fields\n"], ["plan-2.md", "revision\n"], ["plan-stale.md", "before\n"], ["review.md", "pass\n"], ["extra.md", "extra context\n"], ["user.md", "yes\n"], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    const reviewFor = (artifact, id, extraInputs = []) => {
+      const action = issueAction(context, { action_id: id, action: "ddd-review", skill_path: "skills/doubt-driven-development/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: [artifact, ...extraInputs] });
+      const invocation = { agent_id: "reviewer", invocation_id: `${id}-inv`, executor: "subagent", model_capability: "independent-review-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+      const capability = issueCapability(context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" });
+      const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
+      return submitOutcome(context, { action_id: id, interaction_file: prepared.interaction_file, output_path: "review.md", outcome: { disposition: "pass" } }).decision_file;
+    };
+    const specReg = registerSpec(context, { artifact_path: "spec.md", review_output_path: "review.md", review_decision_file: reviewFor("spec.md", "spec-review"), mode: "auto" });
+    const specApproval = approveSpec(context, { registration_file: specReg.registration_file, user_message_path: "user.md", invocation_id: "spec-user" });
+    advanceSpec(context, { registration_file: specReg.registration_file, approval_file: specApproval.approval_file });
+    const metadata = { tasks: [{ id: "T1", depends_on: [], owned_paths: ["src/a.js"], acceptance: ["works"] }, { id: "T2", depends_on: ["T1"], owned_paths: ["src/b.js"], acceptance: ["integrates"] }] };
+    const before = fs.readFileSync(path.join(context.work_item.path, "plan.md"));
+    expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: [], owned_paths: [], acceptance: ["a"] }, { id: "T1", depends_on: [], owned_paths: [], acceptance: ["b"] }] } }), "MDF_PLAN_TASK_IDS_INVALID");
+    expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: ["missing"], owned_paths: [], acceptance: ["a"] }] } }), "MDF_PLAN_TASK_MAPPING_INVALID");
+    expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: [], owned_paths: ["../escape"], acceptance: ["a"] }] } }), "MDF_PLAN_TASK_MAPPING_INVALID");
+    expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: [], owned_paths: [], acceptance: ["a"] }] } }), "MDF_PLAN_TASK_MAPPING_INVALID");
+    for (const alias of ["src/", "src\\a.js"]) expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: [], owned_paths: [alias], acceptance: ["a"] }] } }), "MDF_PLAN_TASK_MAPPING_INVALID");
+    expectCode(() => createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata: { tasks: [{ id: "T1", depends_on: [], owned_paths: ["src/a.js"], acceptance: ["a"] }, { id: "T2", depends_on: [], owned_paths: ["src/a.js"], acceptance: ["b"] }] } }), "MDF_PLAN_TASK_MAPPING_INVALID");
+    const metadataFile = createPlanMetadata(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
+    const review = reviewFor("plan.md", "plan-review", [`evidence/${specReg.registration_file}`, `evidence/${metadataFile}`]);
+    const extraReview = reviewFor("plan.md", "plan-extra-review", [`evidence/${specReg.registration_file}`, `evidence/${metadataFile}`, "extra.md"]);
+    expectCode(() => registerPlan(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: extraReview, mode: "standalone" }), "MDF_PLAN_REVIEW_INVALID");
+    const standalone = registerPlan(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: review, mode: "standalone" });
+    assert.deepStrictEqual(fs.readFileSync(path.join(context.work_item.path, "plan.md")), before);
+    assert.strictEqual(advancePlan(context, { registration_file: standalone.registration_file }).action, "stop");
+    const auto = registerPlan(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: review, mode: "auto" });
+    assert.strictEqual(advancePlan(context, { registration_file: auto.registration_file }).stop.code, "MDF_PLAN_APPROVAL_REQUIRED");
+    expectCode(() => approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-no", affirmative: false }), "MDF_PLAN_APPROVAL_NOT_AFFIRMATIVE");
+    const approval = approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-user", affirmative: true });
+    const revisionMetadata = createPlanMetadata(context, { artifact_path: "plan-2.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
+    const revision = registerPlan(context, { artifact_path: "plan-2.md", spec_registration_file: specReg.registration_file, metadata_file: revisionMetadata, review_output_path: "review.md", review_decision_file: reviewFor("plan-2.md", "plan-2-review", [`evidence/${specReg.registration_file}`, `evidence/${revisionMetadata}`]), mode: "auto" });
+    expectCode(() => advancePlan(context, { registration_file: revision.registration_file, approval_file: approval.approval_file }), "MDF_PLAN_APPROVAL_INVALID");
+    const staleMetadata = createPlanMetadata(context, { artifact_path: "plan-stale.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
+    const stale = registerPlan(context, { artifact_path: "plan-stale.md", spec_registration_file: specReg.registration_file, metadata_file: staleMetadata, review_output_path: "review.md", review_decision_file: reviewFor("plan-stale.md", "plan-stale-review", [`evidence/${specReg.registration_file}`, `evidence/${staleMetadata}`]), mode: "auto" });
+    fs.writeFileSync(path.join(context.work_item.path, "plan-stale.md"), "after\n");
+    expectCode(() => approvePlan(context, { registration_file: stale.registration_file, user_message_path: "user.md", invocation_id: "stale-user", affirmative: true }), "MDF_EVIDENCE_STALE");
+    const cli = spawnSync(process.execPath, [cliPath, "plan", "register", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: review, mode: "standalone" }) });
+    assert.strictEqual(cli.status, 0, cli.stderr);
+    assert.strictEqual(advancePlan(context, { registration_file: auto.registration_file, approval_file: approval.approval_file }).state.phase, "build-task");
+  } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan");
   process.exit(1);
 }
 
@@ -410,5 +460,6 @@ if (group === "context") runContextTests();
 else if (group === "evidence") runEvidenceTests();
 else if (group === "adapter") runAdapterTests();
 else if (group === "lifecycle") runLifecycleTests();
-else runSpecTests();
+else if (group === "spec") runSpecTests();
+else runPlanTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);

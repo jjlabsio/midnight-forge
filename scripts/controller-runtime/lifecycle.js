@@ -44,7 +44,7 @@ function chain(context) {
 function current(context) {
   const ordered = chain(context);
   const last = ordered.at(-1);
-  return { phase: last?.value.invocation.to || "spec", event_file: last?.file || null, stop_reason: last?.value.invocation.stop_reason || null };
+  return { phase: last?.value.invocation.to || "spec", event_file: last?.file || null, evidence_files: last?.value.inputs?.map((input) => input.path).filter((value) => value.startsWith("evidence/")).map((value) => value.slice("evidence/".length)) || [], stop_reason: last?.value.invocation.stop_reason || null };
 }
 
 function next(context) {
