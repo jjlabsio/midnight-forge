@@ -845,7 +845,7 @@ function runSimplifyTests() {
 }
 
 function runReviewTests() {
-  const setup = (reportText, outcome) => {
+  const setup = (reportText, outcome, targetPhase = "ship") => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
     fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
@@ -866,7 +866,7 @@ function runReviewTests() {
     const simplifySessionInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification", invocation_id: "review-simplify", executor: "deterministic-runtime" }, input_paths: [`evidence/${stable.file}`] }); const simplifySession = recordDecision(context, { interaction_file: simplifySessionInteraction.file, conclusion: { kind: "simplification-session", disposition: "no-change", stable_file: stable.file, plan_registration_file: plan.file, head, candidates: [] } });
     recordEvent(context, { event_id: "review-simplify", from: "whole-build", to: "simplify", evidence_files: [simplifySession.file] });
     const noChangeInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: "review-nochange", executor: "deterministic-runtime", session_file: simplifySession.file }, input_paths: [`evidence/${simplifySession.file}`] }); const noChange = recordDecision(context, { interaction_file: noChangeInteraction.file, conclusion: { kind: "simplification-no-change", session_file: simplifySession.file, head } });
-    recordEvent(context, { event_id: "review-phase", from: "simplify", to: "review", evidence_files: [noChange.file] });
+    recordEvent(context, { event_id: `review-phase-${targetPhase}`, from: "simplify", to: targetPhase, evidence_files: [noChange.file] });
     const contextCli = spawnSync(process.execPath, [cliPath, "review", "context", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: "{}" }); assert.strictEqual(contextCli.status, 0, contextCli.stderr); const reviewContext = JSON.parse(contextCli.stdout).review;
     const action = issueAction(context, { action_id: `standalone-review-${outcome.disposition}`, action: "standalone-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: reviewContext.input_paths });
     const invocation = { agent_id: "reviewer", invocation_id: `standalone-${outcome.disposition}-inv`, executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
@@ -878,9 +878,9 @@ function runReviewTests() {
     fs.writeFileSync(path.join(standalone.context.work_item.path, "report.md"), "stale\n"); expectCode(() => registerReview(standalone.context, { context_file: standalone.reviewContext.context_file, output_path: "report.md", decision_file: standalone.decision.decision_file, mode: "standalone" }), "MDF_EVIDENCE_STALE"); fs.writeFileSync(path.join(standalone.context.work_item.path, "report.md"), standalone.reportText);
     assert.strictEqual(registerReview(standalone.context, { context_file: standalone.reviewContext.context_file, output_path: "report.md", decision_file: standalone.decision.decision_file, mode: "standalone" }).action, "stop");
   } finally { fs.rmSync(standalone.fixture.temporaryRoot, { recursive: true, force: true }); }
-  const auto = setup("Free-form prose without prescribed grammar.\n", { disposition: "pass" });
+  const auto = setup("Free-form prose without prescribed grammar.\n", { disposition: "pass" }, "review");
   try { assert.strictEqual(registerReview(auto.context, { context_file: auto.reviewContext.context_file, output_path: "report.md", decision_file: auto.decision.decision_file, mode: "auto" }).state.phase, "ship"); } finally { fs.rmSync(auto.fixture.temporaryRoot, { recursive: true, force: true }); }
-  const findings = setup("Actionable issue in src.\n", { disposition: "findings", human_required: false, affected_task_id: "T1", repair_scope_paths: ["src.js"] });
+  const findings = setup("Actionable issue in src.\n", { disposition: "findings", human_required: false, affected_task_id: "T1", repair_scope_paths: ["src.js"] }, "review");
   try {
     const result = registerReview(findings.context, { context_file: findings.reviewContext.context_file, output_path: "report.md", decision_file: findings.decision.decision_file, mode: "auto" }); assert.strictEqual(result.action, "repair-task"); assert.deepStrictEqual(verifySidecar(findings.context, result.attempt_file, { fresh: false }).invocation.review_scope_paths, ["src.js"]);
     const activePlan = verifySidecar(findings.context, findings.reviewContext.context_file, { fresh: false }).invocation.plan_registration_file;

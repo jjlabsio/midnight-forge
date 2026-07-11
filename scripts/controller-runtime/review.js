@@ -9,10 +9,10 @@ function git(context, args) { const result = spawnSync("git", args, { cwd: conte
 function artifactPath(context, file) { const value = verifySidecar(context, file, { fresh: false }); if (value.kind !== "artifact") throw new ControllerError("MDF_REVIEW_CONTEXT_INVALID", "Review artifact reference is invalid."); return value.artifact.path; }
 
 function createReviewContext(context) {
-  if (current(context).phase !== "review" || git(context, ["status", "--porcelain"])) throw new ControllerError("MDF_REVIEW_PHASE_INVALID", "Review context requires clean review phase.");
+  if (git(context, ["status", "--porcelain"])) throw new ControllerError("MDF_REVIEW_PHASE_INVALID", "Review context requires a clean worktree.");
   const planEvent = transitionEvidence(context, "plan", "build-task").at(-1);
   const wholeEvent = transitionEvidence(context, "build-task", "whole-build").at(-1);
-  const simplifyEvent = transitionEvidence(context, "simplify", "review").at(-1);
+  const simplifyEvent = transitionEvidence(context, "simplify", "ship").at(-1) || transitionEvidence(context, "simplify", "review").at(-1);
   const planFile = planEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).invocation?.agent_id === "mdf-plan");
   const stableFile = wholeEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).conclusion?.kind === "whole-build-stable");
   const simplifyFile = simplifyEvent?.evidence_files.find((file) => new Set(["simplification-no-change"]).has(verifySidecar(context, file, { fresh: false }).conclusion?.kind));
@@ -31,7 +31,7 @@ function createReviewContext(context) {
 function registerReview(context, { context_file: contextFile, output_path: outputPath, decision_file: decisionFile, mode }) {
   if (!new Set(["standalone", "auto"]).has(mode)) throw new ControllerError("MDF_REVIEW_MODE_INVALID", "Review mode must be standalone or auto.");
   const reviewContext = verifySidecar(context, contextFile);
-  if (reviewContext.invocation?.agent_id !== "mdf-review-context" || current(context).phase !== "review") throw new ControllerError("MDF_REVIEW_CONTEXT_INVALID", "Review decision requires current review context.");
+  if (reviewContext.invocation?.agent_id !== "mdf-review-context" || (mode === "auto" && current(context).phase !== "review")) throw new ControllerError("MDF_REVIEW_CONTEXT_INVALID", "Review decision requires current review context.");
   const expected = [...reviewContext.inputs.map((input) => input.path), `evidence/${contextFile}`].sort();
   const { decision, action } = verifyAdapterDecision(context, decisionFile, { action: "standalone-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", output_path: outputPath });
   if (!new Set(["pass", "findings"]).has(decision.conclusion?.disposition) || (decision.conclusion.disposition === "findings" && typeof decision.conclusion.human_required !== "boolean") || JSON.stringify(action.inputs.map((input) => input.path).sort()) !== JSON.stringify(expected)) throw new ControllerError("MDF_REVIEW_DECISION_INVALID", "Review decision must bind exact current context and raw report.");
