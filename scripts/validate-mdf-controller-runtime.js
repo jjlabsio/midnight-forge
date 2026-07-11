@@ -6,6 +6,7 @@ const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const { resolveControllerContext, resolvePluginPath } = require("./controller-runtime/context");
+const { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar } = require("./controller-runtime/evidence");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -103,11 +104,82 @@ function runContextTests() {
   }
 }
 
+function runEvidenceTests() {
+  const fixture = createFixture();
+  try {
+    const git = (args) => {
+      const result = spawnSync("git", args, { cwd: fixture.worktree, encoding: "utf8" });
+      assert.strictEqual(result.status, 0, result.stderr);
+    };
+    git(["init", "--quiet"]);
+    git(["config", "user.email", "test@example.com"]);
+    git(["config", "user.name", "MDF test"]);
+    fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "tree one\n");
+    git(["add", "tracked.txt"]);
+    git(["commit", "--quiet", "-m", "initial"]);
+
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    const artifact = path.join(context.work_item.path, "upstream-result.md");
+    const output = path.join(context.work_item.path, "command-output.log");
+    fs.writeFileSync(artifact, "raw upstream result\n");
+    fs.writeFileSync(output, "command output\n");
+    const rawBefore = fs.readFileSync(artifact);
+    const artifactSidecar = recordArtifact(context, "upstream-result.md");
+    assert.deepStrictEqual(fs.readFileSync(artifact), rawBefore);
+    assert.strictEqual(verifySidecar(context, artifactSidecar.file).kind, "artifact");
+    const commandSidecar = recordCommand(context, { command: ["tool", "--check"], output_path: "command-output.log", exit_code: 0 });
+    assert.strictEqual(verifySidecar(context, commandSidecar.file).kind, "command");
+    const gitSidecar = recordGitFacts(context);
+    assert.strictEqual(verifySidecar(context, gitSidecar.file).kind, "git");
+    const interactionSidecar = recordInteraction(context, {
+      invocation: { agent_id: "reviewer", invocation_id: "inv-1" },
+      input_paths: ["upstream-result.md"],
+    });
+    const decisionSidecar = recordDecision(context, {
+      interaction_file: interactionSidecar.file,
+      conclusion: { disposition: "pass" },
+    });
+    assert.strictEqual(verifySidecar(context, decisionSidecar.file).kind, "decision");
+    expectCode(
+      () => recordDecision(context, { interaction_file: interactionSidecar.file, conclusion: true }),
+      "MDF_DECISION_INVALID"
+    );
+
+    fs.writeFileSync(artifact, "changed\n");
+    expectCode(() => verifySidecar(context, artifactSidecar.file), "MDF_EVIDENCE_STALE");
+    expectCode(() => verifySidecar(context, decisionSidecar.file), "MDF_EVIDENCE_STALE");
+    const sidecarPath = path.join(context.work_item.path, "evidence", artifactSidecar.file);
+    const altered = JSON.parse(fs.readFileSync(sidecarPath, "utf8"));
+    altered.artifact.sha256 = "0".repeat(64);
+    fs.writeFileSync(sidecarPath, JSON.stringify(altered));
+    expectCode(() => verifySidecar(context, artifactSidecar.file), "MDF_EVIDENCE_FABRICATED");
+    fs.symlinkSync(artifact, path.join(context.work_item.path, "escaped.md"));
+    expectCode(() => recordArtifact(context, "escaped.md"), "MDF_EVIDENCE_SYMLINK");
+  } finally {
+    fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+  }
+
+  const symlinkFixture = createFixture();
+  try {
+    const context = resolveControllerContext({ cwd: symlinkFixture.worktree, pluginRoot: root });
+    fs.writeFileSync(path.join(context.work_item.path, "raw.md"), "raw\n");
+    const outside = path.join(symlinkFixture.temporaryRoot, "outside");
+    fs.mkdirSync(outside);
+    fs.symlinkSync(outside, path.join(context.work_item.path, "evidence"));
+    expectCode(() => recordArtifact(context, "raw.md"), "MDF_EVIDENCE_SYMLINK");
+    assert.deepStrictEqual(fs.readdirSync(outside), []);
+  } finally {
+    fs.rmSync(symlinkFixture.temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 const args = new Set(process.argv.slice(2));
-if (!args.has("--group") || !args.has("context") || args.size !== 2) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context");
+const group = process.argv[3];
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence");
   process.exit(1);
 }
 
-runContextTests();
-console.log("MDF controller runtime validation passed for context.");
+if (group === "context") runContextTests();
+else runEvidenceTests();
+console.log(`MDF controller runtime validation passed for ${group}.`);
