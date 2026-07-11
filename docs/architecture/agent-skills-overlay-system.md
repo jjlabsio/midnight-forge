@@ -97,6 +97,50 @@ authoritative for how implementation, review, simplification, shipping, and PR
 creation are performed. The handoff never reimplements commit, push, or
 pull-request mechanics.
 
+## Controller Responsibility Boundary
+
+The controller is a mechanical enforcement layer, not a second implementation
+of the upstream engineering workflows. The root agent loads and follows the
+exact applicable upstream skill, performs semantic judgment, and produces the
+raw result. The controller verifies whether that execution may be recorded or
+advance the MDF lifecycle.
+
+The controller owns facts that deterministic code can establish:
+
+- canonical artifact and input identities, hashes, and current Git tree;
+- actual command argv, exit code, output bytes, and worktree binding;
+- declared verification-matrix completeness where a plan defines a matrix;
+- task-owned path scope, clean baselines, focused commit facts, and one-writer
+  state;
+- executor/persona capability provenance, freshness claims, lifecycle edges,
+  replay protection, and explicit human authority.
+
+The upstream skill and the agent executing it own semantic adequacy:
+
+- whether a test expresses the intended behavior and constitutes a meaningful
+  RED/GREEN TDD cycle;
+- whether a project-specific command is the appropriate full suite or build;
+- whether a review finding, simplification candidate, diagnosis, or ship
+  judgment is technically correct;
+- which applicable upstream supporting skill is required for the current
+  decision.
+
+The controller must not infer those meanings from command names, exit-code
+patterns, Markdown headings, report phrases, or tool-specific allowlists. Such
+parsing would create a partial MDF reimplementation of the upstream workflow and
+would be validator theater rather than proof. Sidecars bind the responsible
+agent's decision to exact inputs; they do not make that semantic decision a
+deterministic fact.
+
+Review this boundary accordingly. A real controller finding requires at least
+one of the following: an applicable upstream primitive is skipped or weakened by
+the public MDF entrypoint; caller-asserted mechanical facts can replace runtime
+observation; provenance, freshness, scope, or lifecycle checks can be bypassed;
+or a declared deterministic matrix can advance while incomplete. The mere fact
+that a malicious or non-compliant root could choose a meaningless test command
+is not a controller defect when the public entrypoint still requires the exact
+upstream workflow and the runtime truthfully records what ran.
+
 ## Evidence Trust Boundary
 
 Canonical project files and the in-process production runtime are trusted to

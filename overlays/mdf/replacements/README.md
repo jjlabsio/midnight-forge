@@ -70,8 +70,8 @@ Public skill files are thin entrypoints over a production controller runtime in
 `scripts/controller-runtime/`. That runtime binds lifecycle decisions to exact
 canonical artifacts and current Git evidence while preserving upstream workflow
 behavior and raw results. The architecture document is the source of truth for
-the sidecar trust boundary and MDF's intentional automation and same-task
-simplification exceptions.
+the controller responsibility boundary, sidecar trust boundary, and MDF's
+intentional automation and same-task simplification exceptions.
 
 ## Work Items
 
