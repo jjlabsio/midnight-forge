@@ -11,14 +11,24 @@ function git(context, args) { const result = spawnSync("git", args, { cwd: conte
 function createShipContext(context) {
   if (current(context).phase !== "ship" || git(context, ["status", "--porcelain"])) throw new ControllerError("MDF_SHIP_PHASE_INVALID", "Ship context requires clean ship phase.");
   const reviewEvent = transitionEvidence(context, "review", "ship").at(-1);
-  const reviewFile = reviewEvent?.evidence_files.find((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass"; });
+  const simplifyEvent = transitionEvidence(context, "simplify", "ship").at(-1);
+  const standaloneFile = reviewEvent?.evidence_files.find((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass"; });
+  const noChangeFile = simplifyEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).conclusion?.kind === "simplification-no-change");
   const planEvent = transitionEvidence(context, "plan", "build-task").at(-1);
   const planFile = planEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).invocation?.agent_id === "mdf-plan");
-  if (!reviewFile || !planFile) throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship requires current passing review and active plan.");
-  const review = verifySidecar(context, reviewFile);
-  const reviewInteraction = verifySidecar(context, review.interaction.file);
+  if ((!standaloneFile && !noChangeFile) || !planFile) throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship requires current passing review and active plan.");
   const head = git(context, ["rev-parse", "HEAD"]);
-  if (reviewInteraction.invocation?.agent_id !== "mdf-standalone-review" || review.conclusion.head !== head) throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship review must be provenance-bound to the current tree.");
+  let reviewFile = standaloneFile;
+  if (standaloneFile) {
+    const review = verifySidecar(context, standaloneFile); const reviewInteraction = verifySidecar(context, review.interaction.file);
+    if (reviewInteraction.invocation?.agent_id !== "mdf-standalone-review" || review.conclusion.head !== head) throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship review must be provenance-bound to the current tree.");
+  } else {
+    const noChange = verifySidecar(context, noChangeFile); const noChangeInteraction = verifySidecar(context, noChange.interaction.file);
+    const stable = verifySidecar(context, noChange.conclusion.stable_file); const stableInteraction = verifySidecar(context, stable.interaction.file);
+    const review = verifySidecar(context, noChange.conclusion.review_file);
+    if (noChangeInteraction.invocation?.agent_id !== "mdf-simplification-no-change" || stableInteraction.invocation?.agent_id !== "mdf-whole-build-stable" || noChange.conclusion.stable_file !== noChangeInteraction.invocation.stable_file || noChange.conclusion.review_file !== stableInteraction.invocation.review_decision_file || noChange.conclusion.head !== head || stable.conclusion.head !== head || review.conclusion?.disposition !== "pass") throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship whole-build review must be provenance-bound to the unchanged current tree.");
+    reviewFile = noChange.conclusion.review_file;
+  }
   const anchorEvent = verifySidecar(context, planEvent.file, { fresh: false });
   const numstat = git(context, ["diff", "--numstat", anchorEvent.git.head, "HEAD", "--"]);
   const rows = numstat ? numstat.split("\n").map((line) => line.split("\t")) : [];

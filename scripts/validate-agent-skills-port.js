@@ -140,11 +140,14 @@ for (const needle of [
 for (const needle of [
   "flat root orchestrator", "explicit spec approval", "explicit plan approval",
   "one-writer", "root-only synthesis", "all approved plan tasks",
+  "do not run a duplicate standalone review", "whole-build review -> simplify -> ship",
 ]) assertContains("skills/auto-workflow/SKILL.md", needle);
 for (const needle of [
   "generic subagent", "exact selected persona prompt", "capability", "root fallback",
 ]) assertContains("skills/use-mdf/SKILL.md", needle);
 assertContains("skills/code-simplify/SKILL.md", "AGENTS.md");
+assertContains("skills/code-simplify/SKILL.md", "exact unchanged HEAD");
+assertNotContains("skills/code-simplify/SKILL.md", "obtain a separate upstream code review");
 assertNotContains("skills/code-simplify/SKILL.md", "Read CLAUDE.md and study project conventions");
 for (const needle of ["parallel", "code-reviewer", "security-auditor", "test-engineer", "GO/NO-GO"]) {
   assertContains("skills/ship/SKILL.md", needle);

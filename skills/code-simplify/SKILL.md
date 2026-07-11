@@ -26,15 +26,16 @@ the commit subject must start `refactor:`. The resulting tree returns to full
 whole-build verification/review before simplification or later phases proceed.
 
 If there is no accepted change (including rejected candidates), restore and
-verify the exact prior clean baseline, obtain a separate upstream code review,
-and call `simplify no-change`. Do not retain a failed candidate diff, modify
-tests to make a refactor pass, or simplify vendor/generated/public-contract
-surfaces.
+verify the exact prior clean baseline and call `simplify no-change`. The
+runtime reuses the passing whole-build review only when it is bound to that
+exact unchanged HEAD; it does not request a duplicate standalone review. Do
+not retain a failed candidate diff, modify tests to make a refactor pass, or
+simplify vendor/generated/public-contract surfaces.
 
 If an accepted candidate later fails verification or fresh review, call
 `simplify reject` while the failure snapshot is still current, using the exact
 attempt, failure sidecars, raw rejection report, and semantic decision. Restore
 the candidate path to the returned prior HEAD without discarding unrelated
 work, then call `simplify rejected`; it succeeds only on the exact clean prior
-baseline. Include the returned rejection evidence in the separate no-change
-review before calling `simplify no-change`.
+baseline. Then call `simplify no-change`; the rejected candidate never changes
+the reviewed baseline tree.

@@ -77,7 +77,18 @@ function canonicalReferences(context) {
   if (!nonempty(specFile)) throw new ControllerError("MDF_GITHUB_PR_SPEC_MISSING", "GitHub PR handoff plan does not reference a canonical spec.");
   verifySidecar(context, specFile, { fresh: false });
   const buildFile = transitionFile(context, "build-task", "whole-build", (value) => value.conclusion?.kind === "whole-build-stable", "MDF_GITHUB_PR_BUILD_MISSING");
-  const reviewFile = transitionFile(context, "review", "ship", (value) => value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass", "MDF_GITHUB_PR_REVIEW_MISSING");
+  const standaloneEvent = transitionEvidence(context, "review", "ship").at(-1);
+  const standaloneFile = standaloneEvent?.evidence_files.find((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass"; });
+  const noChangeEvent = transitionEvidence(context, "simplify", "ship").at(-1);
+  const noChangeFile = noChangeEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).conclusion?.kind === "simplification-no-change");
+  let reviewFile = standaloneFile;
+  if (!reviewFile && noChangeFile) {
+    const noChange = verifySidecar(context, noChangeFile, { fresh: false }); const noChangeInteraction = verifySidecar(context, noChange.interaction.file, { fresh: false });
+    const stableInteraction = verifySidecar(context, verifySidecar(context, buildFile, { fresh: false }).interaction.file, { fresh: false });
+    if (noChangeInteraction.invocation?.agent_id !== "mdf-simplification-no-change" || noChange.conclusion.stable_file !== buildFile || noChangeInteraction.invocation.stable_file !== buildFile || noChange.conclusion.review_file !== stableInteraction.invocation.review_decision_file) throw new ControllerError("MDF_GITHUB_PR_REVIEW_MISSING", "GitHub PR handoff review does not match the final stable tree.");
+    reviewFile = noChange.conclusion.review_file;
+  }
+  if (!reviewFile) throw new ControllerError("MDF_GITHUB_PR_REVIEW_MISSING", "GitHub PR handoff is missing canonical final-tree review evidence.");
   const shipFile = transitionFile(context, "ship", "github-pr", (value) => value.conclusion?.kind === "ship-decision", "MDF_GITHUB_PR_SHIP_INVALID");
   return { task_id: context.lock.task_id, work_id: context.work_item.id, item_path: "item.md", spec_file: specFile, plan_file: planFile, build_file: buildFile, review_file: reviewFile, ship_file: shipFile };
 }

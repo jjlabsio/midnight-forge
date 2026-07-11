@@ -11,7 +11,7 @@ than a paraphrased handoff. It delegates to the actual controllers and their
 exact upstream primitives:
 
 ```text
-spec -> plan -> build all approved plan tasks -> review -> ship -> github-pr
+spec -> plan -> build all approved plan tasks -> whole-build review -> simplify -> ship -> github-pr
 ```
 
 The root owns phase state, artifact pointers, approvals, synthesis, and the
@@ -38,6 +38,10 @@ work and record the fallback.
   complete; a selected task cannot create completion evidence.
 - Preserve upstream clean-baseline, resume, task-only staging, and
   high-risk/irreversible sign-off stops for autonomous work.
+- If simplification changes the tree, return through whole-build verification
+  and a fresh whole-build review. If it makes no accepted change, reuse the
+  passing whole-build review bound to that exact unchanged tree; do not run a
+  duplicate standalone review.
 - Fix actionable review findings and re-review while progress is material;
   stop for repeats, regressions, no-progress, or a human decision.
 
@@ -57,8 +61,11 @@ passed task, and resume from the next canonical pending task after a blocker.
    work item and its latest artifacts. Stop on malformed or conflicting state.
 2. Select the first incomplete phase: no approved spec -> `spec`; no approved
    plan -> `plan`; pending approved plan task -> build loop; no passing
-   whole-build evidence -> whole-build verification/review; no passing
-   standalone review -> `review`; no GO -> `ship`; otherwise `github-pr`.
+   whole-build evidence -> whole-build verification/review; no completed
+   simplification decision for that stable tree -> `code-simplify`; no GO ->
+   `ship`; otherwise `github-pr`. The independently invoked `review` controller
+   remains available, but auto-workflow does not duplicate the exact final-tree
+   whole-build review.
 3. Load the selected controller from the resolved plugin root and follow it;
    do not inline its upstream primitive or rewrite its result.
 4. Stop immediately for `question needed`, missing information, a user

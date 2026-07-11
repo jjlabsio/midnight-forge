@@ -82,17 +82,19 @@ function rejectedIds(context, sessionFile) {
   return new Set(transitionEvidence(context, "build-task", "simplify").flatMap((event) => event.evidence_files).map((file) => verifySidecar(context, file, { fresh: false })).filter((value) => value.conclusion?.kind === "simplification-candidate-rejected" && value.conclusion.session_file === sessionFile).map((value) => value.conclusion.candidate_id));
 }
 
-function finalizeNoChange(context, { session_file: sessionFile, review_output_path: reviewPath, review_decision_file: reviewFile }) {
+function finalizeNoChange(context, { session_file: sessionFile }) {
   const session = verifySidecar(context, sessionFile);
   const rejections = rejectedIds(context, sessionFile);
   if (current(context).phase !== "simplify" || session.conclusion?.candidates?.some((candidate) => candidate.status === "accepted" && !rejections.has(candidate.id)) || git(context, ["status", "--porcelain"]) || git(context, ["rev-parse", "HEAD"]) !== session.conclusion.head) throw new ControllerError("MDF_SIMPLIFY_NO_CHANGE_INVALID", "No-change/rejected result must retain the verified prior baseline.");
   const rejectionFiles = transitionEvidence(context, "build-task", "simplify").flatMap((event) => event.evidence_files).filter((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "simplification-candidate-rejected" && value.conclusion.session_file === sessionFile; });
   const expected = [`evidence/${session.conclusion.stable_file}`, `evidence/${session.conclusion.scope_file}`, `evidence/${sessionFile}`, ...rejectionFiles.map((file) => `evidence/${file}`)].sort();
-  const { decision, action } = verifyAdapterDecision(context, reviewFile, { action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", output_path: reviewPath });
-  if (decision.conclusion?.disposition !== "pass" || JSON.stringify(action.inputs.map((input) => input.path).sort()) !== JSON.stringify(expected)) throw new ControllerError("MDF_SIMPLIFY_NO_CHANGE_INVALID", "No-change requires a separate exact review.");
-  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: `no-change-${session.conclusion.head}`, executor: "deterministic-runtime", session_file: sessionFile, review_decision_file: reviewFile }, input_paths: [...expected, reviewPath, `evidence/${reviewFile}`] });
-  const result = recordDecision(context, { interaction_file: interaction.file, conclusion: { kind: "simplification-no-change", session_file: sessionFile, head: session.conclusion.head } });
-  return recordEvent(context, { event_id: `simplify-review-${result.file}`, from: "simplify", to: "review", evidence_files: [result.file] });
+  const stable = verifySidecar(context, session.conclusion.stable_file);
+  const stableInteraction = verifySidecar(context, stable.interaction?.file);
+  const review = verifySidecar(context, stableInteraction.invocation?.review_decision_file);
+  if (stable.conclusion?.kind !== "whole-build-stable" || stableInteraction.invocation?.agent_id !== "mdf-whole-build-stable" || stable.conclusion.head !== session.conclusion.head || review.conclusion?.disposition !== "pass") throw new ControllerError("MDF_SIMPLIFY_NO_CHANGE_INVALID", "No-change requires the exact current whole-build review.");
+  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: `no-change-${session.conclusion.head}`, executor: "deterministic-runtime", session_file: sessionFile, stable_file: session.conclusion.stable_file, review_decision_file: stableInteraction.invocation.review_decision_file }, input_paths: [...expected, `evidence/${stableInteraction.invocation.review_decision_file}`] });
+  const result = recordDecision(context, { interaction_file: interaction.file, conclusion: { kind: "simplification-no-change", session_file: sessionFile, stable_file: session.conclusion.stable_file, review_file: stableInteraction.invocation.review_decision_file, head: session.conclusion.head } });
+  return recordEvent(context, { event_id: `simplify-ship-${result.file}`, from: "simplify", to: "ship", evidence_files: [result.file] });
 }
 
 module.exports = { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate };

@@ -753,7 +753,9 @@ function runSimplifyTests() {
     const completion = recordDecision(context, { interaction_file: completionInteraction.file, conclusion: { kind: "build-task-complete", plan_registration_file: plan.file, task_id: "T1", recovery_file: null, simplification_file: null, commit } });
     recordEvent(context, { event_id: "simplify-task-complete", from: "build-task", to: "build-task", evidence_files: [completion.file] });
     const baseline = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build", invocation_id: "simplify-baseline", executor: "deterministic-runtime", plan_registration_file: plan.file, commands: [[process.execPath, "-e", "process.exit(0)"]], head, task_ids: ["T1"], completion_files: [completion.file] }, input_paths: [`evidence/${plan.file}`, `evidence/${completion.file}`] });
-    const stableInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build-stable", invocation_id: "simplify-stable", executor: "deterministic-runtime", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"] }, input_paths: [`evidence/${baseline.file}`] });
+    const stableReviewInteraction = recordInteraction(context, { invocation: { agent_id: "reviewer", invocation_id: "simplify-stable-review", executor: "subagent" }, input_paths: [`evidence/${baseline.file}`] });
+    const stableReview = recordDecision(context, { interaction_file: stableReviewInteraction.file, conclusion: { disposition: "pass" } });
+    const stableInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build-stable", invocation_id: "simplify-stable", executor: "deterministic-runtime", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"], review_decision_file: stableReview.file }, input_paths: [`evidence/${baseline.file}`, `evidence/${stableReview.file}`] });
     const stable = recordDecision(context, { interaction_file: stableInteraction.file, conclusion: { kind: "whole-build-stable", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"] } });
     recordEvent(context, { event_id: "simplify-whole", from: "build-task", to: "whole-build", evidence_files: [stable.file] });
     const scopeCli = spawnSync(process.execPath, [cliPath, "simplify", "scope", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ stable_file: stable.file }) });
@@ -768,11 +770,7 @@ function runSimplifyTests() {
   const rejectedCandidate = { id: "C1", path: "scripts/controller-runtime/a.js", status: "rejected", behavior_preserving: true, production: true, generated: false, public_contract: false };
   const noChange = setup({ disposition: "no-change", candidates: [rejectedCandidate] });
   try {
-    const inputs = [`evidence/${noChange.stable.file}`, `evidence/${noChange.scope.scope_file}`, `evidence/${noChange.session.session_file}`];
-    const action = issueAction(noChange.context, { action_id: "simplify-no-change-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs });
-    const invocation = { agent_id: "reviewer", invocation_id: "simplify-no-change-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
-    const capability = issueCapability(noChange.context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" }); const prepared = prepareAdapter(noChange.context, { action_file: action.action_file, capability_file: capability.capability_file, invocation }); const review = submitOutcome(noChange.context, { action_id: "simplify-no-change-review", interaction_file: prepared.interaction_file, output_path: "no-change-review.md", outcome: { disposition: "pass" } });
-    assert.strictEqual(finalizeNoChange(noChange.context, { session_file: noChange.session.session_file, review_output_path: "no-change-review.md", review_decision_file: review.decision_file }).state.phase, "review");
+    assert.strictEqual(finalizeNoChange(noChange.context, { session_file: noChange.session.session_file }).state.phase, "ship");
   } finally { fs.rmSync(noChange.fixture.temporaryRoot, { recursive: true, force: true }); }
   const acceptedCandidate = { ...rejectedCandidate, status: "accepted" };
   const rolledBack = setup({ disposition: "candidates", candidates: [acceptedCandidate] });
@@ -788,11 +786,7 @@ function runSimplifyTests() {
     const rejection = authorizeCandidateRejection(rolledBack.context, { attempt_file: selected.attempt_file, failure_files: [failure.file], output_path: "rejection.md", decision_file: decision.decision_file });
     fs.writeFileSync(path.join(rolledBack.fixture.worktree, "scripts/controller-runtime/a.js"), "1\n");
     const rejected = completeCandidateRejection(rolledBack.context, { rejection_file: rejection.rejection_file });
-    const reviewInputs = [`evidence/${rolledBack.stable.file}`, `evidence/${rolledBack.scope.scope_file}`, `evidence/${rolledBack.session.session_file}`, `evidence/${rejected.rejected_file}`];
-    const reviewAction = issueAction(rolledBack.context, { action_id: "rollback-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: reviewInputs });
-    const reviewInvocation = { agent_id: "rollback-reviewer", invocation_id: "rollback-review-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
-    const reviewCapability = issueCapability(rolledBack.context, { ...reviewInvocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" }); const reviewPrepared = prepareAdapter(rolledBack.context, { action_file: reviewAction.action_file, capability_file: reviewCapability.capability_file, invocation: reviewInvocation }); const reviewDecision = submitOutcome(rolledBack.context, { action_id: "rollback-review", interaction_file: reviewPrepared.interaction_file, output_path: "rollback-review.md", outcome: { disposition: "pass" } });
-    assert.strictEqual(finalizeNoChange(rolledBack.context, { session_file: rolledBack.session.session_file, review_output_path: "rollback-review.md", review_decision_file: reviewDecision.decision_file }).state.phase, "review");
+    assert.strictEqual(finalizeNoChange(rolledBack.context, { session_file: rolledBack.session.session_file }).state.phase, "ship");
   } finally { fs.rmSync(rolledBack.fixture.temporaryRoot, { recursive: true, force: true }); }
   const candidateB = { ...acceptedCandidate, id: "C2", path: "scripts/controller-runtime/b.js" };
   const multiple = setup({ disposition: "candidates", candidates: [acceptedCandidate, candidateB] });
@@ -877,7 +871,7 @@ function runReviewTests() {
 }
 
 function runShipTests() {
-  const setup = (fileCount) => {
+  const setup = (fileCount, autoReview = false) => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
     for (let index = 0; index < fileCount; index += 1) fs.writeFileSync(path.join(fixture.worktree, `file-${index}.js`), "0\n"); spawnSync("git", ["add", "."], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
@@ -889,8 +883,17 @@ function runShipTests() {
     recordEvent(context, { event_id: "ship-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
     for (let index = 0; index < fileCount; index += 1) fs.writeFileSync(path.join(fixture.worktree, `file-${index}.js`), "1\n"); spawnSync("git", ["add", "."], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "feat: ship change"], { cwd: fixture.worktree });
     const phase = recordInteraction(context, { invocation: { agent_id: "phase", invocation_id: "ship-phase", executor: "deterministic-runtime" }, input_paths: ["seed.md"] });
-    recordEvent(context, { event_id: "ship-whole", from: "build-task", to: "whole-build", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-simplify", from: "whole-build", to: "simplify", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-review", from: "simplify", to: "review", evidence_files: [phase.file] });
-    const currentHead = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim(); const reviewInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-standalone-review", invocation_id: "ship-review-pass", executor: "deterministic-runtime" }, input_paths: ["seed.md"] }); const review = recordDecision(context, { interaction_file: reviewInteraction.file, conclusion: { kind: "standalone-review", disposition: "pass", head: currentHead } }); recordEvent(context, { event_id: "ship-phase-enter", from: "review", to: "ship", evidence_files: [review.file] });
+    const currentHead = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim();
+    if (autoReview) {
+      const reviewInteraction = recordInteraction(context, { invocation: { agent_id: "reviewer", invocation_id: "ship-whole-review", executor: "subagent" }, input_paths: ["seed.md"] }); const review = recordDecision(context, { interaction_file: reviewInteraction.file, conclusion: { disposition: "pass" } });
+      const stableInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build-stable", invocation_id: "ship-stable", executor: "deterministic-runtime", plan_registration_file: plan.file, head: currentHead, review_decision_file: review.file }, input_paths: ["seed.md", `evidence/${review.file}`] }); const stable = recordDecision(context, { interaction_file: stableInteraction.file, conclusion: { kind: "whole-build-stable", plan_registration_file: plan.file, head: currentHead } });
+      recordEvent(context, { event_id: "ship-whole", from: "build-task", to: "whole-build", evidence_files: [stable.file] });
+      const sessionInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification", invocation_id: "ship-session", executor: "deterministic-runtime" }, input_paths: [`evidence/${stable.file}`] }); const session = recordDecision(context, { interaction_file: sessionInteraction.file, conclusion: { kind: "simplification-session", stable_file: stable.file, head: currentHead, candidates: [] } }); recordEvent(context, { event_id: "ship-simplify", from: "whole-build", to: "simplify", evidence_files: [session.file] });
+      const noChangeInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: "ship-no-change", executor: "deterministic-runtime", session_file: session.file, stable_file: stable.file, review_decision_file: review.file }, input_paths: [`evidence/${session.file}`, `evidence/${stable.file}`, `evidence/${review.file}`] }); const noChange = recordDecision(context, { interaction_file: noChangeInteraction.file, conclusion: { kind: "simplification-no-change", session_file: session.file, stable_file: stable.file, review_file: review.file, head: currentHead } }); recordEvent(context, { event_id: "ship-phase-enter", from: "simplify", to: "ship", evidence_files: [noChange.file] });
+    } else {
+      recordEvent(context, { event_id: "ship-whole", from: "build-task", to: "whole-build", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-simplify", from: "whole-build", to: "simplify", evidence_files: [phase.file] }); recordEvent(context, { event_id: "ship-review", from: "simplify", to: "review", evidence_files: [phase.file] });
+      const reviewInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-standalone-review", invocation_id: "ship-review-pass", executor: "deterministic-runtime" }, input_paths: ["seed.md"] }); const review = recordDecision(context, { interaction_file: reviewInteraction.file, conclusion: { kind: "standalone-review", disposition: "pass", head: currentHead } }); recordEvent(context, { event_id: "ship-phase-enter", from: "review", to: "ship", evidence_files: [review.file] });
+    }
     const shipCli = spawnSync(process.execPath, [cliPath, "ship", "context", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: "{}" }); assert.strictEqual(shipCli.status, 0, shipCli.stderr); const shipContext = JSON.parse(shipCli.stdout).ship;
     const runAdapter = (id, actionName, personaPath, inputs, output, outcome, rootMode = false) => {
       const action = issueAction(context, { action_id: id, action: actionName, skill_path: "skills/shipping-and-launch/SKILL.md", persona_path: personaPath, input_paths: inputs });
@@ -899,6 +902,9 @@ function runShipTests() {
     };
     return { fixture, context, shipContext, runAdapter };
   };
+  const automatic = setup(1, true);
+  try { assert.strictEqual(automatic.shipContext.head, spawnSync("git", ["rev-parse", "HEAD"], { cwd: automatic.fixture.worktree, encoding: "utf8" }).stdout.trim()); }
+  finally { fs.rmSync(automatic.fixture.temporaryRoot, { recursive: true, force: true }); }
   const full = setup(3);
   try {
     assert.deepStrictEqual(full.shipContext.required_personas, ["code-reviewer", "security-auditor", "test-engineer"]);
@@ -924,7 +930,7 @@ function runShipTests() {
 }
 
 function runGithubPrTests() {
-  const setup = ({ disposition = "GO", dirty = false } = {}) => {
+  const setup = ({ disposition = "GO", dirty = false, auto_review: autoReview = false } = {}) => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
     fs.writeFileSync(path.join(fixture.worktree, "src.js"), "ready\n");
@@ -944,14 +950,19 @@ function runGithubPrTests() {
     const planInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "pr-plan", executor: "deterministic-runtime", spec_registration_file: spec.file }, input_paths: ["seed.md", `evidence/${spec.file}`] });
     const plan = recordDecision(context, { interaction_file: planInteraction.file, conclusion: { kind: "plan-registration" } });
     recordEvent(context, { event_id: "pr-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
-    const build = make("mdf-whole-build-stable", { kind: "whole-build-stable", head });
+    const wholeReview = autoReview ? make("reviewer", { disposition: "pass" }) : null;
+    const build = autoReview
+      ? recordDecision(context, { interaction_file: recordInteraction(context, { invocation: { agent_id: "mdf-whole-build-stable", invocation_id: "pr-stable", executor: "deterministic-runtime", head, review_decision_file: wholeReview.file }, input_paths: ["seed.md", `evidence/${wholeReview.file}`] }).file, conclusion: { kind: "whole-build-stable", head } })
+      : make("mdf-whole-build-stable", { kind: "whole-build-stable", head });
     recordEvent(context, { event_id: "pr-build-whole", from: "build-task", to: "whole-build", evidence_files: [build.file] });
     const whole = make("mdf-whole-build", { kind: "whole-build", disposition: "pass", head });
     recordEvent(context, { event_id: "pr-whole-simplify", from: "whole-build", to: "simplify", evidence_files: [whole.file] });
-    const simplify = make("mdf-simplify", { kind: "simplification", disposition: "no-change", head });
-    recordEvent(context, { event_id: "pr-simplify-review", from: "simplify", to: "review", evidence_files: [simplify.file] });
-    const review = make("mdf-standalone-review", { kind: "standalone-review", disposition: "pass", head });
-    recordEvent(context, { event_id: "pr-review-ship", from: "review", to: "ship", evidence_files: [review.file] });
+    const simplify = autoReview
+      ? recordDecision(context, { interaction_file: recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: "pr-no-change", executor: "deterministic-runtime", stable_file: build.file }, input_paths: [`evidence/${build.file}`, `evidence/${wholeReview.file}`] }).file, conclusion: { kind: "simplification-no-change", stable_file: build.file, review_file: wholeReview.file, head } })
+      : make("mdf-simplify", { kind: "simplification", disposition: "no-change", head });
+    const review = autoReview ? wholeReview : make("mdf-standalone-review", { kind: "standalone-review", disposition: "pass", head });
+    if (autoReview) recordEvent(context, { event_id: "pr-simplify-ship", from: "simplify", to: "ship", evidence_files: [simplify.file] });
+    else { recordEvent(context, { event_id: "pr-simplify-review", from: "simplify", to: "review", evidence_files: [simplify.file] }); recordEvent(context, { event_id: "pr-review-ship", from: "review", to: "ship", evidence_files: [review.file] }); }
     const ship = make("mdf-ship", { kind: "ship-decision", disposition, head, rollback: { trigger_conditions: "failure", procedure: "revert", recovery_time_objective: "5m" } });
     recordEvent(context, { event_id: "pr-ship-github", from: "ship", to: "github-pr", evidence_files: [ship.file] });
     if (dirty) fs.writeFileSync(path.join(fixture.worktree, "dirty.txt"), "dirty\n");
@@ -969,6 +980,11 @@ function runGithubPrTests() {
     assert.strictEqual(cli.status, 0, cli.stderr);
     assert.strictEqual(JSON.parse(cli.stdout).github_pr.action, "github-pr");
   } finally { fs.rmSync(ready.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const automatic = setup({ auto_review: true });
+  try {
+    const observation = observeGithubPrBoundary(automatic.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 1, open_prs: [], release_signal: { state: "known", value: "patch" }, authority_file: automatic.refs.authority });
+    assert.strictEqual(prepareGithubPrHandoff(automatic.context, { observation_file: observation.observation_file }).references.review_file, automatic.refs.review);
+  } finally { fs.rmSync(automatic.fixture.temporaryRoot, { recursive: true, force: true }); }
   for (const scenario of [
     { name: "dirty", setup: { dirty: true }, external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" } } },
     { name: "unpushed-unknown", external: { default_branch: "main", upstream_state: "ambiguous", unpushed_commits: null, open_prs: [], release_signal: { state: "known", value: "minor" } } },
