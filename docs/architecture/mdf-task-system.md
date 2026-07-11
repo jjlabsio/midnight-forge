@@ -61,7 +61,7 @@ Standalone `$task work <id>` briefs the task and stops. A same user message can 
 The automatic MDF workflow is:
 
 ```text
-spec -> plan -> build tasks -> whole-build -> simplify -> review -> ship -> github-pr
+spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-pr
 ```
 
 `spec`, `plan`, and `review` are standalone one-phase workflows. A standalone
@@ -83,10 +83,12 @@ and review occur only after every task in the approved plan revision completes.
 
 After a stable whole-build baseline, automatic execution always performs the
 production-code simplification scan. A changed candidate receives its own gate
-and commit and returns through whole-build; a verified no-change result proceeds
-to a separate standalone review. Ship GO then creates a provenance-bound handoff
-to the existing `github-pr` workflow. MDF does not duplicate that workflow's
-commit, push, task-completion, or PR mechanics.
+and commit and returns through whole-build verification and fresh review. A
+verified no-change result reuses the exact final-tree whole-build review instead
+of repeating a standalone review. Standalone `review` remains independently
+callable. Ship GO then creates a provenance-bound handoff to the existing
+`github-pr` workflow. MDF does not duplicate that workflow's commit, push,
+task-completion, or PR mechanics.
 
 MDF preserves upstream risk matrices, doubt-driven review, Definition of Done,
 and irreversible-work sign-off. It has no separate evaluator personas or MDF

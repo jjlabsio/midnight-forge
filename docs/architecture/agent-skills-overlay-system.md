@@ -124,8 +124,10 @@ composition exceptions for the harness:
   ship NO-GO, and GitHub or PR ambiguity.
 - Code simplification stays inside the same MDF task and feature PR after a
   stable whole-build baseline. It is isolated in candidate-scoped verification
-  and `refactor:` commits; changed code must pass whole-build again before the
-  separate standalone review and ship gates.
+  and `refactor:` commits. Changed code must pass whole-build verification and
+  fresh review again before ship. A verified no-change result reuses the exact
+  final-tree whole-build review; standalone `review` remains independently
+  callable rather than being repeated by `auto-workflow`.
 
 These exceptions change orchestration timing, not the internal rules or output
 shape of an upstream primitive.
