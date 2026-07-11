@@ -313,6 +313,7 @@ function runLifecycleTests() {
     assert.strictEqual(bypass.status, 1);
     assert.strictEqual(JSON.parse(bypass.stderr).error.code, "MDF_CONTROLLER_USAGE");
     expectCode(() => recordEvent(context, { event_id: "bad", from: "spec", to: "ship", evidence_files: [evidence] }), "MDF_LIFECYCLE_ILLEGAL_EDGE");
+    expectCode(() => recordEvent(context, { event_id: "bad-next", from: "spec", to: "plan", next_action: "ship", evidence_files: [evidence] }), "MDF_LIFECYCLE_NEXT_INVALID");
     let from = "spec";
     const sequence = ["plan", "build-task", "build-task", "whole-build", "simplify", "review", "ship", "github-pr", "complete"];
     for (let index = 0; index < sequence.length; index += 1) {
@@ -695,6 +696,9 @@ function runTechnicalRevisionTests() {
     assert.strictEqual(cli.status, 0, cli.stderr);
     const revision = JSON.parse(cli.stdout).technical_revision;
     assert.strictEqual(revision.action, "spec");
+    const resumed = spawnSync(process.execPath, [cliPath, "lifecycle", "next", "--cwd", passing.fixture.worktree, "--plugin-root", root], { encoding: "utf8" });
+    assert.strictEqual(resumed.status, 0, resumed.stderr);
+    assert.strictEqual(JSON.parse(resumed.stdout).action, "spec");
     const action = issueAction(passing.context, { action_id: "revised-spec-review", action: "ddd-review", skill_path: "skills/doubt-driven-development/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: ["spec-new.md"] });
     const invocation = { agent_id: "spec-reviewer", invocation_id: "revised-spec-review-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
     const capability = issueCapability(passing.context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" });

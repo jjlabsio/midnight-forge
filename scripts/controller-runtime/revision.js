@@ -34,7 +34,7 @@ function registerTechnicalRevision(context, { recovery_file: recoveryFile, origi
     const stopped = recordEvent(context, { event_id: `revision-stop-${revision.file}`, from: phase, evidence_files: [revision.file], stop_reason: "human-required" });
     return { action: "stop", revision_file: revision.file, ...stopped };
   }
-  const transition = recordEvent(context, { event_id: `revision-spec-${revision.file}`, from: phase, to: "spec", next_action: "plan", evidence_files: [revision.file] });
+  const transition = recordEvent(context, { event_id: `revision-spec-${revision.file}`, from: phase, to: "spec", next_action: "spec", evidence_files: [revision.file] });
   return { ...transition, action: "spec", revision_file: revision.file, new_spec_artifact_file: artifact.file };
 }
 

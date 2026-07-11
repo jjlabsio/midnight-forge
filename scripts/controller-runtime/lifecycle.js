@@ -75,7 +75,7 @@ function recordEvent(context, request) {
     if (!STOPS.has(stopReason)) throw new ControllerError("MDF_LIFECYCLE_STOP_INVALID", "Unknown lifecycle stop reason.");
   } else validateEdge(from, to);
   const resultingPhase = stopReason ? from : to;
-  if (nextAction && !EDGES.get(resultingPhase)?.includes(nextAction)) throw new ControllerError("MDF_LIFECYCLE_NEXT_INVALID", "Lifecycle next action is not legal from resulting phase.", { resulting_phase: resultingPhase, next_action: nextAction });
+  if (nextAction && nextAction !== resultingPhase && !EDGES.get(resultingPhase)?.includes(nextAction)) throw new ControllerError("MDF_LIFECYCLE_NEXT_INVALID", "Lifecycle next action is not legal from resulting phase.", { resulting_phase: resultingPhase, next_action: nextAction });
   for (const file of evidenceFiles) verifySidecar(context, file);
   const inputPaths = evidenceFiles.map((file) => `evidence/${file}`);
   const event = recordInteraction(context, { invocation: { agent_id: "mdf-lifecycle", invocation_id: eventId, executor: "deterministic-runtime", previous_event_file: state.event_file, from, to: resultingPhase, next_action: nextAction, stop_reason: stopReason }, input_paths: inputPaths });
