@@ -12,14 +12,14 @@ const nonempty = (value) => typeof value === "string" && value.trim().length > 0
 
 function primitive(context, skillPath, personaPath) {
   const skill = resolvePluginPath(context.plugin_root, skillPath);
-  const persona = resolvePluginPath(context.plugin_root, personaPath);
-  return { skill: { path: skill, bytes_sha256: hash(skill) }, persona: { path: persona, bytes_sha256: hash(persona) } };
+  const persona = nonempty(personaPath) ? resolvePluginPath(context.plugin_root, personaPath) : null;
+  return { skill: { path: skill, bytes_sha256: hash(skill) }, persona: persona ? { path: persona, bytes_sha256: hash(persona) } : null };
 }
 
 function issueAction(context, request) {
   if (!nonempty(request?.action_id) || !nonempty(request?.action) || !Array.isArray(request.input_paths)) throw new ControllerError("MDF_ADAPTER_ACTION_INVALID", "Runtime action requires non-empty identity, action, and exact inputs.");
   const exact = primitive(context, request.skill_path, request.persona_path);
-  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-runtime", invocation_id: request.action_id, executor: "deterministic-runtime", action_id: request.action_id, action: request.action, skill_path: request.skill_path, persona_path: request.persona_path, skill_sha256: exact.skill.bytes_sha256, persona_sha256: exact.persona.bytes_sha256 }, input_paths: request.input_paths });
+  const interaction = recordInteraction(context, { invocation: { agent_id: "mdf-runtime", invocation_id: request.action_id, executor: "deterministic-runtime", action_id: request.action_id, action: request.action, skill_path: request.skill_path, persona_path: request.persona_path || null, skill_sha256: exact.skill.bytes_sha256, persona_sha256: exact.persona?.bytes_sha256 || null }, input_paths: request.input_paths });
   return { version: 1, action_file: interaction.file, action_id: request.action_id, action: request.action, ...exact };
 }
 
@@ -27,14 +27,14 @@ function actionRecord(context, file) {
   const action = verifySidecar(context, file);
   if (action.kind !== "interaction" || action.invocation?.agent_id !== "mdf-runtime" || action.invocation?.executor !== "deterministic-runtime") throw new ControllerError("MDF_ADAPTER_ACTION_INVALID", "Adapter requires a runtime-issued action record.");
   const exact = primitive(context, action.invocation.skill_path, action.invocation.persona_path);
-  if (exact.skill.bytes_sha256 !== action.invocation.skill_sha256 || exact.persona.bytes_sha256 !== action.invocation.persona_sha256) throw new ControllerError("MDF_ADAPTER_PRIMITIVE_STALE", "Exact skill or persona changed after action issue.");
+  if (exact.skill.bytes_sha256 !== action.invocation.skill_sha256 || (exact.persona?.bytes_sha256 || null) !== action.invocation.persona_sha256) throw new ControllerError("MDF_ADAPTER_PRIMITIVE_STALE", "Exact skill or persona changed after action issue.");
   return { action, exact };
 }
 
-function validateInvocation(invocation) {
+function validateInvocation(invocation, personaRequired) {
   const capability = invocation?.capability;
   if (![invocation?.agent_id, invocation?.invocation_id, invocation?.model_capability].every(nonempty) || !EXECUTORS.has(invocation?.executor)) throw new ControllerError("MDF_ADAPTER_INVOCATION_INVALID", "Adapter requires enumerated executor and non-empty invocation provenance.");
-  if (!capability || capability.persona_loaded !== true || capability.reasoning_capable !== true || capability.model_suitable !== true || !CAPABILITY_SOURCES.has(capability.source)) throw new ControllerError("MDF_ADAPTER_CAPABILITY_UNSUPPORTED", "Adapter capability is unsupported or unproven.");
+  if (!capability || capability.persona_loaded !== personaRequired || (!personaRequired && invocation.executor !== "root") || capability.reasoning_capable !== true || capability.model_suitable !== true || !CAPABILITY_SOURCES.has(capability.source)) throw new ControllerError("MDF_ADAPTER_CAPABILITY_UNSUPPORTED", "Adapter capability is unsupported or unproven.");
   if (!MODES.has(invocation.freshness)) throw new ControllerError("MDF_ADAPTER_FRESHNESS_INVALID", "Invalid adapter freshness mode.");
   if (invocation.freshness === "fresh") {
     if (invocation.executor === "root" || capability.fresh_context !== true || invocation.fallback) throw new ControllerError("MDF_ADAPTER_MODE_INCONSISTENT", "Fresh mode requires non-root fresh execution without fallback.");
@@ -46,10 +46,11 @@ function validateInvocation(invocation) {
 function issueCapability(context, request) {
   const { persona_path: personaPath, evidence_path: evidencePath, ...invocation } = request;
   if (!nonempty(evidencePath)) throw new ControllerError("MDF_ADAPTER_CAPABILITY_EVIDENCE_MISSING", "Capability issuance requires a canonical runtime observation artifact.");
-  validateInvocation(invocation);
-  const persona = resolvePluginPath(context.plugin_root, personaPath);
-  const record = recordInteraction(context, { invocation: { agent_id: "mdf-capability-runtime", invocation_id: invocation.invocation_id, executor: "deterministic-runtime", capability: invocation, persona_path: personaPath, persona_sha256: hash(persona), evidence_path: evidencePath }, input_paths: [evidencePath] });
-  return { version: 1, capability_file: record.file, persona: { path: persona, bytes_sha256: hash(persona) } };
+  const persona = nonempty(personaPath) ? resolvePluginPath(context.plugin_root, personaPath) : null;
+  validateInvocation(invocation, Boolean(persona));
+  const personaHash = persona ? hash(persona) : null;
+  const record = recordInteraction(context, { invocation: { agent_id: "mdf-capability-runtime", invocation_id: invocation.invocation_id, executor: "deterministic-runtime", capability: invocation, persona_path: personaPath || null, persona_sha256: personaHash, evidence_path: evidencePath }, input_paths: [evidencePath] });
+  return { version: 1, capability_file: record.file, persona: persona ? { path: persona, bytes_sha256: personaHash } : null };
 }
 
 function invocationClaim(invocation) {
@@ -66,11 +67,11 @@ function capabilityRecord(context, file, invocation, personaPath, personaHash) {
 }
 
 function prepareAdapter(context, request) {
-  validateInvocation(request?.invocation);
   const { action, exact } = actionRecord(context, request.action_file);
+  validateInvocation(request?.invocation, Boolean(exact.persona));
   if (!nonempty(request.capability_file)) throw new ControllerError("MDF_ADAPTER_CAPABILITY_MISSING", "Adapter prepare requires a capability provenance record.");
-  const capability = capabilityRecord(context, request.capability_file, request.invocation, action.invocation.persona_path, exact.persona.bytes_sha256);
-  const invocation = { ...request.invocation, adapter_stage: "prepared", action_file: request.action_file, capability_file: request.capability_file, capability_integrity_sha256: capability.integrity_sha256, action_id: action.invocation.action_id, action: action.invocation.action, skill_sha256: exact.skill.bytes_sha256, persona_sha256: exact.persona.bytes_sha256 };
+  const capability = capabilityRecord(context, request.capability_file, request.invocation, action.invocation.persona_path, exact.persona?.bytes_sha256 || null);
+  const invocation = { ...request.invocation, adapter_stage: "prepared", action_file: request.action_file, capability_file: request.capability_file, capability_integrity_sha256: capability.integrity_sha256, action_id: action.invocation.action_id, action: action.invocation.action, skill_sha256: exact.skill.bytes_sha256, persona_sha256: exact.persona?.bytes_sha256 || null };
   const interaction = recordInteraction(context, { invocation, input_paths: action.inputs.map((input) => input.path) });
   return { version: 1, action_file: request.action_file, action_id: invocation.action_id, action: invocation.action, ...exact, invocation, interaction_file: interaction.file };
 }
@@ -79,9 +80,9 @@ function submitOutcome(context, request) {
   if (!nonempty(request?.interaction_file) || !nonempty(request?.action_id) || !nonempty(request?.output_path) || !request.outcome || typeof request.outcome !== "object" || Array.isArray(request.outcome)) throw new ControllerError("MDF_ADAPTER_OUTCOME_INVALID", "Outcome requires prepared interaction, structured result, and raw output artifact.");
   const interaction = verifySidecar(context, request.interaction_file);
   if (interaction.invocation?.adapter_stage !== "prepared") throw new ControllerError("MDF_ADAPTER_PREPARE_REQUIRED", "Outcome requires an adapter-prepared interaction.");
-  validateInvocation(interaction.invocation);
-  if (interaction.invocation?.action_id !== request.action_id) throw new ControllerError("MDF_ADAPTER_ACTION_MISMATCH", "Outcome action does not match invocation.");
   const { action } = actionRecord(context, interaction.invocation.action_file);
+  validateInvocation(interaction.invocation, nonempty(action.invocation.persona_path));
+  if (interaction.invocation?.action_id !== request.action_id) throw new ControllerError("MDF_ADAPTER_ACTION_MISMATCH", "Outcome action does not match invocation.");
   const capability = capabilityRecord(context, interaction.invocation.capability_file, interaction.invocation, action.invocation.persona_path, interaction.invocation.persona_sha256);
   if (capability.integrity_sha256 !== interaction.invocation.capability_integrity_sha256) throw new ControllerError("MDF_ADAPTER_CAPABILITY_MISMATCH", "Prepared capability provenance changed.");
   if (action.invocation.action_id !== request.action_id || interaction.invocation.skill_sha256 !== action.invocation.skill_sha256 || interaction.invocation.persona_sha256 !== action.invocation.persona_sha256) throw new ControllerError("MDF_ADAPTER_PRIMITIVE_STALE", "Outcome provenance no longer matches runtime action.");

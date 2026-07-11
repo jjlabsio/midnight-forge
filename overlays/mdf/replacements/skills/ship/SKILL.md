@@ -28,10 +28,12 @@ adapter with the context sidecar as their exact input and preserve every raw
 report unchanged.
 
 Root then performs the upstream merge and rollback synthesis against the exact
-context and report decisions. Call `ship register` with those raw paths and
-the provenance-bound root synthesis. A rollback trigger, procedure, and RTO
-are mandatory. Missing/stale reports, an unsupported persona claim, or NO-GO
-blocks the PR transition.
+context and report decisions without loading any specialist persona. The
+`ship-synthesis` adapter action is root-owned and persona-less; specialist
+personas remain limited to their individual fan-out reports. Call `ship register`
+with those raw paths and the provenance-bound root synthesis. A rollback
+trigger, procedure, and RTO are mandatory. Missing/stale reports, an unsupported
+persona claim, or NO-GO blocks the PR transition.
 
 When GO would accept a blocking risk, stop for the user. Only after an explicit
 affirmative action call `ship risk` with exact `risk_ids` and the raw user

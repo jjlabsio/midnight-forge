@@ -76,7 +76,7 @@ function registerShip(context, { context_file: contextFile, reports, output_path
     return { ...report, decision };
   });
   const synthesisInputs = [`evidence/${contextFile}`, ...verified.flatMap(({ output_path: reportPath, decision_file: reportFile }) => [reportPath, `evidence/${reportFile}`]), ...(acceptanceFile ? [`evidence/${acceptanceFile}`] : [])].sort();
-  const { decision: synthesis, action } = verifyAdapterDecision(context, decisionFile, { action: "ship-synthesis", skill_path: "skills/shipping-and-launch/SKILL.md", persona_path: "agents/code-reviewer.md", output_path: outputPath });
+  const { decision: synthesis, action } = verifyAdapterDecision(context, decisionFile, { action: "ship-synthesis", skill_path: "skills/shipping-and-launch/SKILL.md", persona_path: null, output_path: outputPath });
   if (JSON.stringify(action.inputs.map((input) => input.path).sort()) !== JSON.stringify(synthesisInputs) || !new Set(["GO", "NO-GO"]).has(synthesis.conclusion?.disposition) || ![synthesis.conclusion.rollback?.trigger_conditions, synthesis.conclusion.rollback?.procedure, synthesis.conclusion.rollback?.recovery_time_objective].every(nonempty) || (shipContext.invocation.small_change_exception && synthesis.conclusion.small_change_direct_review !== true)) throw new ControllerError("MDF_SHIP_DECISION_INVALID", "Root ship synthesis must bind exact reports and mandatory rollback plan.");
   const blockedRisks = [...new Set(verified.filter(({ decision }) => decision.conclusion.disposition === "block" || decision.conclusion.critical).flatMap(({ decision }) => decision.conclusion.risk_ids))];
   let acceptance = null;
