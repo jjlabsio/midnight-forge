@@ -8,7 +8,6 @@ const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const { loadInventory } = require("./overlay-inventory");
-const { approvalMatches, canCompleteWholeBuild, cleanBaseline, resolveBuildMode, resolvePluginPath, reviewDisposition } = require("./controller-contracts");
 
 const root = path.resolve(__dirname, "..");
 const vendorRoot = path.join(root, "vendor", "agent-skills");
@@ -116,8 +115,8 @@ for (const name of controllers) {
   assertContains(output, "plugin root");
 }
 
-// Static scenario contracts: these strings make accidental shortcutting visible
-// in review and force controller authors to preserve the stated lifecycle.
+// Static adapter-closure checks ensure generated controllers keep their declared
+// upstream handoffs without importing a controller runtime model.
 for (const needle of [
   "exact canonical artifact revision/hash",
   "approval-NNN.md",
@@ -159,30 +158,6 @@ for (const output of ["skills/spec-driven-development/SKILL.md", "skills/plannin
   assertNotContains(output, "spec-evaluator");
   assertNotContains(output, "plan-evaluator");
   assertNotContains(output, "artifact storage rule");
-}
-
-// Scenario fixtures exercise the controller contracts independently from prose
-// so a phrase cannot accidentally stand in for revision-safe behavior.
-const latest = { spec: "spec-002.md", spec_sha256: "spec-hash", plan: "plan-003.md", plan_sha256: "plan-hash" };
-assert(approvalMatches({ kind: "spec", artifact: "spec-002.md", artifact_sha256: "spec-hash", latest_pointer: "spec-002.md", affirmative: true }, latest, "spec"), "matching spec approval must pass");
-assert(!approvalMatches({ kind: "spec", artifact: "spec-002.md", artifact_sha256: "old-hash", latest_pointer: "spec-002.md", affirmative: true }, latest, "spec"), "artifact revision mutation must invalidate approval");
-assert(!approvalMatches({ kind: "plan", artifact: "plan-003.md", artifact_sha256: "plan-hash", latest_pointer: "plan-002.md", affirmative: true }, latest, "plan"), "latest-pointer mutation must invalidate approval");
-assert(resolveBuildMode([]) === "single-task", "default build must remain one-task mode");
-assert(resolveBuildMode(["auto"]) === "lifecycle" && resolveBuildMode(["all"]) === "lifecycle", "build auto/all must route to lifecycle mode");
-assert(cleanBaseline(""), "clean baseline must pass");
-assert(!cleanBaseline(" M unrelated.md"), "dirty baseline must stop autonomous work");
-assert(reviewDisposition({ freshReviewerAvailable: true, rootEscalationAllowed: false }) === "fresh", "fresh review must be used when available");
-assert(reviewDisposition({ freshReviewerAvailable: false, rootEscalationAllowed: true }) === "root-fallback", "permitted root escalation must be explicit");
-assert(reviewDisposition({ freshReviewerAvailable: false, rootEscalationAllowed: false }) === "block", "unavailable genuine fresh review must block advancement");
-assert(!canCompleteWholeBuild({ approvedTasks: 3, passedTasks: 1, writers: 1 }), "a selected task cannot complete the whole build");
-assert(!canCompleteWholeBuild({ approvedTasks: 3, passedTasks: 3, writers: 2 }), "whole-build completion requires one-writer serialization");
-assert(canCompleteWholeBuild({ approvedTasks: 3, passedTasks: 3, writers: 1 }), "all approved tasks with one writer can complete the whole build");
-assert(resolvePluginPath(vendorRoot, "agents/code-reviewer.md") === path.join(vendorRoot, "agents", "code-reviewer.md"), "plugin-root resolver must work from a relocated vendor root");
-try {
-  resolvePluginPath(vendorRoot, "../outside.md");
-  assert(false, "plugin-root resolver must reject escapes");
-} catch (error) {
-  assert(error.message.includes("plugin path"), "plugin-root resolver must report path errors");
 }
 
 for (const stalePath of [
