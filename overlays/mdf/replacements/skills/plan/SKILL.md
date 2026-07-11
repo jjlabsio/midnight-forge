@@ -33,7 +33,8 @@ Pass each payload as JSON on stdin while providing the resolved `--cwd` and
 `--plugin-root` options:
 
 - `plan metadata`: `artifact_path`, `spec_registration_file`, and structured
-  `metadata.tasks` (`id`, `depends_on`, `owned_paths`, `acceptance`).
+  `metadata.tasks` (`id`, `depends_on`, `owned_paths`, `acceptance`) plus the
+  complete ordered shell-free `metadata.whole_build_commands` argv matrix.
 - `plan register`: `artifact_path`, `spec_registration_file`, returned
   `metadata_file`, `review_output_path`, provenance-bound
   `review_decision_file`, and `mode` (`standalone` or `auto`).

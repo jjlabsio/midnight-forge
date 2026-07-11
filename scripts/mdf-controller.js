@@ -7,6 +7,7 @@ const { next, recordEvent } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask } = require("./controller-runtime/build-task");
+const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
 
 function fail(error) {
   const response = {
@@ -88,6 +89,16 @@ try {
     const result = operation === "select" ? selectBuildTask(context, request) : operation === "verify" ? runVerification(context, request) : operation === "impact" ? recordDownstreamImpact(context, request) : operation === "authorize" ? authorizeTaskCommit(context, request) : operation === "complete" ? completeBuildTask(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller build-task select|verify|impact|authorize|complete [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, build_task: result }, null, 2));
+    process.exit(0);
+  } else if (command === "whole-build") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Whole-build command requires JSON stdin."); }
+    const result = operation === "resume" ? resumeAutoBuild(context, request) : operation === "begin" ? beginWholeBuild(context, request) : operation === "verify" ? runWholeVerification(context, request) : operation === "inputs" ? { input_paths: wholeReviewInputs(context, request) } : operation === "finalize" ? finalizeWholeBuild(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller whole-build resume|begin|verify|inputs|finalize [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, whole_build: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

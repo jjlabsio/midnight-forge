@@ -6,6 +6,7 @@ const path = require("path");
 
 function validateMetadata(metadata) {
   if (!metadata || !Array.isArray(metadata.tasks) || metadata.tasks.length === 0) throw new ControllerError("MDF_PLAN_METADATA_INVALID", "Plan metadata requires a complete non-empty task set.");
+  if (!Array.isArray(metadata.whole_build_commands) || metadata.whole_build_commands.length === 0 || metadata.whole_build_commands.some((command) => !Array.isArray(command) || command.length === 0 || command.some((part) => typeof part !== "string" || !part))) throw new ControllerError("MDF_PLAN_METADATA_INVALID", "Plan metadata requires a complete ordered whole-build argv matrix.");
   const ids = metadata.tasks.map((task) => task.id);
   if (ids.some((id) => typeof id !== "string" || !id) || new Set(ids).size !== ids.length) throw new ControllerError("MDF_PLAN_TASK_IDS_INVALID", "Plan task IDs must be unique non-empty strings.");
   const known = new Set(ids);
@@ -34,6 +35,7 @@ function registerPlan(context, { artifact_path: artifactPath, spec_registration_
   if (!current(context).evidence_files.includes(specFile)) throw new ControllerError("MDF_PLAN_SPEC_MISMATCH", "Plan spec does not match the current spec-to-plan transition.");
   const metadataSidecar = verifySidecar(context, metadataFile);
   if (metadataSidecar.invocation?.agent_id !== "mdf-plan-metadata" || metadataSidecar.invocation.spec_registration_file !== specFile) throw new ControllerError("MDF_PLAN_METADATA_INVALID", "Plan metadata sidecar does not match current spec.");
+  validateMetadata(metadataSidecar.invocation.metadata);
   const { decision, execution, action } = verifyAdapterDecision(context, reviewDecisionFile, { action: "ddd-review", skill_path: "skills/doubt-driven-development/SKILL.md", persona_path: "agents/code-reviewer.md", output_path: reviewPath });
   const expectedInputs = [artifactPath, `evidence/${specFile}`, `evidence/${metadataFile}`].sort();
   const actionInputs = action.inputs.map((input) => input.path).sort();

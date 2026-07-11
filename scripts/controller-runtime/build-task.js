@@ -6,6 +6,7 @@ const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordCommand, recordDecision, recordInteraction, verifyInputs, verifySidecar } = require("./evidence");
 const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { validateMetadata } = require("./plan");
 
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
 const IMPACTS = new Set(["unaffected", "task-context-updated", "plan-revision-required", "user-decision-required"]);
@@ -51,6 +52,7 @@ function planRegistration(context, file) {
   const registration = verifySidecar(context, file, { fresh: false });
   verifyInputs(context, registration);
   if (registration.kind !== "interaction" || registration.invocation?.agent_id !== "mdf-plan" || !Array.isArray(registration.invocation.metadata?.tasks)) throw new ControllerError("MDF_BUILD_PLAN_INVALID", "Build requires an approved plan registration.");
+  validateMetadata(registration.invocation.metadata);
   return registration;
 }
 

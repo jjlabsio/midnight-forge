@@ -63,3 +63,23 @@ passed task, and resume from the next canonical pending task after a blocker.
    existence alone.
 5. Resume only from canonical evidence that satisfies the selected phase's
    approval, verification, and review contract.
+
+## Build-loop runtime
+
+From the resolved plugin root, drive autonomous build state through production
+`./scripts/mdf-controller.js whole-build` operations, passing JSON on stdin:
+
+- `resume` with approved `plan_registration_file` and root `writer_id` returns
+  a new task, the same writer's canonical in-progress attempt, or the
+  `whole-build` action. Never reconstruct progress from counts or prose.
+- After all tasks complete, `begin` binds the approved plan metadata's complete
+  ordered shell-free command matrix to the exact clean final task commit chain.
+- Execute every returned matrix entry through `verify`; do not submit caller
+  claimed exit codes.
+- Use `inputs` to obtain the exact spec, plan, task-transition, traceability,
+  and command evidence paths for a separate fresh upstream code review.
+- Call `finalize` with the complete ordered verification set and exact raw
+  review decision. Only its stable transition permits simplification.
+
+Any pending/duplicate/unknown task, conflicting writer, partial or reordered
+matrix, stale tree/report, failed command, or review mismatch is a typed stop.
