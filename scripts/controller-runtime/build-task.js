@@ -87,10 +87,10 @@ function selectBuildTask(context, { plan_registration_file: planFile, selected_t
   const dirty = statusPaths(context);
   if (dirty.length) throw new ControllerError("MDF_BUILD_BASELINE_DIRTY", "Task selection requires a clean baseline.", { paths: dirty });
   const registration = planRegistration(context, planFile);
-  const boundTransitions = transitionEvidence(context, "plan", "build-task").filter((event) => event.evidence_files.includes(planFile));
-  if (boundTransitions.length !== 1) throw new ControllerError("MDF_BUILD_PLAN_NOT_APPROVED", "Build plan must be the unique plan-to-build transition evidence.");
+  const activeTransition = transitionEvidence(context, "plan", "build-task").at(-1);
+  if (!activeTransition?.evidence_files.includes(planFile)) throw new ControllerError("MDF_BUILD_PLAN_NOT_APPROVED", "Build plan must be the active plan-to-build generation.");
   const head = git(context, ["rev-parse", "HEAD"]).trim();
-  const active = evidence(context).find(({ value }) => value.kind === "interaction" && value.invocation?.agent_id === "mdf-build-task-select" && value.invocation?.base_head === head);
+  const active = evidence(context).find(({ value }) => value.kind === "interaction" && value.invocation?.agent_id === "mdf-build-task-select" && value.invocation?.base_head === head && value.invocation.plan_registration_file === planFile);
   if (active) throw new ControllerError("MDF_BUILD_MULTI_WRITER", "A task attempt already owns this baseline.", { attempt_file: active.file });
   const complete = completedTasks(context, planFile);
   const ready = registration.invocation.metadata.tasks.filter((task) => !complete.has(task.id) && task.depends_on.every((id) => complete.has(id)));

@@ -20,12 +20,14 @@ failure, not an invitation to invent a path.
    prompt and the bounded review inputs.
 4. Save the plan as canonical `plan-NNN.md`, with its ordered task list and
    acceptance criteria, then stop after this phase in standalone mode.
-5. From the plugin root, call the production `scripts/mdf-controller.js plan metadata`, then execute
+5. From the plugin root, call production `./scripts/mdf-controller.js plan metadata`, then execute
    the exact DDD review with the raw plan, current spec registration, and the
    returned metadata sidecar as bounded inputs. Call `plan register` with that
    provenance-bound review decision. Standalone mode stops on the returned
-   action; auto mode uses `plan approve` and `plan advance` only after the
-   exact explicit user approval is available.
+   action. In the initial generation, auto mode uses `plan approve` and then
+   `plan advance` only after exact explicit user approval. In a verified
+   technical-revision generation, call `plan advance` without an
+   `approval_file`; the spec's revision evidence is the authorization.
 
 ## Controller payloads
 
@@ -42,14 +44,20 @@ Pass each payload as JSON on stdin while providing the resolved `--cwd` and
   and `affirmative: true`. Supply true only after the root has observed an
   explicit affirmative user action; a negative or ambiguous message is not an
   approval request.
-- `plan advance`: current `registration_file` and matching `approval_file`.
+- `plan advance`: current `registration_file`; include matching `approval_file`
+  for the initial generation and omit it for a verified technical revision.
 
 ## Approval contract
 
-Build requires explicit affirmative user approval of the exact canonical
-artifact revision/hash. Follow `../../references/approval-evidence.md` for the
+Initial-generation build requires explicit affirmative user approval of the
+exact canonical plan revision/hash. Follow `../../references/approval-evidence.md` for the
 human-facing approval contract and the optional user-facing `approval-NNN.md`
 record. The production
 controller records the authoritative hash-bound approval sidecars; Markdown
 existence or `latest.plan` text is not transition authority. A revision or byte
 change must invalidate prior approval.
+
+This human approval is mandatory for the initial plan. After a verified
+intent-preserving technical spec revision, the exact revision evidence may
+authorize the freshly generated and freshly reviewed plan automatically. It
+does not authorize old plan bytes or a different definition generation.

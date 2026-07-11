@@ -9,6 +9,7 @@ const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("
 const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
 const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
 const { decideRecovery } = require("./controller-runtime/recovery");
+const { registerTechnicalRevision } = require("./controller-runtime/revision");
 
 function fail(error) {
   const response = {
@@ -107,6 +108,13 @@ try {
     try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Recovery command requires JSON stdin."); }
     console.log(JSON.stringify({ ok: true, recovery: decideRecovery(context, request) }, null, 2));
+    process.exit(0);
+  } else if (command === "technical-revision") {
+    const context = resolveControllerContext(parseContextArgs(args));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Technical-revision command requires JSON stdin."); }
+    console.log(JSON.stringify({ ok: true, technical_revision: registerTechnicalRevision(context, request) }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

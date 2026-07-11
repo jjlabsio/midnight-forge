@@ -99,3 +99,6 @@ Ambiguous, non-reproducible, intent/scope/trade-off changing, high-risk,
 irreversible, external, or human-decision cases stop. Repeating the same
 failure fingerprint at the same worktree progress marker stops as
 `no-progress`; a fingerprint is identity evidence, never repair permission.
+An intent-preserving `technical-revision` is handed to the spec controller's
+production revision path. Do not patch the old plan in place or reuse prior
+task, whole-build, simplification, review, ship, or PR evidence.

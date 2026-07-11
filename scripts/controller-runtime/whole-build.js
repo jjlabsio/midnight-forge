@@ -24,7 +24,7 @@ function allEvidence(context) {
 function plan(context, file) {
   const value = verifySidecar(context, file, { fresh: false });
   verifyInputs(context, value);
-  if (value.invocation?.agent_id !== "mdf-plan" || !Array.isArray(value.invocation.metadata?.tasks) || transitionEvidence(context, "plan", "build-task").filter((event) => event.evidence_files.includes(file)).length !== 1) throw new ControllerError("MDF_WHOLE_BUILD_PLAN_INVALID", "Whole build requires the uniquely approved plan transition.");
+  if (value.invocation?.agent_id !== "mdf-plan" || !Array.isArray(value.invocation.metadata?.tasks) || !transitionEvidence(context, "plan", "build-task").at(-1)?.evidence_files.includes(file)) throw new ControllerError("MDF_WHOLE_BUILD_PLAN_INVALID", "Whole build requires the active approved plan generation.");
   return value;
 }
 

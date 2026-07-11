@@ -57,6 +57,15 @@ function approvePlan(context, { registration_file: registrationFile, user_messag
 function advancePlan(context, { registration_file: registrationFile, approval_file: approvalFile }) {
   const registration = verifySidecar(context, registrationFile);
   if (registration.invocation?.mode === "standalone") return { ok: true, action: "stop", reason: "standalone-plan-complete" };
+  const specRegistration = verifySidecar(context, registration.invocation.spec_registration_file);
+  if (specRegistration.invocation?.revision_file) {
+    const revision = verifySidecar(context, specRegistration.invocation.revision_file);
+    const revisedArtifact = verifySidecar(context, revision.conclusion?.new_spec_artifact_file);
+    const registeredArtifact = verifySidecar(context, specRegistration.invocation.artifact_file);
+    if (revision.conclusion?.kind !== "technical-spec-revision" || revision.conclusion.intent_preserved !== true || revisedArtifact.artifact.path !== registeredArtifact.artifact.path || revisedArtifact.artifact.sha256 !== registeredArtifact.artifact.sha256) throw new ControllerError("MDF_PLAN_REVISION_INVALID", "Automatic plan revision authorization is invalid.");
+    if (current(context).phase !== "plan") throw new ControllerError("MDF_PLAN_PHASE_INVALID", "Plan can advance only from plan phase.");
+    return recordEvent(context, { event_id: `plan-build-${registrationFile}`, from: "plan", to: "build-task", evidence_files: [registrationFile, specRegistration.invocation.revision_file] });
+  }
   if (!approvalFile) return { ok: false, stop: { code: "MDF_PLAN_APPROVAL_REQUIRED", reason: "explicit initial plan approval is required" } };
   const approval = verifySidecar(context, approvalFile);
   if (approval.conclusion?.kind !== "plan-approval" || approval.conclusion?.affirmative !== true || approval.conclusion?.registration_file !== registrationFile || approval.conclusion?.artifact_file !== registration.invocation.artifact_file) throw new ControllerError("MDF_PLAN_APPROVAL_INVALID", "Plan approval does not match current registration.");

@@ -27,6 +27,10 @@ work and record the fallback.
   revision/hash.
 - Stop after `plan` until explicit plan approval is recorded for its exact
   revision/hash.
+- The two human approval stops apply to the initial definition generation. A
+  provenance-bound, intent-preserving technical revision automatically
+  advances only its newly reviewed spec and plan; product/scope/trade-off
+  changes still stop.
 - An artifact revision invalidates prior approval.
 - Run every task in the exact approved plan revision, in order, with build's
   task verification, fresh review, downstream-impact, and focused-commit gate.
