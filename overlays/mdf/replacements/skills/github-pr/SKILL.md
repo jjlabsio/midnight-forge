@@ -19,6 +19,20 @@ Do not save PR drafts or PR creation records under `.mdf/`; GitHub is the source
 
 ## PR Modes
 
+### Auto-workflow Handoff
+
+When `auto-workflow` reaches `github-pr`, first use the production MDF controller
+to observe the external boundary and prepare the handoff. The handoff must carry
+the canonical task, spec, plan, build, review, and current-tree ship GO references.
+It does not commit, push, inspect remote state by itself, or create a pull request;
+the behavior in this skill remains authoritative for those operations.
+
+If the controller returns a typed stop because the worktree, upstream state,
+existing pull requests, release signal, or mutation authority is ambiguous, stop
+before any external mutation. Otherwise continue with the normal MDF task PR mode
+and the preflight below. Do not reconstruct or bypass controller evidence from
+artifact presence or caller assertions.
+
 ### Normal MDF Task PR Mode
 
 Use this mode for ordinary MDF task-backed work. The MDF task completion guard is required and must complete exactly one session-identified task before pushing or creating/updating a PR.

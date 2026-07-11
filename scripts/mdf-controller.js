@@ -13,6 +13,7 @@ const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 const { createReviewContext, registerReview } = require("./controller-runtime/review");
 const { createShipContext, recordRiskAcceptance, registerShip } = require("./controller-runtime/ship");
+const { observeGithubPrBoundary, prepareGithubPrHandoff, recordGithubPrAuthority } = require("./controller-runtime/github-pr");
 
 function fail(error) {
   const response = {
@@ -148,6 +149,16 @@ try {
     const result = operation === "context" ? createShipContext(context) : operation === "risk" ? recordRiskAcceptance(context, request) : operation === "register" ? registerShip(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller ship context|risk|register [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, ship: result }, null, 2));
+    process.exit(0);
+  } else if (command === "github-pr") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request = {};
+    try { request = JSON.parse(fs.readFileSync(0, "utf8") || "{}"); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "GitHub PR command requires JSON stdin."); }
+    const result = operation === "authorize" ? recordGithubPrAuthority(context, request) : operation === "observe" ? observeGithubPrBoundary(context, request) : operation === "handoff" ? prepareGithubPrHandoff(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller github-pr authorize|observe|handoff [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, github_pr: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

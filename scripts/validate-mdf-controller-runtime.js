@@ -18,6 +18,7 @@ const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 const { createReviewContext, registerReview } = require("./controller-runtime/review");
 const { createShipContext, recordRiskAcceptance, registerShip } = require("./controller-runtime/ship");
+const { observeGithubPrBoundary, prepareGithubPrHandoff, recordGithubPrAuthority } = require("./controller-runtime/github-pr");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -916,10 +917,82 @@ function runShipTests() {
   try { const rollback = { trigger_conditions: "failure", procedure: "do not launch", recovery_time_objective: "0m" }; const synthesis = noGo.runAdapter("nogo-synthesis", "ship-synthesis", "agents/code-reviewer.md", [`evidence/${noGo.shipContext.context_file}`], "ship.md", { disposition: "NO-GO", rollback, small_change_direct_review: true }, true); const result = registerShip(noGo.context, { context_file: noGo.shipContext.context_file, reports: [], output_path: "ship.md", decision_file: synthesis.decision_file }); assert.strictEqual(result.action, "stop"); assert.strictEqual(result.stop.code, "MDF_STOP_HUMAN_REQUIRED"); } finally { fs.rmSync(noGo.fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runGithubPrTests() {
+  const setup = ({ disposition = "GO", dirty = false } = {}) => {
+    const fixture = createFixture();
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "ready\n");
+    spawnSync("git", ["add", "."], { cwd: fixture.worktree });
+    spawnSync("git", ["commit", "--quiet", "-m", "feat: ready"], { cwd: fixture.worktree });
+    spawnSync("git", ["branch", "-m", "codex/task-0032"], { cwd: fixture.worktree });
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    fs.writeFileSync(path.join(context.work_item.path, "seed.md"), "seed\n");
+    fs.writeFileSync(path.join(context.work_item.path, "user-authority.md"), "run auto-workflow through PR preparation\n");
+    const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim();
+    const make = (agent, conclusion) => {
+      const interaction = recordInteraction(context, { invocation: { agent_id: agent, invocation_id: `${agent}-${Date.now()}-${Math.random()}`, executor: "deterministic-runtime" }, input_paths: ["seed.md"] });
+      return recordDecision(context, { interaction_file: interaction.file, conclusion });
+    };
+    const spec = make("mdf-spec", { kind: "spec-registration" });
+    recordEvent(context, { event_id: "pr-spec-plan", from: "spec", to: "plan", evidence_files: [spec.file] });
+    const planInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "pr-plan", executor: "deterministic-runtime", spec_registration_file: spec.file }, input_paths: ["seed.md", `evidence/${spec.file}`] });
+    const plan = recordDecision(context, { interaction_file: planInteraction.file, conclusion: { kind: "plan-registration" } });
+    recordEvent(context, { event_id: "pr-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
+    const build = make("mdf-whole-build-stable", { kind: "whole-build-stable", head });
+    recordEvent(context, { event_id: "pr-build-whole", from: "build-task", to: "whole-build", evidence_files: [build.file] });
+    const whole = make("mdf-whole-build", { kind: "whole-build", disposition: "pass", head });
+    recordEvent(context, { event_id: "pr-whole-simplify", from: "whole-build", to: "simplify", evidence_files: [whole.file] });
+    const simplify = make("mdf-simplify", { kind: "simplification", disposition: "no-change", head });
+    recordEvent(context, { event_id: "pr-simplify-review", from: "simplify", to: "review", evidence_files: [simplify.file] });
+    const review = make("mdf-standalone-review", { kind: "standalone-review", disposition: "pass", head });
+    recordEvent(context, { event_id: "pr-review-ship", from: "review", to: "ship", evidence_files: [review.file] });
+    const ship = make("mdf-ship", { kind: "ship-decision", disposition, head, rollback: { trigger_conditions: "failure", procedure: "revert", recovery_time_objective: "5m" } });
+    recordEvent(context, { event_id: "pr-ship-github", from: "ship", to: "github-pr", evidence_files: [ship.file] });
+    if (dirty) fs.writeFileSync(path.join(fixture.worktree, "dirty.txt"), "dirty\n");
+    const authority = recordGithubPrAuthority(context, { user_message_path: "user-authority.md", affirmative: true, push: true, pull_request: true });
+    return { fixture, context, refs: { spec: spec.file, plan: plan.file, build: build.file, whole: whole.file, simplify: simplify.file, review: review.file, ship: ship.file, authority: authority.authority_file } };
+  };
+  const ready = setup();
+  try {
+    const observation = observeGithubPrBoundary(ready.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 2, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: ready.refs.authority });
+    const handoff = prepareGithubPrHandoff(ready.context, { observation_file: observation.observation_file });
+    assert.strictEqual(handoff.action, "github-pr", JSON.stringify(verifySidecar(ready.context, observation.observation_file, { fresh: false }).conclusion));
+    assert.strictEqual(handoff.mutation_performed, false);
+    assert.deepStrictEqual(handoff.references, { task_id: "0032", work_id: ready.fixture.workId, item_path: "item.md", spec_file: ready.refs.spec, plan_file: ready.refs.plan, build_file: ready.refs.build, review_file: ready.refs.review, ship_file: ready.refs.ship });
+    const cli = spawnSync(process.execPath, [cliPath, "github-pr", "handoff", "--cwd", ready.fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ observation_file: observation.observation_file }) });
+    assert.strictEqual(cli.status, 0, cli.stderr);
+    assert.strictEqual(JSON.parse(cli.stdout).github_pr.action, "github-pr");
+  } finally { fs.rmSync(ready.fixture.temporaryRoot, { recursive: true, force: true }); }
+  for (const scenario of [
+    { name: "dirty", setup: { dirty: true }, external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" } } },
+    { name: "unpushed-unknown", external: { default_branch: "main", upstream_state: "ambiguous", unpushed_commits: null, open_prs: [], release_signal: { state: "known", value: "minor" } } },
+    { name: "conflicting-pr", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [{ url: "one", state: "open" }, { url: "two", state: "open" }], release_signal: { state: "known", value: "minor" } } },
+    { name: "release", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "ambiguous", value: null } } },
+    { name: "unsupported-release", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "banana" } } },
+    { name: "authority", external: { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" } } },
+  ]) {
+    const value = setup(scenario.setup);
+    try { const observation = observeGithubPrBoundary(value.context, { ...scenario.external, ...(scenario.name === "authority" ? {} : { authority_file: value.refs.authority }) }); const result = prepareGithubPrHandoff(value.context, { observation_file: observation.observation_file }); assert.strictEqual(result.action, "stop", scenario.name); assert.strictEqual(result.stop.reason, "ambiguous", scenario.name); assert.strictEqual(result.mutation_performed, false); }
+    finally { fs.rmSync(value.fixture.temporaryRoot, { recursive: true, force: true }); }
+  }
+  const invalidAuthority = setup();
+  try {
+    const fakeInteraction = recordInteraction(invalidAuthority.context, { invocation: { agent_id: "caller", invocation_id: "self-attested-authority", executor: "deterministic-runtime" }, input_paths: ["item.md", "user-authority.md"] });
+    const fakeDecision = recordDecision(invalidAuthority.context, { interaction_file: fakeInteraction.file, conclusion: { kind: "github-pr-authority", affirmative: true, push: true, pull_request: true, user_message_path: "user-authority.md" } });
+    const observation = observeGithubPrBoundary(invalidAuthority.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: fakeDecision.file });
+    const result = prepareGithubPrHandoff(invalidAuthority.context, { observation_file: observation.observation_file });
+    assert.strictEqual(result.action, "stop");
+    assert.strictEqual(result.stop.reason, "ambiguous");
+  } finally { fs.rmSync(invalidAuthority.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const noGo = setup({ disposition: "NO-GO" });
+  try { const observation = observeGithubPrBoundary(noGo.context, { default_branch: "main", upstream_state: "known", unpushed_commits: 0, open_prs: [], release_signal: { state: "known", value: "minor" }, authority_file: noGo.refs.authority }); expectCode(() => prepareGithubPrHandoff(noGo.context, { observation_file: observation.observation_file }), "MDF_GITHUB_PR_SHIP_INVALID"); }
+  finally { fs.rmSync(noGo.fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review", "ship"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review|ship");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review", "ship", "github-pr"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review|ship|github-pr");
   process.exit(1);
 }
 
@@ -935,5 +1008,6 @@ else if (group === "recovery") runRecoveryTests();
 else if (group === "technical-revision") runTechnicalRevisionTests();
 else if (group === "simplify") runSimplifyTests();
 else if (group === "review") runReviewTests();
-else runShipTests();
+else if (group === "ship") runShipTests();
+else runGithubPrTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);
