@@ -3,6 +3,7 @@
 const { ControllerError, resolveControllerContext } = require("./controller-runtime/context");
 const fs = require("fs");
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
+const { next, recordEvent } = require("./controller-runtime/lifecycle");
 
 function fail(error) {
   const response = {
@@ -43,6 +44,17 @@ try {
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Adapter command requires JSON stdin.", { cause: error.message }); }
     const adapter = operation === "issue" ? issueAction(context, request) : operation === "capability" ? issueCapability(context, request) : operation === "prepare" ? prepareAdapter(context, request) : submitOutcome(context, request);
     console.log(JSON.stringify({ ok: true, adapter }, null, 2));
+    process.exit(0);
+  } else if (command === "lifecycle") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    if (operation === "next") console.log(JSON.stringify(next(context), null, 2));
+    else if (operation === "record") {
+      let request;
+      try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+      catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Lifecycle record requires JSON stdin."); }
+      console.log(JSON.stringify({ ok: true, lifecycle: recordEvent(context, request) }, null, 2));
+    } else throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller lifecycle next|record [--cwd PATH] [--plugin-root PATH]");
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

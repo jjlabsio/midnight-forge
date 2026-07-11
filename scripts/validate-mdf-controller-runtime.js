@@ -8,6 +8,7 @@ const { spawnSync } = require("child_process");
 const { resolveControllerContext, resolvePluginPath } = require("./controller-runtime/context");
 const { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar } = require("./controller-runtime/evidence");
 const { issueAction, issueCapability, prepareAdapter } = require("./controller-runtime/adapter");
+const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -215,7 +216,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -277,14 +278,96 @@ function runAdapterTests() {
   }
 }
 
+function runLifecycleTests() {
+  const phases = [...EDGES.keys(), "complete"];
+  for (const from of phases) for (const to of phases) {
+    if (EDGES.get(from)?.includes(to)) assert.doesNotThrow(() => validateEdge(from, to));
+    else expectCode(() => validateEdge(from, to), "MDF_LIFECYCLE_ILLEGAL_EDGE");
+  }
+  const fixture = createFixture();
+  try {
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) {
+      assert.strictEqual(spawnSync("git", args, { cwd: fixture.worktree }).status, 0);
+    }
+    fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "tracked\n");
+    assert.strictEqual(spawnSync("git", ["add", "tracked.txt"], { cwd: fixture.worktree }).status, 0);
+    assert.strictEqual(spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree }).status, 0);
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    fs.writeFileSync(path.join(context.work_item.path, "phase.md"), "phase evidence\n");
+    const evidence = recordArtifact(context, "phase.md").file;
+    assert.deepStrictEqual(nextLifecycle(context), nextLifecycle(context));
+    const cliNextA = spawnSync(process.execPath, [cliPath, "lifecycle", "next", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8" });
+    const cliNextB = spawnSync(process.execPath, [cliPath, "lifecycle", "next", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8" });
+    assert.deepStrictEqual(JSON.parse(cliNextA.stdout), JSON.parse(cliNextB.stdout));
+    expectCode(() => recordEvent(context, { event_id: "bad", from: "spec", to: "ship", evidence_files: [evidence] }), "MDF_LIFECYCLE_ILLEGAL_EDGE");
+    let from = "spec";
+    const sequence = ["plan", "build-task", "build-task", "whole-build", "simplify", "review", "ship", "github-pr", "complete"];
+    for (let index = 0; index < sequence.length; index += 1) {
+      const to = sequence[index];
+      recordEvent(context, { event_id: `${from}-${to}`, from, to, next_action: sequence[index + 1] || null, evidence_files: [evidence] });
+      if (index === 0) {
+        fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "new tree\n");
+        spawnSync("git", ["add", "tracked.txt"], { cwd: fixture.worktree });
+        spawnSync("git", ["commit", "--quiet", "-m", "normal lifecycle change"], { cwd: fixture.worktree });
+      }
+      if (index === 2) assert.strictEqual(nextLifecycle(context).action, "whole-build");
+      from = to;
+    }
+    assert.strictEqual(nextLifecycle(context).action, "complete");
+    expectCode(() => validateEdge("complete", "spec"), "MDF_LIFECYCLE_ILLEGAL_EDGE");
+  } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
+
+  const stopped = createFixture();
+  try {
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) assert.strictEqual(spawnSync("git", args, { cwd: stopped.worktree }).status, 0);
+    fs.writeFileSync(path.join(stopped.worktree, "tracked.txt"), "x\n");
+    spawnSync("git", ["add", "tracked.txt"], { cwd: stopped.worktree });
+    spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: stopped.worktree });
+    const context = resolveControllerContext({ cwd: stopped.worktree, pluginRoot: root });
+    fs.writeFileSync(path.join(context.work_item.path, "stop.md"), "stop evidence\n");
+    const stopEvidence = recordArtifact(context, "stop.md").file;
+    const stopCli = spawnSync(process.execPath, [cliPath, "lifecycle", "record", "--cwd", stopped.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ event_id: "stop", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] }) });
+    assert.strictEqual(stopCli.status, 0, stopCli.stderr);
+    assert.strictEqual(nextLifecycle(context).stop.code, "MDF_STOP_HUMAN_REQUIRED");
+    expectCode(() => recordEvent(context, { event_id: "bypass", from: "spec", to: "plan", evidence_files: [stopEvidence] }), "MDF_LIFECYCLE_STOPPED");
+  } finally { fs.rmSync(stopped.temporaryRoot, { recursive: true, force: true }); }
+
+  for (const scenario of ["no-progress", "stale", "ambiguous", "malformed"]) {
+    const fixture = createFixture();
+    try {
+      for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+      fs.writeFileSync(path.join(fixture.worktree, "tracked.txt"), "x\n");
+      spawnSync("git", ["add", "tracked.txt"], { cwd: fixture.worktree });
+      spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+      const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+      if (scenario === "no-progress") {
+        fs.writeFileSync(path.join(context.work_item.path, "stop.md"), "stop evidence\n");
+        recordEvent(context, { event_id: scenario, from: "spec", stop_reason: scenario, evidence_files: [recordArtifact(context, "stop.md").file] });
+      }
+      else if (scenario === "stale") {
+        fs.writeFileSync(path.join(context.work_item.path, "stale.md"), "before\n");
+        const staleEvidence = recordArtifact(context, "stale.md").file;
+        fs.writeFileSync(path.join(context.work_item.path, "stale.md"), "after\n");
+        expectCode(() => recordEvent(context, { event_id: "stale", from: "spec", to: "plan", evidence_files: [staleEvidence] }), "MDF_EVIDENCE_STALE");
+        continue;
+      } else if (scenario === "ambiguous") {
+        recordInteraction(context, { invocation: { agent_id: "mdf-lifecycle", invocation_id: "a", executor: "deterministic-runtime", previous_event_file: null, from: "spec", to: "plan" }, input_paths: [] });
+        recordInteraction(context, { invocation: { agent_id: "mdf-lifecycle", invocation_id: "b", executor: "deterministic-runtime", previous_event_file: null, from: "spec", to: "plan" }, input_paths: [] });
+      } else recordInteraction(context, { invocation: { agent_id: "mdf-lifecycle", invocation_id: "orphan", executor: "deterministic-runtime", previous_event_file: "missing.json", from: "spec", to: "plan" }, input_paths: [] });
+      assert.strictEqual(nextLifecycle(context).stop.code, scenario === "no-progress" ? "MDF_STOP_NO_PROGRESS" : `MDF_LIFECYCLE_${scenario.toUpperCase()}`);
+    } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
+  }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle");
   process.exit(1);
 }
 
 if (group === "context") runContextTests();
 else if (group === "evidence") runEvidenceTests();
-else runAdapterTests();
+else if (group === "adapter") runAdapterTests();
+else runLifecycleTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);
