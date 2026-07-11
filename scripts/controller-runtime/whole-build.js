@@ -29,7 +29,7 @@ function plan(context, file) {
 }
 
 function completions(context, planFile) {
-  return transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files.map((file) => ({ event_file: event.file, event: verifySidecar(context, event.file, { fresh: false }), file, value: verifySidecar(context, file, { fresh: false }) }))).filter(({ value }) => new Set(["build-task-complete", "build-task-repair-complete", "build-task-simplification-complete"]).has(value.conclusion?.kind) && value.conclusion.plan_registration_file === planFile);
+  return transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files.map((file) => ({ event_file: event.file, event: verifySidecar(context, event.file, { fresh: false }), file, value: verifySidecar(context, file, { fresh: false }) }))).filter(({ value }) => new Set(["build-task-complete", "build-task-repair-complete", "build-task-simplification-complete", "build-task-review-repair-complete"]).has(value.conclusion?.kind) && value.conclusion.plan_registration_file === planFile);
 }
 
 function validateCompletion(context, record, planFile) {
@@ -41,10 +41,12 @@ function validateCompletion(context, record, planFile) {
   const commit = decision.conclusion?.commit;
   const repair = decision.conclusion.kind === "build-task-repair-complete";
   const simplification = decision.conclusion.kind === "build-task-simplification-complete";
+  const reviewRepair = decision.conclusion.kind === "build-task-review-repair-complete";
   const recoveryLinked = nonempty(attempt.invocation?.repair_of);
   const recovery = recoveryLinked ? verifySidecar(context, decision.conclusion.recovery_file, { fresh: false }) : null;
   const simplificationSession = simplification ? verifySidecar(context, decision.conclusion.simplification_file, { fresh: false }) : null;
-  if (completion.invocation?.agent_id !== "mdf-build-task-complete" || completion.invocation.plan_registration_file !== planFile || completion.invocation.task_id !== decision.conclusion.task_id || JSON.stringify(completion.invocation.commit) !== JSON.stringify(commit) || authorization.conclusion?.kind !== "build-task-commit-authorization" || authorizationInteraction.invocation?.agent_id !== "mdf-build-commit-authorization" || authorizationInteraction.invocation.plan_registration_file !== planFile || authorization.conclusion.task_id !== decision.conclusion.task_id || authorization.conclusion.base_head !== commit?.parent || authorization.conclusion.expected_tree !== commit?.tree || authorization.conclusion.commit_subject !== commit?.subject || JSON.stringify(authorization.conclusion.expected_paths) !== JSON.stringify(commit?.paths) || attempt.invocation?.agent_id !== "mdf-build-task-select" || attempt.invocation.plan_registration_file !== planFile || attempt.invocation.task?.id !== decision.conclusion.task_id || attempt.invocation.base_head !== commit?.parent || (recoveryLinked && (attempt.invocation.repair_of !== decision.conclusion.recovery_file || recovery.conclusion?.kind !== "recovery-decision" || recovery.conclusion.disposition !== "automatic-repair" || recovery.conclusion.task_id !== decision.conclusion.task_id)) || (repair && !recoveryLinked) || (!recoveryLinked && decision.conclusion.recovery_file) || (simplification && (attempt.invocation.simplification_of !== decision.conclusion.simplification_file || simplificationSession.conclusion?.kind !== "simplification-session" || !commit.subject.startsWith("refactor:"))) || (!simplification && attempt.invocation.simplification_of)) throw new ControllerError("MDF_WHOLE_BUILD_TASK_PROVENANCE_INVALID", "Task completion is not derived from its exact attempt and commit authorization chain.");
+  const reviewResult = reviewRepair ? verifySidecar(context, decision.conclusion.review_file, { fresh: false }) : null;
+  if (completion.invocation?.agent_id !== "mdf-build-task-complete" || completion.invocation.plan_registration_file !== planFile || completion.invocation.task_id !== decision.conclusion.task_id || JSON.stringify(completion.invocation.commit) !== JSON.stringify(commit) || authorization.conclusion?.kind !== "build-task-commit-authorization" || authorizationInteraction.invocation?.agent_id !== "mdf-build-commit-authorization" || authorizationInteraction.invocation.plan_registration_file !== planFile || authorization.conclusion.task_id !== decision.conclusion.task_id || authorization.conclusion.base_head !== commit?.parent || authorization.conclusion.expected_tree !== commit?.tree || authorization.conclusion.commit_subject !== commit?.subject || JSON.stringify(authorization.conclusion.expected_paths) !== JSON.stringify(commit?.paths) || attempt.invocation?.agent_id !== "mdf-build-task-select" || attempt.invocation.plan_registration_file !== planFile || attempt.invocation.task?.id !== decision.conclusion.task_id || attempt.invocation.base_head !== commit?.parent || (recoveryLinked && (attempt.invocation.repair_of !== decision.conclusion.recovery_file || recovery.conclusion?.kind !== "recovery-decision" || recovery.conclusion.disposition !== "automatic-repair" || recovery.conclusion.task_id !== decision.conclusion.task_id)) || (repair && !recoveryLinked) || (!recoveryLinked && decision.conclusion.recovery_file) || (simplification && (attempt.invocation.simplification_of !== decision.conclusion.simplification_file || simplificationSession.conclusion?.kind !== "simplification-session" || !commit.subject.startsWith("refactor:"))) || (!simplification && attempt.invocation.simplification_of) || (reviewRepair && (attempt.invocation.review_of !== decision.conclusion.review_file || reviewResult.conclusion?.kind !== "standalone-review" || reviewResult.conclusion.disposition !== "findings")) || (!reviewRepair && attempt.invocation.review_of)) throw new ControllerError("MDF_WHOLE_BUILD_TASK_PROVENANCE_INVALID", "Task completion is not derived from its exact attempt and commit authorization chain.");
 }
 
 function progress(context, planFile) {
@@ -76,16 +78,24 @@ function resumeAutoBuild(context, { plan_registration_file: planFile, writer_id:
   if (!nonempty(planFile) || !nonempty(writerId) || current(context).phase !== "build-task") throw new ControllerError("MDF_AUTO_BUILD_INPUT_INVALID", "Auto resume requires build-task phase, approved plan, and writer.");
   if (git(context, ["status", "--porcelain"])) throw new ControllerError("MDF_AUTO_BUILD_DIRTY", "Auto resume requires a clean baseline.");
   const state = progress(context, planFile);
+  const head = git(context, ["rev-parse", "HEAD"]);
+  const completedAttempts = new Set(state.records.map(({ value }) => verifySidecar(context, value.interaction.file, { fresh: false })).map((completion) => verifySidecar(context, completion.invocation.authorization_file, { fresh: false }).conclusion.attempt_file));
+  for (const event of transitionEvidence(context, "build-task", "simplify")) for (const file of event.evidence_files) {
+    const rejected = verifySidecar(context, file, { fresh: false });
+    if (rejected.conclusion?.kind === "simplification-candidate-rejected") {
+      const completion = verifySidecar(context, rejected.interaction.file, { fresh: false });
+      const authorization = verifySidecar(context, completion.invocation.rejection_file, { fresh: false });
+      completedAttempts.add(authorization.conclusion.attempt_file);
+    }
+  }
+  const active = allEvidence(context).filter(({ file, value }) => value.invocation?.agent_id === "mdf-build-task-select" && value.invocation.base_head === head && value.invocation.plan_registration_file === planFile && !completedAttempts.has(file));
+  if (active.some(({ value }) => !state.pending.includes(value.invocation.task?.id) && !value.invocation.repair_of && !value.invocation.simplification_of && !value.invocation.review_of)) throw new ControllerError("MDF_AUTO_BUILD_STATE_INVALID", "Active attempt does not match a canonical pending or repair task.");
+  if (active.length > 1 || (active.length === 1 && active[0].value.invocation.writer_id !== writerId)) throw new ControllerError("MDF_BUILD_MULTI_WRITER", "Canonical resume found a conflicting writer.");
+  if (active.length === 1) return { action: "resume-task", attempt_file: active[0].file, task: active[0].value.invocation.task };
   if (state.pending.length === 0) {
-    const head = git(context, ["rev-parse", "HEAD"]);
     if (!state.records.length || state.records.at(-1).value.conclusion.commit?.head !== head) throw new ControllerError("MDF_WHOLE_BUILD_TREE_STALE", "Current tree does not match the final focused task commit.");
     return { action: "whole-build", completed_task_ids: state.actual, head };
   }
-  const head = git(context, ["rev-parse", "HEAD"]);
-  const active = allEvidence(context).filter(({ value }) => value.invocation?.agent_id === "mdf-build-task-select" && value.invocation.base_head === head && value.invocation.plan_registration_file === planFile && !state.actual.includes(value.invocation.task?.id));
-  if (active.some(({ value }) => !state.pending.includes(value.invocation.task?.id))) throw new ControllerError("MDF_AUTO_BUILD_STATE_INVALID", "Active attempt does not match a canonical pending task.");
-  if (active.length > 1 || (active.length === 1 && active[0].value.invocation.writer_id !== writerId)) throw new ControllerError("MDF_BUILD_MULTI_WRITER", "Canonical resume found a conflicting writer.");
-  if (active.length === 1) return { action: "resume-task", attempt_file: active[0].file, task: active[0].value.invocation.task };
   const selected = selectBuildTask(context, { plan_registration_file: planFile, writer_id: writerId });
   return { action: "build-task", ...selected };
 }

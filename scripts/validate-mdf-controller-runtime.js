@@ -16,6 +16,7 @@ const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerificati
 const { decideRecovery, recoveryDisposition } = require("./controller-runtime/recovery");
 const { registerTechnicalRevision } = require("./controller-runtime/revision");
 const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
+const { createReviewContext, registerReview } = require("./controller-runtime/review");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -223,7 +224,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js", "scripts/controller-runtime/revision.js", "scripts/controller-runtime/simplify.js", "scripts/controller-runtime/review.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -727,12 +728,12 @@ function runSimplifyTests() {
     const fixture = createFixture();
     const runGit = (args) => { const result = spawnSync("git", args, { cwd: fixture.worktree, encoding: "utf8" }); assert.strictEqual(result.status, 0, result.stderr); return result.stdout.trim(); };
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) runGit(args);
-    for (const file of ["scripts/controller-runtime/a.js", "scripts/mdf-controller.js", "tests/a.test.js", "vendor/x.js", "skills/generated.js"]) { fs.mkdirSync(path.dirname(path.join(fixture.worktree, file)), { recursive: true }); fs.writeFileSync(path.join(fixture.worktree, file), "0\n"); }
+    for (const file of ["scripts/controller-runtime/a.js", "scripts/controller-runtime/b.js", "scripts/mdf-controller.js", "tests/a.test.js", "vendor/x.js", "skills/generated.js"]) { fs.mkdirSync(path.dirname(path.join(fixture.worktree, file)), { recursive: true }); fs.writeFileSync(path.join(fixture.worktree, file), "0\n"); }
     runGit(["add", "."]); runGit(["commit", "--quiet", "-m", "initial"]);
     const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
     for (const [file, bytes] of [["spec.md", "spec\n"], ["plan.md", "plan\n"], ["simplify.md", "simplify\n"], ["no-change-review.md", "pass\n"], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
     const specArtifact = recordArtifact(context, "spec.md"); const spec = recordInteraction(context, { invocation: { agent_id: "mdf-spec", invocation_id: "simplify-spec", executor: "deterministic-runtime", artifact_file: specArtifact.file }, input_paths: ["spec.md"] });
-    const planArtifact = recordArtifact(context, "plan.md"); const task = { id: "T1", depends_on: [], owned_paths: ["scripts/controller-runtime/a.js", "scripts/mdf-controller.js", "tests/a.test.js", "vendor/x.js", "skills/generated.js"], acceptance: ["works"] };
+    const planArtifact = recordArtifact(context, "plan.md"); const task = { id: "T1", depends_on: [], owned_paths: ["scripts/controller-runtime/a.js", "scripts/controller-runtime/b.js", "scripts/mdf-controller.js", "tests/a.test.js", "vendor/x.js", "skills/generated.js"], acceptance: ["works"] };
     const plan = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "simplify-plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: spec.file, metadata: { tasks: [task], whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] } }, input_paths: ["plan.md", `evidence/${spec.file}`] });
     recordEvent(context, { event_id: "simplify-spec-plan", from: "spec", to: "plan", evidence_files: [spec.file] }); recordEvent(context, { event_id: "simplify-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
     const parent = runGit(["rev-parse", "HEAD"]); const attempt = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-select", invocation_id: "simplify-task", executor: "deterministic-runtime", plan_registration_file: plan.file, task, base_head: parent }, input_paths: [`evidence/${plan.file}`] });
@@ -748,7 +749,7 @@ function runSimplifyTests() {
     const stable = recordDecision(context, { interaction_file: stableInteraction.file, conclusion: { kind: "whole-build-stable", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"] } });
     recordEvent(context, { event_id: "simplify-whole", from: "build-task", to: "whole-build", evidence_files: [stable.file] });
     const scopeCli = spawnSync(process.execPath, [cliPath, "simplify", "scope", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ stable_file: stable.file }) });
-    assert.strictEqual(scopeCli.status, 0, scopeCli.stderr); const scope = JSON.parse(scopeCli.stdout).simplify; assert.deepStrictEqual(scope.eligible.map((item) => item.path), ["scripts/controller-runtime/a.js"]);
+    assert.strictEqual(scopeCli.status, 0, scopeCli.stderr); const scope = JSON.parse(scopeCli.stdout).simplify; assert.deepStrictEqual(scope.eligible.map((item) => item.path), ["scripts/controller-runtime/a.js", "scripts/controller-runtime/b.js"]);
     const action = issueAction(context, { action_id: "simplify-scan", action: "code-simplification", skill_path: "skills/code-simplification/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: [`evidence/${stable.file}`, `evidence/${scope.scope_file}`] });
     const invocation = { agent_id: "simplifier", invocation_id: "simplify-scan-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
     const capability = issueCapability(context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" }); const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
@@ -785,6 +786,16 @@ function runSimplifyTests() {
     const reviewCapability = issueCapability(rolledBack.context, { ...reviewInvocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" }); const reviewPrepared = prepareAdapter(rolledBack.context, { action_file: reviewAction.action_file, capability_file: reviewCapability.capability_file, invocation: reviewInvocation }); const reviewDecision = submitOutcome(rolledBack.context, { action_id: "rollback-review", interaction_file: reviewPrepared.interaction_file, output_path: "rollback-review.md", outcome: { disposition: "pass" } });
     assert.strictEqual(finalizeNoChange(rolledBack.context, { session_file: rolledBack.session.session_file, review_output_path: "rollback-review.md", review_decision_file: reviewDecision.decision_file }).state.phase, "review");
   } finally { fs.rmSync(rolledBack.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const candidateB = { ...acceptedCandidate, id: "C2", path: "scripts/controller-runtime/b.js" };
+  const multiple = setup({ disposition: "candidates", candidates: [acceptedCandidate, candidateB] });
+  try {
+    const first = selectSimplificationCandidate(multiple.context, { session_file: multiple.session.session_file, candidate_id: "C1", writer_id: "root" });
+    const rejectionInteraction = recordInteraction(multiple.context, { invocation: { agent_id: "mdf-simplification-rejection", invocation_id: "multi-reject", executor: "deterministic-runtime", attempt_file: first.attempt_file, session_file: multiple.session.session_file, candidate_id: "C1", baseline_head: first.base_head }, input_paths: [`evidence/${first.attempt_file}`] });
+    const rejection = recordDecision(multiple.context, { interaction_file: rejectionInteraction.file, conclusion: { kind: "simplification-rejection-authorized", attempt_file: first.attempt_file, session_file: multiple.session.session_file, candidate_id: "C1", baseline_head: first.base_head } });
+    completeCandidateRejection(multiple.context, { rejection_file: rejection.file });
+    const second = selectSimplificationCandidate(multiple.context, { session_file: multiple.session.session_file, candidate_id: "C2", writer_id: "root" });
+    assert.strictEqual(resumeAutoBuild(multiple.context, { plan_registration_file: multiple.plan.file, writer_id: "root" }).attempt_file, second.attempt_file);
+  } finally { fs.rmSync(multiple.fixture.temporaryRoot, { recursive: true, force: true }); }
   const changed = setup({ disposition: "candidates", candidates: [acceptedCandidate] });
   try {
     const selected = selectSimplificationCandidate(changed.context, { session_file: changed.session.session_file, candidate_id: "C1", writer_id: "root" });
@@ -807,10 +818,60 @@ function runSimplifyTests() {
   } finally { fs.rmSync(changed.fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runReviewTests() {
+  const setup = (reportText, outcome) => {
+    const fixture = createFixture();
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    let head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim();
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["spec.md", "spec\n"], ["plan.md", "plan\n"], ["report.md", reportText], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    const specArtifact = recordArtifact(context, "spec.md"); const spec = recordInteraction(context, { invocation: { agent_id: "mdf-spec", invocation_id: "review-spec", executor: "deterministic-runtime", artifact_file: specArtifact.file }, input_paths: ["spec.md"] });
+    const planArtifact = recordArtifact(context, "plan.md"); const task = { id: "T1", depends_on: [], owned_paths: ["src.js"], acceptance: ["works"] }; const plan = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "review-plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: spec.file, metadata: { tasks: [task], whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] } }, input_paths: ["plan.md", `evidence/${spec.file}`] });
+    recordEvent(context, { event_id: "review-spec-plan", from: "spec", to: "plan", evidence_files: [spec.file] }); recordEvent(context, { event_id: "review-plan-build", from: "plan", to: "build-task", evidence_files: [plan.file] });
+    const baseParent = head; const baseAttempt = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-select", invocation_id: "review-base-attempt", executor: "deterministic-runtime", writer_id: "root", plan_registration_file: plan.file, task, base_head: baseParent }, input_paths: [`evidence/${plan.file}`] });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "built\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "feat: built"], { cwd: fixture.worktree }); head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim();
+    const baseTree = spawnSync("git", ["show", "-s", "--format=%T", head], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim(); const baseCommit = { head, parent: baseParent, tree: baseTree, subject: "feat: built", paths: ["src.js"] };
+    const baseAuthInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-build-commit-authorization", invocation_id: "review-base-auth", executor: "deterministic-runtime", attempt_file: baseAttempt.file, plan_registration_file: plan.file, task_id: "T1", base_head: baseParent, expected_tree: baseTree, expected_paths: ["src.js"], commit_subject: "feat: built" }, input_paths: [`evidence/${baseAttempt.file}`] }); const baseAuth = recordDecision(context, { interaction_file: baseAuthInteraction.file, conclusion: { kind: "build-task-commit-authorization", attempt_file: baseAttempt.file, task_id: "T1", base_head: baseParent, expected_tree: baseTree, expected_paths: ["src.js"], commit_subject: "feat: built" } });
+    const baseCompletionInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-complete", invocation_id: "review-base-complete", executor: "deterministic-runtime", authorization_file: baseAuth.file, plan_registration_file: plan.file, task_id: "T1", repair_of: null, simplification_of: null, review_of: null, commit: baseCommit }, input_paths: [`evidence/${baseAuth.file}`] }); const baseCompletion = recordDecision(context, { interaction_file: baseCompletionInteraction.file, conclusion: { kind: "build-task-complete", plan_registration_file: plan.file, task_id: "T1", recovery_file: null, simplification_file: null, review_file: null, commit: baseCommit } }); recordEvent(context, { event_id: "review-base-completed", from: "build-task", to: "build-task", evidence_files: [baseCompletion.file] });
+    const baseline = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build", invocation_id: "review-baseline", executor: "deterministic-runtime", plan_registration_file: plan.file, completion_files: [baseCompletion.file], head, task_ids: ["T1"] }, input_paths: [`evidence/${plan.file}`, `evidence/${baseCompletion.file}`] });
+    const stableInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-whole-build-stable", invocation_id: "review-stable", executor: "deterministic-runtime", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"] }, input_paths: [`evidence/${baseline.file}`] }); const stable = recordDecision(context, { interaction_file: stableInteraction.file, conclusion: { kind: "whole-build-stable", baseline_file: baseline.file, plan_registration_file: plan.file, head, task_ids: ["T1"] } });
+    recordEvent(context, { event_id: "review-whole", from: "build-task", to: "whole-build", evidence_files: [stable.file] });
+    const simplifySessionInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification", invocation_id: "review-simplify", executor: "deterministic-runtime" }, input_paths: [`evidence/${stable.file}`] }); const simplifySession = recordDecision(context, { interaction_file: simplifySessionInteraction.file, conclusion: { kind: "simplification-session", disposition: "no-change", stable_file: stable.file, plan_registration_file: plan.file, head, candidates: [] } });
+    recordEvent(context, { event_id: "review-simplify", from: "whole-build", to: "simplify", evidence_files: [simplifySession.file] });
+    const noChangeInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-simplification-no-change", invocation_id: "review-nochange", executor: "deterministic-runtime", session_file: simplifySession.file }, input_paths: [`evidence/${simplifySession.file}`] }); const noChange = recordDecision(context, { interaction_file: noChangeInteraction.file, conclusion: { kind: "simplification-no-change", session_file: simplifySession.file, head } });
+    recordEvent(context, { event_id: "review-phase", from: "simplify", to: "review", evidence_files: [noChange.file] });
+    const contextCli = spawnSync(process.execPath, [cliPath, "review", "context", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: "{}" }); assert.strictEqual(contextCli.status, 0, contextCli.stderr); const reviewContext = JSON.parse(contextCli.stdout).review;
+    const action = issueAction(context, { action_id: `standalone-review-${outcome.disposition}`, action: "standalone-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: reviewContext.input_paths });
+    const invocation = { agent_id: "reviewer", invocation_id: `standalone-${outcome.disposition}-inv`, executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const capability = issueCapability(context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" }); const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation }); const decision = submitOutcome(context, { action_id: `standalone-review-${outcome.disposition}`, interaction_file: prepared.interaction_file, output_path: "report.md", outcome });
+    return { fixture, context, reviewContext, decision, reportText };
+  };
+  const standalone = setup("## Whatever upstream heading\nAll clear.\n", { disposition: "pass" });
+  try {
+    fs.writeFileSync(path.join(standalone.context.work_item.path, "report.md"), "stale\n"); expectCode(() => registerReview(standalone.context, { context_file: standalone.reviewContext.context_file, output_path: "report.md", decision_file: standalone.decision.decision_file, mode: "standalone" }), "MDF_EVIDENCE_STALE"); fs.writeFileSync(path.join(standalone.context.work_item.path, "report.md"), standalone.reportText);
+    assert.strictEqual(registerReview(standalone.context, { context_file: standalone.reviewContext.context_file, output_path: "report.md", decision_file: standalone.decision.decision_file, mode: "standalone" }).action, "stop");
+  } finally { fs.rmSync(standalone.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const auto = setup("Free-form prose without prescribed grammar.\n", { disposition: "pass" });
+  try { assert.strictEqual(registerReview(auto.context, { context_file: auto.reviewContext.context_file, output_path: "report.md", decision_file: auto.decision.decision_file, mode: "auto" }).state.phase, "ship"); } finally { fs.rmSync(auto.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const findings = setup("Actionable issue in src.\n", { disposition: "findings", human_required: false, affected_task_id: "T1", repair_scope_paths: ["src.js"] });
+  try {
+    const result = registerReview(findings.context, { context_file: findings.reviewContext.context_file, output_path: "report.md", decision_file: findings.decision.decision_file, mode: "auto" }); assert.strictEqual(result.action, "repair-task"); assert.deepStrictEqual(verifySidecar(findings.context, result.attempt_file, { fresh: false }).invocation.review_scope_paths, ["src.js"]);
+    const activePlan = verifySidecar(findings.context, findings.reviewContext.context_file, { fresh: false }).invocation.plan_registration_file;
+    assert.strictEqual(resumeAutoBuild(findings.context, { plan_registration_file: activePlan, writer_id: "root" }).action, "resume-task");
+    for (const [file, bytes] of [["review-fix-task.md", "fix\n"], ["review-fix.diff", "diff\n"], ["review-fix-impact.md", "unaffected\n"], ["review-fix-report.md", "pass\n"], ["review-fix-cap.json", "{}\n"]]) fs.writeFileSync(path.join(findings.context.work_item.path, file), bytes);
+    fs.writeFileSync(path.join(findings.fixture.worktree, "src.js"), "fixed\n"); const command = runVerification(findings.context, { attempt_file: result.attempt_file, command: [process.execPath, "-e", "process.exit(0)"], output_path: "review-fix-command.log" }); const impact = recordDownstreamImpact(findings.context, { attempt_file: result.attempt_file, classification: "unaffected", artifact_path: "review-fix-impact.md" });
+    const inputs = ["spec.md", "plan.md", "review-fix-task.md", "review-fix.diff", "review-fix-impact.md", `evidence/${result.attempt_file}`, `evidence/${impact.impact_file}`, "review-fix-command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`]; const action = issueAction(findings.context, { action_id: "review-fix-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs }); const invocation = { agent_id: "fix-reviewer", invocation_id: "review-fix-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } }; const capability = issueCapability(findings.context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "review-fix-cap.json" }); const prepared = prepareAdapter(findings.context, { action_file: action.action_file, capability_file: capability.capability_file, invocation }); const review = submitOutcome(findings.context, { action_id: "review-fix-review", interaction_file: prepared.interaction_file, output_path: "review-fix-report.md", outcome: { disposition: "pass" } });
+    const authorization = authorizeTaskCommit(findings.context, { attempt_file: result.attempt_file, command_files: [command.verification_file], review_output_path: "review-fix-report.md", review_decision_file: review.decision_file, task_evidence_path: "review-fix-task.md", diff_path: "review-fix.diff", downstream_impact_file: impact.impact_file, touched_paths: ["src.js"], commit_subject: "fix: address review" }); spawnSync("git", ["add", "--", "src.js"], { cwd: findings.fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "fix: address review"], { cwd: findings.fixture.worktree }); const completed = completeBuildTask(findings.context, { authorization_file: authorization.authorization_file });
+    assert.strictEqual(completed.state.phase, "build-task");
+    assert.strictEqual(resumeAutoBuild(findings.context, { plan_registration_file: activePlan, writer_id: "root" }).action, "whole-build");
+  } finally { fs.rmSync(findings.fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery", "technical-revision", "simplify", "review"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery|technical-revision|simplify|review");
   process.exit(1);
 }
 
@@ -824,5 +885,6 @@ else if (group === "build-task") runBuildTaskTests();
 else if (group === "whole-build") runWholeBuildTests();
 else if (group === "recovery") runRecoveryTests();
 else if (group === "technical-revision") runTechnicalRevisionTests();
-else runSimplifyTests();
+else if (group === "simplify") runSimplifyTests();
+else runReviewTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);
