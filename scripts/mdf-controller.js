@@ -6,6 +6,7 @@ const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require(
 const { next, recordEvent } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
+const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask } = require("./controller-runtime/build-task");
 
 function fail(error) {
   const response = {
@@ -77,6 +78,16 @@ try {
     const result = operation === "metadata" ? createPlanMetadata(context, request) : operation === "register" ? registerPlan(context, request) : operation === "approve" ? approvePlan(context, request) : operation === "advance" ? advancePlan(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller plan metadata|register|approve|advance [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, plan: result }, null, 2));
+    process.exit(0);
+  } else if (command === "build-task") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Build-task command requires JSON stdin."); }
+    const result = operation === "select" ? selectBuildTask(context, request) : operation === "verify" ? runVerification(context, request) : operation === "impact" ? recordDownstreamImpact(context, request) : operation === "authorize" ? authorizeTaskCommit(context, request) : operation === "complete" ? completeBuildTask(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller build-task select|verify|impact|authorize|complete [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, build_task: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

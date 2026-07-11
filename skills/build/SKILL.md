@@ -26,6 +26,30 @@ re-reviewed while material progress continues; repeated blocker, verification
 regression, no progress, or a user decision stops the loop. Only then create
 one commit per task.
 
+From the resolved plugin root, use the production
+`./scripts/mdf-controller.js build-task` operations for the gate. Pass JSON on
+stdin with resolved `--cwd` and `--plugin-root`:
+
+- `select`: approved `plan_registration_file`, optional ready
+  `selected_task_id`, and the root `writer_id`; requires a clean baseline and
+  returns exactly one task attempt.
+- `verify`: `attempt_file`, a shell-free `command` argv array, and canonical
+  work-item `output_path`; the runtime executes it in the worktree and records
+  the actual exit code and output.
+- `impact`: `attempt_file`, an allowed downstream-impact `classification`, and
+  the raw `artifact_path`.
+- `authorize`: the attempt, passing `command_files`, exact fresh review output
+  and decision, task evidence, diff, downstream-impact decision, exact
+  `touched_paths`, and intended `commit_subject`. This must run before staging
+  or committing.
+- After authorization, stage only the returned task paths and create the one
+  focused commit. Then call `complete` with `authorization_file`; completion is
+  recorded only when runtime-computed parent, tree, subject, paths, and clean
+  status match the authorization.
+
+Never infer completion from prose, a review verdict alone, or the existence of
+a commit. A failed controller operation is a typed stop for the build loop.
+
 Fresh review requires a capability-verified independent executor. If that is
 unavailable, use the permitted root escalation and record it; otherwise record
 the upstream-defined degraded status and block commit/advancement whenever

@@ -47,6 +47,10 @@ function current(context) {
   return { phase: last?.value.invocation.to || "spec", event_file: last?.file || null, evidence_files: last?.value.inputs?.map((input) => input.path).filter((value) => value.startsWith("evidence/")).map((value) => value.slice("evidence/".length)) || [], stop_reason: last?.value.invocation.stop_reason || null };
 }
 
+function transitionEvidence(context, from, to) {
+  return chain(context).filter(({ value }) => value.invocation.from === from && value.invocation.to === to).map(({ file, value }) => ({ file, evidence_files: value.inputs.map((input) => input.path).filter((input) => input.startsWith("evidence/")).map((input) => input.slice(9)) }));
+}
+
 function next(context) {
   try {
     const state = current(context);
@@ -78,4 +82,4 @@ function recordEvent(context, request) {
   return { file: event.file, ...next(context) };
 }
 
-module.exports = { EDGES, current, next, recordEvent, validateEdge };
+module.exports = { EDGES, current, next, recordEvent, transitionEvidence, validateEdge };

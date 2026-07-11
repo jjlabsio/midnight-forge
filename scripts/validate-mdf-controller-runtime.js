@@ -11,6 +11,7 @@ const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require(
 const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
+const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask } = require("./controller-runtime/build-task");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -218,7 +219,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -449,10 +450,70 @@ function runPlanTests() {
   } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runBuildTaskTests() {
+  const fixture = createFixture();
+  try {
+    const runGit = (args) => { const result = spawnSync("git", args, { cwd: fixture.worktree, encoding: "utf8" }); assert.strictEqual(result.status, 0, result.stderr); return result.stdout.trim(); };
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) runGit(args);
+    fs.mkdirSync(path.join(fixture.worktree, "src"), { recursive: true });
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "before\n");
+    fs.writeFileSync(path.join(fixture.worktree, "src", "b.js"), "before\n");
+    runGit(["add", "src/a.js", "src/b.js"]); runGit(["commit", "--quiet", "-m", "initial"]);
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["spec.md", "spec\n"], ["plan.md", "plan\n"], ["task.md", "acceptance evidence\n"], ["diff.patch", "diff evidence\n"], ["review.md", "approved\n"], ["impact.md", "unaffected\n"], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    const specArtifact = recordArtifact(context, "spec.md");
+    const specRegistration = recordInteraction(context, { invocation: { agent_id: "mdf-spec", invocation_id: "spec", executor: "deterministic-runtime", artifact_file: specArtifact.file }, input_paths: ["spec.md"] });
+    const planArtifact = recordArtifact(context, "plan.md");
+    const tasks = [{ id: "T1", depends_on: [], owned_paths: ["src/a.js"], acceptance: ["works"] }, { id: "T2", depends_on: ["T1"], owned_paths: ["src/b.js"], acceptance: ["integrates"] }];
+    const planRegistration = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: specRegistration.file, metadata: { tasks } }, input_paths: ["plan.md", `evidence/${specRegistration.file}`] });
+    recordEvent(context, { event_id: "spec-plan", from: "spec", to: "plan", evidence_files: [specRegistration.file] });
+    recordEvent(context, { event_id: "plan-build", from: "plan", to: "build-task", evidence_files: [planRegistration.file] });
+    const unapprovedPlan = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "unapproved-plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: specRegistration.file, metadata: { tasks } }, input_paths: ["plan.md", `evidence/${specRegistration.file}`] });
+    expectCode(() => selectBuildTask(context, { plan_registration_file: unapprovedPlan.file, writer_id: "root" }), "MDF_BUILD_PLAN_NOT_APPROVED");
+    const attempt = selectBuildTask(context, { plan_registration_file: planRegistration.file, writer_id: "root" });
+    assert.strictEqual(attempt.task.id, "T1");
+    expectCode(() => selectBuildTask(context, { plan_registration_file: planRegistration.file, writer_id: "other" }), "MDF_BUILD_MULTI_WRITER");
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "after\n");
+    const command = runVerification(context, { attempt_file: attempt.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "command.log" });
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "changed after verification\n");
+    expectCode(() => authorizeTaskCommit(context, { attempt_file: attempt.attempt_file, command_files: [command.verification_file], review_output_path: "review.md", review_decision_file: "missing.json", task_evidence_path: "task.md", diff_path: "diff.patch", downstream_impact_file: "missing.json", touched_paths: ["src/a.js"], commit_subject: "feat: complete T1" }), "MDF_EVIDENCE_STALE");
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "after\n");
+    const impact = recordDownstreamImpact(context, { attempt_file: attempt.attempt_file, classification: "unaffected", artifact_path: "impact.md" });
+    const reviewInputs = ["spec.md", "plan.md", "task.md", "diff.patch", "impact.md", `evidence/${attempt.attempt_file}`, `evidence/${impact.impact_file}`, "command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`];
+    const action = issueAction(context, { action_id: "task-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: reviewInputs });
+    const invocation = { agent_id: "reviewer", invocation_id: "task-review-inv", executor: "subagent", model_capability: "independent-review-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const capability = issueCapability(context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "cap.json" });
+    const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
+    const review = submitOutcome(context, { action_id: "task-review", interaction_file: prepared.interaction_file, output_path: "review.md", outcome: { disposition: "pass" } });
+    const request = { attempt_file: attempt.attempt_file, command_files: [command.verification_file], review_output_path: "review.md", review_decision_file: review.decision_file, task_evidence_path: "task.md", diff_path: "diff.patch", downstream_impact_file: impact.impact_file, touched_paths: ["src/a.js"], commit_subject: "feat: complete T1" };
+    expectCode(() => authorizeTaskCommit(context, { ...request, command_files: [] }), "MDF_BUILD_EVIDENCE_MISSING");
+    fs.writeFileSync(path.join(context.work_item.path, "command.log"), "stale\n");
+    expectCode(() => authorizeTaskCommit(context, request), "MDF_EVIDENCE_STALE");
+    fs.writeFileSync(path.join(context.work_item.path, "command.log"), "pass\n");
+    const authorization = authorizeTaskCommit(context, request);
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "tampered after review\n");
+    runGit(["add", "--", "src/a.js"]); runGit(["commit", "--quiet", "-m", "feat: complete T1"]);
+    expectCode(() => completeBuildTask(context, { authorization_file: authorization.authorization_file }), "MDF_BUILD_COMMIT_MISMATCH");
+    fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "after\n");
+    runGit(["add", "--", "src/a.js"]); runGit(["commit", "--quiet", "--amend", "--no-edit"]);
+    const completed = completeBuildTask(context, { authorization_file: authorization.authorization_file });
+    assert.strictEqual(completed.state.phase, "build-task");
+    expectCode(() => completeBuildTask(context, { authorization_file: authorization.authorization_file }), "MDF_BUILD_TASK_DUPLICATE");
+    const orphanInteraction = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-complete", invocation_id: "orphan-T2", executor: "deterministic-runtime", plan_registration_file: planRegistration.file, task_id: "T2" }, input_paths: [`evidence/${planRegistration.file}`] });
+    recordDecision(context, { interaction_file: orphanInteraction.file, conclusion: { kind: "build-task-complete", plan_registration_file: planRegistration.file, task_id: "T2" } });
+    const selected = spawnSync(process.execPath, [cliPath, "build-task", "select", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ plan_registration_file: planRegistration.file, writer_id: "root" }) });
+    assert.strictEqual(selected.status, 0, selected.stderr);
+    const next = JSON.parse(selected.stdout).build_task;
+    assert.strictEqual(next.task.id, "T2");
+    fs.writeFileSync(path.join(fixture.worktree, "outside.js"), "unrelated\n");
+    expectCode(() => authorizeTaskCommit(context, { ...request, attempt_file: next.attempt_file, touched_paths: ["src/b.js"] }), "MDF_BUILD_PATH_SCOPE");
+  } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task");
   process.exit(1);
 }
 
@@ -461,5 +522,6 @@ else if (group === "evidence") runEvidenceTests();
 else if (group === "adapter") runAdapterTests();
 else if (group === "lifecycle") runLifecycleTests();
 else if (group === "spec") runSpecTests();
-else runPlanTests();
+else if (group === "plan") runPlanTests();
+else runBuildTaskTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);

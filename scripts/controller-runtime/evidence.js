@@ -77,7 +77,14 @@ function computeGitFacts(context) {
   };
   const head = run(["rev-parse", "HEAD"]).trim();
   const status = run(["status", "--porcelain"]);
-  return { head, status_sha256: sha256(status) };
+  const diff = spawnSync("git", ["diff", "--binary", "HEAD", "--"], { cwd: context.worktree }).stdout || Buffer.alloc(0);
+  const untracked = run(["ls-files", "--others", "--exclude-standard", "-z"]).split("\0").filter(Boolean).sort().map((file) => {
+    const absolute = path.join(context.worktree, file);
+    const stat = fs.lstatSync(absolute);
+    const bytes = stat.isSymbolicLink() ? Buffer.from(fs.readlinkSync(absolute)) : fs.readFileSync(absolute);
+    return `${file}\0${sha256(bytes)}`;
+  }).join("\0");
+  return { head, status_sha256: sha256(status), worktree_sha256: sha256(Buffer.concat([diff, Buffer.from(untracked)])) };
 }
 
 function recordGitFacts(context) {
@@ -113,6 +120,12 @@ function matches(context, expected) {
   }
 }
 
+function verifyInputs(context, sidecar) {
+  if (!sidecar || !Array.isArray(sidecar.inputs)) throw new ControllerError("MDF_EVIDENCE_MALFORMED", "Evidence does not contain recorded inputs.");
+  sidecar.inputs.forEach((input) => matches(context, input));
+  return sidecar;
+}
+
 function verifySidecar(context, file, { fresh = true } = {}) {
   const sidecar = readSidecar(context, file);
   const integrity = sidecar.integrity_sha256;
@@ -122,24 +135,26 @@ function verifySidecar(context, file, { fresh = true } = {}) {
     throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Evidence sidecar integrity does not match its recorded fields.", { file });
   }
   if (sidecar.work_id !== context.work_item.id) throw new ControllerError("MDF_EVIDENCE_REPLAY", "Evidence sidecar belongs to a different work item.", { file });
-  if (!fresh) return sidecar;
   if (sidecar.version !== 1) throw new ControllerError("MDF_EVIDENCE_MALFORMED", "Unsupported evidence sidecar version.", { file });
-  if (sidecar.kind === "artifact") matches(context, sidecar.artifact);
-  else if (sidecar.kind === "command") matches(context, sidecar.output);
+  if (sidecar.kind === "artifact") { if (!sidecar.artifact?.path || !sidecar.artifact.sha256) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Artifact sidecar lacks facts.", { file }); if (fresh) matches(context, sidecar.artifact); }
+  else if (sidecar.kind === "command") { if (!Array.isArray(sidecar.command) || !Number.isInteger(sidecar.exit_code) || !sidecar.output?.path) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Command sidecar lacks facts.", { file }); if (fresh) matches(context, sidecar.output); }
   else if (sidecar.kind === "interaction") {
     if (!sidecar.invocation?.agent_id || !sidecar.invocation?.invocation_id) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Interaction sidecar lacks invocation provenance.", { file });
-    sidecar.inputs.forEach((input) => matches(context, input));
-    const current = computeGitFacts(context);
-    if (current.head !== sidecar.git?.head || current.status_sha256 !== sidecar.git?.status_sha256) throw new ControllerError("MDF_EVIDENCE_STALE", "Interaction Git facts are stale.", { file });
+    if (!Array.isArray(sidecar.inputs) || !sidecar.git?.head || !sidecar.git.status_sha256) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Interaction sidecar lacks input or Git facts.", { file });
+    if (fresh) {
+      sidecar.inputs.forEach((input) => matches(context, input));
+      const current = computeGitFacts(context);
+      if (current.head !== sidecar.git?.head || current.status_sha256 !== sidecar.git?.status_sha256 || (sidecar.git.worktree_sha256 && current.worktree_sha256 !== sidecar.git.worktree_sha256)) throw new ControllerError("MDF_EVIDENCE_STALE", "Interaction Git facts are stale.", { file });
+    }
   } else if (sidecar.kind === "decision") {
     if (typeof sidecar.interaction?.file !== "string" || typeof sidecar.conclusion !== "object") throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Decision sidecar lacks semantic provenance.", { file });
-    const interaction = verifySidecar(context, sidecar.interaction.file);
+    const interaction = verifySidecar(context, sidecar.interaction.file, { fresh });
     if (interaction.kind !== "interaction" || interaction.integrity_sha256 !== sidecar.interaction.integrity_sha256) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Decision interaction reference is fabricated.", { file });
   } else if (sidecar.kind === "git") {
-    const current = computeGitFacts(context);
-    if (current.head !== sidecar.git?.head || current.status_sha256 !== sidecar.git?.status_sha256) throw new ControllerError("MDF_EVIDENCE_STALE", "Git evidence is stale.", { file });
+    if (!sidecar.git?.head || !sidecar.git.status_sha256) throw new ControllerError("MDF_EVIDENCE_FABRICATED", "Git sidecar lacks facts.", { file });
+    if (fresh) { const current = computeGitFacts(context); if (current.head !== sidecar.git.head || current.status_sha256 !== sidecar.git.status_sha256 || (sidecar.git.worktree_sha256 && current.worktree_sha256 !== sidecar.git.worktree_sha256)) throw new ControllerError("MDF_EVIDENCE_STALE", "Git evidence is stale.", { file }); }
   } else throw new ControllerError("MDF_EVIDENCE_MALFORMED", "Unknown evidence sidecar kind.", { file });
   return sidecar;
 }
 
-module.exports = { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar };
+module.exports = { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifyInputs, verifySidecar };
