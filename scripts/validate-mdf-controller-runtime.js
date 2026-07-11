@@ -7,6 +7,7 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { resolveControllerContext, resolvePluginPath } = require("./controller-runtime/context");
 const { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar } = require("./controller-runtime/evidence");
+const { issueAction, issueCapability, prepareAdapter } = require("./controller-runtime/adapter");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -173,13 +174,117 @@ function runEvidenceTests() {
   }
 }
 
+function runAdapterTests() {
+  const fixture = createFixture();
+  try {
+    for (const [args, input] of [
+      [["init", "--quiet"], null],
+      [["config", "user.email", "test@example.com"], null],
+      [["config", "user.name", "MDF test"], null],
+      [["add", "adapter.txt"], "adapter\n"],
+      [["commit", "--quiet", "-m", "adapter"], null],
+    ]) {
+      if (input !== null) fs.writeFileSync(path.join(fixture.worktree, "adapter.txt"), input);
+      const git = spawnSync("git", args, { cwd: fixture.worktree, encoding: "utf8" });
+      assert.strictEqual(git.status, 0, git.stderr);
+    }
+    const relocated = path.join(fixture.temporaryRoot, "installed-plugin");
+    for (const relative of ["skills/use-mdf/SKILL.md", "agents/code-reviewer.md"]) {
+      fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
+      fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
+    }
+    const input = path.join(fixture.canonicalRoot, ".mdf", "work", fixture.workId, "adapter-input.md");
+    fs.writeFileSync(input, "bounded input\n");
+    fs.writeFileSync(path.join(path.dirname(input), "capability-observation.json"), JSON.stringify({ executor: "subagent", observed: true }));
+    fs.writeFileSync(path.join(path.dirname(input), "agent-report.md"), "review result\n");
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: relocated });
+    const actionRequest = {
+      action_id: "review-1",
+      action: "review",
+      skill_path: "skills/use-mdf/SKILL.md",
+      persona_path: "agents/code-reviewer.md",
+      input_paths: ["adapter-input.md"],
+    };
+    const invocation = { agent_id: "reviewer", invocation_id: "inv-1", executor: "subagent", model_capability: "independent-review-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const issued = issueAction(context, actionRequest);
+    const capability = issueCapability(context, { ...invocation, persona_path: actionRequest.persona_path, evidence_path: "capability-observation.json" });
+    const request = { action_file: issued.action_file, capability_file: capability.capability_file, invocation };
+    const adapter = prepareAdapter(context, request);
+    assert.strictEqual(adapter.invocation.freshness, "fresh");
+    assert(adapter.skill.bytes_sha256 && adapter.persona.bytes_sha256);
+    expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
+    expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
+
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js"]) {
+      fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
+      fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
+    }
+    const relocatedCli = path.join(relocated, "scripts", "mdf-controller.js");
+    const issue = spawnSync(process.execPath, [relocatedCli, "adapter", "issue", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify(actionRequest) });
+    assert.strictEqual(issue.status, 0, issue.stderr);
+    const capabilityIssue = spawnSync(process.execPath, [relocatedCli, "adapter", "capability", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...invocation, persona_path: actionRequest.persona_path, evidence_path: "capability-observation.json" }) });
+    assert.strictEqual(capabilityIssue.status, 0, capabilityIssue.stderr);
+    const cliRequest = { action_file: JSON.parse(issue.stdout).adapter.action_file, capability_file: JSON.parse(capabilityIssue.stdout).adapter.capability_file, invocation };
+    fs.copyFileSync(path.join(relocated, "agents/code-reviewer.md"), path.join(relocated, "agents/code-reviewer-copy.md"));
+    const wrongPersonaCapability = spawnSync(process.execPath, [relocatedCli, "adapter", "capability", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...invocation, persona_path: "agents/code-reviewer-copy.md", evidence_path: "capability-observation.json" }) });
+    const wrongPersona = spawnSync(process.execPath, [relocatedCli, "adapter", "prepare", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...cliRequest, capability_file: JSON.parse(wrongPersonaCapability.stdout).adapter.capability_file }) });
+    assert.strictEqual(JSON.parse(wrongPersona.stderr).error.code, "MDF_ADAPTER_CAPABILITY_MISMATCH");
+    const missingSource = spawnSync(process.execPath, [relocatedCli, "adapter", "capability", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...invocation, capability: { ...invocation.capability, source: undefined }, persona_path: actionRequest.persona_path, evidence_path: "capability-observation.json" }) });
+    assert.strictEqual(JSON.parse(missingSource.stderr).error.code, "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
+    const prepare = spawnSync(process.execPath, [relocatedCli, "adapter", "prepare", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify(cliRequest) });
+    assert.strictEqual(prepare.status, 0, prepare.stderr);
+    const prepared = JSON.parse(prepare.stdout).adapter;
+    assert(prepared.skill.path.startsWith(fs.realpathSync(relocated)));
+    const fallbackRequest = { ...cliRequest, invocation: { ...invocation, invocation_id: "inv-root", executor: "root", freshness: "root-fallback", capability: { ...invocation.capability, fresh_context: false, source: "root-observed" }, fallback: { reason: "fresh reviewer unavailable", source: "fresh-unavailable" } } };
+    const fallbackCapability = spawnSync(process.execPath, [relocatedCli, "adapter", "capability", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...fallbackRequest.invocation, persona_path: actionRequest.persona_path, evidence_path: "capability-observation.json" }) });
+    fallbackRequest.capability_file = JSON.parse(fallbackCapability.stdout).adapter.capability_file;
+    const fallback = spawnSync(process.execPath, [relocatedCli, "adapter", "prepare", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify(fallbackRequest) });
+    assert.strictEqual(fallback.status, 0, fallback.stderr);
+    const degradedRequest = { ...cliRequest, invocation: { ...fallbackRequest.invocation, invocation_id: "inv-degraded", freshness: "degraded", fallback: { reason: "runtime cannot prove independent context", source: "runtime-limited" } } };
+    const degradedCapability = spawnSync(process.execPath, [relocatedCli, "adapter", "capability", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ ...degradedRequest.invocation, persona_path: actionRequest.persona_path, evidence_path: "capability-observation.json" }) });
+    degradedRequest.capability_file = JSON.parse(degradedCapability.stdout).adapter.capability_file;
+    const degraded = spawnSync(process.execPath, [relocatedCli, "adapter", "prepare", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify(degradedRequest) });
+    assert.strictEqual(degraded.status, 0, degraded.stderr);
+    for (const [change, code] of [
+      [{ capability: { ...request.invocation.capability, model_suitable: false } }, "MDF_ADAPTER_CAPABILITY_UNSUPPORTED"],
+      [{ capability: { ...request.invocation.capability, reasoning_capable: false } }, "MDF_ADAPTER_CAPABILITY_UNSUPPORTED"],
+      [{ freshness: "unknown" }, "MDF_ADAPTER_FRESHNESS_INVALID"],
+      [{ freshness: "fresh", executor: "root" }, "MDF_ADAPTER_MODE_INCONSISTENT"],
+      [{ freshness: "root-fallback", executor: "subagent", capability: { ...request.invocation.capability, fresh_context: false } }, "MDF_ADAPTER_MODE_INCONSISTENT"],
+      [{ freshness: "degraded", executor: "root", capability: { ...request.invocation.capability, fresh_context: false } }, "MDF_ADAPTER_MODE_INCONSISTENT"],
+    ]) {
+      const invalidRequest = { ...cliRequest, invocation: { ...invocation, ...change } };
+      const invalid = spawnSync(process.execPath, [relocatedCli, "adapter", "prepare", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify(invalidRequest) });
+      assert.strictEqual(JSON.parse(invalid.stderr).error.code, code);
+    }
+    const mismatch = spawnSync(process.execPath, [relocatedCli, "adapter", "submit", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ action_id: "other", interaction_file: prepared.interaction_file, output_path: "agent-report.md", outcome: { disposition: "pass" } }) });
+    assert.strictEqual(JSON.parse(mismatch.stderr).error.code, "MDF_ADAPTER_ACTION_MISMATCH");
+    const bypass = recordInteraction(context, { invocation: { ...invocation, action_id: actionRequest.action_id, action_file: cliRequest.action_file, skill_sha256: prepared.skill.bytes_sha256, persona_sha256: prepared.persona.bytes_sha256 }, input_paths: actionRequest.input_paths });
+    const bypassSubmit = spawnSync(process.execPath, [relocatedCli, "adapter", "submit", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ action_id: actionRequest.action_id, interaction_file: bypass.file, output_path: "agent-report.md", outcome: { disposition: "pass" } }) });
+    assert.strictEqual(JSON.parse(bypassSubmit.stderr).error.code, "MDF_ADAPTER_PREPARE_REQUIRED");
+    fs.appendFileSync(path.join(relocated, "agents/code-reviewer.md"), "\nstale\n");
+    const stale = spawnSync(process.execPath, [relocatedCli, "adapter", "submit", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ action_id: actionRequest.action_id, interaction_file: prepared.interaction_file, output_path: "agent-report.md", outcome: { disposition: "pass" } }) });
+    assert.strictEqual(JSON.parse(stale.stderr).error.code, "MDF_ADAPTER_PRIMITIVE_STALE");
+    fs.copyFileSync(path.join(root, "agents/code-reviewer.md"), path.join(relocated, "agents/code-reviewer.md"));
+    const submit = spawnSync(process.execPath, [relocatedCli, "adapter", "submit", "--cwd", fixture.worktree, "--plugin-root", relocated], { cwd: fixture.worktree, encoding: "utf8", input: JSON.stringify({ action_id: actionRequest.action_id, interaction_file: prepared.interaction_file, output_path: "agent-report.md", outcome: { disposition: "pass" } }) });
+    assert.strictEqual(submit.status, 0, submit.stderr);
+    const submitted = JSON.parse(submit.stdout).adapter;
+    assert(submitted.decision_file);
+    fs.writeFileSync(input, "changed after decision\n");
+    expectCode(() => verifySidecar(context, submitted.decision_file), "MDF_EVIDENCE_STALE");
+  } finally {
+    fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter");
   process.exit(1);
 }
 
 if (group === "context") runContextTests();
-else runEvidenceTests();
+else if (group === "evidence") runEvidenceTests();
+else runAdapterTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);

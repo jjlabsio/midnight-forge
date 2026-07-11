@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const { ControllerError, resolveControllerContext } = require("./controller-runtime/context");
+const fs = require("fs");
+const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
 
 function fail(error) {
   const response = {
@@ -32,7 +34,17 @@ function parseContextArgs(args) {
 
 try {
   const [command, ...args] = process.argv.slice(2);
-  if (command !== "context") {
+  if (command === "adapter") {
+    const [operation, ...contextArgs] = args;
+    if (!new Set(["issue", "capability", "prepare", "submit"]).has(operation)) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller adapter issue|capability|prepare|submit [--cwd PATH] [--plugin-root PATH]");
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Adapter command requires JSON stdin.", { cause: error.message }); }
+    const adapter = operation === "issue" ? issueAction(context, request) : operation === "capability" ? issueCapability(context, request) : operation === "prepare" ? prepareAdapter(context, request) : submitOutcome(context, request);
+    console.log(JSON.stringify({ ok: true, adapter }, null, 2));
+    process.exit(0);
+  } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");
   }
   console.log(JSON.stringify({ ok: true, context: resolveControllerContext(parseContextArgs(args)) }, null, 2));
