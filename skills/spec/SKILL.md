@@ -34,7 +34,7 @@ automatic authorization; do not fabricate a human approval.
 ## Approval contract
 
 Initial-generation planning requires explicit affirmative user approval of the
-exact canonical spec revision/hash. Persist and verify the
+exact canonical artifact revision/hash for the spec. Persist and verify the
 `../../references/approval-evidence.md` schema: `approval-NNN.md` must match
 the current `latest.spec`, its SHA-256, and its latest-pointer value before the
 controller advances. Any later edit, replacement, or latest-pointer change must

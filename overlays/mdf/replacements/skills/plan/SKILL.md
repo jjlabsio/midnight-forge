@@ -50,7 +50,7 @@ Pass each payload as JSON on stdin while providing the resolved `--cwd` and
 ## Approval contract
 
 Initial-generation build requires explicit affirmative user approval of the
-exact canonical plan revision/hash. Follow `../../references/approval-evidence.md` for the
+exact canonical artifact revision/hash for the plan. Follow `../../references/approval-evidence.md` for the
 human-facing approval contract and the optional user-facing `approval-NNN.md`
 record. The production
 controller records the authoritative hash-bound approval sidecars; Markdown

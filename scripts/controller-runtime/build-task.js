@@ -141,13 +141,14 @@ function authorizeTaskCommit(context, request) {
   if (baseHead !== attempt.invocation.base_head) throw new ControllerError("MDF_BUILD_BASELINE_STALE", "Task baseline changed before commit authorization.");
   const actualPaths = statusPaths(context);
   const expectedPaths = [...touchedPaths].sort();
-  const allowedPaths = attempt.invocation.repair_of ? attempt.invocation.repair_scope_paths : attempt.invocation.task.owned_paths;
+  const allowedPaths = attempt.invocation.repair_of ? attempt.invocation.repair_scope_paths : attempt.invocation.simplification_of ? attempt.invocation.simplification_scope_paths : attempt.invocation.task.owned_paths;
   if (JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths) || expectedPaths.some((file) => !allowedPaths.includes(file))) throw new ControllerError("MDF_BUILD_PATH_SCOPE", "Dirty paths must exactly equal authorized touched paths.", { actual: actualPaths, expected: expectedPaths, allowed: allowedPaths });
   const commands = commandFiles.map((file) => { const verification = verifySidecar(context, file); const command = verifySidecar(context, verification.invocation?.command_file); return { file, verification, commandFile: verification.invocation?.command_file, value: command }; });
   if (commands.some(({ verification, value }) => verification.kind !== "interaction" || verification.invocation?.agent_id !== "mdf-build-verification" || verification.invocation.attempt_file !== attemptFile || !verification.git?.worktree_sha256 || value.kind !== "command" || value.exit_code !== 0 || verification.invocation.exit_code !== value.exit_code)) throw new ControllerError("MDF_BUILD_VERIFICATION_FAILED", "Every verification must belong to this attempt, bind worktree content, and pass.");
   const impact = verifySidecar(context, impactFile);
   if (impact.conclusion?.kind !== "downstream-impact" || impact.conclusion.attempt_file !== attemptFile || new Set(["plan-revision-required", "user-decision-required"]).has(impact.conclusion.classification)) throw new ControllerError("MDF_BUILD_IMPACT_BLOCKED", "Downstream impact does not permit a focused commit.");
   const plan = planRegistration(context, attempt.invocation.plan_registration_file);
+  if (attempt.invocation.simplification_of && JSON.stringify(commands.map(({ value }) => value.command)) !== JSON.stringify(plan.invocation.metadata.whole_build_commands)) throw new ControllerError("MDF_SIMPLIFY_VERIFICATION_INCOMPLETE", "Simplification requires the full approved verification matrix before commit.");
   const spec = verifySidecar(context, plan.invocation.spec_registration_file, { fresh: false });
   verifyInputs(context, spec);
   const requiredInputs = [artifactPath(context, spec.invocation.artifact_file), artifactPath(context, plan.invocation.artifact_file), taskEvidencePath, diffPath, impact.conclusion.artifact_path, `evidence/${attemptFile}`, `evidence/${impactFile}`, ...commands.flatMap(({ file, commandFile, value }) => [value.output.path, `evidence/${file}`, `evidence/${commandFile}`])].sort();
@@ -155,6 +156,7 @@ function authorizeTaskCommit(context, request) {
   const actualInputs = action.inputs.map((input) => input.path).sort();
   if (decision.conclusion?.disposition !== "pass" || JSON.stringify(actualInputs) !== JSON.stringify(requiredInputs)) throw new ControllerError("MDF_BUILD_REVIEW_INVALID", "Fresh review must pass against the exact task evidence set.");
   const expectedTree = proposedTree(context, expectedPaths);
+  if (attempt.invocation.simplification_of && !subject.startsWith("refactor:")) throw new ControllerError("MDF_SIMPLIFY_COMMIT_SUBJECT_INVALID", "Simplification commit subject must start with refactor:.");
   const authorization = recordInteraction(context, { invocation: { agent_id: "mdf-build-commit-authorization", invocation_id: `commit-${attempt.invocation.task.id}-${Date.now()}`, executor: "deterministic-runtime", attempt_file: attemptFile, plan_registration_file: attempt.invocation.plan_registration_file, task_id: attempt.invocation.task.id, base_head: baseHead, expected_tree: expectedTree, expected_paths: expectedPaths, commit_subject: subject }, input_paths: [...requiredInputs, reviewPath, `evidence/${reviewFile}`] });
   const decisionRecord = recordDecision(context, { interaction_file: authorization.file, conclusion: { kind: "build-task-commit-authorization", attempt_file: attemptFile, task_id: attempt.invocation.task.id, base_head: baseHead, expected_tree: expectedTree, expected_paths: expectedPaths, commit_subject: subject } });
   return { authorization_file: decisionRecord.file };
@@ -167,15 +169,16 @@ function completeBuildTask(context, { authorization_file: authorizationFile }) {
   verifyInputs(context, interaction);
   const attempt = verifySidecar(context, authorization.conclusion.attempt_file, { fresh: false });
   const repairAttempt = nonempty(attempt.invocation?.repair_of);
+  const simplificationAttempt = nonempty(attempt.invocation?.simplification_of);
   const alreadyComplete = completedTasks(context, interaction.invocation.plan_registration_file).has(authorization.conclusion.task_id);
-  if (!repairAttempt && alreadyComplete) throw new ControllerError("MDF_BUILD_TASK_DUPLICATE", "Task already has a completion transition.");
+  if (!repairAttempt && !simplificationAttempt && alreadyComplete) throw new ControllerError("MDF_BUILD_TASK_DUPLICATE", "Task already has a completion transition.");
   const repairCompletion = repairAttempt && alreadyComplete;
   const head = git(context, ["rev-parse", "HEAD"]).trim();
   const fields = git(context, ["show", "-s", "--format=%P%n%T%n%s", head]).trimEnd().split("\n");
   const paths = git(context, ["diff-tree", "--no-commit-id", "--name-only", "-r", head]).trim().split("\n").filter(Boolean).sort();
   if (statusPaths(context).length || fields[0] !== authorization.conclusion.base_head || fields[1] !== authorization.conclusion.expected_tree || fields[2] !== authorization.conclusion.commit_subject || JSON.stringify(paths) !== JSON.stringify(authorization.conclusion.expected_paths)) throw new ControllerError("MDF_BUILD_COMMIT_MISMATCH", "Focused commit facts do not match authorization.", { head, parent: fields[0], tree: fields[1], subject: fields[2], paths });
-  const completion = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-complete", invocation_id: `complete-${authorization.conclusion.task_id}-${head}`, executor: "deterministic-runtime", authorization_file: authorizationFile, plan_registration_file: interaction.invocation.plan_registration_file, task_id: authorization.conclusion.task_id, repair_of: attempt.invocation.repair_of || null, commit: { head, parent: fields[0], tree: fields[1], subject: fields[2], paths } }, input_paths: [`evidence/${authorizationFile}`] });
-  const decision = recordDecision(context, { interaction_file: completion.file, conclusion: { kind: repairCompletion ? "build-task-repair-complete" : "build-task-complete", plan_registration_file: interaction.invocation.plan_registration_file, task_id: authorization.conclusion.task_id, recovery_file: attempt.invocation.repair_of || null, commit: completion.invocation.commit } });
+  const completion = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-complete", invocation_id: `complete-${authorization.conclusion.task_id}-${head}`, executor: "deterministic-runtime", authorization_file: authorizationFile, plan_registration_file: interaction.invocation.plan_registration_file, task_id: authorization.conclusion.task_id, repair_of: attempt.invocation.repair_of || null, simplification_of: attempt.invocation.simplification_of || null, commit: { head, parent: fields[0], tree: fields[1], subject: fields[2], paths } }, input_paths: [`evidence/${authorizationFile}`] });
+  const decision = recordDecision(context, { interaction_file: completion.file, conclusion: { kind: simplificationAttempt ? "build-task-simplification-complete" : repairCompletion ? "build-task-repair-complete" : "build-task-complete", plan_registration_file: interaction.invocation.plan_registration_file, task_id: authorization.conclusion.task_id, recovery_file: attempt.invocation.repair_of || null, simplification_file: attempt.invocation.simplification_of || null, commit: completion.invocation.commit } });
   return recordEvent(context, { event_id: `task-${authorization.conclusion.task_id}-${head}`, from: "build-task", to: "build-task", next_action: "build-task", evidence_files: [decision.file] });
 }
 

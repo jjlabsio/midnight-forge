@@ -10,6 +10,7 @@ const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerif
 const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
 const { decideRecovery } = require("./controller-runtime/recovery");
 const { registerTechnicalRevision } = require("./controller-runtime/revision");
+const { authorizeCandidateRejection, completeCandidateRejection, createSimplificationScope, finalizeNoChange, registerSimplification, selectSimplificationCandidate } = require("./controller-runtime/simplify");
 
 function fail(error) {
   const response = {
@@ -115,6 +116,16 @@ try {
     try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Technical-revision command requires JSON stdin."); }
     console.log(JSON.stringify({ ok: true, technical_revision: registerTechnicalRevision(context, request) }, null, 2));
+    process.exit(0);
+  } else if (command === "simplify") {
+    const [operation, ...contextArgs] = args;
+    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Simplify command requires JSON stdin."); }
+    const result = operation === "scope" ? createSimplificationScope(context, request) : operation === "register" ? registerSimplification(context, request) : operation === "select" ? selectSimplificationCandidate(context, request) : operation === "reject" ? authorizeCandidateRejection(context, request) : operation === "rejected" ? completeCandidateRejection(context, request) : operation === "no-change" ? finalizeNoChange(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller simplify scope|register|select|reject|rejected|no-change [--cwd PATH] [--plugin-root PATH]");
+    console.log(JSON.stringify({ ok: true, simplify: result }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");
