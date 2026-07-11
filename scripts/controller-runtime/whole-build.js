@@ -29,7 +29,7 @@ function plan(context, file) {
 }
 
 function completions(context, planFile) {
-  return transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files.map((file) => ({ event_file: event.file, event: verifySidecar(context, event.file, { fresh: false }), file, value: verifySidecar(context, file, { fresh: false }) }))).filter(({ value }) => value.conclusion?.kind === "build-task-complete" && value.conclusion.plan_registration_file === planFile);
+  return transitionEvidence(context, "build-task", "build-task").flatMap((event) => event.evidence_files.map((file) => ({ event_file: event.file, event: verifySidecar(context, event.file, { fresh: false }), file, value: verifySidecar(context, file, { fresh: false }) }))).filter(({ value }) => new Set(["build-task-complete", "build-task-repair-complete"]).has(value.conclusion?.kind) && value.conclusion.plan_registration_file === planFile);
 }
 
 function validateCompletion(context, record, planFile) {
@@ -39,14 +39,18 @@ function validateCompletion(context, record, planFile) {
   const authorizationInteraction = verifySidecar(context, authorization.interaction?.file, { fresh: false });
   const attempt = verifySidecar(context, authorization.conclusion?.attempt_file, { fresh: false });
   const commit = decision.conclusion?.commit;
-  if (completion.invocation?.agent_id !== "mdf-build-task-complete" || completion.invocation.plan_registration_file !== planFile || completion.invocation.task_id !== decision.conclusion.task_id || JSON.stringify(completion.invocation.commit) !== JSON.stringify(commit) || authorization.conclusion?.kind !== "build-task-commit-authorization" || authorizationInteraction.invocation?.agent_id !== "mdf-build-commit-authorization" || authorizationInteraction.invocation.plan_registration_file !== planFile || authorization.conclusion.task_id !== decision.conclusion.task_id || authorization.conclusion.base_head !== commit?.parent || authorization.conclusion.expected_tree !== commit?.tree || authorization.conclusion.commit_subject !== commit?.subject || JSON.stringify(authorization.conclusion.expected_paths) !== JSON.stringify(commit?.paths) || attempt.invocation?.agent_id !== "mdf-build-task-select" || attempt.invocation.plan_registration_file !== planFile || attempt.invocation.task?.id !== decision.conclusion.task_id || attempt.invocation.base_head !== commit?.parent) throw new ControllerError("MDF_WHOLE_BUILD_TASK_PROVENANCE_INVALID", "Task completion is not derived from its exact attempt and commit authorization chain.");
+  const repair = decision.conclusion.kind === "build-task-repair-complete";
+  const recoveryLinked = nonempty(attempt.invocation?.repair_of);
+  const recovery = recoveryLinked ? verifySidecar(context, decision.conclusion.recovery_file, { fresh: false }) : null;
+  if (completion.invocation?.agent_id !== "mdf-build-task-complete" || completion.invocation.plan_registration_file !== planFile || completion.invocation.task_id !== decision.conclusion.task_id || JSON.stringify(completion.invocation.commit) !== JSON.stringify(commit) || authorization.conclusion?.kind !== "build-task-commit-authorization" || authorizationInteraction.invocation?.agent_id !== "mdf-build-commit-authorization" || authorizationInteraction.invocation.plan_registration_file !== planFile || authorization.conclusion.task_id !== decision.conclusion.task_id || authorization.conclusion.base_head !== commit?.parent || authorization.conclusion.expected_tree !== commit?.tree || authorization.conclusion.commit_subject !== commit?.subject || JSON.stringify(authorization.conclusion.expected_paths) !== JSON.stringify(commit?.paths) || attempt.invocation?.agent_id !== "mdf-build-task-select" || attempt.invocation.plan_registration_file !== planFile || attempt.invocation.task?.id !== decision.conclusion.task_id || attempt.invocation.base_head !== commit?.parent || (recoveryLinked && (attempt.invocation.repair_of !== decision.conclusion.recovery_file || recovery.conclusion?.kind !== "recovery-decision" || recovery.conclusion.disposition !== "automatic-repair" || recovery.conclusion.task_id !== decision.conclusion.task_id)) || (repair && !recoveryLinked) || (!recoveryLinked && decision.conclusion.recovery_file)) throw new ControllerError("MDF_WHOLE_BUILD_TASK_PROVENANCE_INVALID", "Task completion is not derived from its exact attempt and commit authorization chain.");
 }
 
 function progress(context, planFile) {
   const registration = plan(context, planFile);
   const records = completions(context, planFile);
   const expected = registration.invocation.metadata.tasks.map((task) => task.id);
-  const actual = records.map(({ value }) => value.conclusion.task_id);
+  const baseRecords = records.filter(({ value }) => value.conclusion.kind === "build-task-complete");
+  const actual = baseRecords.map(({ value }) => value.conclusion.task_id);
   if (new Set(actual).size !== actual.length || actual.some((id) => !expected.includes(id))) throw new ControllerError("MDF_WHOLE_BUILD_TASK_SET_INVALID", "Canonical task completion set contains duplicates or unknown tasks.");
   const planTransition = transitionEvidence(context, "plan", "build-task").find((event) => event.evidence_files.includes(planFile));
   const anchor = verifySidecar(context, planTransition.file, { fresh: false }).git.head;
@@ -55,8 +59,9 @@ function progress(context, planFile) {
     validateCompletion(context, record, planFile);
     const task = registration.invocation.metadata.tasks.find((candidate) => candidate.id === record.value.conclusion.task_id);
     const commit = record.value.conclusion.commit;
-    if (task.depends_on.some((id) => !seen.has(id)) || !commit?.head || !commit.parent || !commit.tree || !nonempty(commit.subject) || !Array.isArray(commit.paths) || commit.paths.length === 0 || commit.paths.some((file) => !task.owned_paths.includes(file)) || record.event.git.head !== commit.head) throw new ControllerError("MDF_WHOLE_BUILD_TASK_TRANSITION_INVALID", "Task transition order, ownership, or commit facts are invalid.");
-    seen.add(task.id);
+    const repair = record.value.conclusion.kind === "build-task-repair-complete";
+    if ((!repair && task.depends_on.some((id) => !seen.has(id))) || (repair && !seen.has(task.id)) || !commit?.head || !commit.parent || !commit.tree || !nonempty(commit.subject) || !Array.isArray(commit.paths) || commit.paths.length === 0 || commit.paths.some((file) => !task.owned_paths.includes(file)) || record.event.git.head !== commit.head) throw new ControllerError("MDF_WHOLE_BUILD_TASK_TRANSITION_INVALID", "Task transition order, ownership, or commit facts are invalid.");
+    if (!repair) seen.add(task.id);
   }
   if (records.length && records[0].value.conclusion.commit.parent !== anchor) throw new ControllerError("MDF_WHOLE_BUILD_COMMIT_CHAIN_INVALID", "First focused task commit is not anchored to the approved plan tree.");
   for (let index = 1; index < records.length; index += 1) {

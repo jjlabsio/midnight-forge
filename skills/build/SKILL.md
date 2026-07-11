@@ -77,3 +77,25 @@ After all approved plan tasks pass, the lifecycle controller runs whole-build
 integration verification and a separate fresh-context upstream review. Whole
 build completion is calculated against all approved plan tasks, never merely
 the selected task.
+
+## Recovery gate
+
+On a failed verification or review, preserve the current failure and reproduce
+it before changing code. Execute exact upstream
+`../debugging-and-error-recovery/SKILL.md` with the test-engineer persona, then
+pass its provenance-bound semantic decision to production
+`./scripts/mdf-controller.js recovery`. The payload contains exact
+`failure_files`, a failing runtime `reproduction_file`, raw diagnosis output
+and decision, and the affected `attempt_file`.
+
+Only a reproducible, intent-preserving, reversible, bounded, task-owned repair
+that needs no human judgment may return `repair-task`. Use `build-task repair`
+with that `recovery_file`, then run the ordinary verification, fresh review,
+downstream impact, authorization, and focused commit gate. A repair completion
+invalidates the earlier whole-build baseline and requires the full whole-build
+matrix and review again.
+
+Ambiguous, non-reproducible, intent/scope/trade-off changing, high-risk,
+irreversible, external, or human-decision cases stop. Repeating the same
+failure fingerprint at the same worktree progress marker stops as
+`no-progress`; a fingerprint is identity evidence, never repair permission.

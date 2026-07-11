@@ -6,8 +6,9 @@ const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require(
 const { next, recordEvent } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
-const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask } = require("./controller-runtime/build-task");
+const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
 const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
+const { decideRecovery } = require("./controller-runtime/recovery");
 
 function fail(error) {
   const response = {
@@ -86,8 +87,8 @@ try {
     let request;
     try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Build-task command requires JSON stdin."); }
-    const result = operation === "select" ? selectBuildTask(context, request) : operation === "verify" ? runVerification(context, request) : operation === "impact" ? recordDownstreamImpact(context, request) : operation === "authorize" ? authorizeTaskCommit(context, request) : operation === "complete" ? completeBuildTask(context, request) : null;
-    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller build-task select|verify|impact|authorize|complete [--cwd PATH] [--plugin-root PATH]");
+    const result = operation === "select" ? selectBuildTask(context, request) : operation === "repair" ? selectRepairTask(context, request) : operation === "verify" ? runVerification(context, request) : operation === "impact" ? recordDownstreamImpact(context, request) : operation === "authorize" ? authorizeTaskCommit(context, request) : operation === "complete" ? completeBuildTask(context, request) : null;
+    if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller build-task select|repair|verify|impact|authorize|complete [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, build_task: result }, null, 2));
     process.exit(0);
   } else if (command === "whole-build") {
@@ -99,6 +100,13 @@ try {
     const result = operation === "resume" ? resumeAutoBuild(context, request) : operation === "begin" ? beginWholeBuild(context, request) : operation === "verify" ? runWholeVerification(context, request) : operation === "inputs" ? { input_paths: wholeReviewInputs(context, request) } : operation === "finalize" ? finalizeWholeBuild(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller whole-build resume|begin|verify|inputs|finalize [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, whole_build: result }, null, 2));
+    process.exit(0);
+  } else if (command === "recovery") {
+    const context = resolveControllerContext(parseContextArgs(args));
+    let request;
+    try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+    catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Recovery command requires JSON stdin."); }
+    console.log(JSON.stringify({ ok: true, recovery: decideRecovery(context, request) }, null, 2));
     process.exit(0);
   } else if (command !== "context") {
     throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller context [--cwd PATH] [--plugin-root PATH]");

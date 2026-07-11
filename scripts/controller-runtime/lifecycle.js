@@ -5,7 +5,7 @@ const { recordInteraction, verifySidecar } = require("./evidence");
 
 const EDGES = new Map([
   ["spec", ["plan"]], ["plan", ["build-task"]], ["build-task", ["build-task", "whole-build"]],
-  ["whole-build", ["simplify"]], ["simplify", ["review"]], ["review", ["ship"]],
+  ["whole-build", ["simplify", "build-task"]], ["simplify", ["review"]], ["review", ["ship"]],
   ["ship", ["github-pr"]], ["github-pr", ["complete"]],
 ]);
 const STOPS = new Set(["human-required", "malformed", "stale", "no-progress", "ambiguous"]);

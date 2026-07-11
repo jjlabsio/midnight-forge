@@ -11,8 +11,9 @@ const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require(
 const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
-const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask } = require("./controller-runtime/build-task");
+const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
 const { beginWholeBuild, finalizeWholeBuild, resumeAutoBuild, runWholeVerification, wholeReviewInputs } = require("./controller-runtime/whole-build");
+const { decideRecovery, recoveryDisposition } = require("./controller-runtime/recovery");
 
 const root = path.resolve(__dirname, "..");
 const cliPath = path.join(root, "scripts", "mdf-controller.js");
@@ -220,7 +221,7 @@ function runAdapterTests() {
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, fresh_context: false } } }), "MDF_ADAPTER_MODE_INCONSISTENT");
     expectCode(() => prepareAdapter(context, { ...request, invocation: { ...request.invocation, capability: { ...request.invocation.capability, persona_loaded: false } } }), "MDF_ADAPTER_CAPABILITY_UNSUPPORTED");
 
-    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js"]) {
+    for (const relative of ["scripts/mdf-controller.js", "scripts/controller-runtime/context.js", "scripts/controller-runtime/evidence.js", "scripts/controller-runtime/adapter.js", "scripts/controller-runtime/lifecycle.js", "scripts/controller-runtime/spec.js", "scripts/controller-runtime/plan.js", "scripts/controller-runtime/build-task.js", "scripts/controller-runtime/whole-build.js", "scripts/controller-runtime/recovery.js"]) {
       fs.mkdirSync(path.dirname(path.join(relocated, relative)), { recursive: true });
       fs.copyFileSync(path.join(root, relative), path.join(relocated, relative));
     }
@@ -578,10 +579,86 @@ function runWholeBuildTests() {
   } finally { fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true }); }
 }
 
+function runRecoveryTests() {
+  const safe = { reproducible: true, intent_unchanged: true, reversible: true, bounded_scope: true, no_human_decision: true, ambiguous: false, high_risk: false, irreversible: false, external: false };
+  for (const change of [{ reproducible: false }, { intent_unchanged: false }, { reversible: false }, { bounded_scope: false }, { no_human_decision: false }, { ambiguous: true }, { high_risk: true }, { irreversible: true }, { external: true }]) assert.strictEqual(recoveryDisposition({ ...safe, ...change }), "human-required");
+  assert.strictEqual(recoveryDisposition(safe), "automatic-repair");
+  const setup = (outcome) => {
+    const fixture = createFixture();
+    for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); fs.writeFileSync(path.join(fixture.worktree, "extra.js"), "x\n"); spawnSync("git", ["add", "src.js", "extra.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
+    for (const [file, bytes] of [["seed.md", "seed\n"], ["plan.md", "plan\n"], ["failure.log", "failed\n"], ["diagnosis.md", "diagnosis\n"], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
+    const seedArtifact = recordArtifact(context, "seed.md");
+    const seed = recordInteraction(context, { invocation: { agent_id: "mdf-spec", invocation_id: "seed", executor: "deterministic-runtime", artifact_file: seedArtifact.file }, input_paths: ["seed.md"] });
+    recordEvent(context, { event_id: "recovery-spec-plan", from: "spec", to: "plan", evidence_files: [seed.file] });
+    const planArtifact = recordArtifact(context, "plan.md");
+    const task = { id: "T1", depends_on: [], owned_paths: ["src.js", "extra.js"], acceptance: ["repair"] };
+    const planRegistration = recordInteraction(context, { invocation: { agent_id: "mdf-plan", invocation_id: "recovery-plan", executor: "deterministic-runtime", artifact_file: planArtifact.file, spec_registration_file: seed.file, metadata: { tasks: [task], whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] } }, input_paths: ["plan.md", `evidence/${seed.file}`] });
+    recordEvent(context, { event_id: "recovery-plan-build", from: "plan", to: "build-task", evidence_files: [planRegistration.file] });
+    const attempt = recordInteraction(context, { invocation: { agent_id: "mdf-build-task-select", invocation_id: "recovery-attempt", executor: "deterministic-runtime", writer_id: "root", plan_registration_file: planRegistration.file, task, base_head: spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim() }, input_paths: [`evidence/${planRegistration.file}`] });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "failing change\n");
+    const failure = recordCommand(context, { command: ["node", "test.js"], output_path: "failure.log", exit_code: 1 });
+    const inputs = [`evidence/${failure.file}`, `evidence/${attempt.file}`].sort();
+    const action = issueAction(context, { action_id: `recovery-${outcome.disposition}`, action: "debug-recovery", skill_path: "skills/debugging-and-error-recovery/SKILL.md", persona_path: "agents/test-engineer.md", input_paths: inputs });
+    const invocation = { agent_id: "diagnoser", invocation_id: `diagnose-${outcome.disposition}`, executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const capability = issueCapability(context, { ...invocation, persona_path: "agents/test-engineer.md", evidence_path: "cap.json" });
+    const prepared = prepareAdapter(context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
+    const diagnosis = submitOutcome(context, { action_id: `recovery-${outcome.disposition}`, interaction_file: prepared.interaction_file, output_path: "diagnosis.md", outcome });
+    return { fixture, context, plan_registration_file: planRegistration.file, request: { failure_files: [failure.file], reproduction_file: failure.file, diagnosis_output_path: "diagnosis.md", diagnosis_decision_file: diagnosis.decision_file, attempt_file: attempt.file } };
+  };
+  const automatic = setup({ disposition: "automatic-repair", judgment: safe, repair_scope_paths: ["src.js"] });
+  try {
+    const recovery = decideRecovery(automatic.context, automatic.request);
+    assert.strictEqual(recovery.action, "repair-task");
+    assert.strictEqual(selectRepairTask(automatic.context, { recovery_file: recovery.recovery_file, writer_id: "root" }).repair_of, recovery.recovery_file);
+    fs.writeFileSync(path.join(automatic.context.work_item.path, "failure-2.log"), "failed\n");
+    const repeatedFailure = recordCommand(automatic.context, { command: ["node", "test.js"], output_path: "failure-2.log", exit_code: 1 });
+    const repeatedInputs = [`evidence/${repeatedFailure.file}`, `evidence/${automatic.request.attempt_file}`].sort();
+    const repeatedAction = issueAction(automatic.context, { action_id: "recovery-repeat", action: "debug-recovery", skill_path: "skills/debugging-and-error-recovery/SKILL.md", persona_path: "agents/test-engineer.md", input_paths: repeatedInputs });
+    const repeatedInvocation = { agent_id: "diagnoser", invocation_id: "diagnose-repeat", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const repeatedCapability = issueCapability(automatic.context, { ...repeatedInvocation, persona_path: "agents/test-engineer.md", evidence_path: "cap.json" });
+    const repeatedPrepared = prepareAdapter(automatic.context, { action_file: repeatedAction.action_file, capability_file: repeatedCapability.capability_file, invocation: repeatedInvocation });
+    const repeatedDiagnosis = submitOutcome(automatic.context, { action_id: "recovery-repeat", interaction_file: repeatedPrepared.interaction_file, output_path: "diagnosis.md", outcome: { disposition: "automatic-repair", judgment: safe, repair_scope_paths: ["src.js"] } });
+    const repeated = decideRecovery(automatic.context, { failure_files: [repeatedFailure.file], reproduction_file: repeatedFailure.file, diagnosis_output_path: "diagnosis.md", diagnosis_decision_file: repeatedDiagnosis.decision_file, attempt_file: automatic.request.attempt_file });
+    assert.strictEqual(repeated.action, "stop"); assert.strictEqual(repeated.stop.code, "MDF_STOP_NO_PROGRESS");
+  } finally { fs.rmSync(automatic.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const repairFlow = setup({ disposition: "automatic-repair", judgment: safe, repair_scope_paths: ["src.js"] });
+  try {
+    const recovery = decideRecovery(repairFlow.context, repairFlow.request);
+    const repair = selectRepairTask(repairFlow.context, { recovery_file: recovery.recovery_file, writer_id: "root" });
+    for (const [file, bytes] of [["repair-task.md", "repair acceptance\n"], ["repair.diff", "repair diff\n"], ["repair-impact.md", "unaffected\n"], ["repair-review.md", "pass\n"], ["repair-cap.json", "{}\n"]]) fs.writeFileSync(path.join(repairFlow.context.work_item.path, file), bytes);
+    fs.writeFileSync(path.join(repairFlow.fixture.worktree, "src.js"), "fixed\n");
+    const command = runVerification(repairFlow.context, { attempt_file: repair.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "repair-command.log" });
+    const impact = recordDownstreamImpact(repairFlow.context, { attempt_file: repair.attempt_file, classification: "unaffected", artifact_path: "repair-impact.md" });
+    const inputs = ["seed.md", "plan.md", "repair-task.md", "repair.diff", "repair-impact.md", `evidence/${repair.attempt_file}`, `evidence/${impact.impact_file}`, "repair-command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`];
+    const action = issueAction(repairFlow.context, { action_id: "repair-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs });
+    const invocation = { agent_id: "repair-reviewer", invocation_id: "repair-review-inv", executor: "subagent", model_capability: "independent-review-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } };
+    const capability = issueCapability(repairFlow.context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "repair-cap.json" });
+    const prepared = prepareAdapter(repairFlow.context, { action_file: action.action_file, capability_file: capability.capability_file, invocation });
+    const review = submitOutcome(repairFlow.context, { action_id: "repair-review", interaction_file: prepared.interaction_file, output_path: "repair-review.md", outcome: { disposition: "pass" } });
+    const authorizationRequest = { attempt_file: repair.attempt_file, command_files: [command.verification_file], review_output_path: "repair-review.md", review_decision_file: review.decision_file, task_evidence_path: "repair-task.md", diff_path: "repair.diff", downstream_impact_file: impact.impact_file, touched_paths: ["src.js"], commit_subject: "fix: repair T1" };
+    fs.writeFileSync(path.join(repairFlow.fixture.worktree, "extra.js"), "scope escape\n");
+    expectCode(() => authorizeTaskCommit(repairFlow.context, authorizationRequest), "MDF_BUILD_PATH_SCOPE");
+    fs.writeFileSync(path.join(repairFlow.fixture.worktree, "extra.js"), "x\n");
+    const authorization = authorizeTaskCommit(repairFlow.context, authorizationRequest);
+    spawnSync("git", ["add", "--", "src.js"], { cwd: repairFlow.fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "fix: repair T1"], { cwd: repairFlow.fixture.worktree });
+    assert.strictEqual(completeBuildTask(repairFlow.context, { authorization_file: authorization.authorization_file }).state.phase, "build-task");
+    assert.strictEqual(resumeAutoBuild(repairFlow.context, { plan_registration_file: repairFlow.plan_registration_file, writer_id: "root" }).action, "whole-build");
+  } finally { fs.rmSync(repairFlow.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const human = setup({ disposition: "automatic-repair", judgment: { ...safe, ambiguous: true }, repair_scope_paths: ["src.js"] });
+  try { const result = decideRecovery(human.context, human.request); assert.strictEqual(result.stop.code, "MDF_STOP_HUMAN_REQUIRED"); } finally { fs.rmSync(human.fixture.temporaryRoot, { recursive: true, force: true }); }
+  const revision = setup({ disposition: "technical-revision", judgment: safe });
+  try {
+    const cli = spawnSync(process.execPath, [cliPath, "recovery", "--cwd", revision.fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify(revision.request) });
+    assert.strictEqual(cli.status, 0, cli.stderr); assert.strictEqual(JSON.parse(cli.stdout).recovery.action, "technical-revision");
+  } finally { fs.rmSync(revision.fixture.temporaryRoot, { recursive: true, force: true }); }
+}
+
 const args = new Set(process.argv.slice(2));
 const group = process.argv[3];
-if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build"].includes(group)) {
-  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build");
+if (process.argv.length !== 4 || process.argv[2] !== "--group" || !["context", "evidence", "adapter", "lifecycle", "spec", "plan", "build-task", "whole-build", "recovery"].includes(group)) {
+  console.error("Usage: node scripts/validate-mdf-controller-runtime.js --group context|evidence|adapter|lifecycle|spec|plan|build-task|whole-build|recovery");
   process.exit(1);
 }
 
@@ -592,5 +669,6 @@ else if (group === "lifecycle") runLifecycleTests();
 else if (group === "spec") runSpecTests();
 else if (group === "plan") runPlanTests();
 else if (group === "build-task") runBuildTaskTests();
-else runWholeBuildTests();
+else if (group === "whole-build") runWholeBuildTests();
+else runRecoveryTests();
 console.log(`MDF controller runtime validation passed for ${group}.`);
