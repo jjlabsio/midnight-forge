@@ -309,6 +309,9 @@ function runLifecycleTests() {
     const cliNextA = spawnSync(process.execPath, [cliPath, "lifecycle", "next", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8" });
     const cliNextB = spawnSync(process.execPath, [cliPath, "lifecycle", "next", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8" });
     assert.deepStrictEqual(JSON.parse(cliNextA.stdout), JSON.parse(cliNextB.stdout));
+    const bypass = spawnSync(process.execPath, [cliPath, "lifecycle", "record", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ event_id: "bypass", from: "spec", to: "plan", evidence_files: [evidence] }) });
+    assert.strictEqual(bypass.status, 1);
+    assert.strictEqual(JSON.parse(bypass.stderr).error.code, "MDF_CONTROLLER_USAGE");
     expectCode(() => recordEvent(context, { event_id: "bad", from: "spec", to: "ship", evidence_files: [evidence] }), "MDF_LIFECYCLE_ILLEGAL_EDGE");
     let from = "spec";
     const sequence = ["plan", "build-task", "build-task", "whole-build", "simplify", "review", "ship", "github-pr", "complete"];
@@ -336,8 +339,7 @@ function runLifecycleTests() {
     const context = resolveControllerContext({ cwd: stopped.worktree, pluginRoot: root });
     fs.writeFileSync(path.join(context.work_item.path, "stop.md"), "stop evidence\n");
     const stopEvidence = recordArtifact(context, "stop.md").file;
-    const stopCli = spawnSync(process.execPath, [cliPath, "lifecycle", "record", "--cwd", stopped.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ event_id: "stop", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] }) });
-    assert.strictEqual(stopCli.status, 0, stopCli.stderr);
+    recordEvent(context, { event_id: "stop", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] });
     assert.strictEqual(nextLifecycle(context).stop.code, "MDF_STOP_HUMAN_REQUIRED");
     expectCode(() => recordEvent(context, { event_id: "bypass", from: "spec", to: "plan", evidence_files: [stopEvidence] }), "MDF_LIFECYCLE_STOPPED");
   } finally { fs.rmSync(stopped.temporaryRoot, { recursive: true, force: true }); }
