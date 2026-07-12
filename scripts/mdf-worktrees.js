@@ -24,6 +24,10 @@ function rootFor(input, options) {
   return canonicalRoot(input.root || input.cwd || options.cwd || process.cwd());
 }
 
+function executionCwd(input, options, root) {
+  return input.cwd || options.cwd || (input.root ? root : process.cwd());
+}
+
 function gitText(args, cwd, runner) {
   return runCommand("git", args, { cwd, runner }).stdout.trim();
 }
@@ -107,7 +111,7 @@ function rollbackCreatedWorktree(root, target, branch, runner, originalError) {
 
 function preflight(input = {}, options = {}) {
   const root = rootFor(input, options);
-  const cwd = input.cwd || options.cwd || root;
+  const cwd = executionCwd(input, options, root);
   const runner = options.runner;
   const gitDir = resolvedGitPath(gitText(["rev-parse", "--git-dir"], cwd, runner), cwd);
   const commonDir = resolvedGitPath(gitText(["rev-parse", "--git-common-dir"], cwd, runner), cwd);
@@ -172,7 +176,7 @@ function create(input = {}, options = {}) {
   const root = rootFor(input, options);
   const requestedWorktree = input.worktree_path || input.worktree;
   const target = targetPath(root, branch, requestedWorktree);
-  const check = preflight({ ...input, root, branch, worktree_path: target }, options);
+  const check = preflight({ ...input, root, cwd: executionCwd(input, options, root), branch, worktree_path: target }, options);
   if (!check.ready) throw new WorkflowError("MDF_WORKTREE_CONFLICT", "Worktree creation is blocked by preflight conflicts or current isolation.", { conflicts: check.conflicts, current_isolated: check.current_isolated });
   const base = `origin/${check.default_branch}`;
   assertBaseHasNoMdf(root, base, options.runner);

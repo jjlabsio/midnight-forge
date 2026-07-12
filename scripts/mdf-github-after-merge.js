@@ -9,6 +9,10 @@ function rootFor(input, options) {
   return canonicalRoot(input.root || input.cwd || options.cwd || process.cwd());
 }
 
+function executionCwd(input, options, root) {
+  return input.cwd || options.cwd || (input.root ? root : process.cwd());
+}
+
 function invalidPrReference(value) {
   throw new WorkflowError("MDF_PR_REF_INVALID", "The pull request reference must be a positive number or a GitHub pull request URL.", { reference: value });
 }
@@ -65,7 +69,7 @@ function repositoryKey(value) {
 
 function verify(input = {}, options = {}) {
   const root = rootFor(input, options);
-  const cwd = input.cwd || options.cwd || root;
+  const cwd = executionCwd(input, options, root);
   const reference = prReference(input);
   const ref = reference && reference.value;
   const args = ["pr", "view"];
@@ -83,7 +87,7 @@ function verify(input = {}, options = {}) {
   } catch (error) {
     throw new WorkflowError("MDF_PR_STATE_MALFORMED", "GitHub returned malformed pull request state.", { cause: error.message });
   }
-  if (!data || typeof data !== "object" || Array.isArray(data) || typeof data.headRefName !== "string" || typeof data.baseRefName !== "string") {
+  if (!data || typeof data !== "object" || Array.isArray(data) || typeof data.headRefName !== "string" || !data.headRefName.trim() || typeof data.baseRefName !== "string" || !data.baseRefName.trim()) {
     throw new WorkflowError("MDF_PR_STATE_MALFORMED", "Pull request state is missing head/base refs.", { reference: ref });
   }
   if (data.state !== "MERGED" || !data.mergedAt) {

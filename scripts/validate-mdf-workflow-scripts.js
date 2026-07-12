@@ -371,6 +371,17 @@ function runWorktreeTests() {
     const linkedPreflight = worktrees.preflight({ root, cwd: created.path, worktree_path: created.path });
     assert.strictEqual(linkedPreflight.current_isolated, true);
     assert.strictEqual(linkedPreflight.current_branch, "task-fixture");
+    const linkedDefaultPreflight = spawnSync(process.execPath, [path.join(__dirname, "mdf-worktrees.js"), "preflight"], {
+      cwd: created.path,
+      encoding: "utf8",
+      input: "{}",
+    });
+    assert.strictEqual(linkedDefaultPreflight.status, 0, linkedDefaultPreflight.stderr);
+    const linkedDefaultResult = JSON.parse(linkedDefaultPreflight.stdout).result;
+    assert.strictEqual(linkedDefaultResult.current_path, fs.realpathSync(created.path));
+    assert.strictEqual(linkedDefaultResult.current_isolated, true);
+    assert.strictEqual(linkedDefaultResult.current_branch, "task-fixture");
+    assert.strictEqual(linkedDefaultResult.ready, false);
     const prepareCommands = [];
     fs.writeFileSync(path.join(target, "package-lock.json"), "{}\n");
     writeJson(path.join(target, "package.json"), { scripts: { "prisma:generate": "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
@@ -611,6 +622,18 @@ function runAfterMergeTests() {
     const verified = afterMerge.verify({ root: fixture.root, pr: "1" }, { runner });
     assert.strictEqual(verified.merged, true);
     assert.strictEqual(verified.head_branch, "feature");
+    const defaultCwdCalls = [];
+    const defaultCwdRunner = (command, args, options) => {
+      defaultCwdCalls.push({ command, cwd: options.cwd });
+      return runner(command, args, options);
+    };
+    afterMerge.verify({ pr: "1" }, { runner: defaultCwdRunner });
+    assert.strictEqual(defaultCwdCalls.find((call) => call.command === "gh").cwd, process.cwd());
+    const emptyRefsRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "", baseRefName: "", url: "https://github.com/example/project/pull/1" }), stderr: "" };
+      return runner(command, args, options);
+    };
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: emptyRefsRunner }), "MDF_PR_STATE_MALFORMED");
     const synced = afterMerge.sync({ root: fixture.root, pr: "1", default_branch: "main" }, { runner });
     assert.strictEqual(synced.default_branch, "main");
     assert.strictEqual(synced.head_branch, "feature");
