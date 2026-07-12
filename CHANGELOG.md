@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.0 - 2026-07-12
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.1.1...v1.2.0)
+
+### Changes
+
+- feat: upstream 워크플로우를 보존하는 MDF 컨트롤러 재구축 ([#53](https://github.com/jjlabsio/midnight-forge/pull/53))
 ## Unreleased
 
 ### Changed
