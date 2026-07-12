@@ -182,6 +182,19 @@ function runArtifactTests() {
     callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 4, content: "build four\n" });
     callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 4 });
     const indexBeforeMalformedEntry = fs.readFileSync(indexPath, "utf8");
+    const itemBeforeNonFileArtifact = fs.readFileSync(itemPath, "utf8");
+    const indexBeforeNonFileArtifact = fs.readFileSync(indexPath, "utf8");
+    const nonFileArtifact = path.join(workDir, "review-001.md");
+    fs.mkdirSync(nonFileArtifact);
+    expectCode(() => callArtifact("latest", {
+      root: fixture.root,
+      work_id: workId,
+      artifact_type: "review",
+      revision: 1,
+    }), "MDF_ARTIFACT_INVALID");
+    assert.strictEqual(fs.readFileSync(itemPath, "utf8"), itemBeforeNonFileArtifact);
+    assert.strictEqual(fs.readFileSync(indexPath, "utf8"), indexBeforeNonFileArtifact);
+    fs.rmSync(nonFileArtifact, { recursive: true, force: true });
     expectCode(() => callArtifact("reconcile", { root: fixture.root, work_id: workId, entry: { work_id: workId, hacked: true } }), "MDF_INDEX_ENTRY_INVALID");
     const validTaskEntry = {
       work_id: workId,
@@ -420,6 +433,18 @@ function runWorktreeTests() {
     assert.deepStrictEqual(prepared.environment.copied, [".env.test"]);
     assert.deepStrictEqual(prepareCommands.map((entry) => [entry.command, ...entry.args]), [["git", "worktree", "list", "--porcelain"], ["npm", "install"], ["npm", "run", "prisma:generate"]]);
     assert.strictEqual(fs.readFileSync(path.join(target, ".env.test"), "utf8"), "SOURCE=1\n");
+    const danglingEnvName = ".env.dangling";
+    const danglingEnvSource = path.join(root, danglingEnvName);
+    const danglingEnvTarget = path.join(target, danglingEnvName);
+    const danglingOutside = path.join(temporaryRoot, "dangling-env-target");
+    fs.writeFileSync(danglingEnvSource, "DANGLING=1\n");
+    fs.symlinkSync(danglingOutside, danglingEnvTarget);
+    expectCode(() => worktrees.prepare({ root, worktree: ".worktrees/task-fixture" }, { runner: (command, args, options) => {
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${fs.realpathSync(target)}\nHEAD abc\nbranch refs/heads/task-fixture\n`, stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    }}), "MDF_ENV_SETUP_FAILED");
+    assert.strictEqual(fs.existsSync(danglingOutside), false);
+    assert.strictEqual(fs.lstatSync(danglingEnvTarget).isSymbolicLink(), true);
     const conflict = worktrees.preflight({ root, branch: "task-fixture" });
     assert.ok(conflict.conflicts.some((entry) => entry.kind === "branch"));
     expectCode(() => worktrees.create({ root, branch: "task-fixture" }), "MDF_WORKTREE_CONFLICT");

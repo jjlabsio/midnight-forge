@@ -139,7 +139,14 @@ function latest(input, options = {}) {
     return revision(match[2]);
   })();
   const target = artifactPath(current.root, current.workId, artifactType, number);
-  if (!fs.existsSync(target)) throw new WorkflowError("MDF_ARTIFACT_MISSING", "Cannot point latest at a missing artifact.", { path: target });
+  let targetStat;
+  try {
+    targetStat = fs.lstatSync(target);
+  } catch (error) {
+    if (error.code === "ENOENT") throw new WorkflowError("MDF_ARTIFACT_MISSING", "Cannot point latest at a missing artifact.", { path: target });
+    throw new WorkflowError("MDF_ARTIFACT_INVALID", "Unable to inspect the latest artifact.", { path: target, cause: error.message });
+  }
+  if (!targetStat.isFile()) throw new WorkflowError("MDF_ARTIFACT_INVALID", "Latest must identify a regular artifact file.", { path: target });
   const relative = path.relative(current.root, target);
   const nextItem = { ...current.item, data: { ...current.item.data, latest: { ...current.item.data.latest, [artifactType]: relative } } };
   const nextEntry = indexEntry(nextItem, current.root);

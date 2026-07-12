@@ -321,10 +321,24 @@ function prepare(input = {}, options = {}) {
       if (!entry.isFile() || !entry.name.startsWith(".env")) continue;
       const source = path.join(root, entry.name);
       const destination = path.join(worktree, entry.name);
-      if (fs.existsSync(destination)) skipped.push(entry.name);
-      else { fs.copyFileSync(source, destination); copied.push(entry.name); }
+      let destinationStat;
+      try {
+        destinationStat = fs.lstatSync(destination);
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+      }
+      if (destinationStat) {
+        if (destinationStat.isSymbolicLink() || !destinationStat.isFile()) {
+          throw new WorkflowError("MDF_ENV_SETUP_FAILED", "Root environment destination must be absent or a regular file.", { path: destination });
+        }
+        skipped.push(entry.name);
+      } else {
+        fs.copyFileSync(source, destination, fs.constants.COPYFILE_EXCL);
+        copied.push(entry.name);
+      }
     }
   } catch (error) {
+    if (error instanceof WorkflowError) throw error;
     throw new WorkflowError("MDF_ENV_SETUP_FAILED", "Root environment file preparation failed.", { cause: error.message });
   }
   const dependency = dependencySetup(worktree, options.runner);
