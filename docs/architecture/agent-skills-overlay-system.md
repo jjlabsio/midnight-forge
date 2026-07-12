@@ -105,6 +105,26 @@ exact applicable upstream skill, performs semantic judgment, and produces the
 raw result. The controller verifies whether that execution may be recorded or
 advance the MDF lifecycle.
 
+### Executor capability and freshness boundary
+
+The adapter records the orchestrator's declared executor, persona, model
+capability, and execution mode (`fresh`, `root-fallback`, or `degraded`). It
+checks that those declarations are internally consistent and binds them to the
+exact skill, persona, inputs, output, and Git tree. It does not independently
+prove model quality, context isolation, or whether a reviewer made a genuinely
+independent semantic judgment; those claims are not deterministically
+observable from the controller runtime.
+
+The root orchestrator remains responsible for choosing the strongest suitable
+model, deciding when root fallback is appropriate, and applying the exact
+upstream rule for whether a degraded execution may advance. A declared mode
+must never be relabeled or silently omitted, but the controller must not block
+solely because host-level model or fresh-context proof is unavailable. A review
+finding about missing host-level capability proof or a blanket freshness gate is
+not actionable unless the public MDF entrypoint skips an applicable upstream
+primitive, mislabels the execution state, or bypasses a mechanically verifiable
+input, tree, scope, or lifecycle constraint.
+
 The controller owns facts that deterministic code can establish:
 
 - canonical artifact and input identities, hashes, and current Git tree;
@@ -112,8 +132,8 @@ The controller owns facts that deterministic code can establish:
 - declared verification-matrix completeness where a plan defines a matrix;
 - task-owned path scope, clean baselines, focused commit facts, and one-writer
   state;
-- executor/persona capability provenance, freshness claims, lifecycle edges,
-  replay protection, and explicit human authority.
+- declared executor/persona provenance and execution-mode claims, lifecycle
+  edges, replay protection, and explicit human authority.
 
 The upstream skill and the agent executing it own semantic adequacy:
 
@@ -134,12 +154,12 @@ deterministic fact.
 
 Review this boundary accordingly. A real controller finding requires at least
 one of the following: an applicable upstream primitive is skipped or weakened by
-the public MDF entrypoint; caller-asserted mechanical facts can replace runtime
-observation; provenance, freshness, scope, or lifecycle checks can be bypassed;
-or a declared deterministic matrix can advance while incomplete. The mere fact
-that a malicious or non-compliant root could choose a meaningless test command
-is not a controller defect when the public entrypoint still requires the exact
-upstream workflow and the runtime truthfully records what ran.
+the public MDF entrypoint; a mechanically observable provenance, execution-mode,
+scope, or lifecycle fact can be bypassed or mislabelled; or a declared
+deterministic matrix can advance while incomplete. The mere fact that a root
+could choose a weak model, a degraded self-review, or a meaningless test
+command is not a controller defect when the public entrypoint still requires
+the exact upstream workflow and the runtime truthfully records what ran.
 
 ## Evidence Trust Boundary
 
