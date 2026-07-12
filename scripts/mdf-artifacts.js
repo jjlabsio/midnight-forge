@@ -7,7 +7,7 @@ const { runCli } = require("./mdf-runtime/cli");
 const { WorkflowError } = require("./mdf-runtime/errors");
 const { canonicalRoot, projectPaths, resolveWithin } = require("./mdf-runtime/canonical-root");
 const { atomicWriteFiles, atomicWriteText } = require("./mdf-runtime/atomic");
-const { parseIndex, parseItem, serializeItem } = require("./mdf-runtime/schema");
+const { parseIndex, parseItem, serializeItem, validateIndexEntry, validateItem } = require("./mdf-runtime/schema");
 const { reconciledIndexContent } = require("./mdf-runtime/index");
 const { requireInitialized } = require("./mdf-init");
 
@@ -26,7 +26,7 @@ function segment(value, name) {
 
 function revision(value) {
   const number = Number(value);
-  if (!Number.isInteger(number) || number < 1) throw new WorkflowError("MDF_REVISION_INVALID", "Revision must be a positive integer.", { revision: value });
+  if (!Number.isInteger(number) || number < 1 || number > 999) throw new WorkflowError("MDF_REVISION_INVALID", "Revision must be a three-digit positive integer from 001 through 999.", { revision: value });
   return number;
 }
 
@@ -60,10 +60,9 @@ function state(input, options) {
   const workDir = resolveWithin(root, path.join(".mdf", "work", workId), { allowMissing: false });
   const itemPath = resolveWithin(root, path.join(".mdf", "work", workId, "item.md"), { allowMissing: false });
   const item = parseItem(itemPath);
+  validateItem(item);
   if (item.data.work_id !== workId) throw new WorkflowError("MDF_ITEM_ID_MISMATCH", "MDF item work_id does not match its directory.", { path: itemPath, work_id: workId });
-  if (!item.data.latest || typeof item.data.latest !== "object" || Array.isArray(item.data.latest)) {
-    throw new WorkflowError("MDF_ITEM_LATEST_MALFORMED", "MDF item latest must be a map.", { path: itemPath });
-  }
+  validateIndexEntry(indexEntry(item, root));
   const index = parseIndex(paths.index);
   return { root, paths, workId, workDir, itemPath, item, index };
 }
@@ -103,12 +102,14 @@ function indexEntry(item, root) {
 function allocate(input, options = {}) {
   const current = state(input, options);
   const artifactType = artifactInput(input).artifactType;
-  const prefix = `${artifactType}-`;
   let maximum = 0;
   for (const name of fs.readdirSync(current.workDir)) {
-    const match = name.match(new RegExp(`^${prefix}(\\d{3})\\.md$`));
-    if (match) maximum = Math.max(maximum, Number(match[1]));
+    const match = name.match(/^(.+)-(\d+)\.md$/);
+    if (!match || match[1] !== artifactType) continue;
+    const number = revision(match[2]);
+    maximum = Math.max(maximum, number);
   }
+  if (maximum >= 999) throw new WorkflowError("MDF_REVISION_EXHAUSTED", "No unused three-digit artifact revision remains.", { work_id: current.workId, artifact_type: artifactType });
   return { root: current.root, work_id: current.workId, artifact_type: artifactType, revision: maximum + 1 };
 }
 

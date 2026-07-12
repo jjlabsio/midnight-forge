@@ -64,6 +64,32 @@ function validateIndexEntry(value) {
   return value;
 }
 
+function validateItem(item) {
+  if (!item || !item.data || typeof item.data !== "object" || Array.isArray(item.data)) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "MDF item data must be an object.", { path: item?.path });
+  }
+  const data = item.data;
+  if (typeof data.work_id !== "string" || !SAFE_WORK_ID.test(data.work_id)) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "MDF item requires a safe work_id.", { path: item.path });
+  }
+  if (typeof data.kind !== "string" || !INDEX_ENTRY_KINDS.has(data.kind)) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "MDF item kind is invalid.", { path: item.path, kind: data.kind });
+  }
+  if (typeof data.title !== "string" || !data.title.trim()) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "MDF item requires a title.", { path: item.path });
+  }
+  if (!data.latest || typeof data.latest !== "object" || Array.isArray(data.latest)) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "MDF item latest must be a map.", { path: item.path });
+  }
+  if (data.kind === "task" && (typeof data.status !== "string" || !data.status.trim())) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "Task items require a non-empty status.", { path: item.path });
+  }
+  if ((data.kind === "note" || data.kind === "track") && (typeof data.item_id !== "string" || !data.item_id.trim())) {
+    throw new WorkflowError("MDF_ITEM_SCHEMA_INVALID", "Non-task items require a non-empty item_id.", { path: item.path, kind: data.kind });
+  }
+  return item;
+}
+
 function parseScalar(value) {
   const trimmed = value.trim();
   if (trimmed === "null") return null;
@@ -175,4 +201,4 @@ function parseIndex(filePath, { fsImpl = fs } = {}) {
   return { raw, rawLines, entries, lineIndexes, newline, trailingNewline: raw.endsWith("\n") };
 }
 
-module.exports = { parseIndex, parseItem, parseScalar, serializeItem, validateIndexEntry };
+module.exports = { parseIndex, parseItem, parseScalar, serializeItem, validateIndexEntry, validateItem };

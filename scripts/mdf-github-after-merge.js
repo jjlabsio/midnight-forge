@@ -67,6 +67,20 @@ function repositoryKey(value) {
   return null;
 }
 
+function pullRequestStateUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  let parsed;
+  try {
+    parsed = new URL(value.trim());
+  } catch (error) {
+    return null;
+  }
+  if (!["http:", "https:"].includes(parsed.protocol) || parsed.hostname.toLowerCase() !== "github.com" || parsed.search || parsed.hash) return null;
+  const match = parsed.pathname.match(/^\/([^/]+)\/([^/]+)\/pull\/(\d+)\/?$/);
+  if (!match || Number(match[3]) < 1) return null;
+  return `github.com/${match[1].toLowerCase()}/${match[2].replace(/\.git$/i, "").toLowerCase()}`;
+}
+
 function verify(input = {}, options = {}) {
   const root = rootFor(input, options);
   const cwd = executionCwd(input, options, root);
@@ -93,12 +107,14 @@ function verify(input = {}, options = {}) {
   if (data.state !== "MERGED" || !data.mergedAt) {
     throw new WorkflowError("MDF_PR_NOT_MERGED", "The pull request is not confirmed merged; local sync and cleanup are blocked.", { state: data.state || null, merged_at: data.mergedAt || null, url: data.url || null });
   }
-  if (typeof data.url !== "string" || !repositoryKey(data.url)) throw new WorkflowError("MDF_PR_STATE_MALFORMED", "Pull request state is missing a valid GitHub pull request URL.", { reference: ref, url: data.url || null });
+  const mergedAt = typeof data.mergedAt === "string" && data.mergedAt.trim() && !Number.isNaN(Date.parse(data.mergedAt));
+  if (!mergedAt) throw new WorkflowError("MDF_PR_STATE_MALFORMED", "Pull request state contains an invalid merged timestamp.", { reference: ref, merged_at: data.mergedAt });
+  const pullRequestRepository = pullRequestStateUrl(data.url);
+  if (!pullRequestRepository) throw new WorkflowError("MDF_PR_STATE_MALFORMED", "Pull request state is missing a valid GitHub pull request URL.", { reference: ref, url: data.url || null });
   const origin = runCommand("git", ["remote", "get-url", "origin"], { cwd: root, runner: options.runner, allowFailure: true });
   if (origin.status !== 0 || !origin.stdout.trim()) throw new WorkflowError("MDF_ORIGIN_MISSING", "The canonical checkout must have an origin remote.", { canonical_root: root });
   const originRepository = repositoryKey(origin.stdout.trim());
   if (!originRepository) throw new WorkflowError("MDF_ORIGIN_INVALID", "The canonical checkout origin is not a recognizable repository URL.", { canonical_root: root, origin: origin.stdout.trim() });
-  const pullRequestRepository = repositoryKey(data.url);
   if (reference && reference.repository && reference.repository !== originRepository) {
     throw new WorkflowError("MDF_PR_REPOSITORY_MISMATCH", "The requested pull request does not belong to the canonical repository.", { expected: originRepository, actual: reference.repository, reference: ref });
   }
@@ -106,7 +122,7 @@ function verify(input = {}, options = {}) {
     throw new WorkflowError("MDF_PR_REPOSITORY_MISMATCH", "The merged pull request does not belong to the canonical repository.", { expected: originRepository, actual: pullRequestRepository, url: data.url });
   }
   if (input.expected_head && input.expected_head !== data.headRefName) throw new WorkflowError("MDF_PR_HEAD_MISMATCH", "The pull request head does not match the expected branch.", { expected: input.expected_head, actual: data.headRefName });
-  return { merged: true, url: data.url || null, merged_at: data.mergedAt, head_branch: data.headRefName, base_branch: data.baseRefName, state: data.state };
+  return { merged: true, url: data.url || null, merged_at: data.mergedAt.trim(), head_branch: data.headRefName, base_branch: data.baseRefName, state: data.state };
 }
 
 function sync(input = {}, options = {}) {

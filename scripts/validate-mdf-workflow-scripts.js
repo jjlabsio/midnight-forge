@@ -139,6 +139,13 @@ function runArtifactTests() {
     callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "spec", path: ".mdf/work/2026-07-12-0001-artifact-fixture/spec-001.md" });
     callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 2, content: "build two\n" });
     callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 2 });
+    fs.writeFileSync(path.join(workDir, "build-999.md"), "build max\n");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_REVISION_EXHAUSTED");
+    fs.unlinkSync(path.join(workDir, "build-999.md"));
+    fs.writeFileSync(path.join(workDir, "build-1000.md"), "invalid build\n");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_REVISION_INVALID");
+    fs.unlinkSync(path.join(workDir, "build-1000.md"));
+    expectCode(() => callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 1000, content: "too large\n" }), "MDF_REVISION_INVALID");
     const cliWrite = cli("write", { work_id: workId, artifact_type: "build", revision: 3, content: "build three\n" });
     assert.strictEqual(cliWrite.status, 0, cliWrite.stderr);
     const cliLatest = cli("latest", { work_id: workId, artifact_type: "build", revision: 3 });
@@ -161,6 +168,9 @@ function runArtifactTests() {
     const malformedItem = fs.readFileSync(itemPath, "utf8");
     fs.writeFileSync(itemPath, "not frontmatter\n");
     expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_ITEM_MALFORMED");
+    fs.writeFileSync(itemPath, malformedItem);
+    fs.writeFileSync(itemPath, serializeItem({ path: itemPath, data: { work_id: workId, latest: {} }, body: "" }));
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_ITEM_SCHEMA_INVALID");
     fs.writeFileSync(itemPath, malformedItem);
     const indexPath = path.join(fixture.root, ".mdf", "index.jsonl");
     const validIndex = fs.readFileSync(indexPath, "utf8");
@@ -334,6 +344,12 @@ function runWorktreeTests() {
     const reported = worktrees.preflight({ root, branch: "reported" }, { runner: reportRunner });
     assert.strictEqual(reported.broken_worktrees.length, 1);
     assert.strictEqual(reported.prunable_worktrees.length, 1);
+    const detachedRunner = (command, args) => {
+      const result = reportRunner(command, args);
+      if (args[0] === "branch" && args[1] === "--show-current") return { ...result, stdout: "" };
+      return result;
+    };
+    expectCode(() => worktrees.preflight({ root, branch: "detached-fixture" }, { runner: detachedRunner }), "MDF_DETACHED_WORKTREE");
     const submoduleCommands = [];
     const submoduleRunner = (command, args) => {
       submoduleCommands.push([command, ...args]);
@@ -614,7 +630,7 @@ function runAfterMergeTests() {
   try {
     expectCode(() => afterMerge.verify({ root: fixture.root, pr: "--repo=attacker/other" }, { runner }), "MDF_PR_REF_INVALID");
     const crossRepositoryRunner = (command, args, options) => {
-      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "main", url: "https://github.com/attacker/other/pull/1" }), stderr: "" };
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "2026-07-12T00:00:00Z", headRefName: "feature", baseRefName: "main", url: "https://github.com/attacker/other/pull/1" }), stderr: "" };
       if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
       return { status: 0, stdout: "", stderr: "" };
     };
@@ -630,10 +646,20 @@ function runAfterMergeTests() {
     afterMerge.verify({ pr: "1" }, { runner: defaultCwdRunner });
     assert.strictEqual(defaultCwdCalls.find((call) => call.command === "gh").cwd, process.cwd());
     const emptyRefsRunner = (command, args, options) => {
-      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "", baseRefName: "", url: "https://github.com/example/project/pull/1" }), stderr: "" };
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "2026-07-12T00:00:00Z", headRefName: "", baseRefName: "", url: "https://github.com/example/project/pull/1" }), stderr: "" };
       return runner(command, args, options);
     };
     expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: emptyRefsRunner }), "MDF_PR_STATE_MALFORMED");
+    const nonStringMergedAtRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: {}, headRefName: "feature", baseRefName: "main", url: "https://github.com/example/project/pull/1" }), stderr: "" };
+      return runner(command, args, options);
+    };
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: nonStringMergedAtRunner }), "MDF_PR_STATE_MALFORMED");
+    const repositoryUrlRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "2026-07-12T00:00:00Z", headRefName: "feature", baseRefName: "main", url: "https://github.com/example/project" }), stderr: "" };
+      return runner(command, args, options);
+    };
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: repositoryUrlRunner }), "MDF_PR_STATE_MALFORMED");
     const synced = afterMerge.sync({ root: fixture.root, pr: "1", default_branch: "main" }, { runner });
     assert.strictEqual(synced.default_branch, "main");
     assert.strictEqual(synced.head_branch, "feature");
@@ -643,7 +669,7 @@ function runAfterMergeTests() {
     const unmergedRunner = (command, args) => command === "gh" ? { status: 0, stdout: JSON.stringify({ state: "OPEN", mergedAt: null, headRefName: "feature", baseRefName: "main", url: "url" }), stderr: "" } : (() => { throw new Error("git must not run"); })();
     expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: unmergedRunner }), "MDF_PR_NOT_MERGED");
     const wrongBaseRunner = (command, args, options) => {
-      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "develop", url: "https://github.com/example/project/pull/1" }), stderr: "" };
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "2026-07-12T00:00:00Z", headRefName: "feature", baseRefName: "develop", url: "https://github.com/example/project/pull/1" }), stderr: "" };
       wrongBaseCalls.push({ command, args, cwd: options.cwd });
       if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
       if (args[0] === "remote") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
