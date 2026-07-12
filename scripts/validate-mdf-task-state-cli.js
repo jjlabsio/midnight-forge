@@ -51,6 +51,7 @@ title: "${title}"
 order: ${Number(id)}
 status: "${status}"
 created: "2026-07-10"
+due: "2026-07-20"
 ${latest}
 ---
 
@@ -119,6 +120,11 @@ try {
   const userBoard = run(["board", "--user", "--json"]);
   assert(userBoard.projects.length === 1, "user board should render valid registered projects");
   assert(userBoard.warnings.length === 1, "user board should warn and skip missing registered projects");
+
+  const completedSeed = run(["done", "1", "--message", "Completed seed task.", "--json"]);
+  assert(completedSeed.task_id === "0001", "done should update the seeded task");
+  const indexEntries = fs.readFileSync(path.join(project, ".mdf", "index.jsonl"), "utf8").trim().split(/\n/).map(JSON.parse);
+  assert(indexEntries.at(-1).due === "2026-07-20", "task index updates should preserve due metadata");
 
   const contextFile = path.join(tempRoot, "context.md");
   write(contextFile, "Created by fixture.\n");

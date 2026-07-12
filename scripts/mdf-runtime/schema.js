@@ -1,5 +1,68 @@
 const fs = require("fs");
+const path = require("path");
 const { WorkflowError } = require("./errors");
+
+const INDEX_ENTRY_KEYS = new Set([
+  "work_id", "kind", "task_id", "title", "status", "item", "latest", "track_id", "due", "order",
+  "completed", "worktree", "branch", "item_id", "state", "outcome",
+]);
+const INDEX_ENTRY_KINDS = new Set(["task", "note", "track", "inbox", "routine"]);
+const SAFE_WORK_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+const ARTIFACT_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]*-\d{3}\.md$/;
+
+function invalidIndexEntry(message, details = {}) {
+  throw new WorkflowError("MDF_INDEX_ENTRY_INVALID", message, details);
+}
+
+function isSafeRelativePath(value) {
+  if (path.isAbsolute(value)) return false;
+  const normalized = path.normalize(value);
+  return normalized !== ".." && !normalized.startsWith(`..${path.sep}`);
+}
+
+function isAllowedLatestPath(value, workId) {
+  if (!isSafeRelativePath(value)) return false;
+  const normalized = path.normalize(value);
+  const fileName = path.basename(normalized);
+  if (!ARTIFACT_FILE.test(fileName)) return false;
+  const directory = path.dirname(normalized);
+  const workDirectory = path.join(".mdf", "work", workId);
+  return directory === "." || directory === workDirectory;
+}
+
+function validateIndexEntry(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) invalidIndexEntry("Index entry must be an object.");
+  for (const key of Object.keys(value)) {
+    if (!INDEX_ENTRY_KEYS.has(key)) invalidIndexEntry("Index entry contains an unsupported field.", { field: key });
+  }
+  if (typeof value.work_id !== "string" || !SAFE_WORK_ID.test(value.work_id)) invalidIndexEntry("Index entry requires a safe work_id.");
+  if (value.kind !== undefined && (typeof value.kind !== "string" || !INDEX_ENTRY_KINDS.has(value.kind))) {
+    invalidIndexEntry("Index entry kind is invalid.", { kind: value.kind });
+  }
+  if (typeof value.title !== "string" || !value.title.trim()) invalidIndexEntry("Index entry requires a title.");
+  const expectedItem = path.join(".mdf", "work", value.work_id, "item.md");
+  if (typeof value.item !== "string" || path.normalize(value.item) !== expectedItem) {
+    invalidIndexEntry("Index entry item must identify the requested work item.", { item: value.item, expected: expectedItem });
+  }
+  if (!value.latest || typeof value.latest !== "object" || Array.isArray(value.latest)) invalidIndexEntry("Index entry latest must be a map.");
+  for (const [artifactType, artifactPath] of Object.entries(value.latest)) {
+    if (typeof artifactType !== "string" || !artifactType.trim() || typeof artifactPath !== "string" || !isAllowedLatestPath(artifactPath, value.work_id)) {
+      invalidIndexEntry("Index entry latest values must identify artifacts in the requested work item.", { artifact_type: artifactType, path: artifactPath });
+    }
+  }
+  if (value.task_id !== undefined && value.task_id !== null && typeof value.task_id !== "string") invalidIndexEntry("Index entry task_id must be a string or null.");
+  if (value.item_id !== undefined && typeof value.item_id !== "string") invalidIndexEntry("Index entry item_id must be a string.");
+  if (value.status !== undefined && typeof value.status !== "string") invalidIndexEntry("Index entry status must be a string.");
+  if (value.state !== undefined && typeof value.state !== "string") invalidIndexEntry("Index entry state must be a string.");
+  if (value.order !== undefined && (!Number.isInteger(value.order) || value.order < 0)) invalidIndexEntry("Index entry order must be a non-negative integer.");
+  for (const field of ["track_id", "due", "completed", "worktree", "branch", "outcome"]) {
+    if (value[field] !== undefined && typeof value[field] !== "string") invalidIndexEntry(`Index entry ${field} must be a string.`);
+  }
+  if ((value.kind === "note" || value.kind === "track") && typeof value.item_id !== "string") {
+    invalidIndexEntry("Non-task index entries require an item_id.", { kind: value.kind });
+  }
+  return value;
+}
 
 function parseScalar(value) {
   const trimmed = value.trim();
@@ -112,4 +175,4 @@ function parseIndex(filePath, { fsImpl = fs } = {}) {
   return { raw, rawLines, entries, lineIndexes, newline, trailingNewline: raw.endsWith("\n") };
 }
 
-module.exports = { parseIndex, parseItem, parseScalar, serializeItem };
+module.exports = { parseIndex, parseItem, parseScalar, serializeItem, validateIndexEntry };

@@ -114,6 +114,10 @@ function preflight(input = {}, options = {}) {
   const currentBranchResult = runCommand("git", ["branch", "--show-current"], { cwd, runner, allowFailure: true });
   const currentBranch = currentBranchResult.stdout.trim() || null;
   const currentIsolated = gitDir !== commonDir;
+  const superproject = runCommand("git", ["rev-parse", "--show-superproject-working-tree"], { cwd, runner, allowFailure: true });
+  if (superproject.status === 0 && superproject.stdout.trim()) {
+    throw new WorkflowError("MDF_SUBMODULE", "Worktree operations are not allowed inside a Git submodule.", { cwd, superproject: superproject.stdout.trim() });
+  }
   const defaultBranch = resolveDefaultBranch({ cwd, runner });
   const expectedBranch = input.branch ? branchName(input.branch) : null;
   const requestedWorktree = input.worktree_path || input.worktree;

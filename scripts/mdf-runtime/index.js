@@ -1,12 +1,9 @@
 const fs = require("fs");
-const { WorkflowError } = require("./errors");
 const { atomicWriteText } = require("./atomic");
-const { parseIndex } = require("./schema");
+const { parseIndex, validateIndexEntry } = require("./schema");
 
 function reconciledIndexContent(indexPath, entry, { fsImpl = fs } = {}) {
-  if (!entry || typeof entry.work_id !== "string" || !entry.work_id) {
-    throw new WorkflowError("MDF_INDEX_ENTRY_INVALID", "Index reconciliation requires a work_id.");
-  }
+  validateIndexEntry(entry);
   const parsed = parseIndex(indexPath, { fsImpl });
   const matches = parsed.entries
     .map((value, position) => ({ value, line: parsed.lineIndexes[position] }))

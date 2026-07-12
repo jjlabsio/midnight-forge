@@ -212,6 +212,19 @@ function validate(input = {}, options = {}) {
   return { canonical_root: root, home, git: isGit, ignore_policy: ignore, user, project, valid: ignore.valid && user.valid && project.valid };
 }
 
+function requireInitialized(input = {}, options = {}) {
+  const report = validate(input, options);
+  if (!report.valid) {
+    throw new WorkflowError("MDF_INIT_REQUIRED", "Valid MDF user and project initialization is required.", {
+      canonical_root: report.canonical_root,
+      home: report.home,
+      missing: [...report.ignore_policy.missing, ...report.user.missing, ...report.project.missing],
+      command: "mdf init",
+    });
+  }
+  return report;
+}
+
 function json(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
@@ -254,4 +267,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { apply, validate };
+module.exports = { apply, requireInitialized, validate };

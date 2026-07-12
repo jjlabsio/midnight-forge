@@ -5,8 +5,9 @@ const os = require("os");
 const path = require("path");
 const { runCli } = require("./mdf-runtime/cli");
 const { WorkflowError } = require("./mdf-runtime/errors");
-const { canonicalRoot, projectPaths } = require("./mdf-runtime/canonical-root");
+const { canonicalRoot } = require("./mdf-runtime/canonical-root");
 const { runCommand } = require("./mdf-runtime/git");
+const { requireInitialized } = require("./mdf-init");
 
 function rootFor(input, options) {
   return canonicalRoot(input.root || input.cwd || options.cwd || process.cwd());
@@ -16,19 +17,8 @@ function homeFor(input, options) {
   return path.resolve(input.home || options.home || os.homedir());
 }
 
-function requireInit(root, home) {
-  const paths = projectPaths(root);
-  const userInit = path.join(home, ".mdf", "user", "init.json");
-  const preferences = path.join(home, ".mdf", "user", "preferences.json");
-  if (!fs.existsSync(paths.projectInit) || !fs.existsSync(userInit) || !fs.existsSync(preferences)) {
-    throw new WorkflowError("MDF_INIT_REQUIRED", "Run mdf init before using gone-branch cleanup.", { canonical_root: root, command: "mdf init" });
-  }
-  try {
-    const prefs = JSON.parse(fs.readFileSync(preferences, "utf8"));
-    if (!prefs || prefs.version !== 1 || typeof prefs.human_language !== "string" || !prefs.human_language.trim()) throw new Error("invalid preferences schema");
-  } catch (error) {
-    throw new WorkflowError("MDF_INIT_MALFORMED", "MDF user preferences are malformed.", { path: preferences, cause: error.message });
-  }
+function requireInit(root, home, runner) {
+  return requireInitialized({ root, home }, { runner });
 }
 
 function parseBranches(output) {
@@ -58,7 +48,7 @@ function parseWorktrees(output) {
 function inspect(input = {}, options = {}) {
   const root = rootFor(input, options);
   const home = homeFor(input, options);
-  requireInit(root, home);
+  requireInit(root, home, options.runner);
   const runner = options.runner;
   try {
     runCommand("git", ["fetch", "--prune"], { cwd: root, runner });

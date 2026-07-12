@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { runCli } = require("./mdf-runtime/cli");
 const { WorkflowError } = require("./mdf-runtime/errors");
@@ -8,6 +9,7 @@ const { canonicalRoot, projectPaths, resolveWithin } = require("./mdf-runtime/ca
 const { atomicWriteFiles, atomicWriteText } = require("./mdf-runtime/atomic");
 const { parseIndex, parseItem, serializeItem } = require("./mdf-runtime/schema");
 const { reconciledIndexContent } = require("./mdf-runtime/index");
+const { requireInitialized } = require("./mdf-init");
 
 function required(value, name) {
   if (typeof value !== "string" || !value.trim()) throw new WorkflowError("MDF_INPUT_REQUIRED", `${name} is required.`, { field: name });
@@ -33,6 +35,10 @@ function rootFor(input, options) {
   return canonicalRoot(requested || process.cwd());
 }
 
+function homeFor(input, options) {
+  return path.resolve(input.home || options.home || os.homedir());
+}
+
 function artifactInput(input) {
   if (input.relative_path) {
     if (typeof input.relative_path !== "string" || path.isAbsolute(input.relative_path) || path.dirname(input.relative_path) !== ".") {
@@ -47,6 +53,8 @@ function artifactInput(input) {
 
 function state(input, options) {
   const root = rootFor(input, options);
+  const home = homeFor(input, options);
+  requireInitialized({ root, home }, { runner: options.runner });
   const paths = projectPaths(root);
   const workId = segment(input.work_id, "work_id");
   const workDir = resolveWithin(root, path.join(".mdf", "work", workId), { allowMissing: false });
@@ -77,6 +85,7 @@ function indexEntry(item, root) {
   if (entry.kind === "task") {
     entry.task_id = data.task_id;
     entry.status = data.status;
+    if (data.due !== undefined && data.due !== null) entry.due = data.due;
     if (data.order !== undefined) entry.order = data.order;
     if (data.completed) entry.completed = data.completed;
     if (data.worktree) entry.worktree = data.worktree;
@@ -85,6 +94,7 @@ function indexEntry(item, root) {
   } else {
     entry.item_id = data.item_id;
     if (data.state) entry.state = data.state;
+    if (data.outcome !== undefined && data.outcome !== null) entry.outcome = data.outcome;
     if (data.track_id) entry.track_id = data.track_id;
   }
   return entry;

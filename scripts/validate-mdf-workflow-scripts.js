@@ -30,12 +30,40 @@ function writeJson(filePath, value) {
 function createFixture() {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-workflow-runtime-"));
   const root = path.join(temporaryRoot, "project");
+  const home = path.join(temporaryRoot, "home");
   fs.mkdirSync(path.join(root, ".worktrees", "task", "nested"), { recursive: true });
+  const canonical = fs.realpathSync(root);
   fs.mkdirSync(path.join(root, ".mdf", "project"), { recursive: true });
-  writeJson(path.join(root, ".mdf", "project", "init.json"), { version: 1 });
+  fs.mkdirSync(path.join(root, ".mdf", "work"), { recursive: true });
+  fs.mkdirSync(path.join(root, ".mdf", "locks"), { recursive: true });
+  writeJson(path.join(root, ".mdf", "project", "init.json"), {
+    version: 1,
+    initialized_at: "now",
+    runtime: "codex",
+    canonical_root: canonical,
+  });
+  writeJson(path.join(root, ".mdf", "project.json"), {
+    name: "project",
+    canonical_root: canonical,
+    remote: null,
+    created: "now",
+  });
+  fs.writeFileSync(path.join(root, ".mdf", "index.jsonl"), "");
+  fs.writeFileSync(path.join(root, ".gitignore"), ".mdf/\n.worktrees/\n");
+  fs.mkdirSync(path.join(home, ".mdf", "user"), { recursive: true });
+  writeJson(path.join(home, ".mdf", "user", "init.json"), {
+    version: 1,
+    initialized_at: "now",
+    runtime: "codex",
+  });
+  writeJson(path.join(home, ".mdf", "user", "preferences.json"), {
+    version: 1,
+    human_language: "Korean",
+  });
+  writeJson(path.join(home, ".mdf", "projects.json"), { version: 1, projects: {} });
   const initialized = spawnSync("git", ["init", "--quiet", root], { encoding: "utf8" });
   assert.strictEqual(initialized.status, 0, initialized.stderr);
-  return { temporaryRoot, root, nested: path.join(root, ".worktrees", "task", "nested") };
+  return { temporaryRoot, root, home, nested: path.join(root, ".worktrees", "task", "nested") };
 }
 
 function runRuntimeTests() {
@@ -89,27 +117,28 @@ function runArtifactTests() {
   const itemPath = path.join(workDir, "item.md");
   const item = {
     path: itemPath,
-    data: { work_id: workId, task_id: "0001", kind: "task", title: "Artifact fixture", status: "active", latest: {} },
+    data: { work_id: workId, task_id: "0001", kind: "task", title: "Artifact fixture", status: "active", due: "2026-07-20", latest: {} },
     body: "## Context\n\nfixture\n",
   };
   fs.writeFileSync(itemPath, serializeItem(item));
   fs.writeFileSync(path.join(fixture.root, ".mdf", "index.jsonl"), `${JSON.stringify({ work_id: "other", title: "preserve"})}\n${JSON.stringify({ work_id: workId, item: path.relative(fixture.root, itemPath), latest: {}})}\n`);
   try {
+    const callArtifact = (method, input) => artifacts[method]({ ...input, home: fixture.home });
     const cli = (command, input) => spawnSync(process.execPath, [path.join(__dirname, "mdf-artifacts.js"), command, "--cwd", fixture.root], {
       encoding: "utf8",
-      input: JSON.stringify(input),
+      input: JSON.stringify({ ...input, home: fixture.home }),
     });
     const cliAllocate = cli("allocate", { work_id: workId, artifact_type: "build" });
     assert.strictEqual(cliAllocate.status, 0, cliAllocate.stderr);
     assert.strictEqual(JSON.parse(cliAllocate.stdout).ok, true);
-    assert.strictEqual(artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 1);
-    artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "build one\n" });
-    assert.strictEqual(artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 2);
-    expectCode(() => artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "collision\n" }), "MDF_ARTIFACT_EXISTS");
-    artifacts.write({ root: fixture.root, work_id: workId, relative_path: "spec-001.md", content: "spec one\n" });
-    artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "spec", path: ".mdf/work/2026-07-12-0001-artifact-fixture/spec-001.md" });
-    artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 2, content: "build two\n" });
-    artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 2 });
+    assert.strictEqual(callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 1);
+    callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "build one\n" });
+    assert.strictEqual(callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 2);
+    expectCode(() => callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "collision\n" }), "MDF_ARTIFACT_EXISTS");
+    callArtifact("write", { root: fixture.root, work_id: workId, relative_path: "spec-001.md", content: "spec one\n" });
+    callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "spec", path: ".mdf/work/2026-07-12-0001-artifact-fixture/spec-001.md" });
+    callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 2, content: "build two\n" });
+    callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 2 });
     const cliWrite = cli("write", { work_id: workId, artifact_type: "build", revision: 3, content: "build three\n" });
     assert.strictEqual(cliWrite.status, 0, cliWrite.stderr);
     const cliLatest = cli("latest", { work_id: workId, artifact_type: "build", revision: 3 });
@@ -125,33 +154,76 @@ function runArtifactTests() {
     assert.deepStrictEqual(index.entries[0], { work_id: "other", title: "preserve" });
     assert.strictEqual(index.entries[1].latest.build, parsed.data.latest.build);
     assert.strictEqual(fs.readFileSync(path.join(workDir, "build-001.md"), "utf8"), "build one\n");
-    expectCode(() => artifacts.allocate({ root: fixture.root, work_id: "../escape", artifact_type: "build" }), "MDF_INPUT_INVALID");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: "../escape", artifact_type: "build" }), "MDF_INPUT_INVALID");
     fs.symlinkSync(workDir, path.join(fixture.root, ".mdf", "work", "linked"));
-    expectCode(() => artifacts.allocate({ root: fixture.root, work_id: "linked", artifact_type: "build" }), "MDF_SYMLINK_PATH");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: "linked", artifact_type: "build" }), "MDF_SYMLINK_PATH");
     fs.unlinkSync(path.join(fixture.root, ".mdf", "work", "linked"));
     const malformedItem = fs.readFileSync(itemPath, "utf8");
     fs.writeFileSync(itemPath, "not frontmatter\n");
-    expectCode(() => artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_ITEM_MALFORMED");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_ITEM_MALFORMED");
     fs.writeFileSync(itemPath, malformedItem);
     const indexPath = path.join(fixture.root, ".mdf", "index.jsonl");
     const validIndex = fs.readFileSync(indexPath, "utf8");
     fs.writeFileSync(indexPath, `${validIndex}not-json\n`);
-    expectCode(() => artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_INDEX_MALFORMED");
+    expectCode(() => callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_INDEX_MALFORMED");
     fs.writeFileSync(indexPath, validIndex);
     fs.writeFileSync(indexPath, `${validIndex}${validIndex.split("\n")[1]}\n`);
-    assert.strictEqual(artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 4);
-    artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 4, content: "build four\n" });
-    artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 4 });
+    assert.strictEqual(callArtifact("allocate", { root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 4);
+    callArtifact("write", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 4, content: "build four\n" });
+    callArtifact("latest", { root: fixture.root, work_id: workId, artifact_type: "build", revision: 4 });
+    const indexBeforeMalformedEntry = fs.readFileSync(indexPath, "utf8");
+    expectCode(() => callArtifact("reconcile", { root: fixture.root, work_id: workId, entry: { work_id: workId, hacked: true } }), "MDF_INDEX_ENTRY_INVALID");
+    const validTaskEntry = {
+      work_id: workId,
+      kind: "task",
+      task_id: "0001",
+      title: "Artifact fixture",
+      status: "active",
+      due: "2026-07-20",
+      item: path.relative(fixture.root, itemPath),
+      latest: parsed.data.latest,
+    };
+    expectCode(() => callArtifact("reconcile", {
+      root: fixture.root,
+      work_id: workId,
+      entry: { ...validTaskEntry, item: "../../outside/item.md" },
+    }), "MDF_INDEX_ENTRY_INVALID");
+    expectCode(() => callArtifact("reconcile", {
+      root: fixture.root,
+      work_id: workId,
+      entry: { ...validTaskEntry, latest: { review: "../../outside.md" } },
+    }), "MDF_INDEX_ENTRY_INVALID");
+    assert.strictEqual(fs.readFileSync(indexPath, "utf8"), indexBeforeMalformedEntry);
     const historicalIndex = parseIndex(indexPath);
     const historicalEntries = historicalIndex.entries.filter((entry) => entry.work_id === workId);
     assert.strictEqual(historicalEntries.length, 2);
     assert.strictEqual(historicalEntries[historicalEntries.length - 1].latest.build, ".mdf/work/2026-07-12-0001-artifact-fixture/build-004.md");
+    assert.strictEqual(historicalEntries[historicalEntries.length - 1].due, "2026-07-20");
+    const trackEntry = artifacts.indexEntry({
+      path: path.join(fixture.root, ".mdf", "work", "track-fixture", "item.md"),
+      data: { work_id: "track-fixture", kind: "track", item_id: "track-1", title: "Track fixture", state: "open", outcome: "Keep this outcome", latest: {} },
+    }, fixture.root);
+    assert.strictEqual(trackEntry.outcome, "Keep this outcome");
     const before = fs.readFileSync(itemPath, "utf8");
     expectCode(() => atomicWriteText(path.join(workDir, "missing", "target.md"), "x", { fsImpl: { ...fs, renameSync() { throw new Error("injected"); } } }), "MDF_ATOMIC_WRITE_FAILED");
     assert.strictEqual(fs.readFileSync(itemPath, "utf8"), before);
     const indexBefore = fs.readFileSync(path.join(fixture.root, ".mdf", "index.jsonl"), "utf8");
-    expectCode(() => reconcileIndex(path.join(fixture.root, ".mdf", "index.jsonl"), { work_id: workId, item: path.relative(fixture.root, itemPath), latest: parsed.data.latest }, { fsImpl: { ...fs, renameSync() { throw new Error("injected"); } } }), "MDF_ATOMIC_WRITE_FAILED");
+    expectCode(() => reconcileIndex(path.join(fixture.root, ".mdf", "index.jsonl"), {
+      work_id: workId,
+      kind: "task",
+      task_id: "0001",
+      title: "Artifact fixture",
+      status: "active",
+      item: path.relative(fixture.root, itemPath),
+      latest: parsed.data.latest,
+    }, { fsImpl: { ...fs, renameSync() { throw new Error("injected"); } } }), "MDF_ATOMIC_WRITE_FAILED");
     assert.strictEqual(fs.readFileSync(path.join(fixture.root, ".mdf", "index.jsonl"), "utf8"), indexBefore);
+    const uninitializedRoot = path.join(fixture.temporaryRoot, "uninitialized-project");
+    const uninitializedHome = path.join(fixture.temporaryRoot, "uninitialized-home");
+    fs.mkdirSync(path.join(uninitializedRoot, ".mdf", "work", workId), { recursive: true });
+    fs.writeFileSync(path.join(uninitializedRoot, ".mdf", "work", workId, "item.md"), serializeItem(item));
+    fs.writeFileSync(path.join(uninitializedRoot, ".mdf", "index.jsonl"), "");
+    expectCode(() => artifacts.allocate({ root: uninitializedRoot, home: uninitializedHome, work_id: workId, artifact_type: "review" }), "MDF_INIT_REQUIRED");
   } finally {
     fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true });
   }
@@ -262,6 +334,24 @@ function runWorktreeTests() {
     const reported = worktrees.preflight({ root, branch: "reported" }, { runner: reportRunner });
     assert.strictEqual(reported.broken_worktrees.length, 1);
     assert.strictEqual(reported.prunable_worktrees.length, 1);
+    const submoduleCommands = [];
+    const submoduleRunner = (command, args) => {
+      submoduleCommands.push([command, ...args]);
+      if (args[0] === "rev-parse" && args[1] === "--git-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "rev-parse" && args[1] === "--git-common-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "rev-parse" && args[1] === "--show-superproject-working-tree") return { status: 0, stdout: "/parent/project\n", stderr: "" };
+      if (args[0] === "branch" && args[1] === "--show-current") return { status: 0, stdout: "main\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "check-ignore") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "fetch") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref" && args[3] === "refs/remotes/origin/main") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref") return { status: 1, stdout: "", stderr: "" };
+      if (args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${root}\nHEAD abc\nbranch refs/heads/main\n`, stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    expectCode(() => worktrees.preflight({ root, branch: "submodule-fixture" }, { runner: submoduleRunner }), "MDF_SUBMODULE");
+    assert.strictEqual(submoduleCommands.some((entry) => entry[0] === "git" && entry[1] === "fetch"), false);
     const created = worktrees.create({ root, branch: "task-fixture", worktree: ".worktrees/task-fixture" });
     assert.strictEqual(created.base, "origin/main");
     assert.strictEqual(fs.existsSync(target), true);
@@ -429,8 +519,13 @@ function runCleanupTests() {
   const remote = path.join(temporaryRoot, "origin.git");
   const home = path.join(temporaryRoot, "home");
   fs.mkdirSync(root, { recursive: true });
+  const canonical = fs.realpathSync(root);
   fs.mkdirSync(path.join(root, ".mdf", "project"), { recursive: true });
-  fs.writeFileSync(path.join(root, ".mdf", "project", "init.json"), "{\"version\":1}\n");
+  fs.mkdirSync(path.join(root, ".mdf", "work"), { recursive: true });
+  fs.mkdirSync(path.join(root, ".mdf", "locks"), { recursive: true });
+  fs.writeFileSync(path.join(root, ".mdf", "project", "init.json"), JSON.stringify({ version: 1, initialized_at: "now", runtime: "codex", canonical_root: canonical }) + "\n");
+  writeJson(path.join(root, ".mdf", "project.json"), { name: "project", canonical_root: canonical, remote, created: "now" });
+  fs.writeFileSync(path.join(root, ".mdf", "index.jsonl"), "");
   fs.writeFileSync(path.join(root, ".gitignore"), ".mdf/\n.worktrees/\n");
   const git = (args, cwd = root) => {
     const result = spawnSync("git", args, { cwd, encoding: "utf8" });
@@ -455,6 +550,7 @@ function runCleanupTests() {
   fs.mkdirSync(path.join(home, ".mdf", "user"), { recursive: true });
   fs.writeFileSync(path.join(home, ".mdf", "user", "init.json"), "{\"version\":1,\"initialized_at\":\"now\",\"runtime\":\"codex\"}\n");
   fs.writeFileSync(path.join(home, ".mdf", "user", "preferences.json"), "{\"version\":1,\"human_language\":\"Korean\"}\n");
+  writeJson(path.join(home, ".mdf", "projects.json"), { version: 1, projects: {} });
   const inspection = clearGone.inspect({ root, home });
   assert.deepStrictEqual(inspection.clean.map((entry) => entry.branch), ["clean-gone"]);
   assert.deepStrictEqual(inspection.dirty.map((entry) => entry.branch), ["dirty-gone"]);
@@ -473,6 +569,20 @@ function runCleanupTests() {
     assert.deepStrictEqual(dirtyResult.removed.map((entry) => entry.branch), ["dirty-gone"]);
     assert.strictEqual(fs.existsSync(dirtyPath), false);
   } finally {
+    const malformedRoot = path.join(temporaryRoot, "malformed-project");
+    const malformedHome = path.join(temporaryRoot, "malformed-home");
+    fs.mkdirSync(path.join(malformedRoot, ".mdf", "project"), { recursive: true });
+    fs.writeFileSync(path.join(malformedRoot, ".mdf", "project", "init.json"), "{\"version\":99}\n");
+    fs.mkdirSync(path.join(malformedHome, ".mdf", "user"), { recursive: true });
+    fs.writeFileSync(path.join(malformedHome, ".mdf", "user", "init.json"), "{\"invalid\":true}\n");
+    fs.writeFileSync(path.join(malformedHome, ".mdf", "user", "preferences.json"), "{\"version\":1,\"human_language\":\"Korean\"}\n");
+    const malformedCommands = [];
+    const malformedRunner = (command, args) => {
+      malformedCommands.push([command, ...args]);
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    expectCode(() => clearGone.applyClean({ root: malformedRoot, home: malformedHome }, { runner: malformedRunner }), "MDF_USER_INIT_MALFORMED");
+    assert.strictEqual(malformedCommands.some((entry) => ["fetch", "branch", "worktree"].includes(entry[1])), false);
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
 }
