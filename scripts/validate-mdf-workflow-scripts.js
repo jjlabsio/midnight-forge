@@ -13,6 +13,7 @@ const { atomicWriteText, atomicWriteFiles } = require("./mdf-runtime/atomic");
 const { parseIndex, parseItem, serializeItem } = require("./mdf-runtime/schema");
 const { reconcileIndex } = require("./mdf-runtime/index");
 const artifacts = require("./mdf-artifacts");
+const worktrees = require("./mdf-worktrees");
 
 function expectCode(callback, code) {
   assert.throws(callback, (error) => error && error.code === code);
@@ -146,10 +147,124 @@ function runArtifactTests() {
   }
 }
 
+function runWorktreeTests() {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-worktree-fixture-"));
+  const root = path.join(temporaryRoot, "project");
+  const remote = path.join(temporaryRoot, "origin.git");
+  fs.mkdirSync(root, { recursive: true });
+  fs.mkdirSync(path.join(root, ".mdf", "project"), { recursive: true });
+  writeJson(path.join(root, ".mdf", "project", "init.json"), { version: 1 });
+  fs.writeFileSync(path.join(root, ".gitignore"), ".worktrees/\n.mdf/\n");
+  for (const args of [["init", "--quiet", root], ["config", "user.email", "mdf@example.com"], ["config", "user.name", "MDF Test"]]) {
+    const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+  }
+  fs.writeFileSync(path.join(root, "README.md"), "fixture\n");
+  for (const args of [["add", "."], ["commit", "--quiet", "-m", "fixture"], ["branch", "-M", "main"], ["init", "--quiet", "--bare", remote]]) {
+    const cwd = args[0] === "init" && args.includes("--bare") ? temporaryRoot : root;
+    const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+  }
+  let result = spawnSync("git", ["remote", "add", "origin", remote], { cwd: root, encoding: "utf8" });
+  assert.strictEqual(result.status, 0, result.stderr);
+  result = spawnSync("git", ["push", "--quiet", "-u", "origin", "main"], { cwd: root, encoding: "utf8" });
+  assert.strictEqual(result.status, 0, result.stderr);
+  result = spawnSync("git", ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], { cwd: root, encoding: "utf8" });
+  assert.strictEqual(result.status, 0, result.stderr);
+  const target = path.join(root, ".worktrees", "task-fixture");
+  fs.mkdirSync(path.join(root, ".worktrees"), { recursive: true });
+  fs.writeFileSync(path.join(root, ".env.test"), "SOURCE=1\n");
+  try {
+    const cli = (command, input) => spawnSync(process.execPath, [path.join(__dirname, "mdf-worktrees.js"), command, "--cwd", root], {
+      encoding: "utf8",
+      input: JSON.stringify(input),
+    });
+    const cliPreflight = cli("preflight", { branch: "cli-fixture" });
+    assert.strictEqual(cliPreflight.status, 0, cliPreflight.stderr);
+    assert.strictEqual(JSON.parse(cliPreflight.stdout).ok, true);
+    const cliCreate = cli("create", { branch: "cli-fixture" });
+    assert.strictEqual(cliCreate.status, 0, cliCreate.stderr);
+    const cliCreated = JSON.parse(cliCreate.stdout).result.path;
+    assert.strictEqual(fs.existsSync(cliCreated), true);
+    spawnSync("git", ["worktree", "remove", "--force", cliCreated], { cwd: root });
+    spawnSync("git", ["branch", "-D", "cli-fixture"], { cwd: root });
+    const cliPrepareTarget = path.join(root, ".worktrees", "cli-prepare");
+    fs.mkdirSync(cliPrepareTarget, { recursive: true });
+    const cliPrepare = cli("prepare", { worktree_path: cliPrepareTarget });
+    assert.strictEqual(cliPrepare.status, 0, cliPrepare.stderr);
+    assert.strictEqual(JSON.parse(cliPrepare.stdout).ok, true);
+    fs.rmSync(cliPrepareTarget, { recursive: true, force: true });
+    const preflight = worktrees.preflight({ root, branch: "task-fixture" });
+    assert.strictEqual(preflight.default_branch, "main");
+    assert.strictEqual(preflight.canonical_root, fs.realpathSync(root));
+    assert.strictEqual(preflight.ignore_policy, true);
+    assert.deepStrictEqual(preflight.conflicts, []);
+    const reportRunner = (command, args) => {
+      if (args[0] === "rev-parse" && args[1] === "--git-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "rev-parse" && args[1] === "--git-common-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "branch") return { status: 0, stdout: "main\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "check-ignore") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "fetch") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref" && args[3] === "refs/remotes/origin/main") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref") return { status: 1, stdout: "", stderr: "" };
+      if (args[0] === "worktree") return { status: 0, stdout: `worktree ${root}\nHEAD abc\nbranch refs/heads/main\n\nworktree ${path.join(root, ".worktrees", "gone")}\nHEAD def\nbroken\nprunable\n`, stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    const reported = worktrees.preflight({ root, branch: "reported" }, { runner: reportRunner });
+    assert.strictEqual(reported.broken_worktrees.length, 1);
+    assert.strictEqual(reported.prunable_worktrees.length, 1);
+    const created = worktrees.create({ root, branch: "task-fixture" });
+    assert.strictEqual(created.base, "origin/main");
+    assert.strictEqual(fs.existsSync(target), true);
+    assert.strictEqual(fs.existsSync(path.join(target, ".mdf")), false);
+    const linkedPreflight = worktrees.preflight({ root, cwd: created.path, worktree_path: created.path });
+    assert.strictEqual(linkedPreflight.current_isolated, true);
+    assert.strictEqual(linkedPreflight.current_branch, "task-fixture");
+    const prepareCommands = [];
+    fs.writeFileSync(path.join(target, "package-lock.json"), "{}\n");
+    writeJson(path.join(target, "package.json"), { scripts: { "prisma:generate": "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
+    const prepared = worktrees.prepare({ root, worktree_path: target }, { runner: (command, args, options) => {
+      prepareCommands.push({ command, args, cwd: options.cwd });
+      return { status: 0, stdout: "", stderr: "" };
+    }});
+    assert.deepStrictEqual(prepared.environment.copied, [".env.test"]);
+    assert.deepStrictEqual(prepareCommands.map((entry) => [entry.command, ...entry.args]), [["npm", "install"], ["npm", "run", "prisma:generate"]]);
+    assert.strictEqual(fs.readFileSync(path.join(target, ".env.test"), "utf8"), "SOURCE=1\n");
+    const conflict = worktrees.preflight({ root, branch: "task-fixture" });
+    assert.ok(conflict.conflicts.some((entry) => entry.kind === "branch"));
+    expectCode(() => worktrees.create({ root, branch: "task-fixture" }), "MDF_WORKTREE_CONFLICT");
+    const failureCommands = [];
+    const failureTarget = path.join(root, ".worktrees", "failure");
+    fs.mkdirSync(failureTarget, { recursive: true });
+    writeJson(path.join(failureTarget, "package.json"), { scripts: { generate: "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
+    expectCode(() => worktrees.prepare({ root, worktree_path: failureTarget }, { runner: (command, args) => {
+      failureCommands.push([command, ...args]);
+      return { status: 1, stdout: "", stderr: "install failed" };
+    }}), "MDF_DEPENDENCY_SETUP_FAILED");
+    assert.deepStrictEqual(failureCommands, [["npm", "install"]]);
+    const prismaFailureTarget = path.join(root, ".worktrees", "prisma-failure");
+    fs.mkdirSync(prismaFailureTarget, { recursive: true });
+    writeJson(path.join(prismaFailureTarget, "package.json"), { scripts: { generate: "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
+    const prismaFailureCommands = [];
+    expectCode(() => worktrees.prepare({ root, worktree_path: prismaFailureTarget }, { runner: (command, args) => {
+      prismaFailureCommands.push([command, ...args]);
+      return args[0] === "run" ? { status: 1, stdout: "", stderr: "prisma failed" } : { status: 0, stdout: "", stderr: "" };
+    }}), "MDF_PRISMA_SETUP_FAILED");
+    assert.deepStrictEqual(prismaFailureCommands, [["npm", "install"], ["npm", "run", "generate"]]);
+    fs.mkdirSync(path.join(root, ".worktrees", "state-boundary", ".mdf"), { recursive: true });
+    expectCode(() => worktrees.prepare({ root, worktree_path: path.join(root, ".worktrees", "state-boundary") }), "MDF_WORKTREE_STATE_BOUNDARY");
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   runRuntimeTests();
   runArtifactTests();
-  console.log("mdf workflow script validation: task 1 and task 2 checks passed");
+  runWorktreeTests();
+  console.log("mdf workflow script validation: task 1, task 2, and task 3 checks passed");
 }
 
 if (require.main === module) main();
