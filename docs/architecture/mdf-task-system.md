@@ -52,7 +52,13 @@ The CLI treats `item.md` as the source of truth, appends `index.jsonl` entries, 
 
 Implementation requires a separate explicit instruction after activation unless the same user message already names a downstream workflow.
 
-`github-pr` completes exactly the session-identified task before PR creation by using task completion behavior and deleting the lock.
+`github-pr` supports two handoff paths for exactly the session-identified task:
+
+- An incomplete task must be `active`, must have a matching lock, and is completed through the task completion behavior before PR creation; the normal completion removes the lock.
+- An already-completed task is eligible when its persisted `worktree` and `branch` match the current checkout. This path does not require a lock, does not invoke `done` or mutate the task card, and stops on an inconsistent matching lock rather than deleting it.
+- A `completed` field combined with `status: "queue"` or `status: "active"` is contradictory task metadata and stops the handoff.
+
+GitHub is the source of truth for whether an open PR already exists; MDF task cards do not store a PR-status field.
 
 Standalone `$task work <id>` briefs the task and stops. A same user message can name an explicit downstream workflow, and that explicit downstream workflow may continue after task activation.
 

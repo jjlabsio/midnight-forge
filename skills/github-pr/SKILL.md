@@ -1,6 +1,6 @@
 ---
 name: github-pr
-description: "Use when creating or updating a GitHub pull request for MDF work; completes the current session's MDF task before PR creation when the session context identifies exactly one task."
+description: "Use when creating or updating a GitHub pull request for MDF work; completes an incomplete current-session task or validates handoff for an already-completed task when the session identifies exactly one task."
 ---
 
 # GitHub PR
@@ -9,7 +9,7 @@ description: "Use when creating or updating a GitHub pull request for MDF work; 
 
 Create or update GitHub pull requests for MDF-managed work. Invoking this skill means the user is asking to create or update the remote GitHub PR for the current MDF work. Do not stop after drafting a PR unless a stop condition is hit.
 
-This skill enforces the MDF lifecycle rule that the task for the current session is completed before PR creation continues, except for the explicit MDF init setup PR mode documented below.
+This skill enforces the MDF lifecycle rule with two handoff paths. An incomplete task must be active and is completed before PR creation; an already-completed task is validated for handoff without repeating task completion, except for the explicit MDF init setup PR mode documented below.
 
 PRs are ready for review by default. Do not pass `--draft`, do not set `draft: true`, and do not report `isDraft=true` unless the user explicitly asks for a draft PR in the current request.
 
@@ -127,24 +127,30 @@ If the session context identifies more than one plausible task ID, stop and ask 
 For the selected task ID:
 
 1. Find exactly one `.mdf/work/*/item.md` whose frontmatter `task_id` matches the selected task ID; stop if it is missing, duplicated, unreadable, or malformed.
-2. Reject the task if frontmatter already has `status: "done"` or `completed`.
-3. Load `.mdf/locks/{id}.lock`; stop if it is missing, unreadable, or malformed.
-4. If the lock and item disagree on task ID or work ID, stop.
+2. Determine the handoff path from frontmatter:
+   - For an incomplete task, require `status: "active"`; a queued task cannot be handed off to a PR.
+   - For an already-completed task, accept `status: "done"` or a `completed` field and validate it through the completed-task path.
+   - Treat `completed` combined with `status: "queue"` or `status: "active"` as contradictory completion metadata and stop.
+   - Stop on any other malformed or contradictory completion metadata.
+3. For an incomplete task, load `.mdf/locks/{id}.lock`; stop if it is missing, unreadable, or malformed. The lock must match the selected task's `task_id` and `work_id`.
+4. For an already-completed task, the handoff does not require a lock. Require persisted `worktree` and `branch` fields and validate both against the current checkout. This path must not create, replace, or delete a lock.
+5. If an already-completed task still has a matching lock, stop with a task-state consistency warning rather than silently deleting or recreating it.
+6. If the lock and item disagree on task ID or work ID, stop.
 
 ### Step 3: Validate Repository Context
 
 Compare the selected task against local git state:
 
 1. Read the current worktree path and branch.
-2. If the lock has `worktree`, it must match the current worktree path unless the session explicitly explains why PR creation is happening from another checkout.
-3. If the lock has `branch`, it must match the current branch unless the session explicitly explains why PR creation is happening from another branch.
+2. For the incomplete-task path, the lock's `worktree` and `branch` must match the current checkout unless the session explicitly explains why PR creation is happening from another checkout or branch.
+3. For the already-completed task path, the item's persisted `worktree` and `branch` must match the current checkout exactly.
 4. If current branch or worktree points to a different MDF task than the selected session task, stop.
 
 Multiple active locks are allowed when the session task is clear and the selected task passes validation.
 
 ### Step 4: Complete the Task
 
-When the selected session task passes validation, use the `task` skill's `done {id} --message "message"` completion behavior with this message:
+When an incomplete selected session task passes validation, use the `task` skill's `done {id} --message "message"` completion behavior with this message:
 
 ```text
 Completed task before PR creation.
@@ -152,13 +158,13 @@ Completed task before PR creation.
 
 This keeps the `task` skill as the source of truth for completion behavior: it adds `completed: YYYY-MM-DD`, appends the log message, and deletes `locks/{id}.lock`.
 
-Report that MDF task `{id}` was completed before PR creation.
+Report that MDF task `{id}` was completed before PR creation. When the selected task is already completed, report that the completed task passed handoff validation instead.
 
-Do not complete any other active task.
+When the selected task is already completed, do not call `task done`, recreate or remove its lock, or mutate its task card. Do not complete any other active task.
 
 ## PR Creation
 
-After the MDF task completion guard succeeds, or after MDF init setup PR mode explicitly bypasses task completion, create or update the remote PR:
+After either task handoff path succeeds, or after MDF init setup PR mode explicitly bypasses task completion, create or update the remote PR:
 
 1. Summarize the branch and base branch.
 2. Analyze all commits in the branch, not just the latest commit.
@@ -172,6 +178,8 @@ After the MDF task completion guard succeeds, or after MDF init setup PR mode ex
 10. Check whether an open PR already exists for the current branch.
 11. If an open PR exists, update it when the current task changed the intended PR title or body; otherwise report its URL instead of creating a duplicate.
 12. If no open PR exists, create one with `gh pr create`. Do not include `--draft` unless the user explicitly asked for a draft PR.
+
+GitHub is the source of truth for whether an open PR already exists; do not add a PR-status field to MDF task cards.
 
 Before drafting PR title prose or PR body bullet prose, follow `../../references/human-facing-language.md`. Keep required PR template headings, release labels, file paths, commands, and repository conventions exactly as specified.
 
@@ -272,9 +280,9 @@ Stop instead of continuing when:
 
 - The current branch is `main` or the repository default branch.
 - `github-commit` cannot create a commit from uncommitted changes.
-- The session does not identify exactly one MDF task and task completion is needed outside MDF init setup PR mode.
-- The selected task file is missing, malformed, or already completed.
-- The selected lock file is missing, unreadable, or malformed.
+- The session does not identify exactly one MDF task when a task handoff is needed outside MDF init setup PR mode.
+- The selected task file is missing or malformed, the incomplete task is not `active`, or the completed-task path lacks matching persisted `worktree` and `branch` values.
+- The incomplete task's lock file is missing, unreadable, or malformed, or a completed task has an inconsistent matching lock.
 - Session task context conflicts with current worktree or branch.
 - The GitHub CLI is unavailable or not authenticated.
 - The repository does not have an `origin` remote.
@@ -286,7 +294,7 @@ Stop instead of continuing when:
 
 ## Boundaries
 
-This skill may complete the current session's MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. This skill may bypass task completion only in MDF init setup PR mode delegated by `init`. This skill may use `github-commit` before PR creation when uncommitted changes exist.
+This skill may complete the current session's incomplete MDF task when the guard passes, but it must use the `task` skill completion behavior rather than editing task files directly. It may hand off an already-completed task after validating its persisted `worktree` and `branch`, without invoking `task done` or mutating task state. This skill may bypass task completion only in MDF init setup PR mode delegated by `init`. This skill may use `github-commit` before PR creation when uncommitted changes exist.
 
 When invoked, push the current branch to `origin` and create a ready-for-review GitHub PR with `gh pr create`. If an open PR already exists for the current branch, report its URL instead of creating a duplicate. Do not require a second explicit confirmation for PR creation.
 
