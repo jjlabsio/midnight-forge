@@ -12,7 +12,7 @@ const { parseIndex } = require("./mdf-runtime/schema");
 const { runCommand } = require("./mdf-runtime/git");
 
 function rootFor(input, options) {
-  return canonicalRoot(input.root || input.cwd || options.cwd || process.cwd());
+  return canonicalRoot(input.root || input.canonical_root || input.cwd || options.cwd || process.cwd());
 }
 
 function homeFor(input, options) {

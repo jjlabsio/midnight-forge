@@ -67,7 +67,8 @@ function preflight(input = {}, options = {}) {
   const currentIsolated = gitDir !== commonDir;
   const defaultBranch = resolveDefaultBranch({ cwd, runner });
   const expectedBranch = input.branch ? branchName(input.branch) : null;
-  const expectedPath = expectedBranch || input.worktree_path ? targetPath(root, expectedBranch || "target", input.worktree_path) : null;
+  const requestedWorktree = input.worktree_path || input.worktree;
+  const expectedPath = expectedBranch || requestedWorktree ? targetPath(root, expectedBranch || "target", requestedWorktree) : null;
 
   if (currentIsolated) {
     if (!currentBranch) throw new WorkflowError("MDF_DETACHED_WORKTREE", "An isolated worktree must have a named branch.", { cwd });
@@ -115,7 +116,8 @@ function preflight(input = {}, options = {}) {
 function create(input = {}, options = {}) {
   const branch = branchName(input.branch);
   const root = rootFor(input, options);
-  const target = targetPath(root, branch, input.worktree_path);
+  const requestedWorktree = input.worktree_path || input.worktree;
+  const target = targetPath(root, branch, requestedWorktree);
   const check = preflight({ ...input, root, branch, worktree_path: target }, options);
   if (!check.ready) throw new WorkflowError("MDF_WORKTREE_CONFLICT", "Worktree creation is blocked by preflight conflicts or current isolation.", { conflicts: check.conflicts, current_isolated: check.current_isolated });
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -228,7 +230,7 @@ function runPrisma(worktree, dependency, runner) {
 
 function prepare(input = {}, options = {}) {
   const root = rootFor(input, options);
-  const requestedWorktree = required(input.worktree_path, "worktree_path");
+  const requestedWorktree = required(input.worktree_path || input.worktree, "worktree_path");
   const candidateWorktree = path.isAbsolute(requestedWorktree) ? requestedWorktree : path.resolve(root, requestedWorktree);
   const canonicalWorktree = fs.existsSync(candidateWorktree) ? fs.realpathSync(candidateWorktree) : candidateWorktree;
   const worktree = resolveWithin(root, path.relative(root, canonicalWorktree), { allowMissing: false });

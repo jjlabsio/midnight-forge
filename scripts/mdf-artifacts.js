@@ -29,8 +29,20 @@ function revision(value) {
 }
 
 function rootFor(input, options) {
-  const requested = input.root || input.cwd || options.cwd;
+  const requested = input.root || input.canonical_root || input.cwd || options.cwd;
   return canonicalRoot(requested || process.cwd());
+}
+
+function artifactInput(input) {
+  if (input.relative_path) {
+    if (typeof input.relative_path !== "string" || path.isAbsolute(input.relative_path) || path.dirname(input.relative_path) !== ".") {
+      throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "relative_path must be a filename within the work item.", { path: input.relative_path });
+    }
+    const match = input.relative_path.match(/^(.+)-(\d{3})\.md$/);
+    if (!match) throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "relative_path must use <artifact-type>-NNN.md.", { path: input.relative_path });
+    return { artifactType: segment(match[1], "artifact_type"), number: revision(match[2]) };
+  }
+  return { artifactType: segment(input.artifact_type || input.kind, "artifact_type"), number: input.revision === undefined ? null : revision(input.revision) };
 }
 
 function state(input, options) {
@@ -80,7 +92,7 @@ function indexEntry(item, root) {
 
 function allocate(input, options = {}) {
   const current = state(input, options);
-  const artifactType = segment(input.artifact_type, "artifact_type");
+  const artifactType = artifactInput(input).artifactType;
   const prefix = `${artifactType}-`;
   let maximum = 0;
   for (const name of fs.readdirSync(current.workDir)) {
@@ -92,8 +104,10 @@ function allocate(input, options = {}) {
 
 function write(input, options = {}) {
   const current = state(input, options);
-  const artifactType = segment(input.artifact_type, "artifact_type");
-  const number = revision(input.revision);
+  const artifact = artifactInput(input);
+  const artifactType = artifact.artifactType;
+  const number = artifact.number;
+  if (number === null) throw new WorkflowError("MDF_REVISION_INVALID", "write requires a revision or relative_path.");
   if (typeof input.content !== "string") throw new WorkflowError("MDF_CONTENT_INVALID", "Artifact content must be a string.");
   const target = artifactPath(current.root, current.workId, artifactType, number);
   if (fs.existsSync(target)) throw new WorkflowError("MDF_ARTIFACT_EXISTS", "Refusing to overwrite an existing artifact revision.", { path: target });
@@ -103,8 +117,16 @@ function write(input, options = {}) {
 
 function latest(input, options = {}) {
   const current = state(input, options);
-  const artifactType = segment(input.artifact_type, "artifact_type");
-  const number = revision(input.revision);
+  const artifact = artifactInput(input);
+  const artifactType = artifact.artifactType;
+  const number = artifact.number || (() => {
+    if (typeof input.path !== "string") throw new WorkflowError("MDF_REVISION_INVALID", "latest requires revision or path.");
+    const candidate = resolveWithin(current.root, input.path, { allowMissing: false });
+    const relative = path.relative(current.root, candidate);
+    const match = relative.match(new RegExp(`^\\.mdf/work/${current.workId}/(.+)-(\\d{3})\\.md$`));
+    if (!match || match[1] !== artifactType) throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "latest path must identify the requested work item and artifact type.", { path: input.path });
+    return revision(match[2]);
+  })();
   const target = artifactPath(current.root, current.workId, artifactType, number);
   if (!fs.existsSync(target)) throw new WorkflowError("MDF_ARTIFACT_MISSING", "Cannot point latest at a missing artifact.", { path: target });
   const relative = path.relative(current.root, target);

@@ -126,7 +126,11 @@ function applyClean(input = {}, options = {}) {
 function applyDirty(input = {}, options = {}) {
   const root = rootFor(input, options);
   const inspection = inspect(input, options);
-  const confirmations = Array.isArray(input.confirmations) ? input.confirmations : [];
+  const confirmations = Array.isArray(input.confirmations)
+    ? input.confirmations
+    : Array.isArray(input.confirmed_dirty_worktrees)
+      ? input.confirmed_dirty_worktrees.map((pathValue) => ({ path: pathValue, acknowledge_uncommitted: true }))
+      : [];
   const expected = inspection.dirty.map((candidate) => path.resolve(candidate.path)).sort();
   const supplied = confirmations.map((confirmation) => {
     if (!confirmation || typeof confirmation.path !== "string" || confirmation.acknowledge_uncommitted !== true) return null;

@@ -48,6 +48,7 @@ function sync(input = {}, options = {}) {
   const origin = runCommand("git", ["remote", "get-url", "origin"], { cwd: root, runner, allowFailure: true });
   if (origin.status !== 0 || !origin.stdout.trim()) throw new WorkflowError("MDF_ORIGIN_MISSING", "The canonical checkout must have an origin remote.", { canonical_root: root });
   const defaultBranch = resolveDefaultBranch({ cwd: root, runner });
+  if (input.default_branch && input.default_branch !== defaultBranch) throw new WorkflowError("MDF_DEFAULT_BRANCH_MISMATCH", "The requested default branch does not match the resolved remote default branch.", { expected: defaultBranch, actual: input.default_branch });
   if (verification.base_branch !== defaultBranch) throw new WorkflowError("MDF_PR_BASE_MISMATCH", "The merged pull request base does not match the remote default branch.", { expected: defaultBranch, actual: verification.base_branch });
   const status = runCommand("git", ["status", "--short"], { cwd: root, runner }).stdout;
   if (status.trim()) throw new WorkflowError("MDF_CANONICAL_DIRTY", "The canonical checkout has uncommitted changes; sync stopped before checkout.", { canonical_root: root, status });

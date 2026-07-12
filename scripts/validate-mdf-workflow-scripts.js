@@ -106,6 +106,8 @@ function runArtifactTests() {
     artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "build one\n" });
     assert.strictEqual(artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 2);
     expectCode(() => artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 1, content: "collision\n" }), "MDF_ARTIFACT_EXISTS");
+    artifacts.write({ root: fixture.root, work_id: workId, relative_path: "spec-001.md", content: "spec one\n" });
+    artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "spec", path: ".mdf/work/2026-07-12-0001-artifact-fixture/spec-001.md" });
     artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 2, content: "build two\n" });
     artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 2 });
     const cliWrite = cli("write", { work_id: workId, artifact_type: "build", revision: 3, content: "build three\n" });
@@ -218,7 +220,7 @@ function runWorktreeTests() {
     const reported = worktrees.preflight({ root, branch: "reported" }, { runner: reportRunner });
     assert.strictEqual(reported.broken_worktrees.length, 1);
     assert.strictEqual(reported.prunable_worktrees.length, 1);
-    const created = worktrees.create({ root, branch: "task-fixture" });
+    const created = worktrees.create({ root, branch: "task-fixture", worktree: ".worktrees/task-fixture" });
     assert.strictEqual(created.base, "origin/main");
     assert.strictEqual(fs.existsSync(target), true);
     assert.strictEqual(fs.existsSync(path.join(target, ".mdf")), false);
@@ -228,7 +230,7 @@ function runWorktreeTests() {
     const prepareCommands = [];
     fs.writeFileSync(path.join(target, "package-lock.json"), "{}\n");
     writeJson(path.join(target, "package.json"), { scripts: { "prisma:generate": "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
-    const prepared = worktrees.prepare({ root, worktree_path: target }, { runner: (command, args, options) => {
+    const prepared = worktrees.prepare({ root, worktree: ".worktrees/task-fixture" }, { runner: (command, args, options) => {
       prepareCommands.push({ command, args, cwd: options.cwd });
       return { status: 0, stdout: "", stderr: "" };
     }});
@@ -276,7 +278,7 @@ function runInitTests() {
   fs.mkdirSync(path.join(home, ".mdf"), { recursive: true });
   writeJson(path.join(home, ".mdf", "projects.json"), { version: 1, projects: unrelated });
   try {
-    const applied = initScript.apply({ root: project, home, human_language: "Korean" });
+    const applied = initScript.apply({ canonical_root: project, home, human_language: "Korean" });
     assert.strictEqual(applied.human_language, "Korean");
     assert.strictEqual(applied.canonical_root, fs.realpathSync(project));
     assert.strictEqual(fs.existsSync(path.join(project, ".mdf", "project.json")), true);
@@ -366,7 +368,7 @@ function runCleanupTests() {
   try {
     expectCode(() => clearGone.applyDirty({ root, home, confirmations: [] }), "MDF_DIRTY_CONFIRMATION_MISMATCH");
     assert.strictEqual(fs.existsSync(dirtyPath), true);
-    const dirtyResult = clearGone.applyDirty({ root, home, confirmations: [{ path: fs.realpathSync(dirtyPath), acknowledge_uncommitted: true }] });
+    const dirtyResult = clearGone.applyDirty({ root, home, confirmed_dirty_worktrees: [fs.realpathSync(dirtyPath)] });
     assert.deepStrictEqual(dirtyResult.removed.map((entry) => entry.branch), ["dirty-gone"]);
     assert.strictEqual(fs.existsSync(dirtyPath), false);
   } finally {
@@ -391,7 +393,7 @@ function runAfterMergeTests() {
     const verified = afterMerge.verify({ root: fixture.root, pr: "1" }, { runner });
     assert.strictEqual(verified.merged, true);
     assert.strictEqual(verified.head_branch, "feature");
-    const synced = afterMerge.sync({ root: fixture.root, pr: "1" }, { runner });
+    const synced = afterMerge.sync({ root: fixture.root, pr: "1", default_branch: "main" }, { runner });
     assert.strictEqual(synced.default_branch, "main");
     assert.strictEqual(synced.head_branch, "feature");
     assert.strictEqual(synced.head, "abc123");
