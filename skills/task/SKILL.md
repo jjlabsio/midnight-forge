@@ -498,6 +498,10 @@ Complete the specified task using the same completion behavior as `done`, but ap
 
 Use this form when another MDF workflow completes a task for a specific lifecycle reason, such as PR preparation. Do not change any other completion behavior: still set `status: "done"`, add `completed: YYYY-MM-DD` to frontmatter, update `.mdf/index.jsonl`, and delete `.mdf/locks/{id}.lock` if it exists.
 
+`done` is a non-idempotent task mutation. The `github-pr` workflow may use an already-completed handoff path when the selected task already has `status: "done"` or `completed`; that path validates the persisted `worktree` and `branch` and does not invoke `done` or mutate the task card.
+
+The `github-pr` handoff must stop when a `completed` field is combined with `status: "queue"` or `status: "active"`, because that metadata is contradictory.
+
 Priority changes are handled through natural language instead of named priority commands. Resolve exactly one queued task from the request, reject active or done tasks, adjust its `order`, and update `.mdf/index.jsonl`. If the target task or intended ordering is ambiguous, ask one short clarifying question before writing.
 
 Appending arbitrary log entries is an internal workflow behavior, not a user-facing command. Other MDF workflows may append dated `## Log` entries when they mutate task state, create derived tasks, or complete work for lifecycle reasons.

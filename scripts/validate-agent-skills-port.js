@@ -155,6 +155,32 @@ for (const needle of ["parallel", "code-reviewer", "security-auditor", "test-eng
   assertContains("skills/ship/SKILL.md", needle);
 }
 for (const needle of ["Callers pass only", "raw command outputs", "never pass", "Release selection"]) assertContains("skills/github-pr/SKILL.md", needle);
+for (const output of ["skills/task/SKILL.md", "overlays/mdf/replacements/skills/task/SKILL.md"]) {
+  for (const needle of [
+    "non-idempotent task mutation",
+    "already-completed handoff path",
+    "does not invoke `done` or mutate the task card",
+  ]) assertContains(output, needle);
+}
+for (const output of ["skills/github-pr/SKILL.md", "overlays/mdf/replacements/skills/github-pr/SKILL.md"]) {
+  assertContains(output, "completes an incomplete current-session task or validates handoff for an already-completed task");
+  for (const needle of [
+    "two handoff paths",
+    "incomplete task",
+    "status: \"active\"",
+    "already-completed task",
+    "persisted `worktree` and `branch`",
+    "does not require a lock",
+    "do not call `task done`",
+    "GitHub is the source of truth for whether an open PR already exists",
+  ]) assertContains(output, needle);
+}
+for (const needle of [
+  "two handoff paths",
+  "already-completed task",
+  "does not invoke `done` or mutate the task card",
+  "GitHub is the source of truth for whether an open PR already exists",
+]) assertContains("docs/architecture/mdf-task-system.md", needle);
 for (const needle of ["test-driven-development", "browser-testing-with-devtools"]) assertContains("skills/test/SKILL.md", needle);
 for (const needle of ["web-performance-auditor", "exact selected persona prompt", "capability", "root fallback"]) {
   assertContains("skills/webperf/SKILL.md", needle);
