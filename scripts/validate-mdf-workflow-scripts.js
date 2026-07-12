@@ -16,6 +16,7 @@ const artifacts = require("./mdf-artifacts");
 const worktrees = require("./mdf-worktrees");
 const initScript = require("./mdf-init");
 const clearGone = require("./mdf-github-clear-gone");
+const afterMerge = require("./mdf-github-after-merge");
 
 function expectCode(callback, code) {
   assert.throws(callback, (error) => error && error.code === code);
@@ -373,13 +374,80 @@ function runCleanupTests() {
   }
 }
 
+function runAfterMergeTests() {
+  const fixture = createFixture();
+  const calls = [];
+  const mergedPayload = JSON.stringify({ state: "MERGED", mergedAt: "2026-07-12T00:00:00Z", headRefName: "feature", baseRefName: "main", url: "https://github.com/example/project/pull/1" });
+  const runner = (command, args, options) => {
+    calls.push({ command, args, cwd: options.cwd });
+    if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
+    if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+    if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "origin\n", stderr: "" };
+    if (args[0] === "status") return { status: 0, stdout: "", stderr: "" };
+    if (args[0] === "rev-parse" && args[1] === "HEAD") return { status: 0, stdout: "abc123\n", stderr: "" };
+    return { status: 0, stdout: "", stderr: "" };
+  };
+  try {
+    const verified = afterMerge.verify({ root: fixture.root, pr: "1" }, { runner });
+    assert.strictEqual(verified.merged, true);
+    assert.strictEqual(verified.head_branch, "feature");
+    const synced = afterMerge.sync({ root: fixture.root, pr: "1" }, { runner });
+    assert.strictEqual(synced.default_branch, "main");
+    assert.strictEqual(synced.head_branch, "feature");
+    assert.strictEqual(synced.head, "abc123");
+    assert.strictEqual(synced.cleanup_handoff.operation, "inspect");
+    assert.strictEqual(calls.some((call) => call.args[0] === "branch" || call.args[0] === "worktree"), false);
+    const unmergedRunner = (command, args) => command === "gh" ? { status: 0, stdout: JSON.stringify({ state: "OPEN", mergedAt: null, headRefName: "feature", baseRefName: "main", url: "url" }), stderr: "" } : (() => { throw new Error("git must not run"); })();
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: unmergedRunner }), "MDF_PR_NOT_MERGED");
+    const wrongBaseRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "develop", url: "url" }), stderr: "" };
+      wrongBaseCalls.push({ command, args, cwd: options.cwd });
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    const wrongBaseCalls = [];
+    expectCode(() => afterMerge.sync({ root: fixture.root, pr: "1" }, { runner: wrongBaseRunner }), "MDF_PR_BASE_MISMATCH");
+    assert.strictEqual(wrongBaseCalls.some((call) => call.args[0] === "checkout" || call.args[0] === "pull"), false);
+    const dirtyRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "status") return { status: 0, stdout: " M dirty\n", stderr: "" };
+      throw new Error(`unexpected command ${command} ${args.join(" ")}`);
+    };
+    expectCode(() => afterMerge.sync({ root: fixture.root, pr: "1" }, { runner: dirtyRunner }), "MDF_CANONICAL_DIRTY");
+    const fetchFailureRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "status" || args[0] === "checkout") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "fetch") return { status: 1, stdout: "", stderr: "fetch failed" };
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    expectCode(() => afterMerge.sync({ root: fixture.root, pr: "1" }, { runner: fetchFailureRunner }), "MDF_SYNC_FETCH_FAILED");
+    const pullFailureRunner = (command, args) => {
+      if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "status" || args[0] === "checkout" || args[0] === "fetch") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "pull") return { status: 1, stdout: "", stderr: "not fast forward" };
+      return { status: 0, stdout: "abc123\n", stderr: "" };
+    };
+    expectCode(() => afterMerge.sync({ root: fixture.root, pr: "1" }, { runner: pullFailureRunner }), "MDF_SYNC_FAST_FORWARD_FAILED");
+  } finally {
+    fs.rmSync(fixture.temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   runRuntimeTests();
   runArtifactTests();
   runWorktreeTests();
   runInitTests();
   runCleanupTests();
-  console.log("mdf workflow script validation: task 1, task 2, task 3, task 4, and task 5 checks passed");
+  runAfterMergeTests();
+  console.log("mdf workflow script validation: task 1, task 2, task 3, task 4, task 5, and task 6 checks passed");
 }
 
 if (require.main === module) main();
