@@ -17,6 +17,24 @@ confirmation before uncommitted changes are discarded.
 
 Clean up local branches whose upstream branches were deleted. This is based on the simple `clean_gone` command workflow.
 
+## Deterministic Script Boundary
+
+After resolving the installed plugin root, use the independent
+`scripts/mdf-github-clear-gone.js` JSON contract from that plugin root for the
+mechanical portions of this workflow:
+
+1. Invoke `inspect` to refresh and classify only `[gone]` branches, associated
+   worktrees, current/canonical protections, and clean/dirty status.
+2. Invoke `apply-clean` only for the freshly inspected clean group.
+3. Invoke `apply-dirty` only after the user or orchestrator has supplied an
+   exact confirmation object for every dirty path with
+   `acknowledge_uncommitted: true`.
+
+The script re-inspects before either apply operation, so caller-provided
+classifications are not authority. Keep the report artifact, user-facing
+confirmation, and semantic decision about discarding work outside the script.
+Typed errors stop the workflow; they are not evidence that deletion succeeded.
+
 ## Workflow
 
 1. Refresh remote branch state when appropriate:

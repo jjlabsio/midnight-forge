@@ -290,6 +290,7 @@ function indexLine(item) {
   if (entry.kind === "task") {
     entry.task_id = data.task_id;
     entry.status = data.status;
+    if (data.due !== undefined && data.due !== null) entry.due = data.due;
     if (data.order !== undefined) entry.order = data.order;
     if (data.completed) entry.completed = data.completed;
     if (data.worktree) entry.worktree = data.worktree;
@@ -298,6 +299,7 @@ function indexLine(item) {
   } else {
     entry.item_id = data.item_id;
     if (data.state) entry.state = data.state;
+    if (data.outcome !== undefined && data.outcome !== null) entry.outcome = data.outcome;
     if (data.track_id) entry.track_id = data.track_id;
   }
   return JSON.stringify(entry);

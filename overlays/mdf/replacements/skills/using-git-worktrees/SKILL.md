@@ -21,6 +21,26 @@ This skill only prepares or selects an isolated workspace. It does not authorize
 
 MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
 
+## Deterministic Script Boundary
+
+After resolving the installed plugin root, the orchestrator may invoke
+`scripts/mdf-worktrees.js` from that plugin root as the independent mechanical
+boundary for this skill. Use its JSON stdin/stdout contract with one operation
+at a time:
+
+- `preflight`: report canonical-root, linked-worktree, remote-default,
+  ignore-policy, broken/prunable, and branch/path-conflict facts without
+  creating a worktree.
+- `create`: re-run the safety checks, then create only from
+  `origin/<default-branch>`.
+- `prepare`: copy only root `.env*`, run the recognized dependency setup, and
+  run the bounded Prisma generation step.
+
+The orchestrator still owns branch naming, task intent, conflict explanation,
+and any user decision about reuse or removal. Treat a typed script error as a
+stop; do not infer success from partial output or continue to a later operation.
+The script never owns task locks, commits, tests, or MDF artifact state.
+
 ## Step 0: Detect Existing Isolation
 
 Before creating anything, check whether the current checkout is already an isolated worktree:

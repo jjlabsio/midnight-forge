@@ -23,6 +23,26 @@ security, observability, documentation, debugging, and migration workflows
 when their trigger conditions apply. MDF may add canonical artifact storage,
 language, lifecycle state, and runtime adaptation only in controllers.
 
+## Independently Callable Mechanical Domains
+
+When a workflow area has a deterministic script contract, the orchestrator may
+compose the domains independently from the resolved plugin root:
+
+- `scripts/mdf-worktrees.js` — worktree preflight, creation, and preparation.
+- `scripts/mdf-init.js` — state validation and explicit local initialization.
+- `scripts/mdf-github-clear-gone.js` — gone-branch inspection and guarded
+  clean/dirty application.
+- `scripts/mdf-github-after-merge.js` — merged-PR verification and
+  fast-forward-only canonical synchronization.
+- `scripts/mdf-artifacts.js` — artifact revision, write, latest, and index
+  operations.
+
+Each script accepts one JSON operation and returns the shared success or typed
+error envelope. Shared runtime helpers are allowed, but no script replaces the
+other domain or creates a monolithic five-domain controller. Semantic choices,
+ambiguous state, destructive confirmation, and user authority remain with the
+orchestrator and applicable upstream skill.
+
 ## Executor and persona adapter
 
 The root verifies executor capability instead of hard-coding a model name. When

@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const { runCli } = require("./mdf-runtime/cli");
+const { WorkflowError } = require("./mdf-runtime/errors");
+const { canonicalRoot, projectPaths, resolveWithin } = require("./mdf-runtime/canonical-root");
+const { atomicWriteFiles, atomicWriteText } = require("./mdf-runtime/atomic");
+const { parseIndex, parseItem, serializeItem, validateIndexEntry, validateItem } = require("./mdf-runtime/schema");
+const { reconciledIndexContent } = require("./mdf-runtime/index");
+const { requireInitialized } = require("./mdf-init");
+
+function required(value, name) {
+  if (typeof value !== "string" || !value.trim()) throw new WorkflowError("MDF_INPUT_REQUIRED", `${name} is required.`, { field: name });
+  return value.trim();
+}
+
+function segment(value, name) {
+  const result = required(value, name);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(result) || result === "." || result === "..") {
+    throw new WorkflowError("MDF_INPUT_INVALID", `${name} must be a safe path segment.`, { field: name, value });
+  }
+  return result;
+}
+
+function revision(value) {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1 || number > 999) throw new WorkflowError("MDF_REVISION_INVALID", "Revision must be a three-digit positive integer from 001 through 999.", { revision: value });
+  return number;
+}
+
+function rootFor(input, options) {
+  const requested = input.root || input.canonical_root || input.cwd || options.cwd;
+  return canonicalRoot(requested || process.cwd());
+}
+
+function homeFor(input, options) {
+  return path.resolve(input.home || options.home || os.homedir());
+}
+
+function artifactInput(input) {
+  if (input.relative_path) {
+    if (typeof input.relative_path !== "string" || path.isAbsolute(input.relative_path) || path.dirname(input.relative_path) !== ".") {
+      throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "relative_path must be a filename within the work item.", { path: input.relative_path });
+    }
+    const match = input.relative_path.match(/^(.+)-(\d{3})\.md$/);
+    if (!match) throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "relative_path must use <artifact-type>-NNN.md.", { path: input.relative_path });
+    return { artifactType: segment(match[1], "artifact_type"), number: revision(match[2]) };
+  }
+  return { artifactType: segment(input.artifact_type || input.kind, "artifact_type"), number: input.revision === undefined ? null : revision(input.revision) };
+}
+
+function state(input, options) {
+  const root = rootFor(input, options);
+  const home = homeFor(input, options);
+  requireInitialized({ root, home }, { runner: options.runner });
+  const paths = projectPaths(root);
+  const workId = segment(input.work_id, "work_id");
+  const workDir = resolveWithin(root, path.join(".mdf", "work", workId), { allowMissing: false });
+  const itemPath = resolveWithin(root, path.join(".mdf", "work", workId, "item.md"), { allowMissing: false });
+  const item = parseItem(itemPath);
+  validateItem(item);
+  if (item.data.work_id !== workId) throw new WorkflowError("MDF_ITEM_ID_MISMATCH", "MDF item work_id does not match its directory.", { path: itemPath, work_id: workId });
+  validateIndexEntry(indexEntry(item, root));
+  const index = parseIndex(paths.index);
+  return { root, paths, workId, workDir, itemPath, item, index };
+}
+
+function artifactPath(root, workId, artifactType, number) {
+  const type = segment(artifactType, "artifact_type");
+  return resolveWithin(root, path.join(".mdf", "work", workId, `${type}-${String(number).padStart(3, "0")}.md`));
+}
+
+function indexEntry(item, root) {
+  const data = item.data;
+  const entry = {
+    work_id: data.work_id,
+    kind: data.kind || "task",
+    title: data.title,
+    item: path.relative(root, item.path),
+    latest: data.latest || {},
+  };
+  if (entry.kind === "task") {
+    entry.task_id = data.task_id;
+    entry.status = data.status;
+    if (data.due !== undefined && data.due !== null) entry.due = data.due;
+    if (data.order !== undefined) entry.order = data.order;
+    if (data.completed) entry.completed = data.completed;
+    if (data.worktree) entry.worktree = data.worktree;
+    if (data.branch) entry.branch = data.branch;
+    if (data.track_id) entry.track_id = data.track_id;
+  } else {
+    entry.item_id = data.item_id;
+    if (data.state) entry.state = data.state;
+    if (data.outcome !== undefined && data.outcome !== null) entry.outcome = data.outcome;
+    if (data.track_id) entry.track_id = data.track_id;
+  }
+  return entry;
+}
+
+function allocate(input, options = {}) {
+  const current = state(input, options);
+  const artifactType = artifactInput(input).artifactType;
+  let maximum = 0;
+  for (const name of fs.readdirSync(current.workDir)) {
+    const match = name.match(/^(.+)-(\d+)\.md$/);
+    if (!match || match[1] !== artifactType) continue;
+    const number = revision(match[2]);
+    maximum = Math.max(maximum, number);
+  }
+  if (maximum >= 999) throw new WorkflowError("MDF_REVISION_EXHAUSTED", "No unused three-digit artifact revision remains.", { work_id: current.workId, artifact_type: artifactType });
+  return { root: current.root, work_id: current.workId, artifact_type: artifactType, revision: maximum + 1 };
+}
+
+function write(input, options = {}) {
+  const current = state(input, options);
+  const artifact = artifactInput(input);
+  const artifactType = artifact.artifactType;
+  const number = artifact.number;
+  if (number === null) throw new WorkflowError("MDF_REVISION_INVALID", "write requires a revision or relative_path.");
+  if (typeof input.content !== "string") throw new WorkflowError("MDF_CONTENT_INVALID", "Artifact content must be a string.");
+  const target = artifactPath(current.root, current.workId, artifactType, number);
+  if (fs.existsSync(target)) throw new WorkflowError("MDF_ARTIFACT_EXISTS", "Refusing to overwrite an existing artifact revision.", { path: target });
+  atomicWriteText(target, input.content);
+  return { root: current.root, work_id: current.workId, artifact_type: artifactType, revision: number, path: path.relative(current.root, target) };
+}
+
+function latest(input, options = {}) {
+  const current = state(input, options);
+  const artifact = artifactInput(input);
+  const artifactType = artifact.artifactType;
+  const number = artifact.number || (() => {
+    if (typeof input.path !== "string") throw new WorkflowError("MDF_REVISION_INVALID", "latest requires revision or path.");
+    const candidate = resolveWithin(current.root, input.path, { allowMissing: false });
+    const relative = path.relative(current.root, candidate);
+    const match = relative.match(new RegExp(`^\\.mdf/work/${current.workId}/(.+)-(\\d{3})\\.md$`));
+    if (!match || match[1] !== artifactType) throw new WorkflowError("MDF_ARTIFACT_PATH_INVALID", "latest path must identify the requested work item and artifact type.", { path: input.path });
+    return revision(match[2]);
+  })();
+  const target = artifactPath(current.root, current.workId, artifactType, number);
+  let targetStat;
+  try {
+    targetStat = fs.lstatSync(target);
+  } catch (error) {
+    if (error.code === "ENOENT") throw new WorkflowError("MDF_ARTIFACT_MISSING", "Cannot point latest at a missing artifact.", { path: target });
+    throw new WorkflowError("MDF_ARTIFACT_INVALID", "Unable to inspect the latest artifact.", { path: target, cause: error.message });
+  }
+  if (!targetStat.isFile()) throw new WorkflowError("MDF_ARTIFACT_INVALID", "Latest must identify a regular artifact file.", { path: target });
+  const relative = path.relative(current.root, target);
+  const nextItem = { ...current.item, data: { ...current.item.data, latest: { ...current.item.data.latest, [artifactType]: relative } } };
+  const nextEntry = indexEntry(nextItem, current.root);
+  const nextIndex = reconciledIndexContent(current.paths.index, nextEntry);
+  atomicWriteFiles([
+    { path: current.itemPath, content: serializeItem(nextItem) },
+    { path: current.paths.index, content: nextIndex },
+  ]);
+  return { root: current.root, work_id: current.workId, artifact_type: artifactType, revision: number, latest: relative, item: current.itemPath, index: current.paths.index };
+}
+
+function reconcile(input, options = {}) {
+  const current = state(input, options);
+  const entry = input.entry && typeof input.entry === "object" ? input.entry : indexEntry(current.item, current.root);
+  if (entry.work_id !== current.workId) throw new WorkflowError("MDF_INDEX_ENTRY_INVALID", "Index entry work_id does not match the requested item.");
+  const content = reconciledIndexContent(current.paths.index, entry);
+  atomicWriteText(current.paths.index, content);
+  return { root: current.root, work_id: current.workId, index: current.paths.index };
+}
+
+function main() {
+  const exitCode = runCli({ operations: { allocate, write, latest, "reconcile-index": reconcile } });
+  if (exitCode) process.exitCode = exitCode;
+}
+
+if (require.main === module) main();
+
+module.exports = { allocate, artifactPath, indexEntry, latest, reconcile, write };
