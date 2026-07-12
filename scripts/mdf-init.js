@@ -126,6 +126,17 @@ function boundaryCheck(root) {
   for (const [relative, expected] of entries) validateLayoutEntry(root, relative, expected);
 }
 
+function userBoundaryCheck(home) {
+  const entries = [
+    [".mdf", "directory"],
+    [".mdf/user", "directory"],
+    [".mdf/user/init.json", "file"],
+    [".mdf/user/preferences.json", "file"],
+    [".mdf/projects.json", "file"],
+  ];
+  for (const [relative, expected] of entries) validateLayoutEntry(home, relative, expected);
+}
+
 function ignoreStatus(root, runner) {
   const missing = [];
   for (const relative of [".mdf/", ".worktrees/"]) {
@@ -146,6 +157,7 @@ function remoteFor(root, runner) {
 }
 
 function validateUser(home) {
+  userBoundaryCheck(home);
   const paths = userPaths(home);
   const missing = [];
   let preferences = null;

@@ -56,6 +56,15 @@ function parseWorktrees(output) {
   }) : [];
 }
 
+function registeredWorktree(root, worktree, runner) {
+  const listed = parseWorktrees(gitText(["worktree", "list", "--porcelain"], root, runner));
+  const record = listed.find((entry) => entry.path && path.resolve(entry.path) === path.resolve(worktree));
+  if (!record || record.broken || record.prunable || !record.branch) {
+    throw new WorkflowError("MDF_WORKTREE_NOT_REGISTERED", "Preparation must target an existing named Git worktree registered with the repository.", { path: worktree });
+  }
+  return record;
+}
+
 function pathEntryExists(filePath) {
   try {
     fs.lstatSync(filePath);
@@ -128,7 +137,7 @@ function preflight(input = {}, options = {}) {
   const ignored = runCommand("git", ["check-ignore", "-q", "--", ignoredPath], { cwd: root, runner, allowFailure: true });
   if (ignored.status !== 0) throw new WorkflowError("MDF_WORKTREES_NOT_IGNORED", "The project .worktrees directory is not ignored.", { path: ignoredPath });
 
-  if (input.fetch !== false) runCommand("git", ["fetch", "origin", defaultBranch], { cwd: root, runner });
+  runCommand("git", ["fetch", "origin", defaultBranch], { cwd: root, runner });
   const remoteRef = runCommand("git", ["show-ref", "--verify", "--quiet", `refs/remotes/origin/${defaultBranch}`], { cwd: root, runner, allowFailure: true });
   if (remoteRef.status !== 0) throw new WorkflowError("MDF_REMOTE_DEFAULT_MISSING", "The remote default branch does not exist.", { branch: defaultBranch });
   const listed = parseWorktrees(gitText(["worktree", "list", "--porcelain"], root, runner));
@@ -287,6 +296,7 @@ function prepare(input = {}, options = {}) {
   const canonicalWorktree = fs.existsSync(candidateWorktree) ? fs.realpathSync(candidateWorktree) : candidateWorktree;
   const worktree = resolveWithin(root, path.relative(root, canonicalWorktree), { allowMissing: false });
   if (!isInside(path.join(root, ".worktrees"), worktree)) throw new WorkflowError("MDF_WORKTREE_PATH_INVALID", "Preparation must target a project-local worktree.", { path: worktree });
+  registeredWorktree(root, worktree, options.runner);
   if (pathEntryExists(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Preparation refuses independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
   const copied = [];
   const skipped = [];

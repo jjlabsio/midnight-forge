@@ -224,14 +224,23 @@ function runWorktreeTests() {
       return { status: 0, stdout: "", stderr: "" };
     }}), "MDF_WORKTREE_STATE_BOUNDARY");
     assert.strictEqual(fs.existsSync(rollbackTarget), false);
+    assert.ok(rollbackCommands.some((args) => args[0] === "git" && args[1] === "fetch"));
     assert.ok(rollbackCommands.some((args) => args[0] === "git" && args[1] === "worktree" && args[2] === "remove"));
     assert.ok(rollbackCommands.some((args) => args[0] === "git" && args[1] === "branch" && args[2] === "-D"));
     const cliPrepareTarget = path.join(root, ".worktrees", "cli-prepare");
     fs.mkdirSync(cliPrepareTarget, { recursive: true });
-    const cliPrepare = cli("prepare", { worktree_path: cliPrepareTarget });
+    expectCode(() => worktrees.prepare({ root, worktree_path: cliPrepareTarget }), "MDF_WORKTREE_NOT_REGISTERED");
+    fs.rmSync(cliPrepareTarget, { recursive: true, force: true });
+    const registeredPrepareTarget = path.join(root, ".worktrees", "registered-cli-prepare");
+    result = spawnSync("git", ["worktree", "add", "--quiet", "-b", "registered-cli-prepare", registeredPrepareTarget, "origin/main"], { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    const cliPrepare = cli("prepare", { worktree_path: registeredPrepareTarget });
     assert.strictEqual(cliPrepare.status, 0, cliPrepare.stderr);
     assert.strictEqual(JSON.parse(cliPrepare.stdout).ok, true);
-    fs.rmSync(cliPrepareTarget, { recursive: true, force: true });
+    result = spawnSync("git", ["worktree", "remove", "--force", registeredPrepareTarget], { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    result = spawnSync("git", ["branch", "-D", "registered-cli-prepare"], { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
     const preflight = worktrees.preflight({ root, branch: "task-fixture" });
     assert.strictEqual(preflight.default_branch, "main");
     assert.strictEqual(preflight.canonical_root, fs.realpathSync(root));
@@ -277,10 +286,11 @@ function runWorktreeTests() {
     writeJson(path.join(target, "package.json"), { scripts: { "prisma:generate": "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
     const prepared = worktrees.prepare({ root, worktree: ".worktrees/task-fixture" }, { runner: (command, args, options) => {
       prepareCommands.push({ command, args, cwd: options.cwd });
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${fs.realpathSync(target)}\nHEAD abc\nbranch refs/heads/task-fixture\n`, stderr: "" };
       return { status: 0, stdout: "", stderr: "" };
     }});
     assert.deepStrictEqual(prepared.environment.copied, [".env.test"]);
-    assert.deepStrictEqual(prepareCommands.map((entry) => [entry.command, ...entry.args]), [["npm", "install"], ["npm", "run", "prisma:generate"]]);
+    assert.deepStrictEqual(prepareCommands.map((entry) => [entry.command, ...entry.args]), [["git", "worktree", "list", "--porcelain"], ["npm", "install"], ["npm", "run", "prisma:generate"]]);
     assert.strictEqual(fs.readFileSync(path.join(target, ".env.test"), "utf8"), "SOURCE=1\n");
     const conflict = worktrees.preflight({ root, branch: "task-fixture" });
     assert.ok(conflict.conflicts.some((entry) => entry.kind === "branch"));
@@ -291,20 +301,26 @@ function runWorktreeTests() {
     writeJson(path.join(failureTarget, "package.json"), { scripts: { generate: "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
     expectCode(() => worktrees.prepare({ root, worktree_path: failureTarget }, { runner: (command, args) => {
       failureCommands.push([command, ...args]);
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${fs.realpathSync(failureTarget)}\nHEAD abc\nbranch refs/heads/failure\n`, stderr: "" };
       return { status: 1, stdout: "", stderr: "install failed" };
     }}), "MDF_DEPENDENCY_SETUP_FAILED");
-    assert.deepStrictEqual(failureCommands, [["npm", "install"]]);
+    assert.deepStrictEqual(failureCommands, [["git", "worktree", "list", "--porcelain"], ["npm", "install"]]);
     const prismaFailureTarget = path.join(root, ".worktrees", "prisma-failure");
     fs.mkdirSync(prismaFailureTarget, { recursive: true });
     writeJson(path.join(prismaFailureTarget, "package.json"), { scripts: { generate: "prisma generate" }, devDependencies: { prisma: "1.0.0" } });
     const prismaFailureCommands = [];
     expectCode(() => worktrees.prepare({ root, worktree_path: prismaFailureTarget }, { runner: (command, args) => {
       prismaFailureCommands.push([command, ...args]);
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${fs.realpathSync(prismaFailureTarget)}\nHEAD abc\nbranch refs/heads/prisma-failure\n`, stderr: "" };
       return args[0] === "run" ? { status: 1, stdout: "", stderr: "prisma failed" } : { status: 0, stdout: "", stderr: "" };
     }}), "MDF_PRISMA_SETUP_FAILED");
-    assert.deepStrictEqual(prismaFailureCommands, [["npm", "install"], ["npm", "run", "generate"]]);
+    assert.deepStrictEqual(prismaFailureCommands, [["git", "worktree", "list", "--porcelain"], ["npm", "install"], ["npm", "run", "generate"]]);
     fs.mkdirSync(path.join(root, ".worktrees", "state-boundary", ".mdf"), { recursive: true });
-    expectCode(() => worktrees.prepare({ root, worktree_path: path.join(root, ".worktrees", "state-boundary") }), "MDF_WORKTREE_STATE_BOUNDARY");
+    const stateBoundaryTarget = path.join(root, ".worktrees", "state-boundary");
+    expectCode(() => worktrees.prepare({ root, worktree_path: stateBoundaryTarget }, { runner: (command, args) => {
+      if (command === "git" && args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${fs.realpathSync(stateBoundaryTarget)}\nHEAD abc\nbranch refs/heads/state-boundary\n`, stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    }}), "MDF_WORKTREE_STATE_BOUNDARY");
   } finally {
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
@@ -389,6 +405,19 @@ function runInitTests() {
     result = spawnSync("git", ["init", "--quiet", wrongIndexTypeProject], { encoding: "utf8" });
     assert.strictEqual(result.status, 0, result.stderr);
     expectCode(() => initScript.validate({ root: wrongIndexTypeProject, home: path.join(temporaryRoot, "wrong-index-type-home") }), "MDF_LAYOUT_INVALID");
+    const symlinkUserProject = path.join(temporaryRoot, "symlink-user-project");
+    const symlinkUserHome = path.join(temporaryRoot, "symlink-user-home");
+    const symlinkUserOutside = path.join(temporaryRoot, "symlink-user-outside");
+    fs.mkdirSync(symlinkUserProject, { recursive: true });
+    fs.mkdirSync(symlinkUserHome, { recursive: true });
+    fs.mkdirSync(symlinkUserOutside, { recursive: true });
+    fs.writeFileSync(path.join(symlinkUserProject, ".gitignore"), ".mdf/\n.worktrees/\n");
+    result = spawnSync("git", ["init", "--quiet", symlinkUserProject], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    fs.mkdirSync(path.join(symlinkUserHome, ".mdf"), { recursive: true });
+    fs.symlinkSync(symlinkUserOutside, path.join(symlinkUserHome, ".mdf", "user"));
+    expectCode(() => initScript.apply({ root: symlinkUserProject, home: symlinkUserHome, human_language: "Korean" }), "MDF_SYMLINK_PATH");
+    assert.deepStrictEqual(fs.readdirSync(symlinkUserOutside), []);
   } finally {
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
@@ -456,12 +485,19 @@ function runAfterMergeTests() {
     calls.push({ command, args, cwd: options.cwd });
     if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
     if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
-    if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "origin\n", stderr: "" };
+    if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
     if (args[0] === "status") return { status: 0, stdout: "", stderr: "" };
     if (args[0] === "rev-parse" && args[1] === "HEAD") return { status: 0, stdout: "abc123\n", stderr: "" };
     return { status: 0, stdout: "", stderr: "" };
   };
   try {
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "--repo=attacker/other" }, { runner }), "MDF_PR_REF_INVALID");
+    const crossRepositoryRunner = (command, args, options) => {
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "main", url: "https://github.com/attacker/other/pull/1" }), stderr: "" };
+      if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "https://github.com/attacker/other/pull/1" }, { runner: crossRepositoryRunner }), "MDF_PR_REPOSITORY_MISMATCH");
     const verified = afterMerge.verify({ root: fixture.root, pr: "1" }, { runner });
     assert.strictEqual(verified.merged, true);
     assert.strictEqual(verified.head_branch, "feature");
@@ -474,10 +510,10 @@ function runAfterMergeTests() {
     const unmergedRunner = (command, args) => command === "gh" ? { status: 0, stdout: JSON.stringify({ state: "OPEN", mergedAt: null, headRefName: "feature", baseRefName: "main", url: "url" }), stderr: "" } : (() => { throw new Error("git must not run"); })();
     expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: unmergedRunner }), "MDF_PR_NOT_MERGED");
     const wrongBaseRunner = (command, args, options) => {
-      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "develop", url: "url" }), stderr: "" };
+      if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: "now", headRefName: "feature", baseRefName: "develop", url: "https://github.com/example/project/pull/1" }), stderr: "" };
       wrongBaseCalls.push({ command, args, cwd: options.cwd });
       if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
-      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
       return { status: 0, stdout: "", stderr: "" };
     };
     const wrongBaseCalls = [];
@@ -486,7 +522,7 @@ function runAfterMergeTests() {
     const dirtyRunner = (command, args, options) => {
       if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
       if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
-      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
       if (args[0] === "status") return { status: 0, stdout: " M dirty\n", stderr: "" };
       throw new Error(`unexpected command ${command} ${args.join(" ")}`);
     };
@@ -494,7 +530,7 @@ function runAfterMergeTests() {
     const fetchFailureRunner = (command, args, options) => {
       if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
       if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
-      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
       if (args[0] === "status" || args[0] === "checkout") return { status: 0, stdout: "", stderr: "" };
       if (args[0] === "fetch") return { status: 1, stdout: "", stderr: "fetch failed" };
       return { status: 0, stdout: "", stderr: "" };
@@ -503,7 +539,7 @@ function runAfterMergeTests() {
     const pullFailureRunner = (command, args) => {
       if (command === "gh") return { status: 0, stdout: mergedPayload + "\n", stderr: "" };
       if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
-      if (args[0] === "remote") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "remote") return { status: 0, stdout: "https://github.com/example/project.git\n", stderr: "" };
       if (args[0] === "status" || args[0] === "checkout" || args[0] === "fetch") return { status: 0, stdout: "", stderr: "" };
       if (args[0] === "pull") return { status: 1, stdout: "", stderr: "not fast forward" };
       return { status: 0, stdout: "abc123\n", stderr: "" };
