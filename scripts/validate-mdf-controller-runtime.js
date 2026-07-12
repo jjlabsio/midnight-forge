@@ -40,7 +40,7 @@ function createFixture() {
   fs.mkdirSync(path.join(canonicalRoot, ".mdf", "locks"), { recursive: true });
   fs.mkdirSync(workItem, { recursive: true });
   fs.writeFileSync(path.join(canonicalRoot, ".mdf", "index.jsonl"), "");
-  fs.writeFileSync(path.join(workItem, "item.md"), "---\nwork_id: \"2026-07-11-0032-context\"\n---\n");
+  fs.writeFileSync(path.join(workItem, "item.md"), "---\nwork_id: \"2026-07-11-0032-context\"\nlatest: {}\n---\n");
   writeJson(path.join(canonicalRoot, ".mdf", "locks", "0032.lock"), {
     task_id: "0032",
     work_id: workId,
@@ -53,6 +53,18 @@ function createFixture() {
 
 function expectCode(callback, code) {
   assert.throws(callback, (error) => error && error.code === code);
+}
+
+function setLatest(context, key, value) {
+  const itemPath = context.work_item.item_path;
+  const current = fs.readFileSync(itemPath, "utf8");
+  const child = new RegExp(`^  ${key}:.*$`, "m");
+  const latest = current.includes("latest: {}")
+    ? current.replace("latest: {}", `latest:\n  ${key}: \"${value}\"`)
+    : child.test(current)
+      ? current.replace(child, `  ${key}: \"${value}\"`)
+      : current.replace(/^latest:\n/m, `latest:\n  ${key}: \"${value}\"\n`);
+  fs.writeFileSync(itemPath, latest);
 }
 
 function runContextTests() {
@@ -404,12 +416,16 @@ function runSpecTests() {
     const auto = registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: review001, mode: "auto" });
     assert.strictEqual(advanceSpec(context, { registration_file: auto.registration_file }).stop.code, "MDF_SPEC_APPROVAL_REQUIRED");
     expectCode(() => approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-no", affirmative: false }), "MDF_SPEC_APPROVAL_NOT_AFFIRMATIVE");
+    setLatest(context, "spec", "spec-001.md");
     const approval = approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-1", affirmative: true });
     const mutation = registerSpec(context, { artifact_path: "spec-mutate.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-mutate.md", "review-mutation"), mode: "auto" });
     fs.writeFileSync(path.join(context.work_item.path, "spec-mutate.md"), "after\n");
     expectCode(() => approveSpec(context, { registration_file: mutation.registration_file, user_message_path: "user.md", invocation_id: "user-mutation", affirmative: true }), "MDF_EVIDENCE_STALE");
     const revised = registerSpec(context, { artifact_path: "spec-002.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-002.md", "review-spec-002"), mode: "auto" });
     expectCode(() => advanceSpec(context, { registration_file: revised.registration_file, approval_file: approval.approval_file }), "MDF_SPEC_APPROVAL_INVALID");
+    setLatest(context, "spec", "spec-002.md");
+    expectCode(() => advanceSpec(context, { registration_file: auto.registration_file, approval_file: approval.approval_file }), "MDF_EVIDENCE_STALE");
+    setLatest(context, "spec", "spec-001.md");
     const result = advanceSpec(context, { registration_file: auto.registration_file, approval_file: approval.approval_file });
     assert.strictEqual(result.state.phase, "plan");
     const cli = spawnSync(process.execPath, [cliPath, "spec", "register", "--cwd", fixture.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ artifact_path: "spec-cli.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-cli.md", "review-cli"), mode: "standalone" }) });
@@ -455,10 +471,14 @@ function runPlanTests() {
     const auto = registerPlan(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: review, mode: "auto" });
     assert.strictEqual(advancePlan(context, { registration_file: auto.registration_file }).stop.code, "MDF_PLAN_APPROVAL_REQUIRED");
     expectCode(() => approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-no", affirmative: false }), "MDF_PLAN_APPROVAL_NOT_AFFIRMATIVE");
+    setLatest(context, "plan", "plan.md");
     const approval = approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-user", affirmative: true });
     const revisionMetadata = createPlanMetadata(context, { artifact_path: "plan-2.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
     const revision = registerPlan(context, { artifact_path: "plan-2.md", spec_registration_file: specReg.registration_file, metadata_file: revisionMetadata, review_output_path: "review.md", review_decision_file: reviewFor("plan-2.md", "plan-2-review", [`evidence/${specReg.registration_file}`, `evidence/${revisionMetadata}`]), mode: "auto" });
     expectCode(() => advancePlan(context, { registration_file: revision.registration_file, approval_file: approval.approval_file }), "MDF_PLAN_APPROVAL_INVALID");
+    setLatest(context, "plan", "plan-2.md");
+    expectCode(() => advancePlan(context, { registration_file: auto.registration_file, approval_file: approval.approval_file }), "MDF_EVIDENCE_STALE");
+    setLatest(context, "plan", "plan.md");
     const staleMetadata = createPlanMetadata(context, { artifact_path: "plan-stale.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
     const stale = registerPlan(context, { artifact_path: "plan-stale.md", spec_registration_file: specReg.registration_file, metadata_file: staleMetadata, review_output_path: "review.md", review_decision_file: reviewFor("plan-stale.md", "plan-stale-review", [`evidence/${specReg.registration_file}`, `evidence/${staleMetadata}`]), mode: "auto" });
     fs.writeFileSync(path.join(context.work_item.path, "plan-stale.md"), "after\n");

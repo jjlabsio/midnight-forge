@@ -21,7 +21,7 @@ function approveSpec(context, { registration_file: registrationFile, user_messag
   if (affirmative !== true) throw new ControllerError("MDF_SPEC_APPROVAL_NOT_AFFIRMATIVE", "Spec approval requires an explicit affirmative human-derived outcome.");
   const registration = verifySidecar(context, registrationFile);
   if (registration.kind !== "interaction" || registration.invocation?.agent_id !== "mdf-spec") throw new ControllerError("MDF_SPEC_REGISTRATION_INVALID", "Spec approval requires a valid registration.");
-  const approval = recordInteraction(context, { invocation: { agent_id: "user-approval", invocation_id: invocationId, executor: "human", explicit_affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file }, input_paths: [userMessagePath, ...registration.inputs.map((input) => input.path), `evidence/${registrationFile}`] });
+  const approval = recordInteraction(context, { invocation: { agent_id: "user-approval", invocation_id: invocationId, executor: "human", explicit_affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file }, input_paths: ["item.md", userMessagePath, ...registration.inputs.map((input) => input.path), `evidence/${registrationFile}`] });
   const decision = recordDecision(context, { interaction_file: approval.file, conclusion: { kind: "spec-approval", affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file } });
   return { approval_interaction_file: approval.file, approval_file: decision.file };
 }
