@@ -5,8 +5,6 @@ description: Tests in real browsers via Chrome DevTools MCP. Use when building o
 
 # Browser Testing with DevTools
 
-When saving browser verification reports, console/network findings, runtime screenshots, or visual verification notes, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/browser-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.browser` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
-
 ## Overview
 
 Use Chrome DevTools MCP to give your agent eyes into the browser. This bridges the gap between static code analysis and live browser execution — the agent can see what the user sees, inspect the DOM, read console logs, analyze network requests, and capture performance data. Instead of guessing what's happening at runtime, verify it.

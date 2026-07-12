@@ -1,12 +1,6 @@
 {
   "output": "agents/code-reviewer.md",
   "source": "agents/code-reviewer.md",
-  "classification": "mdf-overlay-required",
-  "overlay": "replacements/agents/code-reviewer.md",
-  "artifactStorageOverride": false,
-  "notes": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-  "baseSha256": "74667b052cb6a75079791cee8f6e465a248e28fd82178505aaaec8db95c40ccf",
-  "overlayKind": "replacement",
-  "replacementRationale": "Current MDF behavior adds non-artifact workflow semantics that must remain outside the upstream source.",
-  "reviewRisk": "Full-file replacement can hide upstream changes; validation pins the upstream base hash and requires explicit inventory metadata."
+  "classification": "upstream-identical",
+  "overlayKind": "copy"
 }

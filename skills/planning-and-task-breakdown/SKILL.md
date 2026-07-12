@@ -30,7 +30,7 @@ Before writing any code, operate in read-only mode:
 - Map dependencies between components
 - Note risks and unknowns
 
-**Do NOT write code during planning.** The output is a plan artifact, not implementation. Save tracked `tasks/plan.md` and `tasks/todo.md` files only when the user explicitly asks for repo-level planning files.
+**Do NOT write code during planning.** The output is a plan document saved to `tasks/plan.md` and a task list saved to `tasks/todo.md`, not implementation.
 
 ### Step 2: Identify the Dependency Graph
 
@@ -76,35 +76,7 @@ Task 4: User can view task list (query + API + UI for list view)
 
 Each vertical slice delivers working, testable functionality.
 
-### Step 4: Classify Requirement Risk
-
-Before or while finalizing task acceptance criteria, classify every approved SPEC requirement as `normal` or `high-risk`.
-
-This classification is an AI semantic judgment. Do not use or preserve a keyword list as the mechanism. Vocabulary can suggest where to look, but the decision is based on meaning: mark a requirement `high-risk` when implementation correctness depends on a non-obvious semantic property that ordinary happy-path tests could pass while the intended requirement remains wrong.
-
-High-risk requirements commonly involve properties such as persisted state transitions, retries, continuation, recovery, ordering, eventual completion, concurrency, locks, leases, cursors, deduplication, idempotency, replacing one execution mechanism with another, no-stuck guarantees, or behavior where a later external retry would not satisfy a same-loop or same-invocation guarantee. These are examples, not a keyword classifier.
-
-For each high-risk requirement, record:
-
-```markdown
-### High-Risk Requirement: [requirement title]
-
-- Classification reason: [one concise sentence explaining why this is high-risk]
-- Implementation meaning: [concrete behavior the implementation must provide]
-- Required scenario: [positive scenario specific enough to become a regression test or agent-executable check]
-- Negative scenario: [failure mode the verification must reject]
-- Verification: [test, command, manual check, or review step that proves the meaning]
-```
-
-If no high-risk requirements are identified, the plan must say:
-
-```markdown
-No high-risk requirements identified because [concise semantic reason].
-```
-
-This statement is required so future reviewers can challenge the omission instead of inferring that no classification pass happened.
-
-### Step 5: Write Tasks
+### Step 4: Write Tasks
 
 Each task follows this structure:
 
@@ -116,8 +88,6 @@ Each task follows this structure:
 **Acceptance criteria:**
 - [ ] [Specific, testable condition]
 - [ ] [Specific, testable condition]
-
-**High-risk semantic criteria:** [High-risk requirement IDs assigned to this task, with implementation meaning, or "None"]
 
 **Verification:**
 - [ ] Tests pass: `npm test -- --grep "feature-name"`
@@ -133,7 +103,7 @@ Each task follows this structure:
 **Estimated scope:** [Small: 1-2 files | Medium: 3-5 files | Large: 5+ files]
 ```
 
-### Step 6: Order and Checkpoint
+### Step 5: Order and Checkpoint
 
 Arrange tasks so that:
 
@@ -151,35 +121,6 @@ Add explicit checkpoints:
 - [ ] Core user flow works end-to-end
 - [ ] Review with human before proceeding
 ```
-
-### Step 7: Evaluate and Revise
-
-After drafting the plan, run an inline blocker-oriented self-review pass before saving or presenting it. This is the default `$plan` quality gate. Block only on issues likely to cause flawed implementation:
-
-- Missing tasks or missing implementation steps needed to satisfy the spec
-- TODO, TBD, placeholder text, or incomplete task sections
-- Missing coverage for stated SPEC requirements
-- Missing or incomplete requirement risk classification
-- A high-risk requirement classified by keyword matching instead of semantic judgment
-- A high-risk requirement missing `Classification reason`, `Implementation meaning`, `Required scenario`, `Negative scenario`, or `Verification`
-- Missing explicit `No high-risk requirements identified because ...` when no high-risk requirements are found
-- Ordinary tests could pass while a stated semantic requirement remains wrong
-- Same-loop, same-invocation, no-stuck, or eventual-completion guarantees are weakened into later retry or recovery behavior
-- Major scope creep beyond the SPEC
-- Task boundaries that are too vague, too large, or not independently verifiable
-- Steps that would leave an implementer stuck because required context, files, contracts, or decisions are absent
-- Missing concrete verification for a task or checkpoint
-- Inconsistent file paths, type names, API names, command names, or dependencies across tasks
-- Incorrect dependency ordering
-- Genuine blockers or unknowns hidden from the plan instead of surfaced in risks or open questions
-
-Revise the plan and repeat the inline self-review until there are no blockers or a focused user question is required. Do not block on wording polish, stylistic preferences, formatting preferences, or nice-to-have additions.
-
-Subagent-assisted plan evaluation may be used when a fresh-context pass would add signal and the runtime exposes the needed subagent tools.
-
-When those conditions are met, use `agents/plan-evaluator.md` as the prompt template from the plugin-root context. In Codex, if named plugin agents are not directly available but generic subagents are available, pass the evaluator prompt template with the draft plan, the approved SPEC, relevant codebase constraints, and the blocker checklist above. The evaluator must return only blocker findings, `question needed`, or `no blockers`; it must not rewrite the plan or ask the user directly.
-
-The main agent owns revisions, user questions, artifact saving, and deciding whether another evaluator pass is needed. If required information is missing, ask only the clarifying question or related small set of questions needed to unblock the current planning phase. Prefer one focused question, but ask multiple related questions when one answer would not resolve the ambiguity.
 
 ## Task Sizing Guidelines
 
@@ -199,21 +140,12 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 - It touches two or more independent subsystems (e.g., auth and billing)
 - You find yourself writing "and" in the task title (a sign it is two tasks)
 
-## MDF Artifact Storage
+## Output Files
 
-Save implementation plans under the current MDF work item by default. Before saving, verify MDF user and project init state; if init state is missing, stop and instruct the user to run `mdf init`.
+- **Plan document:** Save the implementation plan to `tasks/plan.md`.
+- **Task list:** Save the checklist-style task list to `tasks/todo.md`.
 
-```text
-<canonical-root>/.mdf/work/{work_id}/plan-NNN.md
-```
-
-Resolve `canonical_root` and `work_id` from the active lock first. If there is no active lock, create an implicit work item. Repeated planning runs create `plan-001.md`, `plan-002.md`, and so on; update `item.md` `latest.plan` and `.mdf/index.jsonl`. Only create tracked files such as `tasks/plan.md` and `tasks/todo.md` when the user explicitly asks for repo-level planning files.
-
-When earlier task work changes design, architecture, contracts, workflow
-semantics, task boundaries, or shared acceptance assumptions in a way that
-alters future tasks, preserve the change as a new plan revision, a dated task log/context/criteria update, or a clearly linked superseding artifact. Do not leave later queued task cards relying on obsolete plan text. If the right revision requires product, API, migration, release, or architecture judgment,
-surface the decision instead of silently rewriting the plan.
-
+Create the `tasks/` directory if it does not exist. These paths are the convention expected by the `/build` command and other downstream tooling.
 
 ## Plan Document Template
 
@@ -295,7 +227,6 @@ Before starting implementation, confirm:
 - [ ] Task dependencies are identified and ordered correctly
 - [ ] No task touches more than ~5 files
 - [ ] Checkpoints exist between major phases
-- [ ] The blocker-oriented evaluator loop found no implementation-blocking issues
 - [ ] The human has reviewed and approved the plan
 
 ## See Also

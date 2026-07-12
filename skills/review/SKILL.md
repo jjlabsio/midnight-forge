@@ -1,29 +1,33 @@
 ---
 name: review
-description: "Use when the user invokes review, mdf review, or asks for a five-axis code review with optional security and performance depth."
+description: "Use when the user invokes review, mdf review, or asks for one upstream five-axis review pass."
 ---
 
 # review
 
-Use this Codex-native entrypoint when the user invokes `review`, `mdf review`, `$review`, or asks to review current changes.
+This MDF controller resolves the installed plugin root, loads the exact
+upstream `../code-review-and-quality/SKILL.md`, and follows it without adding
+or weakening review criteria. Pass canonical MDF spec, plan, build evidence,
+and diff as context when they exist; the upstream workflow remains the review
+method and verdict contract.
 
-Invoke the `code-review-and-quality` skill.
+Standalone `review` is one phase and one pass. It saves a canonical
+`review-NNN.md` artifact, then stops. A build controller owns any fix,
+verification, and re-review loop required before advancement. Use a capability
+verified fresh reviewer where upstream freshness is required; otherwise record
+the precise degraded/root fallback status rather than mislabeling it.
 
-This remains a standalone workflow even though `build` may invoke review logic internally. Use `code-review-and-quality` in `standalone` scope for independent verification, manual changes, debugging, PR preparation, merge readiness, and pre-ship checks.
+From the resolved plugin root, call production
+`./scripts/mdf-controller.js review context` first. It returns the exact
+current spec, plan, lifecycle-linked task/refactor completions, stable
+whole-build, simplification result, and tree-bound context paths. Execute one
+exact upstream review pass against those paths and preserve its raw output;
+never parse headings, phrases, or Markdown to derive a verdict.
 
-The shared `code-review-and-quality` workflow owns both spec-compliance review and the five-axis code-quality review. When MDF artifacts are available for the current work item, standalone review uses them for spec-compliance context before applying the five-axis review. When no MDF artifacts are available, standalone review falls back to the existing five-axis behavior.
-
-Review the current changes (staged or recent commits) through the shared workflow:
-
-1. **Spec Compliance** — When MDF artifacts exist, does the change satisfy the approved spec, plan, build evidence, and high-risk implementation meaning?
-2. **Correctness** — Does it match the spec or task? Edge cases handled? Tests adequate?
-3. **Readability** — Clear names? Straightforward logic? Well-organized?
-4. **Architecture** — Follows existing patterns? Clean boundaries? Right abstraction level?
-5. **Security** — Input validated? Secrets safe? Auth checked? (Use security-and-hardening skill)
-6. **Performance** — No N+1 queries? No unbounded ops? (Use performance-optimization skill)
-
-Categorize findings as Critical, Important, or Suggestion.
-Output a structured review with specific file:line references and fix recommendations.
-Before writing review findings, explanations, or recommendations, follow `../../references/human-facing-language.md`.
-
-When saving the review report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/review-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.review` and `.mdf/index.jsonl`.
+Call `review register` with `context_file`, raw `output_path`, provenance-bound
+`decision_file`, and `mode`. Standalone mode always stops after that one pass.
+In auto mode, a passing semantic decision advances to ship. Findings that need
+human judgment stop; bounded findings may create one affected-task attempt and
+must then pass the ordinary verification/fresh-review/focused-commit gate and
+the full whole-build/simplification cycle again. The semantic decision, not
+report grammar, owns that routing.

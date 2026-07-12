@@ -1,67 +1,104 @@
 ---
 name: build
-description: "Use when the user invokes build or asks to implement the next planned task incrementally with TDD, verification, and commits."
+description: "Use when the user invokes build or asks to implement approved MDF plan work with upstream TDD and review gates."
 ---
 
 # build
 
-Use this Codex-native entrypoint when the user invokes `build`, `mdf build`, `$build`, or asks to implement the next pending task.
+This controller preserves the upstream build workflow while providing MDF
+canonical artifacts and orchestration. Resolve the installed plugin root before
+loading any path. Load and follow exact upstream
+`../incremental-implementation/SKILL.md`, `../test-driven-development/SKILL.md`,
+and `../code-review-and-quality/SKILL.md`; MDF does not edit their criteria.
 
-Invoke the `incremental-implementation` skill alongside the `test-driven-development` skill.
+## Selection and task gate
 
-For review gates, load and apply the shared `code-review-and-quality` instructions. In Codex, skills are instruction documents rather than callable functions, so do not describe same-agent review as a separate invoked workflow. Use fresh-context or subagent review when it would add signal and the runtime exposes the needed tools.
+A standalone `build` processes exactly one selected or next pending task from
+the exact approved plan revision. It does not claim whole-build completion.
+Use upstream incremental implementation when its trigger conditions apply and
+always apply appropriate upstream TDD/verification.
 
-By default, process every pending task from the current plan in dependency order. If the user explicitly asks for only the next task or a specific task, process only that requested task.
+Before a focused commit, the root controller must save task evidence and obtain
+a passing fresh-context upstream code review against the canonical full spec,
+full plan, task evidence, relevant sources, diff, and verification results. The
+task then passes its downstream-impact gate: actionable findings are fixed and
+re-reviewed while material progress continues; repeated blocker, verification
+regression, no progress, or a user decision stops the loop. Only then create
+one commit per task.
 
-For each pending task:
+From the resolved plugin root, use the production
+`./scripts/mdf-controller.js build-task` operations for the gate. Pass JSON on
+stdin with resolved `--cwd` and `--plugin-root`:
 
-1. Read the task's acceptance criteria
-2. Load relevant context (existing code, patterns, types)
-3. Write a failing test for behavior changes, or define the task-specific verification first when the task is documentation or workflow-instruction only
-4. Implement the smallest change that satisfies the task
-5. Run task-relevant tests, build checks, lint/type checks, or manual instruction review
-6. Save or update a task-level `.mdf/work/{work_id}/build-NNN.md` artifact with `Task Acceptance Traceability`
-7. Save a separate task-scope `.mdf/work/{work_id}/review-NNN.md` artifact using `code-review-and-quality` in `task` scope against the plan acceptance criteria
-8. If the task review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
-9. Commit with a descriptive message only after the task build artifact and a passing task review artifact exist
-10. If the task changed design, architecture, contracts, workflow semantics, task boundaries, or shared acceptance assumptions, run a downstream impact check against remaining planned tasks and queued MDF task cards before moving on
-11. Classify downstream impact as unaffected, needs task log/context/criteria update, needs plan revision or linked superseding artifact, or needs user/replan decision before implementation; shared files alone are not hard dependencies and must not be converted into `depends_on`
-12. Mark the task complete and move to the next one only after required downstream impact updates or revisions are recorded, or stop if a user/replan decision is required
+- `select`: approved `plan_registration_file`, optional ready
+  `selected_task_id`, and the root `writer_id`; requires a clean baseline and
+  returns exactly one task attempt.
+- `verify`: `attempt_file`, a shell-free `command` argv array, and canonical
+  work-item `output_path`; the runtime executes it in the worktree and records
+  the actual exit code and output.
+- `impact`: `attempt_file`, an allowed downstream-impact `classification`, and
+  the raw `artifact_path`.
+- `authorize`: the attempt, passing `command_files`, exact fresh review output
+  and decision, task evidence, diff, downstream-impact decision, exact
+  `touched_paths`, and intended `commit_subject`. This must run before staging
+  or committing.
+- After authorization, stage only the returned task paths and create the one
+  focused commit. Then call `complete` with `authorization_file`; completion is
+  recorded only when runtime-computed parent, tree, subject, paths, and clean
+  status match the authorization.
 
-After all selected tasks complete, run a final whole-build verification:
+Never infer completion from prose, a review verdict alone, or the existence of
+a commit. A failed controller operation is a typed stop for the build loop.
 
-1. Run the full test suite where available
-2. Run build, typecheck, and lint commands where available
-3. Save a separate final whole-build `.mdf/work/{work_id}/build-NNN.md` artifact with `Whole-Build Spec Traceability`
-4. Save a separate whole-build `.mdf/work/{work_id}/review-NNN.md` artifact using `code-review-and-quality` in `whole-build` scope against the spec and plan
-5. If the whole-build review has blocking findings, save the blocking review artifact, fix the findings, rerun affected verification, update build evidence when needed, and save a later passing review artifact that references or clearly supersedes the blocking review
-6. If the plan contains any high-risk requirement, or build discovers a new high-risk semantic concern, run a mandatory high-risk independent review before claiming build completion
+Fresh review requires a capability-verified independent executor. If that is
+unavailable, use the permitted root escalation and record it; otherwise record
+the upstream-defined degraded status and block commit/advancement whenever
+genuine freshness is required. A generic subagent receives the exact selected
+upstream persona prompt, not a paraphrase.
 
-If any step fails, follow the `debugging-and-error-recovery` skill.
+## `build auto` and `build all`
 
-`build` may invoke test and review logic internally as quality gates, but `test` and `review` remain standalone workflows for independent verification, manual changes, debugging, PR preparation, and pre-ship checks. `ship` remains the final GO/NO-GO workflow.
+`build auto` and `build all` are public lifecycle modes. Route them to the
+flat root `auto-workflow` controller, which processes all approved plan tasks;
+do not reinterpret them as one standalone task. Preserve upstream autonomous
+behavior: clean baseline checks, known approved inputs, separate planning
+commit(s), task-only staging, one commit per task, resume semantics, and
+high-risk or irreversible-work sign-off stops.
 
-Subagent-assisted build or review may be used when fresh-context or parallel review would add signal and the runtime exposes the needed subagent tools.
+Before lifecycle execution, resolve approved spec/plan evidence and run
+`git status --porcelain`; stop for any unrelated dirt. If a promoted tracked
+planning artifact is uncommitted, create its preparatory planning commit before
+task work; canonical local `.mdf` artifacts remain evidence, not tracked
+planning files. Before each task, recheck a clean baseline, stage only the
+enumerated task-touched paths with `git add -- <paths>` (never `git add -A`),
+commit the one passed task, and resume only at the next canonical pending task.
 
-When subagent execution is unavailable or would not add signal, keep implementation, verification, task review, and whole-build review inline in this single `build` workflow.
+After all approved plan tasks pass, the lifecycle controller runs whole-build
+integration verification and a separate fresh-context upstream review. Whole
+build completion is calculated against all approved plan tasks, never merely
+the selected task.
 
-Task-level build artifacts must trace each task acceptance criterion and task-assigned high-risk semantic criterion to concrete evidence. The final whole-build artifact must compare the finished implementation back to the approved spec, not only to the possibly weakened plan text.
+## Recovery gate
 
-Embedded `Task-Scope Review`, `Whole-Build Review`, or similar sections inside `build-NNN.md` may exist only as summaries or links. They do not satisfy task, whole-build, or high-risk review gates. The gate is satisfied only by a separate `review-NNN.md` artifact for the relevant scope.
+On a failed verification or review, preserve the current failure and reproduce
+it before changing code. Execute exact upstream
+`../debugging-and-error-recovery/SKILL.md` with the test-engineer persona, then
+pass its provenance-bound semantic decision to production
+`./scripts/mdf-controller.js recovery`. The payload contains exact
+`failure_files`, a failing runtime `reproduction_file`, raw diagnosis output
+and decision, and the affected `attempt_file`.
 
-The high-risk independent review gate is required whenever high-risk requirements exist or are discovered. Run it after task-level build artifacts, task-level review artifacts, the final whole-build artifact, and whole-build review artifact have completed, but before `$mdf:build` claims completion. Scope it narrowly to high-risk semantic compliance: approved spec requirement text, plan classification and implementation meaning, task build artifact RED/GREEN/code-path evidence, final whole-build traceability, actual changed code paths, required scenarios, and negative scenarios. Save the result as a separate `.mdf/work/{work_id}/review-NNN.md` artifact.
+Only a reproducible, intent-preserving, reversible, bounded, task-owned repair
+that needs no human judgment may return `repair-task`. Use `build-task repair`
+with that `recovery_file`, then run the ordinary verification, fresh review,
+downstream impact, authorization, and focused commit gate. A repair completion
+invalidates the earlier whole-build baseline and requires the full whole-build
+matrix and review again.
 
-Prefer fresh-context or subagent independent review when it would add signal and the runtime exposes the needed tools. If fresh-context/subagent review is unavailable, do not skip the gate; run an inline standalone-like independent pass through `code-review-and-quality` and record `Freshness: standalone-like inline pass` or equivalent in the review artifact.
-
-When saving implementation notes or build evidence, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/build-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.build` and `.mdf/index.jsonl` after every saved build artifact. When saving review evidence, write `.mdf/work/{work_id}/review-NNN.md` and update `item.md` `latest.review` plus `.mdf/index.jsonl`. After a complete `$mdf:build` run, the latest build pointer should reference the final whole-build artifact and the latest review pointer should reference the last passing whole-build or high-risk review artifact, whichever is later.
-
-Before claiming `$mdf:build` completion, verify:
-
-- Every selected plan task has a task-level `build-NNN.md` artifact with `Task Acceptance Traceability`.
-- Every selected plan task has a separate passing task-scope `review-NNN.md` artifact.
-- The whole build has a final `build-NNN.md` artifact with `Whole-Build Spec Traceability`.
-- The whole build has a separate passing whole-build `review-NNN.md` artifact.
-- A separate high-risk `review-NNN.md` artifact exists and passes when high-risk requirements exist or are discovered.
-- Every blocking review artifact is preserved, affected verification was rerun after fixes, build evidence was updated when needed, and a later passing review artifact references or clearly supersedes the blocking review.
-- Downstream impact checks have been recorded for semantic changes that affect remaining planned tasks or queued MDF task cards.
-- `item.md` and `.mdf/index.jsonl` have current `latest.build` and `latest.review` pointers.
+Ambiguous, non-reproducible, intent/scope/trade-off changing, high-risk,
+irreversible, external, or human-decision cases stop. Repeating the same
+failure fingerprint at the same worktree progress marker stops as
+`no-progress`; a fingerprint is identity evidence, never repair permission.
+An intent-preserving `technical-revision` is handed to the spec controller's
+production revision path. Do not patch the old plan in place or reuse prior
+task, whole-build, simplification, review, ship, or PR evidence.

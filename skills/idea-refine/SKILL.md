@@ -5,8 +5,6 @@ description: Refines raw ideas into sharp, actionable concepts through structure
 
 # Idea Refine
 
-When saving idea one-pagers or refinement notes, use the MDF artifact storage rule in `../../references/artifact-storage-override.md` instead of any upstream default persistence rule: verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/idea-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.idea` plus `.mdf/index.jsonl`. Do not save this artifact to upstream tracked documentation paths by default.
-
 Refines raw ideas into sharp, actionable concepts worth building through structured divergent and convergent thinking.
 
 ## How It Works
@@ -31,7 +29,7 @@ bash skills/idea-refine/scripts/idea-refine.sh
 
 ## Output
 
-The final output is a markdown one-pager saved to `.mdf/work/{work_id}/idea-NNN.md` (after user confirmation), containing:
+The final output is a markdown one-pager saved to `docs/ideas/[idea-name].md` (after user confirmation), containing:
 - Problem Statement
 - Recommended Direction
 - Key Assumptions
@@ -139,7 +137,7 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 **The "Not Doing" list is arguably the most valuable part.** Focus is about saying no to good ideas. Make the trade-offs explicit.
 
-Ask the user if they'd like to save this to the current MDF work item as `.mdf/work/{work_id}/idea-NNN.md`. Only save if they confirm.
+Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
 
 ### Anti-patterns to Avoid
 

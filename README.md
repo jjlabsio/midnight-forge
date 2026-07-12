@@ -1,6 +1,9 @@
 # Midnight Forge
 
-Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It combines local MDF task workflows with a generated skill surface built from vendored `agent-skills` plus MDF overlays.
+Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It keeps
+agent-skills workflow primitives byte-identical to their pinned upstream source
+and adds MDF-only controllers for canonical task artifacts and Codex runtime
+orchestration.
 
 ## Scope
 
@@ -55,13 +58,20 @@ Midnight Forge commits complete generated runtime files so Codex can read ordina
 
 ```text
 vendor/agent-skills/          # pinned upstream source
-overlays/mdf/                 # MDF overlay inputs
+overlays/mdf/                 # MDF controller and packaging inputs
 overlays/mdf/release-metadata.json
 scripts/sync-agent-skills.js  # generated surface renderer
 skills/ references/ agents/   # generated runtime surface
 ```
 
 See [docs/architecture/agent-skills-overlay-system.md](docs/architecture/agent-skills-overlay-system.md) for the full overlay model.
+
+Public skill files are thin entrypoints over a production controller runtime in
+`scripts/controller-runtime/`. That runtime binds lifecycle decisions to exact
+canonical artifacts and current Git evidence while preserving upstream workflow
+behavior and raw results. The architecture document is the source of truth for
+the controller responsibility boundary, sidecar trust boundary, and MDF's
+intentional automation and same-task simplification exceptions.
 
 ## Work Items
 
@@ -92,4 +102,6 @@ Run the generated surface checks before PRs:
 node scripts/sync-agent-skills.js --dry-run
 node scripts/validate-agent-skills-sync.js
 node scripts/validate-agent-skills-port.js
+node scripts/validate-mdf-controller-runtime.js
+node scripts/validate-mdf-task-state-cli.js
 ```

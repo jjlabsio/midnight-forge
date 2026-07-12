@@ -5,8 +5,6 @@ description: Prepares production launches. Use when preparing to deploy to produ
 
 # Shipping and Launch
 
-When saving launch readiness notes, GO/NO-GO decisions, or rollback plans, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/ship-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.ship` plus `.mdf/index.jsonl`.
-
 ## Overview
 
 Ship with confidence. The goal is not just to deploy — it's to deploy safely, with monitoring in place, a rollback plan ready, and a clear understanding of what success looks like. Every launch should be reversible, observable, and incremental.
@@ -72,8 +70,7 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 
 - [ ] README updated with any new setup requirements
 - [ ] API documentation current
-- [ ] Durable decision records written for any architectural, product, migration, or launch decisions that project policy requires
-- [ ] Tracked docs placement follows the discovered project docs rules, using a fresh high-confidence `.mdf/project/docs-profile.*` cache only as an interpretation cache
+- [ ] ADRs written for any architectural decisions
 - [ ] Changelog updated
 - [ ] User-facing documentation updated (if applicable)
 

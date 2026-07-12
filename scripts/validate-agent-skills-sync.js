@@ -12,6 +12,7 @@ const overlayRoot = path.join(root, "overlays", "mdf");
 const inventoryPath = path.join(overlayRoot, "inventory.json");
 const lockPath = path.join(root, "vendor", "agent-skills.lock.json");
 const releaseMetadataPath = path.join(overlayRoot, "release-metadata.json");
+const rendererPath = path.join(root, "scripts", "sync-agent-skills.js");
 const failures = [];
 
 function readJson(filePath) {
@@ -54,11 +55,7 @@ function walk(relativePath) {
 }
 
 function overlayKind(entry) {
-  if (entry.overlayKind) return entry.overlayKind;
-  if (!entry.source && entry.overlay) return "mdfOnly";
-  if (entry.classification === "mdf-rename-or-adapter") return "renameAdapter";
-  if (entry.source && entry.overlay) return "replacement";
-  return "copy";
+  return entry.overlayKind || "copy";
 }
 
 function formatMode(mode) {
@@ -75,7 +72,7 @@ function expectedMode(entry, kind) {
     return null;
   }
 
-  if (["mdfOnly", "replacement", "renameAdapter"].includes(kind)) {
+  if (kind === "mdfOnly" || kind === "renameAdapter") {
     if (!entry.overlay) return null;
     const overlayPath = path.resolve(overlayRoot, entry.overlay);
     if (!exists(overlayPath)) return null;
@@ -86,36 +83,6 @@ function expectedMode(entry, kind) {
   const sourcePath = path.resolve(vendorRoot, entry.source);
   if (!exists(sourcePath)) return null;
   return fs.statSync(sourcePath).mode & 0o777;
-}
-
-function stripFrontmatter(content) {
-  if (!content.startsWith("---\n")) return content;
-  const end = content.indexOf("\n---\n", 4);
-  if (end === -1) return content;
-  return content.slice(end + "\n---\n".length);
-}
-
-function validateArtifactStoragePlacement(entry, generated) {
-  const body = stripFrontmatter(generated);
-  const lines = body.split(/\r?\n/);
-  const h1Index = lines.findIndex((line) => /^# [^#]/.test(line));
-  assert(h1Index !== -1, `${entry.output} artifact storage injection requires a first H1 after frontmatter`);
-
-  const marker = "MDF artifact storage rule";
-  const markerLines = [];
-  lines.forEach((line, index) => {
-    if (line.includes(marker)) markerLines.push(index);
-  });
-  assert(markerLines.length === 1, `${entry.output} artifact storage policy must appear exactly once; found ${markerLines.length}`);
-  if (h1Index === -1 || markerLines.length !== 1) return;
-
-  const markerIndex = markerLines[0];
-  const firstH2Index = lines.findIndex((line) => /^## [^#]/.test(line));
-  assert(markerIndex > h1Index, `${entry.output} artifact storage policy must render after the first H1`);
-  assert(firstH2Index === -1 || markerIndex < firstH2Index, `${entry.output} artifact storage policy must render before the first H2`);
-
-  const firstContentAfterH1 = lines.findIndex((line, index) => index > h1Index && line.trim() !== "");
-  assert(firstContentAfterH1 === markerIndex, `${entry.output} artifact storage policy must be the first content after the first H1`);
 }
 
 function lineNumberAt(content, index) {
@@ -156,11 +123,8 @@ const warnings = [];
 const supportedOverlayKinds = new Set(inventory.overlayV2?.supportedKinds || []);
 const allowedClassifications = new Set([
   "upstream-identical",
-  "artifact-storage-only",
-  "mdf-overlay-required",
   "mdf-rename-or-adapter",
   "mdf-only",
-  "upstream-drift-preserved",
 ]);
 
 assert(inventory.schemaVersion === 2, "Inventory schemaVersion must be 2 for overlay v2.");
@@ -180,14 +144,18 @@ for (const [entryFile, count] of entryFileCounts) {
   assert(count === 1, `${entryFile} appears ${count} times in generated.entryFiles`);
 }
 assert(exists(releaseMetadataPath), "Missing overlays/mdf/release-metadata.json.");
+const rendererSource = readText(rendererPath);
+for (const removedHelper of ["artifactStorageParagraph", "applyExactPatches", "applyPolicyInjection"]) {
+  assert(!rendererSource.includes(removedHelper), `Renderer still implements removed transform helper ${removedHelper}`);
+}
 assert(/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(releaseMetadata.version), "Release metadata version must be semver.");
 assert(releaseMetadata.marketplaceRef === `v${releaseMetadata.version}`, "Release metadata marketplaceRef must match v{version}.");
-for (const kind of ["copy", "mdfOnly", "fragment", "patch", "replacement", "renameAdapter"]) {
+for (const kind of ["copy", "mdfOnly", "renameAdapter"]) {
   assert(supportedOverlayKinds.has(kind), `Overlay v2 must support ${kind}.`);
 }
 assert(lock.repository === inventory.upstream.repository, "Vendor lock repository must match inventory.");
 assert(lock.commit === inventory.upstream.commit, "Vendor lock commit must match inventory.");
-assert(exists(path.join(overlayRoot, "references", "artifact-storage-override.md")), "Missing common MDF artifact storage override.");
+assert(exists(path.join(overlayRoot, "replacements", "references", "agent-skills-port-notes.md")), "Missing MDF controller runtime policy.");
 for (const entry of entries) {
   outputCounts.set(entry.output, (outputCounts.get(entry.output) || 0) + 1);
 }
@@ -207,6 +175,9 @@ for (const entry of entries) {
   assert(supportedOverlayKinds.has(kind), `${entry.output} has unsupported overlayKind ${kind}`);
   assert(allowedClassifications.has(entry.classification), `${entry.output} has unsupported classification ${entry.classification}`);
   assert(entry.classification !== "manual-review-required", `${entry.output} still requires manual review`);
+  assert(!entry.policyInjection, `${entry.output} cannot inject MDF policy into a generated surface`);
+  assert(!entry.exactPatches || entry.exactPatches.length === 0, `${entry.output} cannot patch a generated surface`);
+  assert(kind !== "fragment" && kind !== "patch" && kind !== "replacement", `${entry.output} uses a disallowed semantic overlay kind`);
 
   if (entry.source) {
     const sourcePath = path.resolve(vendorRoot, entry.source);
@@ -239,45 +210,6 @@ for (const entry of entries) {
       }
       assert(node === releaseMetadata[mapping.value], `${entry.output} release metadata ${mapping.path.join(".")} must match overlays/mdf/release-metadata.json ${mapping.value}`);
     }
-  }
-  if (entry.classification === "artifact-storage-only") {
-    assert(entry.artifactStorageOverride === true, `${entry.output} must point at the common artifact storage override`);
-    assert(kind === "fragment" || kind === "patch", `${entry.output} artifact storage entry must use fragment or patch overlay v2`);
-    assert(!entry.overlay, `${entry.output} artifact storage entry must not use a full replacement overlay`);
-    assert(entry.policyInjection, `${entry.output} artifact storage entry must declare a policy injection`);
-    if (exists(path.join(root, entry.output))) {
-      const generated = readText(path.join(root, entry.output));
-      validateArtifactStoragePlacement(entry, generated);
-      for (const forbidden of [/`docs\//, /\bdocs\/[A-Za-z0-9._/-]+/, /`SPEC\.md`/, /`tasks\/plan\.md`/, /`tasks\/todo\.md`/]) {
-        assert(!forbidden.test(generated), `${entry.output} retains an upstream tracked artifact storage path matching ${forbidden}`);
-      }
-    }
-  }
-  if (kind === "fragment") {
-    assert(entry.source, `${entry.output} fragment overlay must have a source`);
-    assert(entry.policyInjection?.anchor, `${entry.output} fragment overlay must have an anchor`);
-    if (entry.source && entry.policyInjection?.anchor && exists(path.join(vendorRoot, entry.source))) {
-      const source = readText(path.join(vendorRoot, entry.source));
-      const matches = source.split(entry.policyInjection.anchor).length - 1;
-      assert(matches === 1, `${entry.output} fragment anchor must occur exactly once; found ${matches}`);
-      if (entry.policyInjection.anchorSha256) {
-        assert(sha256(entry.policyInjection.anchor) === entry.policyInjection.anchorSha256, `${entry.output} fragment anchor hash is stale`);
-      }
-    }
-  }
-  for (const patch of entry.exactPatches || []) {
-    assert(kind === "fragment" || kind === "patch", `${entry.output} exact patch is only allowed on fragment or patch entries`);
-    assert(patch.id && patch.search && patch.replace, `${entry.output} exact patch is missing id/search/replace`);
-    if (entry.source && exists(path.join(vendorRoot, entry.source))) {
-      const source = readText(path.join(vendorRoot, entry.source));
-      const matches = source.split(patch.search).length - 1;
-      assert(matches === 1, `${entry.output} exact patch ${patch.id} must match once; found ${matches}`);
-    }
-  }
-  if (kind === "replacement" && entry.source) {
-    assert(entry.baseSha256, `${entry.output} replacement must declare baseSha256`);
-    assert(entry.replacementRationale, `${entry.output} replacement must declare replacementRationale`);
-    assert(entry.reviewRisk, `${entry.output} replacement must declare reviewRisk`);
   }
   if (kind === "renameAdapter") {
     assert(entry.source && entry.overlay, `${entry.output} renameAdapter must declare source and overlay`);
@@ -325,11 +257,17 @@ function isExternalUrlPath(content, index) {
   return content.slice(tokenStart, index).includes("://");
 }
 
+const entryByOutput = new Map(entries.map((entry) => [entry.output, entry]));
 for (const output of generatedMarkdown) {
   const outputPath = path.join(root, output);
   if (!exists(outputPath)) continue;
   const content = readText(outputPath);
-  warnRuntimeRootReferences(output, content);
+  // Exact upstream primitives retain their original prose. Their installed
+  // plugin-root resolution is an MDF controller concern, not a reason to patch
+  // the primitive or emit a false portability warning.
+  if (entryByOutput.get(output)?.classification !== "upstream-identical") {
+    warnRuntimeRootReferences(output, content);
+  }
   for (const match of content.matchAll(referencedPathPattern)) {
     if (isExternalUrlPath(content, match.index)) continue;
     const referenced = match[0].replace(/[).,;:]+$/, "");
@@ -343,9 +281,12 @@ for (const output of generatedMarkdown) {
 }
 
 const useMdf = entries.find((entry) => entry.output === "skills/use-mdf/SKILL.md");
-assert(useMdf?.source === "skills/using-agent-skills/SKILL.md", "use-mdf must explicitly adapt upstream using-agent-skills.");
-assert(useMdf?.classification === "mdf-rename-or-adapter", "use-mdf must use mdf-rename-or-adapter classification.");
-assert(overlayKind(useMdf || {}) === "renameAdapter", "use-mdf must use renameAdapter overlayKind.");
+assert(useMdf?.classification === "mdf-only", "use-mdf must be an independent MDF-only routing controller.");
+assert(overlayKind(useMdf || {}) === "mdfOnly", "use-mdf must use mdfOnly overlayKind.");
+assert(!useMdf?.source, "use-mdf must not claim an upstream source.");
+assert(!useMdf?.baseSha256, "use-mdf must not claim an upstream source hash.");
+const usingAgentSkills = entries.find((entry) => entry.output === "skills/using-agent-skills/SKILL.md");
+assert(usingAgentSkills?.classification === "upstream-identical", "using-agent-skills must remain an exact upstream primitive.");
 
 const manual = entries.filter((entry) => entry.classification === "manual-review-required");
 assert(manual.length === 0, `Manual review entries remain: ${manual.map((entry) => entry.output).join(", ")}`);

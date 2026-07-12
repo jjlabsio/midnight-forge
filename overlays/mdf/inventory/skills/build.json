@@ -7,6 +7,6 @@
   "notes": "MDF adapts the upstream build command into a Codex-native entrypoint skill.",
   "baseSha256": "e25857cf424905bceea7f1250903eb801a8e79ed62ec67c2fd4d785969e47e62",
   "overlayKind": "renameAdapter",
-  "adapterRationale": "The upstream command is converted from a command prompt into an MDF skill with task artifact, review gate, high-risk review, and MDF workflow-state semantics.",
+  "adapterRationale": "The upstream command is converted into an MDF controller that owns canonical artifacts and task orchestration while delegating workflow, TDD, review, and risk semantics to exact upstream primitives.",
   "reviewRisk": "Full adapter replacement can hide upstream build command changes; validation pins the upstream command hash and requires explicit review when it changes."
 }

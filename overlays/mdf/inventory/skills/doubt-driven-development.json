@@ -1,18 +1,1 @@
-{
-  "output": "skills/doubt-driven-development/SKILL.md",
-  "source": "skills/doubt-driven-development/SKILL.md",
-  "classification": "mdf-overlay-required",
-  "overlay": null,
-  "artifactStorageOverride": false,
-  "notes": "MDF redirects saved doubt cycle reports, adversarial findings, and reconciliation notes into current work item artifact storage.",
-  "baseSha256": "59aef769adeae40aad67a1d54474aaf914ea7ecdfc2a4752a54840a8d29f80de",
-  "overlayKind": "patch",
-  "exactPatches": [
-    {
-      "id": "mdf-doubt-artifact-storage",
-      "search": "# Doubt-Driven Development\n\n## Overview",
-      "replace": "# Doubt-Driven Development\n\nWhen saving doubt cycle reports, adversarial findings, or reconciliation notes, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/doubt-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Repeated saves create new revisions and update `item.md` `latest.doubt` plus `.mdf/index.jsonl`.\n\n## Overview"
-    }
-  ],
-  "normalizedDifferences": "Rendered from the pinned upstream source with only MDF doubt artifact storage guidance inserted. Previous subagent authorization restrictions are intentionally normalized back to upstream so fresh-context review remains available from the main-session orchestrator."
-}
+{"output":"skills/doubt-driven-development/SKILL.md","source":"skills/doubt-driven-development/SKILL.md","classification":"upstream-identical","overlayKind":"copy"}

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Restore protected agent-skills workflows, personas, documentation, and
+  security references as byte-identical pinned upstream copies.
+- Move MDF lifecycle, approval, executor, and artifact policy into thin Codex
+  controllers with contract validation.
+- Add a production, evidence-bound automatic lifecycle from approved spec and
+  plan through task gates, whole-build recovery, same-task simplification,
+  standalone review, ship, and a guarded handoff to the existing PR workflow.
+
 ## v1.1.1 - 2026-07-10
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.1.0...v1.1.1)

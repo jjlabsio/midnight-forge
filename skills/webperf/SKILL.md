@@ -5,7 +5,9 @@ description: "Use when the user invokes webperf, mdf webperf, or asks for a web 
 
 # webperf
 
-Use this Codex-native entrypoint when the user invokes `webperf`, `mdf webperf`, `$webperf`, or asks for a web performance audit.
+Resolve the installed plugin root before loading paths. Use this Codex-native
+entrypoint when the user invokes `webperf`, `mdf webperf`, `$webperf`, or asks
+for a web performance audit.
 
 `webperf` targets web applications specifically. Do not use it for utility libraries, CLIs, or server-only code with no browser-facing output.
 
@@ -24,7 +26,10 @@ Use this Codex-native entrypoint when the user invokes `webperf`, `mdf webperf`,
 
 ## Run the audit
 
-Spawn the `web-performance-auditor` subagent. Pass it explicitly:
+From the plugin root, load the exact upstream `agents/web-performance-auditor.md` persona prompt.
+A generic subagent receives that exact selected persona prompt.
+Select it only when capability can be verified; otherwise use root fallback or
+report degraded status honestly. Pass it explicitly:
 
 - The files, components, or diff under review
 - Any artifact paths, such as Lighthouse JSON, PSI JSON, CrUX response, trace, or pasted JSON content

@@ -5,23 +5,37 @@ description: "Use when the user invokes code-simplify, mdf code-simplify, or ask
 
 # code-simplify
 
-Use this Codex-native entrypoint when the user invokes `code-simplify`, `mdf code-simplify`, `$code-simplify`, or asks to simplify recently changed code.
+Resolve the installed plugin root, load the exact upstream
+`../code-simplification/SKILL.md`, and preserve its workflow. Read `AGENTS.md`
+and the established project conventions before changing code. Simplify only the
+requested scope, apply changes incrementally with upstream verification, then
+use the exact upstream `../code-review-and-quality/SKILL.md` for review.
 
-Invoke the `code-simplification` skill.
+In the lifecycle, simplification starts only from the current stable
+whole-build decision. From the resolved plugin root, call production
+`./scripts/mdf-controller.js simplify scope`; the runtime derives eligible
+production paths from lifecycle-linked task/refactor commits and excludes
+tests, vendor, generated surfaces, and public workflow contracts. Run the exact
+upstream simplification primitive against the returned scope, preserving its
+raw report, and call `simplify register` with the exact decision.
 
-Simplify recently changed code (or the specified scope) while preserving exact behavior:
+For each accepted behavior-preserving candidate, call `simplify select`, then
+use the ordinary build-task verification, fresh review, downstream-impact,
+authorization, and focused commit gate. Only candidate paths may change and
+the commit subject must start `refactor:`. The resulting tree returns to full
+whole-build verification/review before simplification or later phases proceed.
 
-1. Read CLAUDE.md and study project conventions
-2. Identify the target code — recent changes unless a broader scope is specified
-3. Understand the code's purpose, callers, edge cases, and test coverage before touching it
-4. Scan for simplification opportunities:
-   - Deep nesting → guard clauses or extracted helpers
-   - Long functions → split by responsibility
-   - Nested ternaries → if/else or switch
-   - Generic names → descriptive names
-   - Duplicated logic → shared functions
-   - Dead code → remove after confirming
-5. Apply each simplification incrementally — run tests after each change
-6. Verify all tests pass, the build succeeds, and the diff is clean
+If there is no accepted change (including rejected candidates), restore and
+verify the exact prior clean baseline and call `simplify no-change`. The
+runtime reuses the passing whole-build review only when it is bound to that
+exact unchanged HEAD; it does not request a duplicate standalone review. Do
+not retain a failed candidate diff, modify tests to make a refactor pass, or
+simplify vendor/generated/public-contract surfaces.
 
-If tests fail after a simplification, revert that change and reconsider. Use `code-review-and-quality` to review the result.
+If an accepted candidate later fails verification or fresh review, call
+`simplify reject` while the failure snapshot is still current, using the exact
+attempt, failure sidecars, raw rejection report, and semantic decision. Restore
+the candidate path to the returned prior HEAD without discarding unrelated
+work, then call `simplify rejected`; it succeeds only on the exact clean prior
+baseline. Then call `simplify no-change`; the rejected candidate never changes
+the reviewed baseline tree.

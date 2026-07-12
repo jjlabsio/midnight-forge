@@ -5,137 +5,9 @@ description: Records decisions and documentation. Use when making architectural 
 
 # Documentation and ADRs
 
-When saving local decision notes or ADR-style workflow artifacts, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/decision-NNN.md` by default. If init state is missing, stop and instruct the user to run `mdf init`. Only promote a decision into tracked project docs when the user explicitly asks or project policy requires a durable reviewed document.
-
-Before writing tracked project docs, discover the project's docs rules and taxonomy. Existing tracked docs policy files and structure are the source of truth; MDF defaults apply only when no stronger project convention exists.
-
 ## Overview
 
 Document decisions, not just code. The most valuable documentation captures the *why* — the context, constraints, and trade-offs that led to a decision. Code shows *what* was built; documentation explains *why it was built this way* and *what alternatives were considered*. This context is essential for future humans and agents working in the codebase.
-
-## Durable Tracked Docs Placement
-
-Tracked project docs are durable shared documentation that will be committed to the repository. Local MDF artifacts under `.mdf/work/{work_id}/` remain the default for workflow notes, draft decisions, specs, plans, reviews, and ship evidence.
-
-Before writing or updating tracked project docs:
-
-1. Resolve the canonical project root. If running under `<canonical-root>/.worktrees/<branch>`, use `<canonical-root>` for docs discovery and `.mdf` state.
-2. Read likely docs policy files when present: `docs/AGENTS.md`, `docs/CLAUDE.md`, `AGENTS.md`, `CLAUDE.md`, `docs/index.md`, and root `README.md`.
-3. Inspect existing docs taxonomy, especially `docs/index.md`, area indexes, existing `docs/product/`, `docs/architecture/`, `docs/decisions/`, `docs/operations/`, feature/system-local `spec.md` and `decisions.md`, and any project-specific decision templates.
-4. Prefer the project's existing convention over MDF defaults.
-5. If multiple tracked-doc destinations are plausible, or confidence is not high, stop before writing tracked docs and ask which convention to follow.
-
-For monorepos with no stronger existing convention, durable project-wide architecture, product, migration, and operations decisions default to the canonical root `docs/`, not `apps/*/docs` or `packages/*/docs`. App/package-local docs are appropriate only when the existing project convention clearly scopes that documentation to a local feature, package, or system boundary.
-
-When no equivalent project docs convention exists, MDF's basic docs structure is:
-
-```text
-docs/index.md
-docs/product/index.md
-docs/product/product-brief.md
-docs/architecture/index.md
-docs/decisions/index.md
-docs/operations/index.md
-```
-
-Use `index.md` files for this structure. Do not create placeholder `README.md` files for these docs areas when the files are only standing in until real docs are written.
-
-Use `docs/product/product-brief.md` as the lightweight default product context document for startup, solo-founder, and product-led projects. It should capture what the product is, who it serves, the core problem, current scope, non-goals, key workflows, success signals, constraints, and open assumptions. Do not require `docs/product/service-definition.md` by default; reserve it as an optional extension for service-heavy, platform-oriented, B2B/enterprise, or operationally mature projects where ownership, interfaces, dependencies, support boundaries, or SLO/SLA expectations are central to implementation decisions.
-
-When creating the fallback product brief, use this section outline unless the project already has a stronger product-doc template:
-
-```markdown
-# Product Brief
-
-## One-Liner
-## Current Stage
-## Target Users
-## Problem
-## Promise
-## Core Use Case
-## Current Scope
-## Out Of Scope
-## Key Workflows
-## Success Signals
-## Differentiation
-## Constraints
-## Open Questions
-## Related Docs
-```
-
-If the project already has equivalent product, architecture, decisions, or operations docs, preserve those paths instead of creating duplicate MDF fallback directories. Record the equivalents in `.mdf/project/docs-profile.*` after project init exists, but continue treating tracked docs policy files and the tracked docs tree as the source of truth.
-
-When MDF must apply a fallback decision convention, use root-level `docs/decisions/` organized by area or design unit:
-
-```text
-docs/decisions/<area-or-design-unit>/<decision-slug>.md
-```
-
-Avoid date-only filenames, a single global numbered ADR sequence, or placing durable decisions solely near the implementation file unless the project already uses that convention.
-
-When adding, moving, or deleting tracked docs under the basic docs structure, update `docs/index.md` and the relevant area `index.md` in the same change. If the project uses an equivalent structure, update its equivalent root and area indexes instead.
-
-### Docs Profile Cache
-
-To avoid rediscovering the same docs structure on every run, maintain a project-local docs profile cache under the canonical project root:
-
-```text
-<canonical-root>/.mdf/project/docs-profile.json
-<canonical-root>/.mdf/project/docs-profile.md
-```
-
-Do not create this cache inside linked worktrees. Do not store it as primary state under `~/.mdf`; the global `~/.mdf/projects.json` registry remains only a thin project index. Before writing `.mdf/project/docs-profile.*`, verify MDF user and project init state. If init is missing, stop and instruct the user to run `mdf init`.
-
-The docs profile cache is an interpretation cache, not the source of truth. Tracked docs policy files and the tracked docs tree remain authoritative. Use the cache only when it is fresh and high-confidence.
-
-The JSON profile should record enough evidence for future agents to trust or invalidate it:
-
-```json
-{
-  "version": 1,
-  "canonical_root": "/absolute/project/root",
-  "generated_at": "2026-06-07T00:00:00Z",
-  "source_files": [
-    {
-      "path": "docs/index.md",
-      "sha256": "hex",
-      "mtime": "2026-06-07T00:00:00Z"
-    }
-  ],
-  "known_absent_source_files": [
-    "docs/AGENTS.md",
-    "docs/CLAUDE.md"
-  ],
-  "detected_taxonomy": {
-    "docs_root": "docs",
-    "product": "docs/product",
-    "architecture": "docs/architecture",
-    "decisions": "docs/decisions",
-    "operations": "docs/operations"
-  },
-  "equivalent_paths": {
-    "product": null,
-    "architecture": null,
-    "decisions": null,
-    "operations": null,
-    "agent_rules": null
-  },
-  "decision_placement": {
-    "default": "docs/decisions/<area-or-design-unit>/<decision-slug>.md",
-    "monorepo_scope": "canonical-root-docs",
-    "preserve_existing_feature_or_system_local_decisions": true
-  },
-  "index_update_rules": [
-    "Update docs/index.md when adding, moving, or deleting tracked docs under the basic docs structure.",
-    "Update the relevant area index.md when adding, moving, or deleting tracked docs under docs/product, docs/architecture, docs/decisions, or docs/operations.",
-    "Use equivalent project indexes instead when the tracked docs tree has a stronger existing convention."
-  ],
-  "confidence": "high",
-  "ambiguities": []
-}
-```
-
-Invalidate or rescan the profile when any recorded source file changes by hash or mtime, when a likely docs policy/index file appears or disappears, when a previously absent source file now exists, or when existing decision docs indicate a different convention than the cached profile. If the cache is missing, stale, low-confidence, or ambiguous, rescan before using it. If rescanning still leaves more than one plausible destination, stop before tracked writes and ask the user.
 
 ## When to Use
 
@@ -148,9 +20,9 @@ Invalidate or rescan the profile when any recorded source file changes by hash o
 
 **When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.
 
-## Decision Records and ADRs
+## Architecture Decision Records (ADRs)
 
-Decision records and ADRs capture the reasoning behind significant technical and product decisions. They're the highest-value documentation you can write.
+ADRs capture the reasoning behind significant technical decisions. They're the highest-value documentation you can write.
 
 ### When to Write an ADR
 
@@ -161,15 +33,15 @@ Decision records and ADRs capture the reasoning behind significant technical and
 - Choosing between build tools, hosting platforms, or infrastructure
 - Any decision that would be expensive to reverse
 
-### Decision Record Template
+### ADR Template
 
-Use the project's discovered decision convention. If MDF fallback rules apply, store decisions under `docs/decisions/<area-or-design-unit>/<decision-slug>.md`:
+Store ADRs in `docs/decisions/` with sequential numbering:
 
 ```markdown
-# Use PostgreSQL for primary database
+# ADR-001: Use PostgreSQL for primary database
 
 ## Status
-Accepted | Superseded | Deprecated
+Accepted | Superseded by ADR-XXX | Deprecated
 
 ## Date
 2025-01-15
@@ -208,14 +80,14 @@ Use PostgreSQL with Prisma ORM.
 - Hosting on managed service (Supabase, Neon, or RDS)
 ```
 
-### Decision Record Lifecycle
+### ADR Lifecycle
 
 ```
 PROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)
 ```
 
-- **Don't delete old decision records.** They capture historical context.
-- When a decision changes, write a new decision record that references and supersedes the old one according to the project's discovered convention.
+- **Don't delete old ADRs.** They capture historical context.
+- When a decision changes, write a new ADR that references and supersedes the old one.
 
 ## Inline Documentation
 
@@ -340,7 +212,7 @@ One-paragraph description of what this project does.
 
 ## Architecture
 Brief overview of the project structure and key design decisions.
-Link to decision records for details.
+Link to ADRs for details.
 
 ## Contributing
 How to contribute, coding standards, PR process.
@@ -371,7 +243,7 @@ Special consideration for AI agent context:
 
 - **CLAUDE.md / rules files** — Document project conventions so agents follow them
 - **Spec files** — Keep specs updated so agents build the right thing
-- **Decision records** — Help agents understand why past decisions were made (prevents re-deciding)
+- **ADRs** — Help agents understand why past decisions were made (prevents re-deciding)
 - **Inline gotchas** — Prevent agents from falling into known traps
 
 ## Common Rationalizations
@@ -381,7 +253,7 @@ Special consideration for AI agent context:
 | "The code is self-documenting" | Code shows what. It doesn't show why, what alternatives were rejected, or what constraints apply. |
 | "We'll write docs when the API stabilizes" | APIs stabilize faster when you document them. The doc is the first test of the design. |
 | "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
-| "Decision records are overhead" | A 10-minute decision record prevents a 2-hour debate about the same decision six months later. |
+| "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
 | "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
 
 ## Red Flags
@@ -391,14 +263,14 @@ Special consideration for AI agent context:
 - README that doesn't explain how to run the project
 - Commented-out code instead of deletion
 - TODO comments that have been there for weeks
-- No decision records in a project with significant architectural choices
+- No ADRs in a project with significant architectural choices
 - Documentation that restates the code instead of explaining intent
 
 ## Verification
 
 After documenting:
 
-- [ ] Decision records exist for all significant architectural decisions required by project policy
+- [ ] ADRs exist for all significant architectural decisions
 - [ ] README covers quick start, commands, and architecture overview
 - [ ] API functions have parameter and return type documentation
 - [ ] Known gotchas are documented inline where they matter

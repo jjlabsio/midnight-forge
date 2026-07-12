@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by the controller-boundary restoration in task 0032.
 
 ## Date
 
@@ -14,17 +14,17 @@ Many upstream skills create workflow artifacts. In MDF, workflow artifacts shoul
 
 ## Decision
 
-For artifact-storage-only skills, render from pinned upstream source and replace upstream artifact persistence instructions with the MDF artifact storage rule. Use overlay v2 `fragment` entries with explicit anchors and exact patches where upstream text names a tracked path.
-
-Artifact-storage-only generated skills must not retain upstream tracked storage paths such as `docs/`, `SPEC.md`, `tasks/plan.md`, or `tasks/todo.md`.
+The prior artifact-storage injection model modified upstream workflow content.
+Task 0032 supersedes it: protected upstream primitives are byte-identical and
+MDF controllers own canonical artifact storage and lifecycle adaptation.
 
 ## Alternatives Considered
 
-### Full-file replacements
+### Controller-bound adaptation
 
-- Pros: Easy to express current behavior.
-- Cons: Repeats whole upstream files and hides upstream improvements.
-- Rejected for artifact-storage-only skills because the change is narrow.
+- Pros: keeps upstream primitives byte-identical and localizes runtime policy.
+- Cons: controllers must carry explicit artifact and approval contracts.
+- Accepted by task 0032; this supersedes the former narrow-patch approach.
 
 ### Add MDF storage instructions without removing upstream storage instructions
 
@@ -34,7 +34,7 @@ Artifact-storage-only generated skills must not retain upstream tracked storage 
 
 ## Consequences
 
-- `api-and-interface-design` receives an MDF contract storage rule even though upstream has no tracked storage path to remove.
-- `idea-refine` and `interview-me` replace their upstream `docs/...` persistence text with `.mdf/work/{work_id}/...` paths.
-- Validation fails if artifact-storage-only generated files keep tracked storage paths.
-- Future tracked docs behavior must be modeled as a separate explicit overlay or MDF-native workflow rule.
+- Existing artifact storage is resolved by the controller that invokes the
+  upstream primitive.
+- Validation rejects semantic patches and source-backed replacements for the
+  protected upstream matrix.

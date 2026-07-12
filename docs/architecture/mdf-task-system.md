@@ -58,21 +58,51 @@ Standalone `$task work <id>` briefs the task and stops. A same user message can 
 
 ## Workflow Model
 
-The normal MDF workflow is:
+The automatic MDF workflow is:
 
 ```text
-spec -> plan -> build -> review -> ship
+spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-pr
 ```
 
-`spec`, `plan`, and `build` use inline loops by default. `test` and `review` are still standalone quality tools for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+`spec`, `plan`, and `review` are standalone one-phase workflows. A standalone
+`build` processes exactly one selected or next pending approved plan task.
+`build auto` and `build all` are routed to the flat root lifecycle controller,
+which processes every approved plan task and preserves clean-baseline,
+task-only-staging, focused-commit, resume, and upstream sign-off rules.
 
-`auto-workflow` delegates each phase and stops when a delegated phase needs a real decision, returns a blocking question, cannot complete its gate, returns NO-GO, or hits a git/PR ambiguity. Prompts classified as review checkpoint only or artifact saved confirmation can be auto-proceeded only after the required artifact exists, the blocker-oriented review loop has passed, and no planning-blocking question remains.
+`auto-workflow` stops after spec and plan until the user explicitly approves the
+exact canonical artifact revision/hash. Revisions invalidate approval. It is
+the single writer and root-only synthesizer; persona or generic-subagent work is
+bounded reporting, selected by verified capability with an honest root fallback.
 
-High-risk work has heavier gates by design. During planning, every approved SPEC requirement is classified as `normal` or `high-risk` by semantic judgment. During build, task artifacts include Task Acceptance Traceability and final build artifacts include Whole-Build Spec Traceability. When a plan contains high-risk requirements, build must pass a mandatory high-risk independent review before claiming completion.
+Typed human-decision stops preserve their append-only evidence. Once the user
+resolves a resumable stop, the root calls `mdf-controller lifecycle resume`,
+which returns to the same phase and re-enters that phase's normal gate. It does
+not permit a phase jump or a blind retry of stale or malformed state.
 
-Subagent-assisted evaluator, build, or review modes require both explicit current-user authorization and runtime tool availability.
+Every task uses applicable upstream TDD/verification and then a fresh-context
+upstream review of the full canonical context. Actionable findings are fixed and
+re-reviewed while progress is material; repeated blockers, regressions,
+no-progress, or required user judgment stop the loop. Whole-build verification
+and review occur only after every task in the approved plan revision completes.
 
-Example: if a spec requires a continued DB-backed job to be reselected within the same bounded scheduler invocation, evidence that only verifies persisted `continued` state is insufficient.
+After a stable whole-build baseline, automatic execution always performs the
+production-code simplification scan. A changed candidate receives its own gate
+and commit and returns through whole-build verification and fresh review. A
+verified no-change result reuses the exact final-tree whole-build review instead
+of repeating a standalone review. Standalone `review` remains independently
+callable. Ship GO then creates a provenance-bound handoff to the existing
+`github-pr` workflow. MDF does not duplicate that workflow's commit, push,
+task-completion, or PR mechanics.
+
+MDF preserves upstream risk matrices, doubt-driven review, Definition of Done,
+and irreversible-work sign-off. It has no separate evaluator personas or MDF
+semantic high-risk protocol.
+
+Production runtime architecture, evidence trust boundaries, and the two
+intentional orchestration exceptions are defined in
+[Agent Skills Overlay System](agent-skills-overlay-system.md). This task-system
+document applies that policy to canonical work items rather than redefining it.
 
 ## Init and PR Preparation
 
