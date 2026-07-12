@@ -1,9 +1,0 @@
-{
-  "output": "skills/mdf-handshake/SKILL.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/skills/mdf-handshake/SKILL.md",
-  "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
-  "overlayKind": "mdfOnly"
-}
