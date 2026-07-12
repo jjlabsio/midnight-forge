@@ -50,12 +50,12 @@ Pass each payload as JSON on stdin while providing the resolved `--cwd` and
 ## Approval contract
 
 Initial-generation build requires explicit affirmative user approval of the
-exact canonical artifact revision/hash for the plan. Follow `../../references/approval-evidence.md` for the
-human-facing approval contract and the optional user-facing `approval-NNN.md`
-record. The production
-controller records the authoritative hash-bound approval sidecars; Markdown
-existence or `latest.plan` text is not transition authority. A revision or byte
-change must invalidate prior approval.
+exact canonical artifact revision/hash for the plan. Follow
+`../../references/approval-evidence.md`: the controller's JSON interaction and
+decision sidecars are the canonical approval record, and `item.md.latest.plan`
+must name the registered artifact at approval and advance time. Do not create a
+duplicate `approval-NNN.md` file. A revision or byte change must invalidate
+prior approval.
 
 This human approval is mandatory for the initial plan. After a verified
 intent-preserving technical spec revision, the exact revision evidence may

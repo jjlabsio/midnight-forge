@@ -1,7 +1,15 @@
-const { ControllerError } = require("./context");
+const { ControllerError, readLatestPointer } = require("./context");
 const { recordArtifact, recordDecision, recordInteraction, verifySidecar } = require("./evidence");
 const { current, recordEvent } = require("./lifecycle");
 const { verifyAdapterDecision } = require("./adapter");
+
+function assertCurrentLatest(context, registration, code) {
+  const artifact = verifySidecar(context, registration.invocation?.artifact_file);
+  const latest = readLatestPointer(context, "spec");
+  if (artifact.kind !== "artifact" || latest !== artifact.artifact.path) {
+    throw new ControllerError(code, "Spec approval requires item.md.latest.spec to match the registered artifact.", { latest_pointer: latest, artifact_path: artifact.artifact?.path || null });
+  }
+}
 
 function registerSpec(context, { artifact_path: artifactPath, review_output_path: reviewPath, review_decision_file: reviewDecisionFile, revision_file: revisionFile = null, mode }) {
   if (!new Set(["standalone", "auto"]).has(mode)) throw new ControllerError("MDF_SPEC_MODE_INVALID", "Spec mode must be standalone or auto.");
@@ -21,6 +29,7 @@ function approveSpec(context, { registration_file: registrationFile, user_messag
   if (affirmative !== true) throw new ControllerError("MDF_SPEC_APPROVAL_NOT_AFFIRMATIVE", "Spec approval requires an explicit affirmative human-derived outcome.");
   const registration = verifySidecar(context, registrationFile);
   if (registration.kind !== "interaction" || registration.invocation?.agent_id !== "mdf-spec") throw new ControllerError("MDF_SPEC_REGISTRATION_INVALID", "Spec approval requires a valid registration.");
+  assertCurrentLatest(context, registration, "MDF_SPEC_LATEST_POINTER_INVALID");
   const approval = recordInteraction(context, { invocation: { agent_id: "user-approval", invocation_id: invocationId, executor: "human", explicit_affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file }, input_paths: ["item.md", userMessagePath, ...registration.inputs.map((input) => input.path), `evidence/${registrationFile}`] });
   const decision = recordDecision(context, { interaction_file: approval.file, conclusion: { kind: "spec-approval", affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file } });
   return { approval_interaction_file: approval.file, approval_file: decision.file };
@@ -34,12 +43,14 @@ function advanceSpec(context, { registration_file: registrationFile, approval_fi
     const revisedArtifact = verifySidecar(context, revision.conclusion?.new_spec_artifact_file);
     const registeredArtifact = verifySidecar(context, registration.invocation.artifact_file);
     if (revision.conclusion?.kind !== "technical-spec-revision" || revision.conclusion.intent_preserved !== true || revisedArtifact.artifact.path !== registeredArtifact.artifact.path || revisedArtifact.artifact.sha256 !== registeredArtifact.artifact.sha256) throw new ControllerError("MDF_SPEC_REVISION_INVALID", "Automatic spec revision authorization is invalid.");
+    assertCurrentLatest(context, registration, "MDF_SPEC_LATEST_POINTER_INVALID");
     if (current(context).phase !== "spec") throw new ControllerError("MDF_SPEC_PHASE_INVALID", "Spec can advance only from spec phase.");
     return recordEvent(context, { event_id: `spec-plan-${registrationFile}`, from: "spec", to: "plan", evidence_files: [registrationFile, registration.invocation.revision_file] });
   }
   if (!approvalFile) return { ok: false, stop: { code: "MDF_SPEC_APPROVAL_REQUIRED", reason: "explicit initial spec approval is required" } };
   const approval = verifySidecar(context, approvalFile);
   if (approval.kind !== "decision" || approval.conclusion?.kind !== "spec-approval" || approval.conclusion?.affirmative !== true || approval.conclusion?.registration_file !== registrationFile || approval.conclusion?.artifact_file !== registration.invocation.artifact_file) throw new ControllerError("MDF_SPEC_APPROVAL_INVALID", "Spec approval does not match current registration.");
+  assertCurrentLatest(context, registration, "MDF_SPEC_LATEST_POINTER_INVALID");
   if (current(context).phase !== "spec") throw new ControllerError("MDF_SPEC_PHASE_INVALID", "Spec can advance only from spec phase.");
   return recordEvent(context, { event_id: `spec-plan-${registrationFile}`, from: "spec", to: "plan", evidence_files: [registrationFile, approvalFile] });
 }

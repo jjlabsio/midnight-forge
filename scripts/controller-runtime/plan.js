@@ -1,8 +1,16 @@
-const { ControllerError } = require("./context");
+const { ControllerError, readLatestPointer } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordArtifact, recordDecision, recordInteraction, verifySidecar } = require("./evidence");
 const { current, recordEvent } = require("./lifecycle");
 const path = require("path");
+
+function assertCurrentLatest(context, registration, code) {
+  const artifact = verifySidecar(context, registration.invocation?.artifact_file);
+  const latest = readLatestPointer(context, "plan");
+  if (artifact.kind !== "artifact" || latest !== artifact.artifact.path) {
+    throw new ControllerError(code, "Plan approval requires item.md.latest.plan to match the registered artifact.", { latest_pointer: latest, artifact_path: artifact.artifact?.path || null });
+  }
+}
 
 function validateMetadata(metadata) {
   if (!metadata || !Array.isArray(metadata.tasks) || metadata.tasks.length === 0) throw new ControllerError("MDF_PLAN_METADATA_INVALID", "Plan metadata requires a complete non-empty task set.");
@@ -50,6 +58,7 @@ function approvePlan(context, { registration_file: registrationFile, user_messag
   if (affirmative !== true) throw new ControllerError("MDF_PLAN_APPROVAL_NOT_AFFIRMATIVE", "Plan approval requires an explicit affirmative human-derived outcome.");
   const registration = verifySidecar(context, registrationFile);
   if (registration.invocation?.agent_id !== "mdf-plan") throw new ControllerError("MDF_PLAN_REGISTRATION_INVALID", "Plan approval requires a valid registration.");
+  assertCurrentLatest(context, registration, "MDF_PLAN_LATEST_POINTER_INVALID");
   const interaction = recordInteraction(context, { invocation: { agent_id: "user-approval", invocation_id: invocationId, executor: "human", explicit_affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file }, input_paths: ["item.md", userMessagePath, ...registration.inputs.map((input) => input.path), `evidence/${registrationFile}`] });
   const decision = recordDecision(context, { interaction_file: interaction.file, conclusion: { kind: "plan-approval", affirmative: true, registration_file: registrationFile, artifact_file: registration.invocation.artifact_file } });
   return { approval_file: decision.file };
@@ -64,12 +73,14 @@ function advancePlan(context, { registration_file: registrationFile, approval_fi
     const revisedArtifact = verifySidecar(context, revision.conclusion?.new_spec_artifact_file);
     const registeredArtifact = verifySidecar(context, specRegistration.invocation.artifact_file);
     if (revision.conclusion?.kind !== "technical-spec-revision" || revision.conclusion.intent_preserved !== true || revisedArtifact.artifact.path !== registeredArtifact.artifact.path || revisedArtifact.artifact.sha256 !== registeredArtifact.artifact.sha256) throw new ControllerError("MDF_PLAN_REVISION_INVALID", "Automatic plan revision authorization is invalid.");
+    assertCurrentLatest(context, registration, "MDF_PLAN_LATEST_POINTER_INVALID");
     if (current(context).phase !== "plan") throw new ControllerError("MDF_PLAN_PHASE_INVALID", "Plan can advance only from plan phase.");
     return recordEvent(context, { event_id: `plan-build-${registrationFile}`, from: "plan", to: "build-task", evidence_files: [registrationFile, specRegistration.invocation.revision_file] });
   }
   if (!approvalFile) return { ok: false, stop: { code: "MDF_PLAN_APPROVAL_REQUIRED", reason: "explicit initial plan approval is required" } };
   const approval = verifySidecar(context, approvalFile);
   if (approval.conclusion?.kind !== "plan-approval" || approval.conclusion?.affirmative !== true || approval.conclusion?.registration_file !== registrationFile || approval.conclusion?.artifact_file !== registration.invocation.artifact_file) throw new ControllerError("MDF_PLAN_APPROVAL_INVALID", "Plan approval does not match current registration.");
+  assertCurrentLatest(context, registration, "MDF_PLAN_LATEST_POINTER_INVALID");
   if (current(context).phase !== "plan") throw new ControllerError("MDF_PLAN_PHASE_INVALID", "Plan can advance only from plan phase.");
   return recordEvent(context, { event_id: `plan-build-${registrationFile}`, from: "plan", to: "build-task", evidence_files: [registrationFile, approvalFile] });
 }

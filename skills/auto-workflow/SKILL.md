@@ -53,7 +53,8 @@ work and record the fallback.
 The root-only synthesis produces the final decision. `ship` retains the
 upstream persona fan-out and `github-pr` retains its own git/PR behavior.
 
-For autonomous task work, first verify matching `approval-NNN.md` records using
+For autonomous task work, first verify the canonical JSON approval sidecars and
+the matching `item.md.latest.spec`/`item.md.latest.plan` pointers using
 `../../references/approval-evidence.md`, then run `git status --porcelain` and
 stop on unrelated dirt. Commit any promoted tracked planning artifact before
 task work; local `.mdf` evidence is not staged. Before each task, recheck the

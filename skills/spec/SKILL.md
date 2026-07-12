@@ -34,12 +34,13 @@ automatic authorization; do not fabricate a human approval.
 ## Approval contract
 
 Initial-generation planning requires explicit affirmative user approval of the
-exact canonical artifact revision/hash for the spec. Persist and verify the
-`../../references/approval-evidence.md` schema: `approval-NNN.md` must match
-the current `latest.spec`, its SHA-256, and its latest-pointer value before the
-controller advances. Any later edit, replacement, or latest-pointer change must
-invalidate prior approval; do not carry approval to a new revision. A saved
-artifact or a reviewer pass is not approval.
+exact canonical artifact revision/hash for the spec. Follow
+`../../references/approval-evidence.md`: the controller's JSON interaction and
+decision sidecars are the canonical approval record, and `item.md.latest.spec`
+must name the registered artifact at approval and advance time. Do not create a
+duplicate `approval-NNN.md` file. Any later edit, replacement, or latest-pointer
+change must invalidate prior approval; do not carry approval to a new revision.
+A saved artifact or a reviewer pass is not approval.
 
 For the initial generation, `auto-workflow` must stop here until explicit spec
 approval exists. A verified intent-preserving technical revision instead calls

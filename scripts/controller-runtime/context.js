@@ -132,6 +132,34 @@ function resolvePluginPath(pluginRoot, relativePath) {
   return resolved;
 }
 
+function readLatestPointer(context, key) {
+  if (typeof key !== "string" || !/^[A-Za-z0-9_-]+$/.test(key)) {
+    throw new ControllerError("MDF_ITEM_LATEST_INVALID", "Latest pointer key is invalid.", { key });
+  }
+  let content;
+  try {
+    content = fs.readFileSync(context.work_item.item_path, "utf8");
+  } catch (error) {
+    throw new ControllerError("MDF_ITEM_LATEST_INVALID", "Could not read canonical item metadata.", { cause: error.message });
+  }
+  if (!content.startsWith("---\n")) throw new ControllerError("MDF_ITEM_LATEST_INVALID", "Canonical item metadata has no frontmatter.");
+  const end = content.indexOf("\n---\n", 4);
+  if (end < 0) throw new ControllerError("MDF_ITEM_LATEST_INVALID", "Canonical item metadata frontmatter is unterminated.");
+  const lines = content.slice(4, end).split(/\r?\n/);
+  let inLatest = false;
+  for (const line of lines) {
+    if (/^latest:\s*(?:\{\})?\s*$/.test(line)) {
+      inLatest = true;
+      continue;
+    }
+    if (inLatest && !line.startsWith("  ") && line.trim()) inLatest = false;
+    if (!inLatest) continue;
+    const match = line.match(new RegExp(`^  ${key}:\\s*(?:"([^"]*)"|'([^']*)'|(\\S+))\\s*$`));
+    if (match) return match[1] ?? match[2] ?? match[3];
+  }
+  return null;
+}
+
 function resolveControllerContext({ cwd = process.cwd(), pluginRoot = path.resolve(__dirname, "..", "..") } = {}) {
   const resolvedCwd = realpath(cwd, "MDF_CONTEXT_CWD_INVALID", "Controller cwd does not exist.");
   const canonicalRoot = findCanonicalRoot(resolvedCwd);
@@ -153,6 +181,7 @@ function resolveControllerContext({ cwd = process.cwd(), pluginRoot = path.resol
 
 module.exports = {
   ControllerError,
+  readLatestPointer,
   resolveControllerContext,
   resolvePluginPath,
 };

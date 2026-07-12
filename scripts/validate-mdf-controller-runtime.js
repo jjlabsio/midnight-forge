@@ -428,6 +428,7 @@ function runSpecTests() {
     const auto = registerSpec(context, { artifact_path: "spec-001.md", review_output_path: "review.md", review_decision_file: review001, mode: "auto" });
     assert.strictEqual(advanceSpec(context, { registration_file: auto.registration_file }).stop.code, "MDF_SPEC_APPROVAL_REQUIRED");
     expectCode(() => approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-no", affirmative: false }), "MDF_SPEC_APPROVAL_NOT_AFFIRMATIVE");
+    expectCode(() => approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-missing-pointer", affirmative: true }), "MDF_SPEC_LATEST_POINTER_INVALID");
     setLatest(context, "spec", "spec-001.md");
     const approval = approveSpec(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "user-1", affirmative: true });
     const mutation = registerSpec(context, { artifact_path: "spec-mutate.md", review_output_path: "review.md", review_decision_file: reviewFor("spec-mutate.md", "review-mutation"), mode: "auto" });
@@ -461,6 +462,7 @@ function runPlanTests() {
       return submitOutcome(context, { action_id: id, interaction_file: prepared.interaction_file, output_path: "review.md", outcome: { disposition: "pass" } }).decision_file;
     };
     const specReg = registerSpec(context, { artifact_path: "spec.md", review_output_path: "review.md", review_decision_file: reviewFor("spec.md", "spec-review"), mode: "auto" });
+    setLatest(context, "spec", "spec.md");
     const specApproval = approveSpec(context, { registration_file: specReg.registration_file, user_message_path: "user.md", invocation_id: "spec-user", affirmative: true });
     advanceSpec(context, { registration_file: specReg.registration_file, approval_file: specApproval.approval_file });
     const matrix = { whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] };
@@ -483,6 +485,7 @@ function runPlanTests() {
     const auto = registerPlan(context, { artifact_path: "plan.md", spec_registration_file: specReg.registration_file, metadata_file: metadataFile, review_output_path: "review.md", review_decision_file: review, mode: "auto" });
     assert.strictEqual(advancePlan(context, { registration_file: auto.registration_file }).stop.code, "MDF_PLAN_APPROVAL_REQUIRED");
     expectCode(() => approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-no", affirmative: false }), "MDF_PLAN_APPROVAL_NOT_AFFIRMATIVE");
+    expectCode(() => approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-missing-pointer", affirmative: true }), "MDF_PLAN_LATEST_POINTER_INVALID");
     setLatest(context, "plan", "plan.md");
     const approval = approvePlan(context, { registration_file: auto.registration_file, user_message_path: "user.md", invocation_id: "plan-user", affirmative: true });
     const revisionMetadata = createPlanMetadata(context, { artifact_path: "plan-2.md", spec_registration_file: specReg.registration_file, metadata }).metadata_file;
@@ -771,6 +774,7 @@ function runTechnicalRevisionTests() {
     expectCode(() => registerSpec(passing.context, { artifact_path: "spec-new.md", review_output_path: "spec-review.md", review_decision_file: review.decision_file, revision_file: revision.revision_file, mode: "auto" }), "MDF_EVIDENCE_STALE");
     fs.writeFileSync(path.join(passing.context.work_item.path, "spec-new.md"), "new technical spec\n");
     const registration = registerSpec(passing.context, { artifact_path: "spec-new.md", review_output_path: "spec-review.md", review_decision_file: review.decision_file, revision_file: revision.revision_file, mode: "auto" });
+    setLatest(passing.context, "spec", "spec-new.md");
     advanceSpec(passing.context, { registration_file: registration.registration_file });
     expectCode(() => registerPlan(passing.context, { artifact_path: "plan.md", spec_registration_file: passing.oldSpec.file, metadata_file: "missing.json", review_output_path: "revision-review.md", review_decision_file: passing.review.decision_file, mode: "auto" }), "MDF_PLAN_SPEC_MISMATCH");
     const metadataValue = { tasks: [{ id: "T1", depends_on: [], owned_paths: ["src.js"], acceptance: ["revised"] }], whole_build_commands: [[process.execPath, "-e", "process.exit(0)"]] };
@@ -781,6 +785,7 @@ function runTechnicalRevisionTests() {
     const planPrepared = prepareAdapter(passing.context, { action_file: planAction.action_file, capability_file: planCapability.capability_file, invocation: planInvocation });
     const planReview = submitOutcome(passing.context, { action_id: "revised-plan-review", interaction_file: planPrepared.interaction_file, output_path: "plan-review.md", outcome: { disposition: "pass" } });
     const newPlan = registerPlan(passing.context, { artifact_path: "plan-new.md", spec_registration_file: registration.registration_file, metadata_file: metadata.metadata_file, review_output_path: "plan-review.md", review_decision_file: planReview.decision_file, mode: "auto" });
+    setLatest(passing.context, "plan", "plan-new.md");
     advancePlan(passing.context, { registration_file: newPlan.registration_file });
     expectCode(() => selectBuildTask(passing.context, { plan_registration_file: passing.plan.file, writer_id: "root" }), "MDF_BUILD_PLAN_NOT_APPROVED");
     assert.strictEqual(selectBuildTask(passing.context, { plan_registration_file: newPlan.registration_file, writer_id: "root" }).task.id, "T1");
