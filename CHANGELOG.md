@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.2 - 2026-07-12
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.1...v1.3.2)
+
+### Changes
+
+- fix(github-pr): 완료된 task의 PR handoff 허용 ([#56](https://github.com/jjlabsio/midnight-forge/pull/56))
 ## v1.3.1 - 2026-07-12
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.0...v1.3.1)
