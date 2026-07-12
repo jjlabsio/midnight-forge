@@ -12,6 +12,22 @@ This skill owns the post-merge transition. `github-pr` stops at PR creation; it
 does not wait for review, CI, merge, or cleanup. Run this as a later follow-up
 once the user says the PR was merged or asks to sync after merge.
 
+## Deterministic Script Boundary
+
+After resolving the installed plugin root, invoke the independent
+`scripts/mdf-github-after-merge.js` JSON contract:
+
+- `verify` obtains the PR state and stops unless `mergedAt`, head ref, and base
+  ref are present and consistent.
+- `sync` re-verifies the PR, checks the clean canonical checkout, resolves the
+  remote default branch, then performs checkout, `fetch --prune`, and
+  `pull --ff-only` only.
+
+The result contains a cleanup handoff for
+`scripts/mdf-github-clear-gone.js`; do not invoke deletion, merging, pushing,
+or cleanup from this script. The orchestrator retains PR identification,
+external-state interpretation, and dirty-worktree confirmation authority.
+
 ## Workflow
 
 1. Identify the PR to verify.
