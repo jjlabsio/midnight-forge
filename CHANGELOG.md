@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0 - 2026-07-12
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.2.0...v1.3.0)
+
+### Changes
+
+- feat: mechanize deterministic MDF workflow operations ([#54](https://github.com/jjlabsio/midnight-forge/pull/54))
 ## v1.2.0 - 2026-07-12
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.1.1...v1.2.0)
