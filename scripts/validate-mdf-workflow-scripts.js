@@ -15,6 +15,7 @@ const { reconcileIndex } = require("./mdf-runtime/index");
 const artifacts = require("./mdf-artifacts");
 const worktrees = require("./mdf-worktrees");
 const initScript = require("./mdf-init");
+const clearGone = require("./mdf-github-clear-gone");
 
 function expectCode(callback, code) {
   assert.throws(callback, (error) => error && error.code === code);
@@ -318,12 +319,67 @@ function runInitTests() {
   }
 }
 
+function runCleanupTests() {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-cleanup-fixture-"));
+  const root = path.join(temporaryRoot, "project");
+  const remote = path.join(temporaryRoot, "origin.git");
+  const home = path.join(temporaryRoot, "home");
+  fs.mkdirSync(root, { recursive: true });
+  fs.mkdirSync(path.join(root, ".mdf", "project"), { recursive: true });
+  fs.writeFileSync(path.join(root, ".mdf", "project", "init.json"), "{\"version\":1}\n");
+  fs.writeFileSync(path.join(root, ".gitignore"), ".mdf/\n.worktrees/\n");
+  const git = (args, cwd = root) => {
+    const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+  git(["init", "--quiet", root]);
+  git(["config", "user.email", "mdf@example.com"]);
+  git(["config", "user.name", "MDF Test"]);
+  fs.writeFileSync(path.join(root, "README.md"), "fixture\n");
+  git(["add", "."]); git(["commit", "--quiet", "-m", "fixture"]); git(["branch", "-M", "main"]);
+  git(["init", "--quiet", "--bare", remote], temporaryRoot);
+  git(["remote", "add", "origin", remote]);
+  git(["push", "--quiet", "-u", "origin", "main"]);
+  git(["branch", "clean-gone"]); git(["branch", "dirty-gone"]);
+  git(["push", "--quiet", "-u", "origin", "clean-gone"]);
+  git(["push", "--quiet", "-u", "origin", "dirty-gone"]);
+  const dirtyPath = path.join(root, ".worktrees", "dirty-gone");
+  git(["worktree", "add", "--quiet", dirtyPath, "dirty-gone"]);
+  fs.writeFileSync(path.join(dirtyPath, "uncommitted.txt"), "discard me\n");
+  git(["push", "--quiet", "origin", "--delete", "clean-gone", "dirty-gone"]);
+  fs.mkdirSync(path.join(home, ".mdf", "user"), { recursive: true });
+  fs.writeFileSync(path.join(home, ".mdf", "user", "init.json"), "{\"version\":1,\"initialized_at\":\"now\",\"runtime\":\"codex\"}\n");
+  fs.writeFileSync(path.join(home, ".mdf", "user", "preferences.json"), "{\"version\":1,\"human_language\":\"Korean\"}\n");
+  const inspection = clearGone.inspect({ root, home });
+  assert.deepStrictEqual(inspection.clean.map((entry) => entry.branch), ["clean-gone"]);
+  assert.deepStrictEqual(inspection.dirty.map((entry) => entry.branch), ["dirty-gone"]);
+  assert.strictEqual(inspection.dirty[0].path, fs.realpathSync(dirtyPath));
+  const cliInspect = spawnSync(process.execPath, [path.join(__dirname, "mdf-github-clear-gone.js"), "inspect", "--cwd", root], { encoding: "utf8", input: JSON.stringify({ home }) });
+  assert.strictEqual(cliInspect.status, 0, cliInspect.stderr);
+  assert.strictEqual(JSON.parse(cliInspect.stdout).ok, true);
+  const cleanResult = clearGone.applyClean({ root, home });
+  assert.deepStrictEqual(cleanResult.removed.map((entry) => entry.branch), ["clean-gone"]);
+  const cleanRef = spawnSync("git", ["show-ref", "--verify", "--quiet", "refs/heads/clean-gone"], { cwd: root, encoding: "utf8" });
+  assert.notStrictEqual(cleanRef.status, 0);
+  try {
+    expectCode(() => clearGone.applyDirty({ root, home, confirmations: [] }), "MDF_DIRTY_CONFIRMATION_MISMATCH");
+    assert.strictEqual(fs.existsSync(dirtyPath), true);
+    const dirtyResult = clearGone.applyDirty({ root, home, confirmations: [{ path: fs.realpathSync(dirtyPath), acknowledge_uncommitted: true }] });
+    assert.deepStrictEqual(dirtyResult.removed.map((entry) => entry.branch), ["dirty-gone"]);
+    assert.strictEqual(fs.existsSync(dirtyPath), false);
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   runRuntimeTests();
   runArtifactTests();
   runWorktreeTests();
   runInitTests();
-  console.log("mdf workflow script validation: task 1, task 2, task 3, and task 4 checks passed");
+  runCleanupTests();
+  console.log("mdf workflow script validation: task 1, task 2, task 3, task 4, and task 5 checks passed");
 }
 
 if (require.main === module) main();
