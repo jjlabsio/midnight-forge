@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.1 - 2026-07-12
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.0...v1.3.1)
+
+### Changes
+
+- chore: 불필요한 handshake 스킬 제거 ([#55](https://github.com/jjlabsio/midnight-forge/pull/55))
 ## v1.3.0 - 2026-07-12
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.2.0...v1.3.0)
