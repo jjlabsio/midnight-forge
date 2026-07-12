@@ -372,6 +372,17 @@ function runWorktreeTests() {
     assert.strictEqual(created.base, "origin/main");
     assert.strictEqual(fs.existsSync(target), true);
     assert.strictEqual(fs.existsSync(path.join(target, ".mdf")), false);
+    const projectInitPath = path.join(root, ".mdf", "project", "init.json");
+    const projectInitContents = fs.readFileSync(projectInitPath, "utf8");
+    fs.rmSync(projectInitPath, { force: true, recursive: true });
+    fs.mkdirSync(projectInitPath);
+    const invalidMarkerTarget = path.join(root, ".worktrees", "invalid-init-marker");
+    expectCode(() => worktrees.create({ root, branch: "invalid-init-marker" }), "MDF_PROJECT_INIT_INVALID");
+    assert.strictEqual(fs.existsSync(invalidMarkerTarget), false);
+    assert.notStrictEqual(spawnSync("git", ["show-ref", "--verify", "--quiet", "refs/heads/invalid-init-marker"], { cwd: root, encoding: "utf8" }).status, 0);
+    fs.rmSync(projectInitPath, { force: true, recursive: true });
+    fs.writeFileSync(projectInitPath, projectInitContents);
+
     fs.writeFileSync(path.join(root, ".mdf", "tracked-state.txt"), "must not enter linked worktrees\n");
     for (const args of [["add", "-f", ".mdf/tracked-state.txt"], ["commit", "--quiet", "-m", "tracked MDF boundary"]]) {
       result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -650,6 +661,13 @@ function runAfterMergeTests() {
       return runner(command, args, options);
     };
     expectCode(() => afterMerge.verify({ root: fixture.root, pr: "1" }, { runner: emptyRefsRunner }), "MDF_PR_STATE_MALFORMED");
+    const ambiguousReferenceCalls = [];
+    const ambiguousReferenceRunner = (command, args, options) => {
+      ambiguousReferenceCalls.push({ command, args, cwd: options.cwd });
+      return runner(command, args, options);
+    };
+    expectCode(() => afterMerge.verify({ root: fixture.root, pr: "", pr_number: "123" }, { runner: ambiguousReferenceRunner }), "MDF_PR_REF_INVALID");
+    assert.strictEqual(ambiguousReferenceCalls.some((call) => call.command === "gh"), false);
     const nonStringMergedAtRunner = (command, args, options) => {
       if (command === "gh") return { status: 0, stdout: JSON.stringify({ state: "MERGED", mergedAt: {}, headRefName: "feature", baseRefName: "main", url: "https://github.com/example/project/pull/1" }), stderr: "" };
       return runner(command, args, options);

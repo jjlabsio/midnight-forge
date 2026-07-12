@@ -141,7 +141,14 @@ function preflight(input = {}, options = {}) {
   const origin = runCommand("git", ["remote", "get-url", "origin"], { cwd, runner, allowFailure: true });
   if (origin.status !== 0 || !origin.stdout.trim()) throw new WorkflowError("MDF_ORIGIN_MISSING", "The repository must have an origin remote.", { cwd });
   const paths = projectPaths(root);
-  if (!fs.existsSync(paths.projectInit)) throw new WorkflowError("MDF_PROJECT_INIT_MISSING", "MDF project init is missing.", { path: paths.projectInit });
+  let projectInitStat;
+  try {
+    projectInitStat = fs.lstatSync(paths.projectInit);
+  } catch (error) {
+    if (error.code === "ENOENT") throw new WorkflowError("MDF_PROJECT_INIT_MISSING", "MDF project init is missing.", { path: paths.projectInit });
+    throw new WorkflowError("MDF_PROJECT_INIT_INVALID", "MDF project init must be a regular file.", { path: paths.projectInit, cause: error.message });
+  }
+  if (!projectInitStat.isFile()) throw new WorkflowError("MDF_PROJECT_INIT_INVALID", "MDF project init must be a regular file.", { path: paths.projectInit });
   const ignoredPath = path.join(root, ".worktrees/");
   const ignored = runCommand("git", ["check-ignore", "-q", "--", ignoredPath], { cwd: root, runner, allowFailure: true });
   if (ignored.status !== 0) throw new WorkflowError("MDF_WORKTREES_NOT_IGNORED", "The project .worktrees directory is not ignored.", { path: ignoredPath });

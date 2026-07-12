@@ -18,8 +18,11 @@ function invalidPrReference(value) {
 }
 
 function prReference(input) {
-  const value = input.pr ?? input.pr_number ?? input.pr_url;
-  if (value === undefined || value === null || (typeof value === "string" && !value.trim())) return null;
+  const fields = ["pr", "pr_number", "pr_url"].filter((field) => Object.prototype.hasOwnProperty.call(input, field) && input[field] !== undefined && input[field] !== null);
+  if (fields.length === 0) return null;
+  if (fields.length > 1) invalidPrReference(fields.join(", "));
+  const value = input[fields[0]];
+  if (typeof value === "string" && !value.trim()) invalidPrReference(value);
   if (typeof value === "number") {
     if (Number.isInteger(value) && value > 0) return { value: String(value), repository: null };
     invalidPrReference(value);
