@@ -3,7 +3,7 @@
 const { ControllerError, resolveControllerContext } = require("./controller-runtime/context");
 const fs = require("fs");
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
-const { next } = require("./controller-runtime/lifecycle");
+const { next, resumeLifecycle } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
@@ -59,7 +59,12 @@ try {
     const [operation, ...contextArgs] = args;
     const context = resolveControllerContext(parseContextArgs(contextArgs));
     if (operation === "next") console.log(JSON.stringify(next(context), null, 2));
-    else throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller lifecycle next [--cwd PATH] [--plugin-root PATH]");
+    else if (operation === "resume") {
+      let request;
+      try { request = JSON.parse(fs.readFileSync(0, "utf8")); }
+      catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Lifecycle resume requires JSON stdin.", { cause: error.message }); }
+      console.log(JSON.stringify(resumeLifecycle(context, request), null, 2));
+    } else throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller lifecycle next|resume [--cwd PATH] [--plugin-root PATH]");
     process.exit(0);
   } else if (command === "spec") {
     const [operation, ...contextArgs] = args;

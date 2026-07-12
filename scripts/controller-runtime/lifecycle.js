@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { ControllerError } = require("./context");
-const { recordInteraction, verifySidecar } = require("./evidence");
+const { recordDecision, recordInteraction, verifySidecar } = require("./evidence");
 
 const EDGES = new Map([
   ["spec", ["plan"]], ["plan", ["build-task"]], ["build-task", ["build-task", "whole-build", "spec", "simplify"]],
@@ -9,6 +9,7 @@ const EDGES = new Map([
   ["ship", ["github-pr"]], ["github-pr", ["complete"]],
 ]);
 const STOPS = new Set(["human-required", "malformed", "stale", "no-progress", "ambiguous"]);
+const RESUMABLE_STOPS = new Set(["human-required", "no-progress", "ambiguous"]);
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
 
 function validateEdge(from, to) {
@@ -95,4 +96,57 @@ function recordEvent(context, request) {
   return { file: event.file, ...next(context) };
 }
 
-module.exports = { EDGES, activePlanFile, current, next, recordEvent, transitionEvidence, validateEdge };
+function resumeLifecycle(context, { stop_event_file: stopEventFile, user_message_path: userMessagePath, invocation_id: invocationId, affirmative, evidence_files: evidenceFiles = [] }) {
+  if (!nonempty(stopEventFile) || !nonempty(userMessagePath) || !nonempty(invocationId) || affirmative !== true || !Array.isArray(evidenceFiles) || new Set(evidenceFiles).size !== evidenceFiles.length || evidenceFiles.some((file) => !nonempty(file))) {
+    throw new ControllerError("MDF_LIFECYCLE_RESUME_INVALID", "Lifecycle resume requires an explicit affirmative decision, current stop event, and optional evidence files.");
+  }
+  const state = current(context);
+  if (!state.stop_reason || !RESUMABLE_STOPS.has(state.stop_reason) || state.event_file !== stopEventFile) {
+    throw new ControllerError("MDF_LIFECYCLE_RESUME_INVALID", "Lifecycle resume must target the current resumable stop event.", { stop_event_file: stopEventFile, current_event_file: state.event_file, stop_reason: state.stop_reason });
+  }
+  const stop = verifySidecar(context, stopEventFile, { fresh: false });
+  if (stop.kind !== "interaction" || stop.invocation?.agent_id !== "mdf-lifecycle" || stop.invocation?.stop_reason !== state.stop_reason || stop.invocation?.from !== state.phase || stop.invocation?.to !== state.phase) {
+    throw new ControllerError("MDF_LIFECYCLE_RESUME_INVALID", "Lifecycle resume target is not a canonical stop event.");
+  }
+  evidenceFiles.forEach((file) => verifySidecar(context, file));
+  const inputPaths = ["item.md", userMessagePath, `evidence/${stopEventFile}`, ...evidenceFiles.map((file) => `evidence/${file}`)];
+  const authorization = recordInteraction(context, {
+    invocation: {
+      agent_id: "user-lifecycle-resume",
+      invocation_id: invocationId,
+      executor: "human",
+      explicit_affirmative: true,
+      stop_event_file: stopEventFile,
+      stop_reason: state.stop_reason,
+      phase: state.phase,
+    },
+    input_paths: inputPaths,
+  });
+  const decision = recordDecision(context, {
+    interaction_file: authorization.file,
+    conclusion: {
+      kind: "lifecycle-resume",
+      affirmative: true,
+      stop_event_file: stopEventFile,
+      stop_reason: state.stop_reason,
+      phase: state.phase,
+    },
+  });
+  const resumed = recordInteraction(context, {
+    invocation: {
+      agent_id: "mdf-lifecycle",
+      invocation_id: `resume-${stopEventFile}-${Date.now()}`,
+      executor: "deterministic-runtime",
+      previous_event_file: stopEventFile,
+      from: state.phase,
+      to: state.phase,
+      next_action: state.phase,
+      stop_reason: null,
+      resume_decision_file: decision.file,
+    },
+    input_paths: [`evidence/${decision.file}`],
+  });
+  return { resume_file: decision.file, file: resumed.file, ...next(context) };
+}
+
+module.exports = { EDGES, activePlanFile, current, next, recordEvent, resumeLifecycle, transitionEvidence, validateEdge };

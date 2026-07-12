@@ -75,6 +75,11 @@ exact canonical artifact revision/hash. Revisions invalidate approval. It is
 the single writer and root-only synthesizer; persona or generic-subagent work is
 bounded reporting, selected by verified capability with an honest root fallback.
 
+Typed human-decision stops preserve their append-only evidence. Once the user
+resolves a resumable stop, the root calls `mdf-controller lifecycle resume`,
+which returns to the same phase and re-enters that phase's normal gate. It does
+not permit a phase jump or a blind retry of stale or malformed state.
+
 Every task uses applicable upstream TDD/verification and then a fresh-context
 upstream review of the full canonical context. Actionable findings are fixed and
 re-reviewed while progress is material; repeated blockers, regressions,

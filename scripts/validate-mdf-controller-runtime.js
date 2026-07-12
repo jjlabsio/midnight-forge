@@ -8,7 +8,7 @@ const { spawnSync } = require("child_process");
 const { resolveControllerContext, resolvePluginPath } = require("./controller-runtime/context");
 const { recordArtifact, recordCommand, recordInteraction, recordDecision, recordGitFacts, verifySidecar } = require("./controller-runtime/evidence");
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
-const { EDGES, next: nextLifecycle, recordEvent, validateEdge } = require("./controller-runtime/lifecycle");
+const { EDGES, next: nextLifecycle, recordEvent, resumeLifecycle, validateEdge } = require("./controller-runtime/lifecycle");
 const { advanceSpec, approveSpec, registerSpec } = require("./controller-runtime/spec");
 const { advancePlan, approvePlan, createPlanMetadata, registerPlan } = require("./controller-runtime/plan");
 const { authorizeTaskCommit, completeBuildTask, recordDownstreamImpact, runVerification, selectBuildTask, selectRepairTask } = require("./controller-runtime/build-task");
@@ -358,9 +358,21 @@ function runLifecycleTests() {
     const context = resolveControllerContext({ cwd: stopped.worktree, pluginRoot: root });
     fs.writeFileSync(path.join(context.work_item.path, "stop.md"), "stop evidence\n");
     const stopEvidence = recordArtifact(context, "stop.md").file;
-    recordEvent(context, { event_id: "stop", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] });
+    const stoppedEvent = recordEvent(context, { event_id: "stop", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] });
     assert.strictEqual(nextLifecycle(context).stop.code, "MDF_STOP_HUMAN_REQUIRED");
     expectCode(() => recordEvent(context, { event_id: "bypass", from: "spec", to: "plan", evidence_files: [stopEvidence] }), "MDF_LIFECYCLE_STOPPED");
+    fs.writeFileSync(path.join(context.work_item.path, "resume.md"), "continue after user decision\n");
+    const resumed = resumeLifecycle(context, { stop_event_file: stoppedEvent.file, user_message_path: "resume.md", invocation_id: "resume-1", affirmative: true });
+    assert.strictEqual(resumed.action, "spec");
+    assert.strictEqual(resumed.state.phase, "spec");
+    assert.strictEqual(resumed.state.stop_reason, null);
+    assert.strictEqual(nextLifecycle(context).action, "spec");
+    expectCode(() => resumeLifecycle(context, { stop_event_file: stoppedEvent.file, user_message_path: "resume.md", invocation_id: "resume-replay", affirmative: true }), "MDF_LIFECYCLE_RESUME_INVALID");
+    const secondStopped = recordEvent(context, { event_id: "stop-again", from: "spec", stop_reason: "human-required", evidence_files: [stopEvidence] });
+    fs.writeFileSync(path.join(context.work_item.path, "resume-cli.md"), "continue through CLI\n");
+    const cliResume = spawnSync(process.execPath, [cliPath, "lifecycle", "resume", "--cwd", stopped.worktree, "--plugin-root", root], { encoding: "utf8", input: JSON.stringify({ stop_event_file: secondStopped.file, user_message_path: "resume-cli.md", invocation_id: "resume-cli", affirmative: true }) });
+    assert.strictEqual(cliResume.status, 0, cliResume.stderr);
+    assert.strictEqual(JSON.parse(cliResume.stdout).action, "spec");
   } finally { fs.rmSync(stopped.temporaryRoot, { recursive: true, force: true }); }
 
   for (const scenario of ["no-progress", "stale", "ambiguous", "malformed"]) {

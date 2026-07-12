@@ -44,6 +44,11 @@ work and record the fallback.
   duplicate standalone review.
 - Fix actionable review findings and re-review while progress is material;
   stop for repeats, regressions, no-progress, or a human decision.
+- After a typed stop, preserve the append-only evidence. If the user resolves
+  the stop, call `mdf-controller lifecycle resume` with the current stop event
+  and the user-decision artifact; resume returns to the same phase and does not
+  bypass that phase's ordinary gate. There is no blind retry for stale or
+  malformed state.
 
 The root-only synthesis produces the final decision. `ship` retains the
 upstream persona fan-out and `github-pr` retains its own git/PR behavior.
@@ -72,7 +77,11 @@ passed task, and resume from the next canonical pending task after a blocker.
    decision, failed verification, stale approval, failed fresh-review gate,
    NO-GO, or a git/PR ambiguity. Do not infer a phase result from an artifact's
    existence alone.
-5. Resume only from canonical evidence that satisfies the selected phase's
+5. When a user decision resolves a resumable stop, call
+   `mdf-controller lifecycle resume` with its exact stop event and user-message
+   artifact. The runtime appends a decision-bound resume event and returns the
+   same phase; continue only through that phase's normal controller.
+6. Resume only from canonical evidence that satisfies the selected phase's
    approval, verification, and review contract.
 
 ## Build-loop runtime

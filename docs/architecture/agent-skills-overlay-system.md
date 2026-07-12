@@ -97,6 +97,13 @@ authoritative for how implementation, review, simplification, shipping, and PR
 creation are performed. The handoff never reimplements commit, push, or
 pull-request mechanics.
 
+When a lifecycle stop requires a user decision, the stop event remains immutable.
+After the user resolves it, `mdf-controller lifecycle resume` records the
+decision against the current task metadata and appends a resume event that
+returns to the same phase. It cannot jump to another phase or bypass that
+phase's ordinary gate; stale and malformed stops remain terminal until their
+canonical state is repaired through the appropriate workflow.
+
 ## Controller Responsibility Boundary
 
 The controller is a mechanical enforcement layer, not a second implementation
