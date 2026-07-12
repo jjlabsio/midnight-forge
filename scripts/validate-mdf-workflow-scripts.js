@@ -139,8 +139,13 @@ function runArtifactTests() {
     expectCode(() => artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_INDEX_MALFORMED");
     fs.writeFileSync(indexPath, validIndex);
     fs.writeFileSync(indexPath, `${validIndex}${validIndex.split("\n")[1]}\n`);
-    expectCode(() => artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }), "MDF_INDEX_DUPLICATE");
-    fs.writeFileSync(indexPath, validIndex);
+    assert.strictEqual(artifacts.allocate({ root: fixture.root, work_id: workId, artifact_type: "build" }).revision, 4);
+    artifacts.write({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 4, content: "build four\n" });
+    artifacts.latest({ root: fixture.root, work_id: workId, artifact_type: "build", revision: 4 });
+    const historicalIndex = parseIndex(indexPath);
+    const historicalEntries = historicalIndex.entries.filter((entry) => entry.work_id === workId);
+    assert.strictEqual(historicalEntries.length, 2);
+    assert.strictEqual(historicalEntries[historicalEntries.length - 1].latest.build, ".mdf/work/2026-07-12-0001-artifact-fixture/build-004.md");
     const before = fs.readFileSync(itemPath, "utf8");
     expectCode(() => atomicWriteText(path.join(workDir, "missing", "target.md"), "x", { fsImpl: { ...fs, renameSync() { throw new Error("injected"); } } }), "MDF_ATOMIC_WRITE_FAILED");
     assert.strictEqual(fs.readFileSync(itemPath, "utf8"), before);
@@ -177,7 +182,6 @@ function runWorktreeTests() {
   result = spawnSync("git", ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], { cwd: root, encoding: "utf8" });
   assert.strictEqual(result.status, 0, result.stderr);
   const target = path.join(root, ".worktrees", "task-fixture");
-  fs.mkdirSync(path.join(root, ".worktrees"), { recursive: true });
   fs.writeFileSync(path.join(root, ".env.test"), "SOURCE=1\n");
   try {
     const cli = (command, input) => spawnSync(process.execPath, [path.join(__dirname, "mdf-worktrees.js"), command, "--cwd", root], {
@@ -187,12 +191,41 @@ function runWorktreeTests() {
     const cliPreflight = cli("preflight", { branch: "cli-fixture" });
     assert.strictEqual(cliPreflight.status, 0, cliPreflight.stderr);
     assert.strictEqual(JSON.parse(cliPreflight.stdout).ok, true);
+    assert.strictEqual(fs.existsSync(path.join(root, ".worktrees")), false);
     const cliCreate = cli("create", { branch: "cli-fixture" });
     assert.strictEqual(cliCreate.status, 0, cliCreate.stderr);
     const cliCreated = JSON.parse(cliCreate.stdout).result.path;
     assert.strictEqual(fs.existsSync(cliCreated), true);
     spawnSync("git", ["worktree", "remove", "--force", cliCreated], { cwd: root });
     spawnSync("git", ["branch", "-D", "cli-fixture"], { cwd: root });
+    const rollbackTarget = path.join(root, ".worktrees", "rollback-fixture");
+    const rollbackCommands = [];
+    expectCode(() => worktrees.create({ root, branch: "rollback-fixture", worktree: ".worktrees/rollback-fixture", fetch: false }, { runner: (command, args) => {
+      rollbackCommands.push([command, ...args]);
+      if (command !== "git") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "rev-parse" && args[1] === "--git-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "rev-parse" && args[1] === "--git-common-dir") return { status: 0, stdout: ".git\n", stderr: "" };
+      if (args[0] === "branch" && args[1] === "--show-current") return { status: 0, stdout: "main\n", stderr: "" };
+      if (args[0] === "symbolic-ref") return { status: 0, stdout: "origin/main\n", stderr: "" };
+      if (args[0] === "remote" && args[1] === "get-url") return { status: 0, stdout: "origin\n", stderr: "" };
+      if (args[0] === "check-ignore") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref" && args[3] === "refs/remotes/origin/main") return { status: 0, stdout: "", stderr: "" };
+      if (args[0] === "show-ref") return { status: 1, stdout: "", stderr: "" };
+      if (args[0] === "worktree" && args[1] === "list") return { status: 0, stdout: `worktree ${root}\nHEAD abc\nbranch refs/heads/main\n`, stderr: "" };
+      if (args[0] === "worktree" && args[1] === "add") {
+        fs.mkdirSync(path.join(rollbackTarget, ".mdf"), { recursive: true });
+        return { status: 0, stdout: "", stderr: "" };
+      }
+      if (args[0] === "worktree" && args[1] === "remove") {
+        fs.rmSync(rollbackTarget, { recursive: true, force: true });
+        return { status: 0, stdout: "", stderr: "" };
+      }
+      if (args[0] === "branch" && args[1] === "-D") return { status: 0, stdout: "", stderr: "" };
+      return { status: 0, stdout: "", stderr: "" };
+    }}), "MDF_WORKTREE_STATE_BOUNDARY");
+    assert.strictEqual(fs.existsSync(rollbackTarget), false);
+    assert.ok(rollbackCommands.some((args) => args[0] === "git" && args[1] === "worktree" && args[2] === "remove"));
+    assert.ok(rollbackCommands.some((args) => args[0] === "git" && args[1] === "branch" && args[2] === "-D"));
     const cliPrepareTarget = path.join(root, ".worktrees", "cli-prepare");
     fs.mkdirSync(cliPrepareTarget, { recursive: true });
     const cliPrepare = cli("prepare", { worktree_path: cliPrepareTarget });
@@ -224,6 +257,18 @@ function runWorktreeTests() {
     assert.strictEqual(created.base, "origin/main");
     assert.strictEqual(fs.existsSync(target), true);
     assert.strictEqual(fs.existsSync(path.join(target, ".mdf")), false);
+    fs.writeFileSync(path.join(root, ".mdf", "tracked-state.txt"), "must not enter linked worktrees\n");
+    for (const args of [["add", "-f", ".mdf/tracked-state.txt"], ["commit", "--quiet", "-m", "tracked MDF boundary"]]) {
+      result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      assert.strictEqual(result.status, 0, result.stderr);
+    }
+    result = spawnSync("git", ["push", "--quiet", "origin", "main"], { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    const trackedBoundaryTarget = path.join(root, ".worktrees", "tracked-boundary");
+    expectCode(() => worktrees.create({ root, branch: "tracked-boundary", worktree: ".worktrees/tracked-boundary" }), "MDF_WORKTREE_STATE_BOUNDARY");
+    assert.strictEqual(fs.existsSync(trackedBoundaryTarget), false);
+    result = spawnSync("git", ["show-ref", "--verify", "--quiet", "refs/heads/tracked-boundary"], { cwd: root, encoding: "utf8" });
+    assert.strictEqual(result.status, 1);
     const linkedPreflight = worktrees.preflight({ root, cwd: created.path, worktree_path: created.path });
     assert.strictEqual(linkedPreflight.current_isolated, true);
     assert.strictEqual(linkedPreflight.current_branch, "task-fixture");
@@ -317,6 +362,33 @@ function runInitTests() {
     assert.strictEqual(result.status, 0, result.stderr);
     writeJson(path.join(malformedProject, ".mdf", "project", "init.json"), { version: 99 });
     expectCode(() => initScript.apply({ root: malformedProject, home: path.join(temporaryRoot, "malformed-project-home"), human_language: "Korean" }), "MDF_PROJECT_INIT_MALFORMED");
+    const symlinkProject = path.join(temporaryRoot, "symlink-project");
+    const symlinkOutside = path.join(temporaryRoot, "symlink-outside");
+    fs.mkdirSync(path.join(symlinkProject, ".mdf"), { recursive: true });
+    fs.mkdirSync(symlinkOutside, { recursive: true });
+    fs.writeFileSync(path.join(symlinkProject, ".gitignore"), ".mdf/\n.worktrees/\n");
+    result = spawnSync("git", ["init", "--quiet", symlinkProject], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    fs.symlinkSync(symlinkOutside, path.join(symlinkProject, ".mdf", "project"));
+    expectCode(() => initScript.apply({ root: symlinkProject, home: path.join(temporaryRoot, "symlink-project-home"), human_language: "Korean" }), "MDF_SYMLINK_PATH");
+    assert.strictEqual(fs.existsSync(path.join(symlinkOutside, "init.json")), false);
+    const wrongTypeProject = path.join(temporaryRoot, "wrong-type-project");
+    fs.mkdirSync(path.join(wrongTypeProject, ".mdf", "project"), { recursive: true });
+    fs.mkdirSync(path.join(wrongTypeProject, ".mdf", "locks"), { recursive: true });
+    fs.writeFileSync(path.join(wrongTypeProject, ".mdf", "work"), "not a directory\n");
+    fs.writeFileSync(path.join(wrongTypeProject, ".gitignore"), ".mdf/\n.worktrees/\n");
+    result = spawnSync("git", ["init", "--quiet", wrongTypeProject], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    expectCode(() => initScript.validate({ root: wrongTypeProject, home: path.join(temporaryRoot, "wrong-type-home") }), "MDF_LAYOUT_INVALID");
+    const wrongIndexTypeProject = path.join(temporaryRoot, "wrong-index-type-project");
+    fs.mkdirSync(path.join(wrongIndexTypeProject, ".mdf", "project"), { recursive: true });
+    fs.mkdirSync(path.join(wrongIndexTypeProject, ".mdf", "work"), { recursive: true });
+    fs.mkdirSync(path.join(wrongIndexTypeProject, ".mdf", "locks"), { recursive: true });
+    fs.mkdirSync(path.join(wrongIndexTypeProject, ".mdf", "index.jsonl"), { recursive: true });
+    fs.writeFileSync(path.join(wrongIndexTypeProject, ".gitignore"), ".mdf/\n.worktrees/\n");
+    result = spawnSync("git", ["init", "--quiet", wrongIndexTypeProject], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    expectCode(() => initScript.validate({ root: wrongIndexTypeProject, home: path.join(temporaryRoot, "wrong-index-type-home") }), "MDF_LAYOUT_INVALID");
   } finally {
     fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }

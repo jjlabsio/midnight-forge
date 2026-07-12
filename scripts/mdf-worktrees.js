@@ -56,6 +56,46 @@ function parseWorktrees(output) {
   }) : [];
 }
 
+function pathEntryExists(filePath) {
+  try {
+    fs.lstatSync(filePath);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Unable to inspect worktree state boundary.", { path: filePath, cause: error.message });
+  }
+}
+
+function assertBaseHasNoMdf(root, base, runner) {
+  const result = runCommand("git", ["ls-tree", "-r", "--name-only", base, "--", ".mdf"], { cwd: root, runner });
+  const tracked = result.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (tracked.length > 0) {
+    throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "The worktree base contains tracked independent MDF state.", { base, paths: tracked });
+  }
+}
+
+function rollbackCreatedWorktree(root, target, branch, runner, originalError) {
+  const failures = [];
+  try {
+    runCommand("git", ["worktree", "remove", "--force", target], { cwd: root, runner });
+  } catch (error) {
+    failures.push({ operation: "worktree_remove", cause: error.message });
+  }
+  try {
+    runCommand("git", ["branch", "-D", branch], { cwd: root, runner });
+  } catch (error) {
+    failures.push({ operation: "branch_delete", cause: error.message });
+  }
+  if (failures.length > 0) {
+    throw new WorkflowError("MDF_WORKTREE_ROLLBACK_FAILED", "Worktree creation failed and automatic rollback was incomplete.", {
+      target,
+      branch,
+      original_error: originalError.code || originalError.message,
+      cleanup_errors: failures,
+    });
+  }
+}
+
 function preflight(input = {}, options = {}) {
   const root = rootFor(input, options);
   const cwd = input.cwd || options.cwd || root;
@@ -84,8 +124,9 @@ function preflight(input = {}, options = {}) {
   if (origin.status !== 0 || !origin.stdout.trim()) throw new WorkflowError("MDF_ORIGIN_MISSING", "The repository must have an origin remote.", { cwd });
   const paths = projectPaths(root);
   if (!fs.existsSync(paths.projectInit)) throw new WorkflowError("MDF_PROJECT_INIT_MISSING", "MDF project init is missing.", { path: paths.projectInit });
-  const ignored = runCommand("git", ["check-ignore", "-q", "--", path.join(root, ".worktrees")], { cwd: root, runner, allowFailure: true });
-  if (ignored.status !== 0) throw new WorkflowError("MDF_WORKTREES_NOT_IGNORED", "The project .worktrees directory is not ignored.", { path: path.join(root, ".worktrees") });
+  const ignoredPath = path.join(root, ".worktrees/");
+  const ignored = runCommand("git", ["check-ignore", "-q", "--", ignoredPath], { cwd: root, runner, allowFailure: true });
+  if (ignored.status !== 0) throw new WorkflowError("MDF_WORKTREES_NOT_IGNORED", "The project .worktrees directory is not ignored.", { path: ignoredPath });
 
   if (input.fetch !== false) runCommand("git", ["fetch", "origin", defaultBranch], { cwd: root, runner });
   const remoteRef = runCommand("git", ["show-ref", "--verify", "--quiet", `refs/remotes/origin/${defaultBranch}`], { cwd: root, runner, allowFailure: true });
@@ -120,10 +161,21 @@ function create(input = {}, options = {}) {
   const target = targetPath(root, branch, requestedWorktree);
   const check = preflight({ ...input, root, branch, worktree_path: target }, options);
   if (!check.ready) throw new WorkflowError("MDF_WORKTREE_CONFLICT", "Worktree creation is blocked by preflight conflicts or current isolation.", { conflicts: check.conflicts, current_isolated: check.current_isolated });
+  const base = `origin/${check.default_branch}`;
+  assertBaseHasNoMdf(root, base, options.runner);
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  runCommand("git", ["worktree", "add", target, "-b", branch, `origin/${check.default_branch}`], { cwd: root, runner: options.runner });
-  if (fs.existsSync(path.join(target, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "A new worktree must not contain independent MDF state.", { path: path.join(target, ".mdf") });
-  return { canonical_root: root, path: target, branch, base: `origin/${check.default_branch}`, default_branch: check.default_branch };
+  let created = false;
+  try {
+    runCommand("git", ["worktree", "add", target, "-b", branch, base], { cwd: root, runner: options.runner });
+    created = true;
+    const statePath = path.join(target, ".mdf");
+    if (pathEntryExists(statePath)) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "A new worktree must not contain independent MDF state.", { path: statePath });
+  } catch (error) {
+    if (!created) throw error;
+    rollbackCreatedWorktree(root, target, branch, options.runner, error);
+    throw error;
+  }
+  return { canonical_root: root, path: target, branch, base, default_branch: check.default_branch };
 }
 
 function managerFor(dir, fallback, boundary = dir) {
@@ -235,7 +287,7 @@ function prepare(input = {}, options = {}) {
   const canonicalWorktree = fs.existsSync(candidateWorktree) ? fs.realpathSync(candidateWorktree) : candidateWorktree;
   const worktree = resolveWithin(root, path.relative(root, canonicalWorktree), { allowMissing: false });
   if (!isInside(path.join(root, ".worktrees"), worktree)) throw new WorkflowError("MDF_WORKTREE_PATH_INVALID", "Preparation must target a project-local worktree.", { path: worktree });
-  if (fs.existsSync(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Preparation refuses independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
+  if (pathEntryExists(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Preparation refuses independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
   const copied = [];
   const skipped = [];
   try {
@@ -250,9 +302,9 @@ function prepare(input = {}, options = {}) {
     throw new WorkflowError("MDF_ENV_SETUP_FAILED", "Root environment file preparation failed.", { cause: error.message });
   }
   const dependency = dependencySetup(worktree, options.runner);
-  if (fs.existsSync(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Preparation produced independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
+  if (pathEntryExists(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Preparation produced independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
   const prisma = runPrisma(worktree, dependency, options.runner);
-  if (fs.existsSync(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Prisma preparation produced independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
+  if (pathEntryExists(path.join(worktree, ".mdf"))) throw new WorkflowError("MDF_WORKTREE_STATE_BOUNDARY", "Prisma preparation produced independent MDF state inside a worktree.", { path: path.join(worktree, ".mdf") });
   return { canonical_root: root, worktree, environment: { copied, skipped }, dependencies: dependency, prisma };
 }
 

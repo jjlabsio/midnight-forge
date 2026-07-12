@@ -106,13 +106,9 @@ function parseIndex(filePath, { fsImpl = fs } = {}) {
   } catch (error) {
     throw new WorkflowError("MDF_INDEX_MALFORMED", "MDF index contains malformed JSONL.", { path: filePath, cause: error.message });
   }
-  const seen = new Set();
-  for (const entry of entries) {
-    if (seen.has(entry.work_id)) {
-      throw new WorkflowError("MDF_INDEX_DUPLICATE", "MDF index contains duplicate work_id entries.", { path: filePath, work_id: entry.work_id });
-    }
-    seen.add(entry.work_id);
-  }
+  // index.jsonl is an append-only history of item snapshots. Repeated work_id
+  // entries are valid; callers resolve the current snapshot from the latest
+  // matching line while older entries remain available as history.
   return { raw, rawLines, entries, lineIndexes, newline, trailingNewline: raw.endsWith("\n") };
 }
 

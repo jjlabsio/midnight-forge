@@ -11,12 +11,9 @@ function reconciledIndexContent(indexPath, entry, { fsImpl = fs } = {}) {
   const matches = parsed.entries
     .map((value, position) => ({ value, line: parsed.lineIndexes[position] }))
     .filter(({ value }) => value.work_id === entry.work_id);
-  if (matches.length > 1) {
-    throw new WorkflowError("MDF_INDEX_DUPLICATE", "MDF index contains duplicate work_id entries.", { work_id: entry.work_id });
-  }
   const lines = parsed.rawLines.slice();
   const serialized = JSON.stringify(entry);
-  if (matches.length === 1) lines[matches[0].line] = serialized;
+  if (matches.length > 0) lines[matches[matches.length - 1].line] = serialized;
   else {
     if (parsed.trailingNewline) lines.splice(lines.length - 1, 0, serialized);
     else lines.push(serialized);

@@ -82,13 +82,48 @@ function validateProjectInit(value, root, filePath) {
   requireString(value.initialized_at, "initialized_at", filePath);
 }
 
-function boundaryCheck(root) {
-  for (const relative of [".mdf", ".worktrees"]) {
-    const candidate = path.join(root, relative);
-    if (fs.existsSync(candidate) && fs.lstatSync(candidate).isSymbolicLink()) {
-      throw new WorkflowError("MDF_SYMLINK_PATH", "MDF state boundaries cannot be symlinks.", { path: candidate });
+function layoutError(candidate, expected, actual) {
+  throw new WorkflowError("MDF_LAYOUT_INVALID", "MDF state path has an unexpected type.", { path: candidate, expected, actual });
+}
+
+function actualType(stat) {
+  if (stat.isDirectory()) return "directory";
+  if (stat.isFile()) return "file";
+  if (stat.isSymbolicLink()) return "symlink";
+  return "other";
+}
+
+function validateLayoutEntry(root, relative, expected) {
+  let current = root;
+  const parts = relative.split(path.sep);
+  for (let index = 0; index < parts.length; index += 1) {
+    current = path.join(current, parts[index]);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch (error) {
+      if (error.code === "ENOENT") return false;
+      throw new WorkflowError("MDF_LAYOUT_INVALID", "Unable to inspect MDF state path.", { path: current, cause: error.message });
     }
+    if (stat.isSymbolicLink()) throw new WorkflowError("MDF_SYMLINK_PATH", "MDF state paths cannot be symlinks.", { path: current });
+    if (index < parts.length - 1 && !stat.isDirectory()) layoutError(current, "directory", actualType(stat));
+    if (index === parts.length - 1 && actualType(stat) !== expected) layoutError(current, expected, actualType(stat));
   }
+  return true;
+}
+
+function boundaryCheck(root) {
+  const entries = [
+    [".mdf", "directory"],
+    [".worktrees", "directory"],
+    [".mdf/project", "directory"],
+    [".mdf/work", "directory"],
+    [".mdf/locks", "directory"],
+    [".mdf/project.json", "file"],
+    [".mdf/project/init.json", "file"],
+    [".mdf/index.jsonl", "file"],
+  ];
+  for (const [relative, expected] of entries) validateLayoutEntry(root, relative, expected);
 }
 
 function ignoreStatus(root, runner) {
