@@ -14,6 +14,7 @@ const { parseIndex, parseItem, serializeItem } = require("./mdf-runtime/schema")
 const { reconcileIndex } = require("./mdf-runtime/index");
 const artifacts = require("./mdf-artifacts");
 const worktrees = require("./mdf-worktrees");
+const initScript = require("./mdf-init");
 
 function expectCode(callback, code) {
   assert.throws(callback, (error) => error && error.code === code);
@@ -260,11 +261,69 @@ function runWorktreeTests() {
   }
 }
 
+function runInitTests() {
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-init-fixture-"));
+  const project = path.join(temporaryRoot, "project");
+  const home = path.join(temporaryRoot, "home");
+  fs.mkdirSync(project, { recursive: true });
+  fs.mkdirSync(home, { recursive: true });
+  fs.writeFileSync(path.join(project, ".gitignore"), "node_modules/\n.mdf/\n.worktrees/\n");
+  let result = spawnSync("git", ["init", "--quiet", project], { encoding: "utf8" });
+  assert.strictEqual(result.status, 0, result.stderr);
+  const unrelated = { "/other/project": { id: "other", name: "other", canonical_root: "/other/project", remote: null, index: ".mdf/index.jsonl", last_seen: "2026-01-01T00:00:00Z" } };
+  fs.mkdirSync(path.join(home, ".mdf"), { recursive: true });
+  writeJson(path.join(home, ".mdf", "projects.json"), { version: 1, projects: unrelated });
+  try {
+    const applied = initScript.apply({ root: project, home, human_language: "Korean" });
+    assert.strictEqual(applied.human_language, "Korean");
+    assert.strictEqual(applied.canonical_root, fs.realpathSync(project));
+    assert.strictEqual(fs.existsSync(path.join(project, ".mdf", "project.json")), true);
+    assert.strictEqual(fs.existsSync(path.join(project, ".mdf", "project", "init.json")), true);
+    assert.strictEqual(fs.existsSync(path.join(project, ".mdf", "work")), true);
+    assert.strictEqual(fs.existsSync(path.join(project, ".mdf", "locks")), true);
+    const registry = JSON.parse(fs.readFileSync(path.join(home, ".mdf", "projects.json"), "utf8"));
+    assert.deepStrictEqual(registry.projects["/other/project"], unrelated["/other/project"]);
+    assert.strictEqual(registry.projects[fs.realpathSync(project)].name, "project");
+    assert.strictEqual(initScript.validate({ root: project, home }).project.valid, true);
+    const cliValidate = spawnSync(process.execPath, [path.join(__dirname, "mdf-init.js"), "validate", "--cwd", project], { encoding: "utf8", input: JSON.stringify({ home }) });
+    assert.strictEqual(cliValidate.status, 0, cliValidate.stderr);
+    assert.strictEqual(JSON.parse(cliValidate.stdout).ok, true);
+    const cliApply = spawnSync(process.execPath, [path.join(__dirname, "mdf-init.js"), "apply", "--cwd", project], { encoding: "utf8", input: JSON.stringify({ home, human_language: "Korean" }) });
+    assert.strictEqual(cliApply.status, 0, cliApply.stderr);
+    expectCode(() => initScript.apply({ root: project, home: path.join(temporaryRoot, "missing-home") }), "MDF_HUMAN_LANGUAGE_REQUIRED");
+    const malformedPrefs = path.join(temporaryRoot, "malformed-prefs");
+    writeJson(path.join(malformedPrefs, ".mdf", "user", "init.json"), { version: 1, initialized_at: "now", runtime: "codex" });
+    fs.mkdirSync(path.join(malformedPrefs, ".mdf", "user"), { recursive: true });
+    fs.writeFileSync(path.join(malformedPrefs, ".mdf", "user", "preferences.json"), "not-json\n");
+    expectCode(() => initScript.apply({ root: project, home: malformedPrefs }), "MDF_USER_PREFS_MALFORMED");
+    const malformedRegistryHome = path.join(temporaryRoot, "malformed-registry");
+    fs.mkdirSync(path.join(malformedRegistryHome, ".mdf"), { recursive: true });
+    fs.writeFileSync(path.join(malformedRegistryHome, ".mdf", "projects.json"), "{\"version\":2}\n");
+    expectCode(() => initScript.apply({ root: project, home: malformedRegistryHome, human_language: "Korean" }), "MDF_PROJECTS_REGISTRY_MALFORMED");
+    const noIgnore = path.join(temporaryRoot, "no-ignore");
+    fs.mkdirSync(noIgnore, { recursive: true });
+    result = spawnSync("git", ["init", "--quiet", noIgnore], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    expectCode(() => initScript.apply({ root: noIgnore, home: path.join(temporaryRoot, "no-ignore-home"), human_language: "Korean" }), "MDF_IGNORE_POLICY_MISSING");
+    assert.strictEqual(fs.existsSync(path.join(noIgnore, ".mdf")), false);
+    const malformedProject = path.join(temporaryRoot, "malformed-project");
+    fs.mkdirSync(path.join(malformedProject, ".mdf", "project"), { recursive: true });
+    fs.writeFileSync(path.join(malformedProject, ".gitignore"), ".mdf/\n.worktrees/\n");
+    result = spawnSync("git", ["init", "--quiet", malformedProject], { encoding: "utf8" });
+    assert.strictEqual(result.status, 0, result.stderr);
+    writeJson(path.join(malformedProject, ".mdf", "project", "init.json"), { version: 99 });
+    expectCode(() => initScript.apply({ root: malformedProject, home: path.join(temporaryRoot, "malformed-project-home"), human_language: "Korean" }), "MDF_PROJECT_INIT_MALFORMED");
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   runRuntimeTests();
   runArtifactTests();
   runWorktreeTests();
-  console.log("mdf workflow script validation: task 1, task 2, and task 3 checks passed");
+  runInitTests();
+  console.log("mdf workflow script validation: task 1, task 2, task 3, and task 4 checks passed");
 }
 
 if (require.main === module) main();
