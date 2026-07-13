@@ -28,6 +28,7 @@
       "inventory/agents/web-performance-auditor.json",
       "inventory/references/accessibility-checklist.json",
       "inventory/references/approval-evidence.json",
+      "inventory/references/mdf-preserved-contract.json",
       "inventory/references/definition-of-done.json",
       "inventory/references/artifact-storage-override.json",
       "inventory/references/agent-skills-port-notes.json",
@@ -95,10 +96,50 @@
     ],
     "policyModules": [
       {
-        "id": "controller-runtime",
+        "id": "packaging-contract",
         "path": "references/agent-skills-port-notes.md"
       }
     ],
     "diffReport": "reports/overlay-v2-artifact-storage-migration.md"
+  },
+  "task0041SurfaceClasses": {
+    "active": {
+      "owningTask": "0041",
+      "paths": [
+        "skills/task/SKILL.md",
+        "skills/init/SKILL.md",
+        "skills/using-git-worktrees/SKILL.md",
+        "skills/use-mdf/SKILL.md",
+        "skills/spec/SKILL.md",
+        "skills/plan/SKILL.md",
+        "skills/build/SKILL.md",
+        "skills/auto-workflow/SKILL.md",
+        "skills/review/SKILL.md",
+        "skills/code-simplify/SKILL.md",
+        "skills/ship/SKILL.md",
+        "skills/github-pr/SKILL.md",
+        "skills/github-after-merge/SKILL.md",
+        "skills/github-clear-gone/SKILL.md"
+      ],
+      "disposition": "model-led workflow guidance and preserved canonical-state contracts"
+    },
+    "historical": {
+      "owningTask": "0041",
+      "paths": [".mdf/work/", ".mdf/index.jsonl", ".mdf/locks/"],
+      "disposition": "read-only historical state; do not rewrite or delete"
+    },
+    "packaging": {
+      "owningTask": "0041",
+      "paths": [
+        "vendor/agent-skills/",
+        "overlays/mdf/inventory.json",
+        "overlays/mdf/inventory/",
+        "overlays/mdf/release-metadata.json",
+        "scripts/sync-agent-skills.js",
+        "scripts/validate-agent-skills-sync.js",
+        "scripts/validate-agent-skills-port.js"
+      ],
+      "disposition": "source, render, and validate generated packaging only"
+    }
   }
 }

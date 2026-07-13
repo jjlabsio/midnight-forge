@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/agent-skills-port-notes.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Packaging contract for pinned upstream, overlay inputs, generated outputs, and packaging-only validation.",
   "overlayKind": "mdfOnly"
 }

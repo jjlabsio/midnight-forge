@@ -1,40 +1,33 @@
-# Replace Artifact Storage Rules With MDF Storage
+# Keep Artifact and Task State Readable
 
 ## Status
 
-Superseded by the controller-boundary restoration in task 0032.
+Accepted
 
 ## Date
 
-2026-07-08
+2026-07-13
 
 ## Context
 
-Many upstream skills create workflow artifacts. In MDF, workflow artifacts should be local task evidence under `.mdf/work/{work_id}/` unless explicitly promoted into tracked project docs. Keeping upstream tracked-file storage instructions alongside MDF storage instructions creates conflicting guidance.
+Workflow artifacts and task state need a predictable local home, but a large
+scripted storage protocol makes ordinary work rigid and expensive to maintain.
+The upstream primitive should remain byte-identical, while MDF guidance needs
+to explain where cards and artifacts live.
 
 ## Decision
 
-The prior artifact-storage injection model modified upstream workflow content.
-Task 0032 supersedes it: protected upstream primitives are byte-identical and
-MDF controllers own canonical artifact storage and lifecycle adaptation.
-
-## Alternatives Considered
-
-### Controller-bound adaptation
-
-- Pros: keeps upstream primitives byte-identical and localizes runtime policy.
-- Cons: controllers must carry explicit artifact and approval contracts.
-- Accepted by task 0032; this supersedes the former narrow-patch approach.
-
-### Add MDF storage instructions without removing upstream storage instructions
-
-- Pros: Smaller implementation.
-- Cons: Produces conflicting instructions when upstream names tracked paths.
-- Rejected because MDF storage should be authoritative for workflow artifacts.
+Keep canonical project state under `<canonical-root>/.mdf/` and readable
+workflow artifacts under `.mdf/work/{work_id}/`. `item.md` is the card source
+of truth and `index.jsonl` is an append-only projection. Exact spec and plan
+approvals name the Markdown path and SHA-256. Model-led skills write and
+explain these artifacts; packaging scripts only render and validate generated
+files.
 
 ## Consequences
 
-- Existing artifact storage is resolved by the controller that invokes the
-  upstream primitive.
-- Validation rejects semantic patches and source-backed replacements for the
-  protected upstream matrix.
+- Worktree isolation does not create a second `.mdf` store.
+- Historical cards and artifacts remain readable.
+- Generated root files are produced from explicit overlay inputs.
+- A narrow lock helper may protect ownership bytes, but it does not own
+  artifacts, approvals, lifecycle, review, or external actions.

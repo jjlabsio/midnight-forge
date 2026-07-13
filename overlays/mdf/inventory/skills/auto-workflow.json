@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/auto-workflow/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Active model-led continuation over approved Markdown spec, plan, tasks, review, ship, and PR handoff.",
   "overlayKind": "mdfOnly"
 }

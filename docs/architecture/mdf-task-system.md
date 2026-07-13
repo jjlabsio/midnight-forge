@@ -2,11 +2,12 @@
 
 ## Purpose
 
-MDF provides a local, LLM-orchestrated work item system for Codex workflows. It records task state, locks, and workflow artifacts without requiring an MCP server, event store, background runner, or hosted service.
+MDF provides a local, model-orchestrated work-item system for Codex. It keeps
+task cards, locks, readable artifacts, and Git worktree facts in the project
+root without requiring an MCP server, hosted service, background runner, or
+broad workflow runtime.
 
-Mechanical task-state operations are moving into the deterministic local script `scripts/mdf-task-state.js`. The LLM keeps responsibility for user intent, handoff-quality context and criteria, semantic staleness checks, downstream impact checks, and user-facing explanation.
-
-## Storage Model
+## Storage model
 
 Canonical project state lives under the repository root:
 
@@ -19,137 +20,63 @@ Canonical project state lives under the repository root:
   locks/
 ```
 
-The global `~/.mdf/projects.json` file is only a lightweight registry. It is not the primary task store.
+The global `~/.mdf/projects.json` file is only a lightweight registry. A
+linked worktree under `<canonical-root>/.worktrees/<branch>` reads the
+canonical root `.mdf/` directory and never creates independent state.
 
-Linked worktrees under `<canonical-root>/.worktrees/<branch>` use the canonical root `.mdf/` directory. They do not create independent `.mdf/` state.
+`item.md` is the source of truth for a work item. `index.jsonl` is an
+append-only read model: read the card first, then use the latest valid line for
+board rendering. Malformed cards, invalid index rows, path escapes, and
+conflicting facts stop the current operation.
 
-## Resolver boundary and completed-task review
+## Task lifecycle and ownership
 
-MDF has two intentional context boundaries. Stateful controllers (`context`,
-`spec`, `plan`, `build-task`, `whole-build`, `simplify`, `ship`, and
-`github-pr`) use the strict active-lock resolver; a missing, malformed, stale,
-or mismatched active lock remains a typed failure. Only `review context` and
-`review register` use the review-specific resolver.
+Task cards use queue, active, and done states. A task is ready only when its
+dependencies and current card state permit it. The task skill resolves the
+exact task ID, confirms the canonical root, and records the complete card
+before appending one complete index projection.
 
-The review resolver preserves task identity separately from active ownership.
-It therefore supports read-only review of a completed task after its matching
-lock has been removed, using the persisted canonical worktree and branch. This
-path never recreates, deletes, or mutates the task card or lock. A completed
-task with a matching lock is an inconsistent state and stops rather than being
-silently repaired.
+Locks associate a task with its canonical work item, worktree, and branch. A
+lock conflict is a stop; stale recovery is never automatic. The owner must
+confirm the current task/worktree/branch facts and use the narrow lock
+procedure for acquisition and byte-conditional release. Lock bytes do not
+authorize semantic bypasses, card deletion, unrelated staging, or external
+actions.
 
-Review context has two explicit, resolver-owned modes:
+The task skill also supports a completed-task read-only handoff. It does not
+invoke `done` or mutate the task card when the task is already complete. The
+GitHub PR skill has two handoff paths: it completes an incomplete current task
+through the task skill, or validates an already-completed task from persisted
+worktree and branch facts without recreating a lock. GitHub is the source of
+truth for whether an open PR already exists.
 
-- `lifecycle-review`: the full current spec/plan, whole-build, simplification,
-  clean-tree path with fresh provenance-bound evidence.
-- `task-review`: a standalone direct-task path allowed only when no lifecycle
-  marker exists; it requires exact task/Git/diff and successful verification
-  evidence, and cannot create lifecycle evidence or advance to ship.
+## Workflow model
 
-The final decision records `review_mode`. Lifecycle transitions and ship
-consumers accept only `lifecycle-review`; direct `task-review` output cannot be
-relabelled into lifecycle evidence by a caller or filename.
-
-## Work Item Kinds
-
-- `task`: executable work with queue, active, and done lifecycle.
-- `note`: durable non-executable context.
-- `track`: a grouping outcome for related work.
-
-Legacy `inbox` and `routine` items may be read for compatibility but are not first-class new item kinds.
-
-The task board entrypoints are `tasks-project` for the current project and `tasks-user` for registered local projects.
-
-## Task Lifecycle
-
-The first deterministic CLI slice supports:
-
-```text
-scripts/mdf-task-state.js validate --json
-scripts/mdf-task-state.js board --project --json
-scripts/mdf-task-state.js board --user --json
-scripts/mdf-task-state.js resolve --task-id <id> --json
-scripts/mdf-task-state.js add --kind task --title <title> --context-file <file> --json
-scripts/mdf-task-state.js done <id> --message <message> --json
-```
-
-The CLI treats `item.md` as the source of truth, appends `index.jsonl` entries, keeps lock files as ownership markers, emits typed JSON errors, and uses low-risk atomic writes for item cards.
-
-`task work {id}` resolves an exact task ID, validates dependencies, runs staleness preflight, prepares an isolated worktree, writes a lock, and updates the task card to active.
-
-Implementation requires a separate explicit instruction after activation unless the same user message already names a downstream workflow.
-
-`github-pr` supports two handoff paths for exactly the session-identified task:
-
-- An incomplete task must be `active`, must have a matching lock, and is completed through the task completion behavior before PR creation; the normal completion removes the lock.
-- An already-completed task is eligible when its persisted `worktree` and `branch` match the current checkout. This path does not require a lock, does not invoke `done` or mutate the task card, and stops on an inconsistent matching lock rather than deleting it.
-- A `completed` field combined with `status: "queue"` or `status: "active"` is contradictory task metadata and stops the handoff.
-
-GitHub is the source of truth for whether an open PR already exists; MDF task cards do not store a PR-status field.
-
-Standalone `$task work <id>` briefs the task and stops. A same user message can name an explicit downstream workflow, and that explicit downstream workflow may continue after task activation.
-
-## Workflow Model
-
-The automatic MDF workflow is:
+The automatic workflow is:
 
 ```text
 spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-pr
 ```
 
-`spec`, `plan`, and `review` are standalone one-phase workflows. A standalone
-`build` processes exactly one selected or next pending approved plan task.
-`build auto` and `build all` are routed to the flat root lifecycle controller,
-which processes every approved plan task and preserves clean-baseline,
-task-only-staging, focused-commit, resume, and upstream sign-off rules.
+`spec`, `plan`, and `review` save readable Markdown artifacts. Exact artifact
+path and SHA-256 approvals are human decisions; a revision invalidates the
+earlier approval. `build` follows TDD, focused verification, task-owned
+staging, readable review, downstream-impact judgment, and one focused commit.
+The model chooses the next ready task and explains ambiguity.
 
-`auto-workflow` stops after spec and plan until the user explicitly approves the
-exact canonical artifact revision/hash. Revisions invalidate approval. It is
-the single writer and root-only synthesizer; persona or generic-subagent work is
-bounded reporting, selected by verified capability with an honest root fallback.
+`auto-workflow` repeats the same loop over all approved plan tasks, then runs
+the plan's whole-build matrix and final review. Simplification is scoped to the
+reviewed tree and returns through verification when it changes code. Ship
+produces GO/NO-GO and rollback reasoning; push, PR, merge, deploy, and cleanup
+remain explicit external-action boundaries.
 
-Typed human-decision stops preserve their append-only evidence. Once the user
-resolves a resumable stop, the root calls `mdf-controller lifecycle resume`,
-which returns to the same phase and re-enters that phase's normal gate. It does
-not permit a phase jump or a blind retry of stale or malformed state.
+Review has two readable scope labels: `lifecycle-review` for a full approved
+tree and `task-review` for a direct task/diff check. A completed task can be
+reviewed read-only after its lock is released. `review_mode` is descriptive,
+not a permission to mutate state; a task review cannot create lifecycle
+evidence or promote itself to ship.
 
-Every task uses applicable upstream TDD/verification and then a fresh-context
-upstream review of the full canonical context. Actionable findings are fixed and
-re-reviewed while progress is material; repeated blockers, regressions,
-no-progress, or required user judgment stop the loop. Whole-build verification
-and review occur only after every task in the approved plan revision completes.
-
-After a stable whole-build baseline, automatic execution always performs the
-production-code simplification scan. A changed candidate receives its own gate
-and commit and returns through whole-build verification and fresh review. A
-verified no-change result reuses the exact final-tree whole-build review instead
-of repeating a standalone review. Standalone `review` remains independently
-callable. Ship GO then creates a provenance-bound handoff to the existing
-`github-pr` workflow. MDF does not duplicate that workflow's commit, push,
-task-completion, or PR mechanics.
-
-MDF preserves upstream risk matrices, doubt-driven review, Definition of Done,
-and irreversible-work sign-off. It has no separate evaluator personas or MDF
-semantic high-risk protocol.
-
-Production runtime architecture, evidence trust boundaries, and the two
-intentional orchestration exceptions are defined in
-[Agent Skills Overlay System](agent-skills-overlay-system.md). This task-system
-document applies that policy to canonical work items rather than redefining it.
-
-## Init and PR Preparation
-
-`init` owns setup for local workflow-state ignore rules. If `.mdf/` or `.worktrees/` ignore setup needs a PR, `init` delegates setup PR push/create/update mechanics to `github-pr` through the narrow MDF init setup PR mode.
-
-PRs are ready for review by default.
-
-## Staleness and Downstream Impact
-
-Queued task cards are checked for semantic drift before work starts. The staleness preflight runs before branch/worktree creation, lock mutation, task state changes, implementation edits, tests, commits, or other implementation side effects.
-
-When task work changes design, architecture, contracts, workflow semantics, task boundaries, or shared acceptance assumptions, MDF runs a downstream impact check against remaining planned work, queued task cards, and related context. Shared files alone do not create hard dependencies, and `depends_on` remains only for true hard blockers.
-
-## Artifact Storage
+## Approval and artifacts
 
 Workflow artifacts are local by default:
 
@@ -157,13 +84,24 @@ Workflow artifacts are local by default:
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
 ```
 
-Tracked project docs under `docs/` are reserved for durable shared documentation that the user explicitly wants committed.
+Approval is a human-readable note tied to the exact artifact revision and
+SHA-256. Do not infer approval from artifact existence, a review pass, or a
+green command. See [references/approval-evidence.md](../../references/approval-evidence.md)
+and [references/mdf-preserved-contract.md](../../references/mdf-preserved-contract.md).
 
-## Historical Notes
+## Recovery and historical state
 
-Earlier Superpowers-era documents described primary storage under `~/.mdf/projects/{project-hash}` and Claude command shims. Those details are obsolete. Current behavior is defined by `skills/task/SKILL.md`, `skills/tasks-project/SKILL.md`, `skills/tasks-user/SKILL.md`, and related generated MDF skills.
+Failures are reproduced and recorded in readable notes before a repair. A
+bounded, reversible, task-owned repair can return through TDD and review;
+scope changes, ambiguity, repeated no-progress, destructive actions, or
+external effects stop for the user. Technical revisions create fresh spec and
+plan revisions.
 
-## Related Decisions
+Historical `.mdf/work/` artifacts are read-only evidence of prior work and are
+not rewritten or deleted by packaging cleanup. The current card, lock, branch,
+and worktree facts are reconciled before deleting maintained code.
+
+## Related decisions
 
 - [Use canonical project-root task storage](../decisions/mdf-task-system/canonical-project-root-storage.md)
 - [Use the MDF docs taxonomy](../decisions/docs/mdf-docs-taxonomy.md)
