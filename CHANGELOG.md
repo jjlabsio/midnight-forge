@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.0 - 2026-07-13
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.2...v1.4.0)
+
+### Changes
+
+- feat: review context와 active task lock 분리 ([#57](https://github.com/jjlabsio/midnight-forge/pull/57))
 ## v1.3.2 - 2026-07-12
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.1...v1.3.2)
