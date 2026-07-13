@@ -4,7 +4,7 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
-const { recordCommand, recordDecision, recordInteraction, verifyInputs, verifySidecar } = require("./evidence");
+const { recordCommand, recordDecision, recordInteraction, recordVerification, resolveRemoteBase, verifyInputs, verifySidecar } = require("./evidence");
 const { activePlanFile, current, recordEvent, transitionEvidence } = require("./lifecycle");
 const { validateMetadata } = require("./plan");
 
@@ -56,9 +56,9 @@ function planRegistration(context, file) {
   return registration;
 }
 
-function runVerification(context, { attempt_file: attemptFile, command, output_path: outputPath }) {
+function runVerification(context, { attempt_file: attemptFile, command, output_path: outputPath, producer = "mdf-build-verification" }) {
   const attempt = verifySidecar(context, attemptFile, { fresh: false });
-  if (attempt.invocation?.agent_id !== "mdf-build-task-select" || !Array.isArray(command) || command.length === 0 || command.some((part) => typeof part !== "string") || !nonempty(outputPath) || path.isAbsolute(outputPath)) throw new ControllerError("MDF_BUILD_COMMAND_INVALID", "Verification requires a task attempt, argv, and relative output path.");
+  if (attempt.invocation?.agent_id !== "mdf-build-task-select" || !new Set(["mdf-build-verification", "mdf-direct-verification"]).has(producer) || !Array.isArray(command) || command.length === 0 || command.some((part) => typeof part !== "string") || !nonempty(outputPath) || path.isAbsolute(outputPath)) throw new ControllerError("MDF_BUILD_COMMAND_INVALID", "Verification requires a task attempt, supported producer, argv, and relative output path.");
   const target = path.resolve(context.work_item.path, outputPath);
   const relative = path.relative(context.work_item.path, target);
   if (relative === ".." || relative.startsWith(`..${path.sep}`)) throw new ControllerError("MDF_BUILD_COMMAND_INVALID", "Verification output must stay inside the work item.");
@@ -72,7 +72,22 @@ function runVerification(context, { attempt_file: attemptFile, command, output_p
   const exitCode = Number.isInteger(result.status) ? result.status : 1;
   fs.writeFileSync(target, `${result.stdout || ""}${result.stderr || ""}`);
   const evidence = recordCommand(context, { command, output_path: outputPath, exit_code: exitCode });
-  const verification = recordInteraction(context, { invocation: { agent_id: "mdf-build-verification", invocation_id: `verify-${attempt.invocation.task.id}-${Date.now()}`, executor: "deterministic-runtime", attempt_file: attemptFile, command_file: evidence.file, exit_code: exitCode }, input_paths: [outputPath, `evidence/${evidence.file}`, `evidence/${attemptFile}`] });
+  const verificationInvocation = {
+    agent_id: producer,
+    invocation_id: `verify-${attempt.invocation.task.id}-${Date.now()}`,
+    executor: "deterministic-runtime",
+    attempt_file: attemptFile,
+    command_file: evidence.file,
+    exit_code: exitCode,
+    task_id: context.lock?.task_id || null,
+    work_id: context.lock?.work_id || null,
+    canonical_root: context.canonical_root,
+    worktree: context.worktree,
+    branch: context.lock?.branch || git(context, ["branch", "--show-current"]).trim(),
+    ...resolveRemoteBase(context, "MDF_BUILD_BASE_INVALID"),
+    head: git(context, ["rev-parse", "HEAD"]).trim(),
+  };
+  const verification = recordVerification(context, { invocation: verificationInvocation, input_paths: [outputPath, `evidence/${evidence.file}`, `evidence/${attemptFile}`] });
   return { verification_file: verification.file, command_file: evidence.file, exit_code: exitCode };
 }
 

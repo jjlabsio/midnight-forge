@@ -28,6 +28,12 @@ function writeJson(filePath, value) {
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2));
 }
 
+function setOriginHead(cwd) {
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).stdout.trim();
+  spawnSync("git", ["update-ref", "refs/remotes/origin/main", head], { cwd });
+  spawnSync("git", ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], { cwd });
+}
+
 function createFixture() {
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-controller-context-"));
   const canonicalRoot = path.join(temporaryRoot, "project");
@@ -528,7 +534,7 @@ function runBuildTaskTests() {
     assert.strictEqual(attempt.task.id, "T1");
     expectCode(() => selectBuildTask(context, { plan_registration_file: planRegistration.file, writer_id: "other" }), "MDF_BUILD_MULTI_WRITER");
     fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "after\n");
-    const command = runVerification(context, { attempt_file: attempt.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "command.log" });
+    setOriginHead(context.worktree); const command = runVerification(context, { attempt_file: attempt.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "command.log" });
     fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "changed after verification\n");
     expectCode(() => authorizeTaskCommit(context, { attempt_file: attempt.attempt_file, command_files: [command.verification_file], review_output_path: "review.md", review_decision_file: "missing.json", task_evidence_path: "task.md", diff_path: "diff.patch", downstream_impact_file: "missing.json", touched_paths: ["src/a.js"], commit_subject: "feat: complete T1" }), "MDF_EVIDENCE_STALE");
     fs.writeFileSync(path.join(fixture.worktree, "src", "a.js"), "after\n");
@@ -679,7 +685,7 @@ function runRecoveryTests() {
     const repair = selectRepairTask(repairFlow.context, { recovery_file: recovery.recovery_file, writer_id: "root" });
     for (const [file, bytes] of [["repair-task.md", "repair acceptance\n"], ["repair.diff", "repair diff\n"], ["repair-impact.md", "unaffected\n"], ["repair-review.md", "pass\n"], ["repair-cap.json", "{}\n"]]) fs.writeFileSync(path.join(repairFlow.context.work_item.path, file), bytes);
     fs.writeFileSync(path.join(repairFlow.fixture.worktree, "src.js"), "fixed\n");
-    const command = runVerification(repairFlow.context, { attempt_file: repair.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "repair-command.log" });
+    setOriginHead(repairFlow.context.worktree); const command = runVerification(repairFlow.context, { attempt_file: repair.attempt_file, command: [process.execPath, "-e", "process.stdout.write('pass\\n')"], output_path: "repair-command.log" });
     const impact = recordDownstreamImpact(repairFlow.context, { attempt_file: repair.attempt_file, classification: "unaffected", artifact_path: "repair-impact.md" });
     const inputs = ["seed.md", "plan.md", "repair-task.md", "repair.diff", "repair-impact.md", `evidence/${repair.attempt_file}`, `evidence/${impact.impact_file}`, "repair-command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`];
     const action = issueAction(repairFlow.context, { action_id: "repair-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs });
@@ -733,7 +739,9 @@ function runTechnicalRevisionTests() {
   const setup = (revisionOutcome) => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
-    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree }); spawnSync("git", ["branch", "-m", "codex/task-0032"], { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.canonicalRoot, ".mdf", "work", fixture.workId, "item.md"), `---\nkind: task\nwork_id: "${fixture.workId}"\ntask_id: "0032"\ntitle: "Review fixture"\norder: 32\nstatus: active\ncreated: "2026-07-11"\nlatest: {}\nworktree: "${fs.realpathSync(fixture.worktree)}"\nbranch: "codex/task-0032"\n---\n`);
+    writeJson(path.join(fixture.canonicalRoot, ".mdf", "locks", "0032.lock"), { task_id: "0032", work_id: fixture.workId, canonical_root: fs.realpathSync(fixture.canonicalRoot), worktree: fs.realpathSync(fixture.worktree), branch: "codex/task-0032", started: "2026-07-11T00:00:00.000Z", runtime: "test" });
     const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
     for (const [file, bytes] of [["intent.md", "intent\n"], ["spec-old.md", "old spec\n"], ["spec-new.md", "new technical spec\n"], ["plan.md", "old plan\n"], ["plan-new.md", "new plan\n"], ["revision-review.md", "revision pass\n"], ["spec-review.md", "spec pass\n"], ["plan-review.md", "plan pass\n"], ["user.md", "yes\n"], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
     const oldArtifact = recordArtifact(context, "spec-old.md");
@@ -872,7 +880,7 @@ function runSimplifyTests() {
     assert.strictEqual(nextLifecycle(changed.context).state.phase, "build-task");
     for (const [file, bytes] of [["simplify-task.md", "candidate C1\n"], ["simplify.diff", "diff\n"], ["simplify-impact.md", "unaffected\n"], ["simplify-review.md", "pass\n"], ["simplify-cap.json", "{}\n"]]) fs.writeFileSync(path.join(changed.context.work_item.path, file), bytes);
     fs.writeFileSync(path.join(changed.fixture.worktree, "scripts/controller-runtime/a.js"), "2\n");
-    const command = runVerification(changed.context, { attempt_file: selected.attempt_file, command: [process.execPath, "-e", "process.exit(0)"], output_path: "simplify-command.log" });
+    setOriginHead(changed.context.worktree); const command = runVerification(changed.context, { attempt_file: selected.attempt_file, command: [process.execPath, "-e", "process.exit(0)"], output_path: "simplify-command.log" });
     const impact = recordDownstreamImpact(changed.context, { attempt_file: selected.attempt_file, classification: "unaffected", artifact_path: "simplify-impact.md" });
     const inputs = ["spec.md", "plan.md", "simplify-task.md", "simplify.diff", "simplify-impact.md", `evidence/${selected.attempt_file}`, `evidence/${impact.impact_file}`, "simplify-command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`];
     const action = issueAction(changed.context, { action_id: "simplify-candidate-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs });
@@ -891,7 +899,9 @@ function runReviewTests() {
   const setup = (reportText, outcome, targetPhase = "ship") => {
     const fixture = createFixture();
     for (const args of [["init", "--quiet"], ["config", "user.email", "test@example.com"], ["config", "user.name", "MDF test"]]) spawnSync("git", args, { cwd: fixture.worktree });
-    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.worktree, "src.js"), "x\n"); spawnSync("git", ["add", "src.js"], { cwd: fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "initial"], { cwd: fixture.worktree }); spawnSync("git", ["branch", "-m", "codex/task-0032"], { cwd: fixture.worktree });
+    fs.writeFileSync(path.join(fixture.canonicalRoot, ".mdf", "work", fixture.workId, "item.md"), `---\nkind: task\nwork_id: "${fixture.workId}"\ntask_id: "0032"\ntitle: "Review fixture"\norder: 32\nstatus: active\ncreated: "2026-07-11"\nlatest: {}\nworktree: "${fs.realpathSync(fixture.worktree)}"\nbranch: "codex/task-0032"\n---\n`);
+    writeJson(path.join(fixture.canonicalRoot, ".mdf", "locks", "0032.lock"), { task_id: "0032", work_id: fixture.workId, canonical_root: fs.realpathSync(fixture.canonicalRoot), worktree: fs.realpathSync(fixture.worktree), branch: "codex/task-0032", started: "2026-07-11T00:00:00.000Z", runtime: "test" });
     let head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: fixture.worktree, encoding: "utf8" }).stdout.trim();
     const context = resolveControllerContext({ cwd: fixture.worktree, pluginRoot: root });
     for (const [file, bytes] of [["spec.md", "spec\n"], ["plan.md", "plan\n"], ["report.md", reportText], ["cap.json", "{}\n"]]) fs.writeFileSync(path.join(context.work_item.path, file), bytes);
@@ -929,7 +939,7 @@ function runReviewTests() {
     const activePlan = verifySidecar(findings.context, findings.reviewContext.context_file, { fresh: false }).invocation.plan_registration_file;
     assert.strictEqual(resumeAutoBuild(findings.context, { plan_registration_file: activePlan, writer_id: "root" }).action, "resume-task");
     for (const [file, bytes] of [["review-fix-task.md", "fix\n"], ["review-fix.diff", "diff\n"], ["review-fix-impact.md", "unaffected\n"], ["review-fix-report.md", "pass\n"], ["review-fix-cap.json", "{}\n"]]) fs.writeFileSync(path.join(findings.context.work_item.path, file), bytes);
-    fs.writeFileSync(path.join(findings.fixture.worktree, "src.js"), "fixed\n"); const command = runVerification(findings.context, { attempt_file: result.attempt_file, command: [process.execPath, "-e", "process.exit(0)"], output_path: "review-fix-command.log" }); const impact = recordDownstreamImpact(findings.context, { attempt_file: result.attempt_file, classification: "unaffected", artifact_path: "review-fix-impact.md" });
+    fs.writeFileSync(path.join(findings.fixture.worktree, "src.js"), "fixed\n"); setOriginHead(findings.fixture.worktree); const command = runVerification(findings.context, { attempt_file: result.attempt_file, command: [process.execPath, "-e", "process.exit(0)"], output_path: "review-fix-command.log" }); const impact = recordDownstreamImpact(findings.context, { attempt_file: result.attempt_file, classification: "unaffected", artifact_path: "review-fix-impact.md" });
     const inputs = ["spec.md", "plan.md", "review-fix-task.md", "review-fix.diff", "review-fix-impact.md", `evidence/${result.attempt_file}`, `evidence/${impact.impact_file}`, "review-fix-command.log", `evidence/${command.verification_file}`, `evidence/${command.command_file}`]; const action = issueAction(findings.context, { action_id: "review-fix-review", action: "code-review", skill_path: "skills/code-review-and-quality/SKILL.md", persona_path: "agents/code-reviewer.md", input_paths: inputs }); const invocation = { agent_id: "fix-reviewer", invocation_id: "review-fix-inv", executor: "subagent", model_capability: "reasoning-capable", freshness: "fresh", capability: { persona_loaded: true, reasoning_capable: true, model_suitable: true, fresh_context: true, source: "runtime-verified" } }; const capability = issueCapability(findings.context, { ...invocation, persona_path: "agents/code-reviewer.md", evidence_path: "review-fix-cap.json" }); const prepared = prepareAdapter(findings.context, { action_file: action.action_file, capability_file: capability.capability_file, invocation }); const review = submitOutcome(findings.context, { action_id: "review-fix-review", interaction_file: prepared.interaction_file, output_path: "review-fix-report.md", outcome: { disposition: "pass" } });
     const authorization = authorizeTaskCommit(findings.context, { attempt_file: result.attempt_file, command_files: [command.verification_file], review_output_path: "review-fix-report.md", review_decision_file: review.decision_file, task_evidence_path: "review-fix-task.md", diff_path: "review-fix.diff", downstream_impact_file: impact.impact_file, touched_paths: ["src.js"], commit_subject: "fix: address review" }); spawnSync("git", ["add", "--", "src.js"], { cwd: findings.fixture.worktree }); spawnSync("git", ["commit", "--quiet", "-m", "fix: address review"], { cwd: findings.fixture.worktree }); const completed = completeBuildTask(findings.context, { authorization_file: authorization.authorization_file });
     assert.strictEqual(completed.state.phase, "build-task");
