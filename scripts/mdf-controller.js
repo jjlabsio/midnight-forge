@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { ControllerError, resolveControllerContext } = require("./controller-runtime/context");
+const { ControllerError, resolveControllerContext, resolveReviewControllerContext } = require("./controller-runtime/context");
 const fs = require("fs");
 const { issueAction, issueCapability, prepareAdapter, submitOutcome } = require("./controller-runtime/adapter");
 const { next, resumeLifecycle } = require("./controller-runtime/lifecycle");
@@ -134,11 +134,12 @@ try {
     process.exit(0);
   } else if (command === "review") {
     const [operation, ...contextArgs] = args;
-    const context = resolveControllerContext(parseContextArgs(contextArgs));
+    if (!new Set(["context", "register"]).has(operation)) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller review context|register [--cwd PATH] [--plugin-root PATH]");
+    const context = resolveReviewControllerContext(parseContextArgs(contextArgs));
     let request = {};
     try { request = JSON.parse(fs.readFileSync(0, "utf8") || "{}"); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Review command requires JSON stdin."); }
-    const result = operation === "context" ? createReviewContext(context) : operation === "register" ? registerReview(context, request) : null;
+    const result = operation === "context" ? createReviewContext(context, request) : operation === "register" ? registerReview(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller review context|register [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, review: result }, null, 2));
     process.exit(0);

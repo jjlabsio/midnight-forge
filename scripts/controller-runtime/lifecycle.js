@@ -52,6 +52,23 @@ function transitionEvidence(context, from, to) {
   return chain(context).filter(({ value }) => value.invocation.from === from && value.invocation.to === to).map(({ file, value }) => ({ file, evidence_files: value.inputs.map((input) => input.path).filter((input) => input.startsWith("evidence/")).map((input) => input.slice(9)) }));
 }
 
+function assertLifecycleReviewEvidence(context, file) {
+  const sidecar = verifySidecar(context, file, { fresh: false });
+  const direct = sidecar.kind === "interaction"
+    ? sidecar
+    : sidecar.kind === "decision" && sidecar.interaction?.file
+      ? verifySidecar(context, sidecar.interaction.file, { fresh: false })
+      : null;
+  if (sidecar.kind === "interaction" && sidecar.invocation?.review_mode !== undefined && sidecar.invocation.agent_id !== "mdf-standalone-review") throw new ControllerError("MDF_LIFECYCLE_REVIEW_MODE_INVALID", "Review-mode interactions must originate from the standalone-review adapter before lifecycle consumption.", { file, agent_id: sidecar.invocation.agent_id || null });
+  if (sidecar.conclusion?.kind === "standalone-review") {
+    if (sidecar.conclusion.review_mode !== undefined && sidecar.conclusion.review_mode !== "lifecycle-review") throw new ControllerError("MDF_LIFECYCLE_REVIEW_MODE_INVALID", "Lifecycle transitions require resolver-owned lifecycle-review evidence.", { file, review_mode: sidecar.conclusion.review_mode || null });
+    if (!direct || direct.invocation?.agent_id !== "mdf-standalone-review") throw new ControllerError("MDF_LIFECYCLE_REVIEW_MODE_INVALID", "Lifecycle review evidence must originate from the standalone-review adapter.", { file, agent_id: direct?.invocation?.agent_id || null });
+    if (sidecar.conclusion.review_mode === undefined) throw new ControllerError("MDF_LIFECYCLE_REVIEW_MODE_INVALID", "Resolver-owned review evidence must carry an explicit lifecycle-review mode.", { file });
+  }
+  if (direct?.invocation?.agent_id === "mdf-standalone-review" && direct.invocation.review_mode !== "lifecycle-review") throw new ControllerError("MDF_LIFECYCLE_REVIEW_MODE_INVALID", "Direct task-review evidence cannot satisfy a lifecycle transition.", { file, review_mode: direct.invocation.review_mode || null });
+  return sidecar;
+}
+
 function activePlanFile(context) {
   for (const { value } of [...chain(context)].reverse()) {
     for (const input of value.inputs || []) {
@@ -90,7 +107,10 @@ function recordEvent(context, request) {
   } else validateEdge(from, to);
   const resultingPhase = stopReason ? from : to;
   if (nextAction && nextAction !== resultingPhase && !EDGES.get(resultingPhase)?.includes(nextAction)) throw new ControllerError("MDF_LIFECYCLE_NEXT_INVALID", "Lifecycle next action is not legal from resulting phase.", { resulting_phase: resultingPhase, next_action: nextAction });
-  for (const file of evidenceFiles) verifySidecar(context, file);
+  for (const file of evidenceFiles) {
+    assertLifecycleReviewEvidence(context, file);
+    verifySidecar(context, file);
+  }
   const inputPaths = evidenceFiles.map((file) => `evidence/${file}`);
   const event = recordInteraction(context, { invocation: { agent_id: "mdf-lifecycle", invocation_id: eventId, executor: "deterministic-runtime", previous_event_file: state.event_file, from, to: resultingPhase, next_action: nextAction, stop_reason: stopReason }, input_paths: inputPaths });
   return { file: event.file, ...next(context) };
@@ -149,4 +169,4 @@ function resumeLifecycle(context, { stop_event_file: stopEventFile, user_message
   return { resume_file: decision.file, file: resumed.file, ...next(context) };
 }
 
-module.exports = { EDGES, activePlanFile, current, next, recordEvent, resumeLifecycle, transitionEvidence, validateEdge };
+module.exports = { EDGES, activePlanFile, assertLifecycleReviewEvidence, current, next, recordEvent, resumeLifecycle, transitionEvidence, validateEdge };
