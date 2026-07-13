@@ -181,6 +181,15 @@ function runTests() {
     fs.rmSync(direct.temporaryRoot, { recursive: true, force: true });
   }
 
+  const invalidBase = fixture();
+  try {
+    const produced = verification(invalidBase.context);
+    git(invalidBase.context.worktree, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/heads/local"]);
+    expectCode(() => createReviewContext(invalidBase.context, { mode: "task-review", verification_files: [`evidence/${produced.file}`] }), "MDF_REVIEW_BASE_INVALID");
+  } finally {
+    fs.rmSync(invalidBase.temporaryRoot, { recursive: true, force: true });
+  }
+
   const lifecycle = fixture();
   try {
     verification(lifecycle.context);
