@@ -216,7 +216,7 @@ function runTests() {
   try {
     const itemBefore = fs.readFileSync(path.join(completedWithLock.workItem, "item.md"), "utf8");
     const lockBefore = fs.readFileSync(path.join(completedWithLock.canonicalRoot, ".mdf", "locks", "0036.lock"), "utf8");
-    expectCode(() => resolveReviewControllerContext({ cwd: completedWithLock.worktree, pluginRoot: root }), "MDF_REVIEW_TASK_STATE_INVALID");
+    assert.throws(() => resolveReviewControllerContext({ cwd: completedWithLock.worktree, pluginRoot: root }), (error) => error?.code === "MDF_REVIEW_TASK_STATE_INVALID" && error.details?.task_id === "0036" && error.details?.path.endsWith("0036.lock"));
     assert.strictEqual(fs.readFileSync(path.join(completedWithLock.workItem, "item.md"), "utf8"), itemBefore);
     assert.strictEqual(fs.readFileSync(path.join(completedWithLock.canonicalRoot, ".mdf", "locks", "0036.lock"), "utf8"), lockBefore);
   } finally {
