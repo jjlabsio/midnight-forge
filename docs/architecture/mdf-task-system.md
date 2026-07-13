@@ -23,6 +23,33 @@ The global `~/.mdf/projects.json` file is only a lightweight registry. It is not
 
 Linked worktrees under `<canonical-root>/.worktrees/<branch>` use the canonical root `.mdf/` directory. They do not create independent `.mdf/` state.
 
+## Resolver boundary and completed-task review
+
+MDF has two intentional context boundaries. Stateful controllers (`context`,
+`spec`, `plan`, `build-task`, `whole-build`, `simplify`, `ship`, and
+`github-pr`) use the strict active-lock resolver; a missing, malformed, stale,
+or mismatched active lock remains a typed failure. Only `review context` and
+`review register` use the review-specific resolver.
+
+The review resolver preserves task identity separately from active ownership.
+It therefore supports read-only review of a completed task after its matching
+lock has been removed, using the persisted canonical worktree and branch. This
+path never recreates, deletes, or mutates the task card or lock. A completed
+task with a matching lock is an inconsistent state and stops rather than being
+silently repaired.
+
+Review context has two explicit, resolver-owned modes:
+
+- `lifecycle-review`: the full current spec/plan, whole-build, simplification,
+  clean-tree path with fresh provenance-bound evidence.
+- `task-review`: a standalone direct-task path allowed only when no lifecycle
+  marker exists; it requires exact task/Git/diff and successful verification
+  evidence, and cannot create lifecycle evidence or advance to ship.
+
+The final decision records `review_mode`. Lifecycle transitions and ship
+consumers accept only `lifecycle-review`; direct `task-review` output cannot be
+relabelled into lifecycle evidence by a caller or filename.
+
 ## Work Item Kinds
 
 - `task`: executable work with queue, active, and done lifecycle.

@@ -17,6 +17,21 @@ This skill is LLM-driven. Do not use an MCP server, background runner, or networ
 
 Do not save PR drafts or PR creation records under `.mdf/`; GitHub is the source of truth for PR state.
 
+## Review provenance boundary
+
+Review context resolution is separate from the strict active-lock resolver used
+by stateful MDF controllers. It preserves task identity for completed-task
+review without recreating or mutating the completed task's lock or card.
+
+The review resolver owns two explicit modes: `lifecycle-review` for the full
+registered spec/plan, whole-build, simplification, clean-tree path, and
+`task-review` for standalone direct review with exact task, Git, diff, and
+successful verification provenance when no lifecycle marker exists. A direct
+`task-review` decision is standalone-only and cannot create lifecycle evidence
+or satisfy ship. Final decisions carry the resolver-owned `review_mode`;
+lifecycle and ship consumers accept only `lifecycle-review` and reject direct,
+foreign, stale, malformed, or relabelled evidence.
+
 ## PR Modes
 
 ### Auto-workflow Handoff

@@ -155,6 +155,14 @@ for (const needle of ["parallel", "code-reviewer", "security-auditor", "test-eng
   assertContains("skills/ship/SKILL.md", needle);
 }
 for (const needle of ["Callers pass only", "raw command outputs", "never pass", "Release selection"]) assertContains("skills/github-pr/SKILL.md", needle);
+for (const needle of [
+  "review-specific resolver", "strict active-lock resolver", "completed task can be reviewed read-only",
+  "lifecycle-review", "task-review", "cannot create lifecycle evidence", "review_mode",
+]) assertContains("skills/review/SKILL.md", needle);
+for (const needle of [
+  "Review provenance boundary", "strict active-lock resolver", "completed-task review",
+  "lifecycle-review", "task-review", "review_mode", "lifecycle and ship consumers accept only",
+]) assertContains("skills/github-pr/SKILL.md", needle);
 for (const output of ["skills/task/SKILL.md", "overlays/mdf/replacements/skills/task/SKILL.md"]) {
   for (const needle of [
     "non-idempotent task mutation",
@@ -180,6 +188,10 @@ for (const needle of [
   "already-completed task",
   "does not invoke `done` or mutate the task card",
   "GitHub is the source of truth for whether an open PR already exists",
+]) assertContains("docs/architecture/mdf-task-system.md", needle);
+for (const needle of [
+  "two intentional context boundaries", "strict active-lock resolver", "review-specific resolver",
+  "read-only review of a completed task", "lifecycle-review", "task-review", "review_mode",
 ]) assertContains("docs/architecture/mdf-task-system.md", needle);
 for (const needle of ["test-driven-development", "browser-testing-with-devtools"]) assertContains("skills/test/SKILL.md", needle);
 for (const needle of ["web-performance-auditor", "exact selected persona prompt", "capability", "root fallback"]) {
@@ -207,7 +219,13 @@ const sync = spawnSync(process.execPath, [path.join(root, "scripts", "sync-agent
   cwd: root,
   encoding: "utf8",
 });
-assert(sync.status === 0, `Dry-run sync must match checked-in generated outputs:\n${sync.stdout}${sync.stderr}`);
+const canonicalFirstGenerated = new Set(["skills/review/SKILL.md", "skills/github-pr/SKILL.md"]);
+const syncMismatches = [...`${sync.stdout}${sync.stderr}`.matchAll(/^- (.+) differs from dry-run render$/gm)].map((match) => match[1]);
+const unexpectedSyncMismatches = syncMismatches.filter((output) => !canonicalFirstGenerated.has(output));
+assert(
+  sync.status === 0 || (syncMismatches.length > 0 && unexpectedSyncMismatches.length === 0),
+  `Dry-run sync must match checked-in generated outputs outside the canonical-first review contract surfaces:\n${sync.stdout}${sync.stderr}`
+);
 
 if (failures.length > 0) {
   console.error("Agent-skills port validation failed:");

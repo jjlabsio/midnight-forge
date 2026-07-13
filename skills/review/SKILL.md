@@ -11,6 +11,31 @@ or weakening review criteria. Pass canonical MDF spec, plan, build evidence,
 and diff as context when they exist; the upstream workflow remains the review
 method and verdict contract.
 
+## Review context modes and ownership
+
+`review context` uses a review-specific resolver. Stateful controllers such as
+`context`, `spec`, `plan`, `build-task`, `whole-build`, `simplify`, `ship`, and
+`github-pr` continue to use the strict active-lock resolver. The review
+resolver separates task identity from active ownership so a completed task can
+be reviewed read-only after its lock is removed; it never recreates, deletes,
+or mutates a task lock or task card.
+
+The resolver owns exactly two review modes:
+
+- `lifecycle-review` is the full lifecycle path. It requires the current
+  registered spec and plan, stable whole-build evidence, simplification
+  evidence, a clean tree, and fresh provenance-bound sidecars.
+- `task-review` is a standalone direct-task path. It is eligible only when no
+  lifecycle marker exists, requires the task card plus exact Git, diff, and
+  successful verification evidence, and cannot create lifecycle evidence or
+  advance to ship.
+
+The resolved `review_mode` is authoritative. Registration records it in the
+final decision; caller-supplied provenance or mode relabeling is rejected.
+Lifecycle transitions and ship consumers accept only `lifecycle-review`
+provenance, so direct task-review output cannot be promoted by filename or
+caller assertion.
+
 Standalone `review` is one phase and one pass. It saves a canonical
 `review-NNN.md` artifact, then stops. A build controller owns any fix,
 verification, and re-review loop required before advancement. Use a capability
