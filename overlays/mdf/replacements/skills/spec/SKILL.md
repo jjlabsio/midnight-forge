@@ -1,57 +1,56 @@
 ---
 name: spec
-description: "Use when the user invokes spec, mdf spec, or asks to create an approved MDF specification before planning."
+description: "Use when defining or revising a non-trivial MDF change before planning or implementation."
 ---
 
 # spec
 
-This is an MDF controller, not a replacement for the upstream workflow.
-Resolve the installed plugin root from this loaded skill before reading any
-skill, persona, reference, or script path. Fail rather than guessing when the
-plugin root cannot be resolved.
+MDF specifications are model-led Markdown artifacts, not a replacement for
+the upstream workflow. Resolve the canonical project root and installed plugin
+root from the current checkout before reading or writing project state; an
+unresolved plugin root is a stop. Load and follow the exact
+upstream `../spec-driven-development/SKILL.md`; for non-trivial decisions also
+load `../doubt-driven-development/SKILL.md` and preserve its
+`CLAIM -> EXTRACT -> DOUBT -> RECONCILE -> STOP` process.
 
-1. Load and follow the exact upstream `../spec-driven-development/SKILL.md`.
-2. For a non-trivial draft, load and follow the exact upstream
-   `../doubt-driven-development/SKILL.md`; its full
-   `CLAIM -> EXTRACT -> DOUBT -> RECONCILE -> STOP` process remains intact.
-3. The root agent saves the resulting artifact under the resolved canonical
-   MDF work item as `spec-NNN.md`. No subagent writes the artifact.
-4. Run one independent upstream review of the saved artifact when the upstream
-   doubt workflow requires it. A generic subagent, when used, receives the
-   exact selected upstream prompt plus ARTIFACT and CONTRACT only.
-5. Stop after this phase. Do not plan or build in a standalone `spec` run.
+## Create or revise a specification
 
-From the resolved plugin root, register the raw artifact and exact review via
-production `./scripts/mdf-controller.js spec register`. Pass JSON on stdin with
-`artifact_path`, raw `review_output_path`, provenance-bound
-`review_decision_file`, and `mode`. In a technical revision, also pass the
-exact returned `revision_file`. Use `spec approve` only with `affirmative:
-true` after explicit user approval, then `spec advance` with the matching
-registration and approval. For a controller-verified intent-preserving
-technical revision, `spec advance` uses the exact revision evidence as its
-automatic authorization; do not fabricate a human approval.
+1. Inspect the relevant project documentation, current task card, existing
+   decisions, and the repository state before drafting.
+2. Extract the user's goal, non-goals, constraints, observable behavior,
+   risks, and acceptance criteria. Ask only the questions needed to resolve a
+   material ambiguity.
+3. Write a new Markdown revision under the canonical work item as
+   `.mdf/work/<work-id>/spec-NNN.md`. Never overwrite an earlier revision.
+4. Review the complete artifact against the upstream definition of done and
+   the applicable doubt-driven-development result. Fix actionable findings
+   before presenting the artifact.
+5. Compute the SHA-256 of the exact saved bytes and report the path and hash.
+
+The root agent owns the artifact write. Reviewers may comment on the draft but
+do not silently replace it. Historical specifications remain readable.
 
 ## Approval contract
 
-Initial-generation planning requires explicit affirmative user approval of the
-exact canonical artifact revision/hash for the spec. Follow
-`../../references/approval-evidence.md`: the controller's JSON interaction and
-decision sidecars are the canonical approval record, and `item.md.latest.spec`
-must name the registered artifact at approval and advance time. Do not create a
-duplicate `approval-NNN.md` file. Any later edit, replacement, or latest-pointer
-change must invalidate prior approval; do not carry approval to a new revision.
-A saved artifact or a reviewer pass is not approval.
+Initial planning requires an explicit affirmative user approval of the exact
+canonical artifact revision/hash just reported. A saved artifact or a review
+pass is not approval. If the bytes, path, scope, or latest revision changes,
+invalidate prior approval and request approval for the new exact revision.
 
-For the initial generation, `auto-workflow` must stop here until explicit spec
-approval exists. A verified intent-preserving technical revision instead calls
-`spec advance` without `approval_file`; its exact revision evidence authorizes
-only the newly reviewed spec generation.
+In an automatic workflow, stop after presenting the specification until that
+approval is observed. Do not plan or build on an unapproved or ambiguous
+revision. Record the approval in a concise human-readable work-item note or
+the task conversation; keep approval state readable and tied to the exact
+artifact. If a file is needed, use one human-readable `approval-NNN.md` note
+for that exact revision and do not duplicate it.
 
-When recovery returns `technical-revision`, run exact upstream spec-driven
-development and review against original intent, prior spec, current recovery
-evidence, and the new raw spec. Submit them to production
-`./scripts/mdf-controller.js technical-revision`. Intent-preserving technical
-constraints return to `spec`; a user-goal, external-behavior, scope, or
-material-trade-off change stops for human judgment. Re-run fresh spec and plan
-reviews/registration; the revision evidence authorizes their automatic
-advances. Never reuse prior downstream evidence.
+## Technical revisions and handoff
+
+When recovery reveals an intent-preserving technical constraint, produce a new
+specification revision and review it against the original intent, prior
+specification, current failure evidence, and the new constraints. A change to
+the user's goal, external behavior, scope, or material trade-off stops for
+human judgment. Once the exact new revision is approved, hand off to `plan`.
+
+Stop after this phase in a standalone `spec` run. Do not plan or build as an
+unstated continuation.

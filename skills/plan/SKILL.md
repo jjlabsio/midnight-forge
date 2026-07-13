@@ -1,63 +1,51 @@
 ---
 name: plan
-description: "Use when the user invokes plan, mdf plan, or asks to create an approved MDF implementation plan."
+description: "Use when breaking an approved MDF specification into an ordered implementation plan."
 ---
 
 # plan
 
-This is an MDF controller. Resolve the installed plugin root from this loaded
-skill before loading paths; unresolved plugin-root references are a validation
-failure, not an invitation to invent a path.
+Plans are model-led Markdown artifacts. Resolve the installed plugin root and
+require the current explicit approval of the exact specification revision
+before planning. An unresolved plugin root is a stop. Load and follow the exact
+upstream `../planning-and-task-breakdown/SKILL.md`, including its risk matrix,
+early-risk handling, Definition of Done, and sign-off requirements. For
+non-trivial planning decisions also apply the exact
+`../doubt-driven-development/SKILL.md` process.
 
-1. Require current, explicit approval of the selected spec revision.
-2. Load and follow the exact upstream
-   `../planning-and-task-breakdown/SKILL.md`, including its ordinary risk
-   matrix, early-risk handling, Definition of Done, and sign-off requirements.
-   Do not add MDF semantic normal/high-risk classification or evaluator rules.
-3. Apply the exact upstream `../doubt-driven-development/SKILL.md` process for
-   non-trivial planning decisions. The root agent owns synthesis and artifact
-   writes; a generic subagent may receive only the exact selected upstream
-   prompt and the bounded review inputs.
-4. Save the plan as canonical `plan-NNN.md`, with its ordered task list and
-   acceptance criteria, then stop after this phase in standalone mode.
-5. From the plugin root, call production `./scripts/mdf-controller.js plan metadata`, then execute
-   the exact DDD review with the raw plan, current spec registration, and the
-   returned metadata sidecar as bounded inputs. Call `plan register` with that
-   provenance-bound review decision. Standalone mode stops on the returned
-   action. In the initial generation, auto mode uses `plan approve` and then
-   `plan advance` only after exact explicit user approval. In a verified
-   technical-revision generation, call `plan advance` without an
-   `approval_file`; the spec's revision evidence is the authorization.
+## Create or revise a plan
 
-## Controller payloads
+1. Read the approved specification by its exact path and SHA-256, relevant
+   documentation and decisions, and the current task state.
+2. Break the work into ordered, independently verifiable tasks. Each task must
+   state its dependencies, owned paths, acceptance criteria, verification
+   commands, and any human or external confirmation stop.
+3. Include the whole-build verification matrix and identify generated files,
+   source-of-truth inputs, and packaging checks where applicable.
+4. Write a new revision under the canonical work item as
+   `.mdf/work/<work-id>/plan-NNN.md`; never patch an approved revision in place.
+5. Review the complete plan against the approved specification and upstream
+   Definition of Done. Fix actionable findings before presenting it.
+6. Compute the SHA-256 of the exact saved bytes and report the path and hash.
 
-Pass each payload as JSON on stdin while providing the resolved `--cwd` and
-`--plugin-root` options:
-
-- `plan metadata`: `artifact_path`, `spec_registration_file`, and structured
-  `metadata.tasks` (`id`, `depends_on`, `owned_paths`, `acceptance`) plus the
-  complete ordered shell-free `metadata.whole_build_commands` argv matrix.
-- `plan register`: `artifact_path`, `spec_registration_file`, returned
-  `metadata_file`, `review_output_path`, provenance-bound
-  `review_decision_file`, and `mode` (`standalone` or `auto`).
-- `plan approve`: `registration_file`, `user_message_path`, `invocation_id`,
-  and `affirmative: true`. Supply true only after the root has observed an
-  explicit affirmative user action; a negative or ambiguous message is not an
-  approval request.
-- `plan advance`: current `registration_file`; include matching `approval_file`
-  for the initial generation and omit it for a verified technical revision.
+The root agent owns the plan artifact write. The plan is a checklist and
+decision aid, not a replacement task state machine: ordinary model judgment
+chooses the next ready task and explains ambiguity.
 
 ## Approval contract
 
-Initial-generation build requires explicit affirmative user approval of the
-exact canonical artifact revision/hash for the plan. Follow
-`../../references/approval-evidence.md`: the controller's JSON interaction and
-decision sidecars are the canonical approval record, and `item.md.latest.plan`
-must name the registered artifact at approval and advance time. Do not create a
-duplicate `approval-NNN.md` file. A revision or byte change must invalidate
-prior approval.
+Initial implementation requires explicit affirmative user approval of the exact
+canonical artifact revision/hash for the plan. A review pass or a saved plan is
+not approval. Any byte, path, scope, or task-order change requires a new
+revision and new approval; invalidate prior approval when that happens. Record
+approval in a concise human-readable work-item note or the task conversation;
+keep approval and planning state readable and tied to the exact artifact. If a
+file is needed, use one human-readable `approval-NNN.md` note for that exact
+revision and do not duplicate it.
 
-This human approval is mandatory for the initial plan. After a verified
-intent-preserving technical spec revision, the exact revision evidence may
-authorize the freshly generated and freshly reviewed plan automatically. It
-does not authorize old plan bytes or a different definition generation.
+Automatic workflow stops before build until both the exact specification and
+the exact plan approvals are current. A technical revision does not silently
+authorize an old plan; regenerate and review the affected plan revision.
+
+Stop after this phase in a standalone `plan` run. Do not begin implementation
+as an unstated continuation.

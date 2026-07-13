@@ -1,104 +1,66 @@
 ---
 name: build
-description: "Use when the user invokes build or asks to implement approved MDF plan work with upstream TDD and review gates."
+description: "Use when implementing an approved MDF plan with TDD, focused verification, review, and task-owned commits."
 ---
 
 # build
 
-This controller preserves the upstream build workflow while providing MDF
-canonical artifacts and orchestration. Resolve the installed plugin root before
-loading any path. Load and follow exact upstream
-`../incremental-implementation/SKILL.md`, `../test-driven-development/SKILL.md`,
-and `../code-review-and-quality/SKILL.md`; MDF does not edit their criteria.
+Build is a model-led implementation workflow. Resolve the installed plugin
+root before loading any skill or reference; an unresolved plugin root is a
+stop. Load and follow the exact
+upstream `../incremental-implementation/SKILL.md`,
+`../test-driven-development/SKILL.md`, and
+`../code-review-and-quality/SKILL.md`; add UI, API, security, documentation,
+debugging, or other applicable skills when their triggers apply.
 
-## Selection and task gate
+## Task loop
 
-A standalone `build` processes exactly one selected or next pending task from
-the exact approved plan revision. It does not claim whole-build completion.
-Use upstream incremental implementation when its trigger conditions apply and
-always apply appropriate upstream TDD/verification.
+1. Resolve the canonical root, read the exact approved specification and plan
+   revisions, and confirm their paths and SHA-256 values are still current.
+2. Read the task card and current index projection. Choose exactly one
+   selected or next pending task that is ready, confirm its owned paths, and
+   acquire the task lock using the approved
+   lock procedure. Do not infer readiness from card text that conflicts with
+   canonical state, a live lock, or the plan.
+3. Confirm the worktree is the locked worktree, the expected branch is checked
+   out, and the baseline is clean. Stop for unrelated dirt, lock conflict,
+   ambiguous ownership, or a missing setup.
+4. Follow upstream TDD: write a failing test or reproducible check when the
+   behavior warrants one, make the smallest implementation, and run focused
+   verification. Keep edits inside the task-owned paths.
+5. Review the diff and verification results against the full specification,
+   plan, task acceptance, and relevant project documentation. Write readable
+   Markdown notes in the work item when the task's reasoning or downstream
+   impact needs to be preserved. Aim for a fresh-context upstream code review
+   when an independent reviewer is available; if it is unavailable, perform
+   and disclose a root review rather than claiming independent freshness.
+6. Apply a downstream-impact gate in ordinary language. Actionable findings,
+   verification regressions, ambiguity, or a scope change must be fixed,
+   replanned, or stopped before commit. Do not let a clean command substitute
+   for semantic correctness.
+7. Stage only the exact task-owned paths and create one focused commit. Release
+   the lock only through the task skill's owner and digest checks after the
+   task handoff is complete. Never stage unrelated work.
+8. Re-read the card and index projection and report the commit, verification,
+   remaining tasks, and any explicit follow-up decision.
 
-Before a focused commit, the root controller must save task evidence and obtain
-a passing fresh-context upstream code review against the canonical full spec,
-full plan, task evidence, relevant sources, diff, and verification results. The
-task then passes its downstream-impact gate: actionable findings are fixed and
-re-reviewed while material progress continues; repeated blocker, verification
-regression, no progress, or a user decision stops the loop. Only then create
-one commit per task.
+## Failure and recovery
 
-From the resolved plugin root, use the production
-`./scripts/mdf-controller.js build-task` operations for the gate. Pass JSON on
-stdin with resolved `--cwd` and `--plugin-root`:
+On a failed check, preserve the failure, reproduce it, and load the exact
+upstream `../debugging-and-error-recovery/SKILL.md`. A bounded, reversible,
+task-owned repair that preserves intent may continue after the normal review
+and verification loop. A non-reproducible failure, user-goal change, external
+effect, material trade-off, repeated no-progress failure, or destructive
+operation stops for human judgment. Technical revisions return to `spec` and
+must not reuse stale plan or review conclusions.
 
-- `select`: approved `plan_registration_file`, optional ready
-  `selected_task_id`, and the root `writer_id`; requires a clean baseline and
-  returns exactly one task attempt.
-- `verify`: `attempt_file`, a shell-free `command` argv array, and canonical
-  work-item `output_path`; the runtime executes it in the worktree and records
-  the actual exit code and output.
-- `impact`: `attempt_file`, an allowed downstream-impact `classification`, and
-  the raw `artifact_path`.
-- `authorize`: the attempt, passing `command_files`, exact fresh review output
-  and decision, task evidence, diff, downstream-impact decision, exact
-  `touched_paths`, and intended `commit_subject`. This must run before staging
-  or committing.
-- After authorization, stage only the returned task paths and create the one
-  focused commit. Then call `complete` with `authorization_file`; completion is
-  recorded only when runtime-computed parent, tree, subject, paths, and clean
-  status match the authorization.
+## Automatic continuation and completion
 
-Never infer completion from prose, a review verdict alone, or the existence of
-a commit. A failed controller operation is a typed stop for the build loop.
-
-Fresh review requires a capability-verified independent executor. If that is
-unavailable, use the permitted root escalation and record it; otherwise record
-the upstream-defined degraded status and block commit/advancement whenever
-genuine freshness is required. A generic subagent receives the exact selected
-upstream persona prompt, not a paraphrase.
-
-## `build auto` and `build all`
-
-`build auto` and `build all` are public lifecycle modes. Route them to the
-flat root `auto-workflow` controller, which processes all approved plan tasks;
-do not reinterpret them as one standalone task. Preserve upstream autonomous
-behavior: clean baseline checks, known approved inputs, separate planning
-commit(s), task-only staging, one commit per task, resume semantics, and
-high-risk or irreversible-work sign-off stops.
-
-Before lifecycle execution, resolve approved spec/plan evidence and run
-`git status --porcelain`; stop for any unrelated dirt. If a promoted tracked
-planning artifact is uncommitted, create its preparatory planning commit before
-task work; canonical local `.mdf` artifacts remain evidence, not tracked
-planning files. Before each task, recheck a clean baseline, stage only the
-enumerated task-touched paths with `git add -- <paths>` (never `git add -A`),
-commit the one passed task, and resume only at the next canonical pending task.
-
-After all approved plan tasks pass, the lifecycle controller runs whole-build
-integration verification and a separate fresh-context upstream review. Whole
-build completion is calculated against all approved plan tasks, never merely
-the selected task.
-
-## Recovery gate
-
-On a failed verification or review, preserve the current failure and reproduce
-it before changing code. Execute exact upstream
-`../debugging-and-error-recovery/SKILL.md` with the test-engineer persona, then
-pass its provenance-bound semantic decision to production
-`./scripts/mdf-controller.js recovery`. The payload contains exact
-`failure_files`, a failing runtime `reproduction_file`, raw diagnosis output
-and decision, and the affected `attempt_file`.
-
-Only a reproducible, intent-preserving, reversible, bounded, task-owned repair
-that needs no human judgment may return `repair-task`. Use `build-task repair`
-with that `recovery_file`, then run the ordinary verification, fresh review,
-downstream impact, authorization, and focused commit gate. A repair completion
-invalidates the earlier whole-build baseline and requires the full whole-build
-matrix and review again.
-
-Ambiguous, non-reproducible, intent/scope/trade-off changing, high-risk,
-irreversible, external, or human-decision cases stop. Repeating the same
-failure fingerprint at the same worktree progress marker stops as
-`no-progress`; a fingerprint is identity evidence, never repair permission.
-An intent-preserving `technical-revision` is handed to the spec controller's
-production revision path. Do not patch the old plan in place or reuse prior
-task, whole-build, simplification, review, ship, or PR evidence.
+`build auto` and `build all` are this same loop repeated over all approved plan
+tasks. Before each task, recheck approval, lock ownership, clean baseline, and
+exact task scope; inspect `git status --porcelain`, stage with `git add --`,
+create one commit per task, and resume at the next pending task. After all
+approved plan tasks pass, run the whole-build verification matrix from the
+plan and perform a final review against the full specification. Report
+completion only after that review with a readable task handoff that identifies
+the commit, checks, and remaining work.
