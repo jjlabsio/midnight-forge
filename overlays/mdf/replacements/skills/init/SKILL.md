@@ -7,26 +7,11 @@ description: "Initialize MDF user and project state, including explicit human la
 
 Use this skill when the user invokes `$init` in Codex, `mdf init`, or asks to initialize MDF.
 
-Semantic setup questions in this skill remain LLM-driven. Deterministic local
-state validation and application may use the independent JSON script described
-below; do not use an MCP server, background runner, event store, or network
-service.
-
-## Deterministic Script Boundary
-
-After resolving the installed plugin root, the orchestrator may invoke
-`scripts/mdf-init.js` from that plugin root with one JSON operation at a time:
-
-- `validate`: inspect user/project schemas, canonical layout, and ignore-policy
-  status without creating state.
-- `apply`: apply only explicit bootstrap input such as `human_language`, write
-  canonical state atomically, and preserve unrelated registry entries.
-
-The script must run only after the skill has handled the semantic setup
-questions. It never infers a human language, edits `.gitignore`, creates a
-setup branch/commit/PR, chooses docs or agent-rule changes, or performs a
-tracked project setup decision. Missing ignore coverage and malformed state
-are typed stops; do not continue from a partial result.
+Semantic setup questions and local state work are LLM-driven. Inspect the
+filesystem and Git state directly, explain the facts you found, and apply only
+the explicit setup decisions that the user confirms. Do not use a background
+runner, event store, network service, or hidden state cache. Missing ignore
+coverage and malformed state are stops; do not continue from a partial result.
 
 `mdf init` is the only MDF skill that creates or repairs MDF setup state. Other MDF state-boundary skills must verify init state and stop with instructions to run `mdf init` when init is missing.
 
