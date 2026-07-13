@@ -1,30 +1,31 @@
 # Midnight Forge
 
 Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It keeps
-agent-skills workflow primitives byte-identical to their pinned upstream source
-and adds MDF-only controllers for canonical task artifacts and Codex runtime
-orchestration.
+the pinned `agent-skills` primitives byte-identical while adding readable MDF
+skills for canonical task state, approvals, worktree isolation, review, and
+GitHub handoff.
 
 ## Scope
 
 - Product name: `midnight-forge`
 - Plugin namespace: `mdf`
 - Supported runtime: Codex
-- Runtime surface: generated root `skills/`, `references/`, and `agents/`
-- Source inputs: `vendor/agent-skills`, `overlays/mdf`, and sync/validation scripts
+- Runtime surface: generated `skills/`, `references/`, and `agents/`
+- Source inputs: `vendor/agent-skills`, `overlays/mdf`, and packaging scripts
 - Local task state: canonical project-root `.mdf/`, gitignored
 
-Claude Code plugin support has been intentionally removed. Do not recreate `.claude-plugin/` or `commands/` shims unless the product direction changes explicitly.
+Claude Code plugin support has been intentionally removed. Do not recreate
+`.claude-plugin/` or `commands/` shims unless product direction changes
+explicitly.
 
 ## Install
-
-Install the released plugin through the GitHub-hosted Codex marketplace:
 
 ```bash
 codex plugin marketplace add jjlabsio/midnight-forge
 ```
 
-Then open the Codex Plugin Directory, select the `Midnight Forge` marketplace, and install or enable `mdf`.
+Then open the Codex Plugin Directory, select the `Midnight Forge` marketplace,
+and install or enable `mdf`.
 
 ## Use
 
@@ -52,30 +53,36 @@ $ship
 $webperf
 ```
 
+Each workflow is model-led. Skills resolve the canonical root, read Markdown
+cards and artifacts, explain ambiguity, and stop for current human or
+external confirmation. No broad workflow runtime owns routing or semantic
+success. The narrow lock helper, when used, only inspects, exclusively
+acquires, and byte-conditionally releases a lock.
+
 ## Architecture
 
-Midnight Forge commits complete generated runtime files so Codex can read ordinary skill files during task execution. The source layout is:
+The repository commits complete generated files so Codex can read ordinary
+skill files during execution. The source layout is:
 
 ```text
-vendor/agent-skills/          # pinned upstream source
-overlays/mdf/                 # MDF controller and packaging inputs
-overlays/mdf/release-metadata.json
-scripts/sync-agent-skills.js  # generated surface renderer
+vendor/agent-skills/          # pinned immutable upstream source
+overlays/mdf/                 # MDF skill and packaging inputs
+overlays/mdf/inventory/       # generated-surface inventory shards
+scripts/sync-agent-skills.js  # packaging renderer
 skills/ references/ agents/   # generated runtime surface
 ```
 
-See [docs/architecture/agent-skills-overlay-system.md](docs/architecture/agent-skills-overlay-system.md) for the full overlay model.
+Edit overlay inputs and regenerate root outputs with the sync renderer. The
+vendor snapshot is immutable. The retained validators check source hashes,
+inventory coverage, generated output, and overlay/source equality; they do not
+enforce workflow lifecycle or review meaning.
 
-Public skill files are thin entrypoints over a production controller runtime in
-`scripts/controller-runtime/`. That runtime binds lifecycle decisions to exact
-canonical artifacts and current Git evidence while preserving upstream workflow
-behavior and raw results. The architecture document is the source of truth for
-the controller responsibility boundary, sidecar trust boundary, and MDF's
-intentional automation and same-task simplification exceptions.
+See [docs/architecture/agent-skills-overlay-system.md](docs/architecture/agent-skills-overlay-system.md)
+and [docs/architecture/mdf-task-system.md](docs/architecture/mdf-task-system.md).
 
 ## Work Items
 
-MDF task state and workflow artifacts are local by default:
+MDF task state and readable workflow artifacts are local by default:
 
 ```text
 <canonical-project-root>/.mdf/
@@ -86,22 +93,22 @@ MDF task state and workflow artifacts are local by default:
   locks/
 ```
 
-Linked worktrees under `<canonical-project-root>/.worktrees/<branch>` use the canonical root `.mdf/` directory. Workflow artifacts stay under `.mdf/work/{work_id}/` unless the user explicitly promotes a document into tracked project docs.
-
-See [docs/architecture/mdf-task-system.md](docs/architecture/mdf-task-system.md) for the task storage model.
-
-## Documentation
-
-Tracked project docs live under [docs/](docs/index.md). The docs taxonomy separates product context, architecture, durable decisions, and operations. Local workflow artifacts remain under `.mdf/work/{work_id}/`.
+Linked worktrees under `<canonical-project-root>/.worktrees/<branch>` use the
+canonical root `.mdf/` directory and never create independent state. `item.md`
+is the card source of truth; `index.jsonl` is an append-only board projection
+whose latest valid line wins. Locks are ownership markers, not semantic
+authorization.
 
 ## Validation
 
-Run the generated surface checks before PRs:
+Run the packaging checks before PRs:
 
 ```bash
 node scripts/sync-agent-skills.js --dry-run
 node scripts/validate-agent-skills-sync.js
 node scripts/validate-agent-skills-port.js
-node scripts/validate-mdf-controller-runtime.js
-node scripts/validate-mdf-task-state-cli.js
 ```
+
+Historical `.mdf/work/` artifacts remain readable and are not rewritten by
+packaging checks. See [docs/architecture/mdf-mechanization-inventory-0041.md](docs/architecture/mdf-mechanization-inventory-0041.md)
+for the maintained, historical, and packaging surface inventory.

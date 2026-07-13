@@ -4,9 +4,9 @@
   "classification": "mdf-rename-or-adapter",
   "overlay": "replacements/skills/ship/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF adapts the upstream ship command into a Codex-native shipping entrypoint skill.",
+  "notes": "MDF adapts the upstream ship command into a Codex-native GO/NO-GO and rollback entrypoint.",
   "baseSha256": "a067c5c4ea484609ceb530b908c7fb707f184abae839826012ddca653517c1c5",
   "overlayKind": "renameAdapter",
-  "adapterRationale": "The upstream ship command is converted from a command prompt into an MDF skill with Codex/MDF fan-out, evidence, and GO/NO-GO semantics.",
+  "adapterRationale": "The upstream ship command is converted from a command prompt into an explicit review, rollback, risk, and external-authority workflow.",
   "reviewRisk": "Full adapter replacement can hide upstream ship command changes; validation pins the upstream command hash and requires explicit review when it changes."
 }

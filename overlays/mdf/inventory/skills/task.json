@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/task/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Active model-led task state skill over canonical cards, index projections, and locks.",
   "overlayKind": "mdfOnly"
 }

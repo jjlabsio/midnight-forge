@@ -10,11 +10,15 @@ Accepted
 
 ## Context
 
-Midnight Forge vendors upstream `agent-skills` and applies MDF-specific behavior. Agents need to consume skills during normal execution without mentally composing upstream files, overlay metadata, and local policy fragments.
+Midnight Forge vendors upstream `agent-skills` and applies MDF-specific model
+guidance. Agents need to consume skills during normal execution without
+mentally composing upstream files, overlay metadata, and local policy fragments.
 
 ## Decision
 
-Commit complete generated runtime files under root `skills/`, `references/`, and `agents/`. Treat `vendor/agent-skills` plus `overlays/mdf` as source inputs and use scripts to regenerate and validate the runtime surface.
+Commit complete generated files under root `skills/`, `references/`, and
+`agents/`. Treat `vendor/agent-skills` plus `overlays/mdf` as source inputs and
+use packaging scripts to regenerate and validate the installed surface.
 
 ## Alternatives Considered
 
@@ -33,6 +37,6 @@ Commit complete generated runtime files under root `skills/`, `references/`, and
 ## Consequences
 
 - Generated files duplicate source-derived content.
-- Sync and validation are required before PRs.
+- Packaging sync and validation are required before PRs.
 - Future agents can read ordinary runtime files without overlay knowledge.
 - Upstream update work can compare pinned source, overlay metadata, and generated output.

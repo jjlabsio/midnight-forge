@@ -5,43 +5,27 @@ description: "Use before software development workflow decisions in Codex or MDF
 
 # Use MDF
 
-MDF is a controller layer over agent-skills, not a fork of its primitive
-workflows. Resolve the installed plugin root from the loaded skill before
-loading a skill, reference, persona, documentation file, or supporting script.
-Do not rely on a fixed cache path; unresolved paths fail validation.
+MDF is a routing and context layer over agent-skills, not a fork of its
+primitive workflows. Resolve the installed skill or reference location before
+loading a skill, persona, documentation file, or supporting material. Do not
+rely on a fixed cache path; unresolved paths are a stop.
 
 ## Routing
 
-Route public MDF commands to controllers (`spec`, `plan`, `build`, `review`,
-`auto-workflow`, `code-simplify`, `ship`, `webperf`, task and git controllers),
-then load every applicable exact upstream primitive. Keep `using-agent-skills`
-as a separately accessible exact upstream primitive; `use-mdf` does not replace
-its skill discovery, lifecycle stages, or Definition of Done.
+Route public MDF commands to their named skills (`spec`, `plan`, `build`,
+`review`, `auto-workflow`, `code-simplify`, `ship`, `webperf`, task, and Git
+skills), then load every applicable exact upstream primitive. Keep
+`using-agent-skills` as a separately accessible exact upstream primitive;
+`use-mdf` does not replace its skill discovery, lifecycle stages, or Definition
+of Done.
 
 Select all applicable upstream skills, including UI, API, source-driven,
 security, observability, documentation, debugging, and migration workflows
 when their trigger conditions apply. MDF may add canonical artifact storage,
-language, lifecycle state, and runtime adaptation only in controllers.
-
-## Independently Callable Mechanical Domains
-
-When a workflow area has a deterministic script contract, the orchestrator may
-compose the domains independently from the resolved plugin root:
-
-- `scripts/mdf-worktrees.js` — worktree preflight, creation, and preparation.
-- `scripts/mdf-init.js` — state validation and explicit local initialization.
-- `scripts/mdf-github-clear-gone.js` — gone-branch inspection and guarded
-  clean/dirty application.
-- `scripts/mdf-github-after-merge.js` — merged-PR verification and
-  fast-forward-only canonical synchronization.
-- `scripts/mdf-artifacts.js` — artifact revision, write, latest, and index
-  operations.
-
-Each script accepts one JSON operation and returns the shared success or typed
-error envelope. Shared runtime helpers are allowed, but no script replaces the
-other domain or creates a monolithic five-domain controller. Semantic choices,
-ambiguous state, destructive confirmation, and user authority remain with the
-orchestrator and applicable upstream skill.
+language, lifecycle state, and runtime adaptation as written guidance, but it
+does not replace semantic judgment with a workflow runtime or a JSON command
+contract. The model owns routing, ambiguity handling, destructive confirmation,
+and user authority.
 
 ## Executor and persona adapter
 

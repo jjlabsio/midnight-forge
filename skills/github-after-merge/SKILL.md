@@ -1,113 +1,33 @@
 ---
 name: github-after-merge
-description: "Use after a GitHub PR has been merged to return to the default branch, fast-forward it, and hand off gone branch/worktree cleanup to github-clear-gone."
+description: "Use after a GitHub PR has been merged to return to the default branch and hand off gone-branch cleanup."
 ---
 
 # GitHub After Merge
 
-Use this skill after a PR created from an MDF worktree has been merged and the
-user wants the local session ready for the next task or code exploration.
+Use this skill only after the user says the PR was merged or explicitly asks
+to sync after merge. It owns post-merge local synchronization; it does not
+merge PRs, create commits, push, or silently clean branches.
 
-This skill owns the post-merge transition. `github-pr` stops at PR creation; it
-does not wait for review, CI, merge, or cleanup. Run this as a later follow-up
-once the user says the PR was merged or asks to sync after merge.
+1. Identify the PR from an explicit number or URL, or from the current branch
+   with `gh pr view`. Stop if it cannot be identified.
+2. Read the PR state and require `mergedAt`, head ref, base ref, and URL to be
+   present and mutually consistent. If it is not merged, stop without
+   switching branches, pulling, or deleting anything.
+3. Resolve the canonical repository checkout. When invoked from a linked
+   worktree under `<canonical-root>/.worktrees/<branch>`, use the canonical
+   root for default-branch synchronization. Do not create or write MDF task
+   state from this skill.
+4. Stop if the canonical checkout is dirty, the repository has no `origin`, or
+   the remote default branch cannot be resolved.
+5. In the canonical checkout, fetch the remote default branch with prune,
+   check it out only when safe, and fast-forward it only with
+   `git pull --ff-only`. Never reset, rebase, or overwrite local work.
+6. Hand off gone-branch candidates to `github-clear-gone`. Show candidates and
+   remove only clean gone branches/worktrees automatically; dirty worktrees
+   require explicit confirmation naming the path and discarded changes.
+7. Report the merged PR URL, default branch and latest commit, synchronization
+   result, cleanup result, and any confirmation still required.
 
-## Deterministic Script Boundary
-
-After resolving the installed plugin root, invoke the independent
-`scripts/mdf-github-after-merge.js` JSON contract:
-
-- `verify` obtains the PR state and stops unless `mergedAt`, head ref, and base
-  ref are present and consistent.
-- `sync` re-verifies the PR, checks the clean canonical checkout, resolves the
-  remote default branch, then performs checkout, `fetch --prune`, and
-  `pull --ff-only` only.
-
-The result contains a cleanup handoff for
-`scripts/mdf-github-clear-gone.js`; do not invoke deletion, merging, pushing,
-or cleanup from this script. The orchestrator retains PR identification,
-external-state interpretation, and dirty-worktree confirmation authority.
-
-## Workflow
-
-1. Identify the PR to verify.
-   - Prefer an explicit PR number or URL from the user.
-   - Otherwise, infer it from the current branch with `gh pr view`.
-   - If no PR can be identified, ask for the PR number or URL.
-2. Verify the PR is merged:
-
-```bash
-gh pr view <pr> --json state,mergedAt,headRefName,baseRefName,url
-```
-
-If `mergedAt` is empty, stop and report that cleanup waits until the PR is
-merged. Do not switch branches, pull, or delete anything.
-
-3. Resolve the canonical repository checkout.
-   - If running inside `<canonical-root>/.worktrees/<branch>`, use
-     `<canonical-root>` for all default-branch sync and cleanup commands.
-   - Otherwise, use `git rev-parse --show-toplevel`.
-   - Do not create or write MDF task state from this skill.
-4. In the canonical checkout, stop if there are uncommitted changes:
-
-```bash
-git status --short
-```
-
-5. Resolve the remote default branch:
-
-```bash
-default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
-if [ -z "$default_branch" ]; then
-  default_branch=$(git remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p')
-fi
-```
-
-6. Move the canonical checkout to the default branch and update it:
-
-```bash
-git checkout "$default_branch"
-git fetch --prune origin
-git pull --ff-only origin "$default_branch"
-```
-
-If checkout, fetch, or pull fails, stop and report the exact failure. Do not
-delete branches or worktrees.
-
-7. Use `github-clear-gone` to clean stale local branches and associated
-worktrees.
-   - Follow `github-clear-gone` exactly.
-   - Show deletion candidates first.
-   - Automatically remove clean `[gone]` branches and their clean associated
-     worktrees.
-   - Require explicit user confirmation only for dirty worktrees that would
-     discard uncommitted changes.
-   - Never delete branches that are not marked `[gone]`.
-
-8. Report the final state:
-   - merged PR URL
-   - default branch and latest commit
-   - whether cleanup was completed, skipped, or waiting for dirty-worktree
-     confirmation
-   - that subsequent code exploration or task work should start from the
-     updated default branch
-
-## Stop Conditions
-
-Stop instead of continuing when:
-
-- The PR cannot be identified.
-- The PR is not merged.
-- The current directory is not in a git repository.
-- The repository has no `origin` remote.
-- The default branch cannot be resolved.
-- The canonical checkout has uncommitted changes.
-- Checking out or fast-forwarding the default branch fails.
-- `github-clear-gone` finds dirty worktrees that require confirmation and the
-  user has not confirmed discarding their uncommitted changes.
-
-## Boundaries
-
-Do not merge PRs. Do not create commits. Do not push. Do not delete current or
-non-gone branches. Do not remove dirty worktrees without explicit confirmation
-through `github-clear-gone`.
+Stop on a failed GitHub query, non-merged PR, dirty canonical checkout, failed
+checkout/fetch/fast-forward, branch ambiguity, or an unconfirmed dirty cleanup.

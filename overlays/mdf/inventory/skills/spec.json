@@ -4,9 +4,9 @@
   "classification": "mdf-rename-or-adapter",
   "overlay": "replacements/skills/spec/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF adapts the upstream spec command into a Codex-native spec entrypoint skill.",
+  "notes": "MDF adapts the upstream spec command into a Codex-native model-led Markdown entrypoint.",
   "baseSha256": "e964ec1155154d9f2f83dbd4c7a6e030ec19aec1fdc5060176c7c255d4695577",
   "overlayKind": "renameAdapter",
-  "adapterRationale": "The upstream spec command is converted from a command prompt into an MDF skill with MDF spec artifact and workflow-state semantics.",
+  "adapterRationale": "The upstream spec command is converted from a command prompt into a Markdown specification skill with exact human approval.",
   "reviewRisk": "Full adapter replacement can hide upstream spec command changes; validation pins the upstream command hash and requires explicit review when it changes."
 }

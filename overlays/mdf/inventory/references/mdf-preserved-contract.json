@@ -1,0 +1,9 @@
+{
+  "output": "references/mdf-preserved-contract.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/references/mdf-preserved-contract.md",
+  "artifactStorageOverride": false,
+  "notes": "Readable reference for canonical root, cards, index, locks, malformed state, paths, interruption repair, and explicit authority.",
+  "overlayKind": "mdfOnly"
+}

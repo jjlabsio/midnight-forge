@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/github-after-merge/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Active model-led merged-PR synchronization and cleanup handoff.",
   "overlayKind": "mdfOnly"
 }

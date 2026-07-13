@@ -155,7 +155,7 @@ for (const kind of ["copy", "mdfOnly", "renameAdapter"]) {
 }
 assert(lock.repository === inventory.upstream.repository, "Vendor lock repository must match inventory.");
 assert(lock.commit === inventory.upstream.commit, "Vendor lock commit must match inventory.");
-assert(exists(path.join(overlayRoot, "replacements", "references", "agent-skills-port-notes.md")), "Missing MDF controller runtime policy.");
+assert(exists(path.join(overlayRoot, "replacements", "references", "agent-skills-port-notes.md")), "Missing MDF packaging reference.");
 for (const entry of entries) {
   outputCounts.set(entry.output, (outputCounts.get(entry.output) || 0) + 1);
 }
@@ -263,8 +263,8 @@ for (const output of generatedMarkdown) {
   if (!exists(outputPath)) continue;
   const content = readText(outputPath);
   // Exact upstream primitives retain their original prose. Their installed
-  // plugin-root resolution is an MDF controller concern, not a reason to patch
-  // the primitive or emit a false portability warning.
+  // plugin-root resolution is an MDF runtime-surface concern, not a reason to
+  // patch the primitive or emit a false portability warning.
   if (entryByOutput.get(output)?.classification !== "upstream-identical") {
     warnRuntimeRootReferences(output, content);
   }
@@ -281,7 +281,7 @@ for (const output of generatedMarkdown) {
 }
 
 const useMdf = entries.find((entry) => entry.output === "skills/use-mdf/SKILL.md");
-assert(useMdf?.classification === "mdf-only", "use-mdf must be an independent MDF-only routing controller.");
+assert(useMdf?.classification === "mdf-only", "use-mdf must be an independent MDF-only routing skill.");
 assert(overlayKind(useMdf || {}) === "mdfOnly", "use-mdf must use mdfOnly overlayKind.");
 assert(!useMdf?.source, "use-mdf must not claim an upstream source.");
 assert(!useMdf?.baseSha256, "use-mdf must not claim an upstream source hash.");

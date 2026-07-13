@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/github-clear-gone/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Active model-led gone-branch classification with clean/dirty deletion confirmation.",
   "overlayKind": "mdfOnly"
 }

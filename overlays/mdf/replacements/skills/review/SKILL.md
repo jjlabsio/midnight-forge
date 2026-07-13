@@ -1,58 +1,50 @@
 ---
 name: review
-description: "Use when the user invokes review, mdf review, or asks for one upstream five-axis review pass."
+description: "Use when the user invokes review or asks for one upstream five-axis review pass."
 ---
 
 # review
 
-This MDF controller resolves the installed plugin root, loads the exact
-upstream `../code-review-and-quality/SKILL.md`, and follows it without adding
-or weakening review criteria. Pass canonical MDF spec, plan, build evidence,
-and diff as context when they exist; the upstream workflow remains the review
-method and verdict contract.
+Resolve the installed plugin root, then load and follow the exact upstream
+`../code-review-and-quality/SKILL.md` without adding or weakening its
+criteria. Resolve the canonical root, then
+read the exact specification, plan, task card, current diff, tests, and
+verification notes that are relevant to the requested review.
 
-## Review context modes and ownership
+## Review modes
 
-`review context` uses a review-specific resolver. Stateful controllers such as
-`context`, `spec`, `plan`, `build-task`, `whole-build`, `simplify`, `ship`, and
-`github-pr` continue to use the strict active-lock resolver. The review
-resolver separates task identity from active ownership so a completed task can
-be reviewed read-only after its lock is removed; it never recreates, deletes,
-or mutates a task lock or task card.
+The review-specific resolver is a model inspection step; writes still require
+the strict active-lock resolver and current task ownership.
 
-The resolver owns exactly two review modes:
+- `lifecycle-review` covers the approved specification and plan, the complete
+  task sequence, whole-build checks, simplification result, and the clean
+  final tree.
+- `task-review` covers the task card, exact Git diff, owned paths, successful
+  focused verification, and any downstream-impact note. It is read-only and
+  must not recreate a task lock, mutate a card, or promote itself to ship. It
+  cannot create lifecycle evidence; it only reports on the supplied tree.
 
-- `lifecycle-review` is the full lifecycle path. It requires the current
-  registered spec and plan, stable whole-build evidence, simplification
-  evidence, a clean tree, and fresh provenance-bound sidecars.
-- `task-review` is a standalone direct-task path. It is eligible only when no
-  lifecycle marker exists, requires the task card plus exact Git, diff, and
-  successful verification evidence, and cannot create lifecycle evidence or
-  advance to ship.
+The `review_mode` is a readable label for the selected review scope, not a
+permission to mutate workflow state. A completed task can be reviewed
+read-only after its lock is released.
 
-The resolved `review_mode` is authoritative. Registration records it in the
-final decision; caller-supplied provenance or mode relabeling is rejected.
-Lifecycle transitions and ship consumers accept only `lifecycle-review`
-provenance, so direct task-review output cannot be promoted by filename or
-caller assertion.
+Standalone `review` is one pass. Save a human-readable `review-NNN.md` report
+under the canonical work item and stop. A review report is not user approval,
+does not change task state, and cannot authorize an external action by itself.
+When independent freshness is required, ask for a fresh upstream reviewer;
+otherwise perform a root review and disclose that limitation rather than
+claiming an unavailable reviewer ran.
 
-Standalone `review` is one phase and one pass. It saves a canonical
-`review-NNN.md` artifact, then stops. A build controller owns any fix,
-verification, and re-review loop required before advancement. Use a capability
-verified fresh reviewer where upstream freshness is required; otherwise record
-the precise degraded/root fallback status rather than mislabeling it.
+## Review method
 
-From the resolved plugin root, call production
-`./scripts/mdf-controller.js review context` first. It returns the exact
-current spec, plan, lifecycle-linked task/refactor completions, stable
-whole-build, simplification result, and tree-bound context paths. Execute one
-exact upstream review pass against those paths and preserve its raw output;
-never parse headings, phrases, or Markdown to derive a verdict.
+Check correctness, readability, architecture, security, and performance. Use
+the full relevant source context and verification output, not only a summary or
+headings. Classify findings as actionable defects, clarity suggestions,
+scope/plan changes, or user decisions. Fix actionable findings and rerun the
+appropriate verification and review while material progress continues. Stop
+for repeated findings, regressions, ambiguity, or a material trade-off.
 
-Call `review register` with `context_file`, raw `output_path`, provenance-bound
-`decision_file`, and `mode`. Standalone mode always stops after that one pass.
-In auto mode, a passing semantic decision advances to ship. Findings that need
-human judgment stop; bounded findings may create one affected-task attempt and
-must then pass the ordinary verification/fresh-review/focused-commit gate and
-the full whole-build/simplification cycle again. The semantic decision, not
-report grammar, owns that routing.
+Only the root agent writes the report. Keep the report readable, cite paths and
+commands, and state the final disposition and remaining risk. A passing review
+means the reviewed tree satisfies the supplied contract; it is not proof that
+the command output alone establishes semantic correctness.

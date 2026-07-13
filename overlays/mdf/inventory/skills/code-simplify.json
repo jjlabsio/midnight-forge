@@ -4,7 +4,7 @@
   "classification": "mdf-rename-or-adapter",
   "overlay": "replacements/skills/code-simplify/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF adapts the upstream code-simplify command into a Codex-native entrypoint skill.",
+  "notes": "MDF adapts the upstream code-simplify command into a Codex-native behavior-preserving model-led entrypoint.",
   "baseSha256": "640cdd34c26a04cabe6d3ea64ba5aad91bb68b16c8f7619a9e5fae6fe0a37ec8",
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream command is converted from a command prompt into an MDF skill while preserving the code-simplify entrypoint intent.",

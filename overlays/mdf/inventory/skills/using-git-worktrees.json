@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/using-git-worktrees/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "MDF-native file with no direct upstream source in agent-skills.",
+  "notes": "Active model-led worktree isolation with branch, path, lock, and cleanup guards.",
   "overlayKind": "mdfOnly"
 }
