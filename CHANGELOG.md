@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.0 - 2026-07-13
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.4.0...v2.0.0)
+
+### Changes
+
+- refactor!: MDF를 모델 주도 워크플로로 되돌리기 ([#58](https://github.com/jjlabsio/midnight-forge/pull/58))
 ## v1.4.0 - 2026-07-13
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.3.2...v1.4.0)
