@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.1 - 2026-07-13
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.0...v2.0.1)
+
+### Changes
+
+- docs: preserve upstream command contracts in MDF adapters ([#59](https://github.com/jjlabsio/midnight-forge/pull/59))
 ## v2.0.0 - 2026-07-13
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v1.4.0...v2.0.0)
