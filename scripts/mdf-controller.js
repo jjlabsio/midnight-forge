@@ -139,7 +139,7 @@ try {
     let request = {};
     try { request = JSON.parse(fs.readFileSync(0, "utf8") || "{}"); }
     catch (error) { throw new ControllerError("MDF_CONTROLLER_INPUT_INVALID", "Review command requires JSON stdin."); }
-    const result = operation === "context" ? createReviewContext(context) : operation === "register" ? registerReview(context, request) : null;
+    const result = operation === "context" ? createReviewContext(context, request) : operation === "register" ? registerReview(context, request) : null;
     if (!result) throw new ControllerError("MDF_CONTROLLER_USAGE", "Usage: mdf-controller review context|register [--cwd PATH] [--plugin-root PATH]");
     console.log(JSON.stringify({ ok: true, review: result }, null, 2));
     process.exit(0);

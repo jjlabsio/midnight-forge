@@ -95,6 +95,9 @@ function runCli(fixture, command, input = {}) {
 }
 
 function runTests() {
+  const dispatcherSource = fs.readFileSync(cliPath, "utf8");
+  assert.match(dispatcherSource, /createReviewContext\(context, request\)/, "review context must receive the parsed request");
+
   const completed = createFixture({ lock: false, completed: "2026-07-13" });
   try {
     const context = resolveReviewControllerContext({ cwd: completed.worktree, pluginRoot: root });
