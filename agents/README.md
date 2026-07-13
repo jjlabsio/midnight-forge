@@ -13,5 +13,5 @@ Codex/MDF runtime adapter.
 - The root verifies capability, uses root fallback for quality-critical work
   when capability cannot be selected or verified, and records any degraded
   freshness status honestly.
-- MDF controllers own canonical artifact storage, approval evidence, and
+- The root model owns canonical artifact storage, approval evidence, and
   root-only synthesis. Persona content remains upstream-owned.

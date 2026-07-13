@@ -263,8 +263,8 @@ for (const output of generatedMarkdown) {
   if (!exists(outputPath)) continue;
   const content = readText(outputPath);
   // Exact upstream primitives retain their original prose. Their installed
-  // plugin-root resolution is an MDF controller concern, not a reason to patch
-  // the primitive or emit a false portability warning.
+  // plugin-root resolution is an MDF runtime-surface concern, not a reason to
+  // patch the primitive or emit a false portability warning.
   if (entryByOutput.get(output)?.classification !== "upstream-identical") {
     warnRuntimeRootReferences(output, content);
   }
