@@ -1,17 +1,14 @@
 ---
 name: test
-description: "Use when the user invokes test, mdf test, or asks to run the agent-skills TDD workflow, including browser testing only for browser-related issues."
+description: "Run TDD workflow — write failing tests, implement, verify. For bugs, use the Prove-It pattern. Use when the user invokes test, mdf test, or asks to run the agent-skills TDD workflow."
 ---
 
 # test
 
-Resolve the installed plugin root before loading paths. Use this Codex-native
-entrypoint when the user invokes `test`, `mdf test`, `$test`, or asks to run the
-TDD workflow.
+## Upstream command contract
 
-Load and follow the exact upstream `../test-driven-development/SKILL.md`.
-
-This remains a standalone workflow even though `build` may invoke test logic internally. Use it for independent verification, manual changes, debugging, PR preparation, and pre-ship checks.
+Invoke the test-driven-development skill by loading and following the exact
+upstream `../test-driven-development/SKILL.md`.
 
 For new features:
 1. Write tests that describe the expected behavior (they should FAIL)
@@ -28,4 +25,18 @@ For bug fixes (Prove-It pattern):
 For browser-related issues, also load the exact upstream
 `../browser-testing-with-devtools/SKILL.md` to verify with Chrome DevTools MCP.
 
-When saving a test plan or test result report, verify MDF user and project init state, resolve the current MDF work item, and write `.mdf/work/{work_id}/test-NNN.md`. If init state is missing, stop and instruct the user to run `mdf init`. Update `item.md` `latest.test` and `.mdf/index.jsonl`.
+## MDF/Codex adaptation
+
+Resolve the installed plugin root before loading paths. Use this Codex-native
+entrypoint when the user invokes `test`, `mdf test`, `$test`, or asks to run the
+TDD workflow.
+
+This remains a standalone workflow even though `build` may invoke test logic
+internally. Use it for independent verification, manual changes, debugging,
+PR preparation, and pre-ship checks.
+
+When saving a test plan or test result report, verify MDF user and project init
+state, resolve the current MDF work item, and write
+`.mdf/work/{work_id}/test-NNN.md`. If init state is missing, stop and instruct
+the user to run `mdf init`. Update `item.md` `latest.test` and
+`.mdf/index.jsonl`.
