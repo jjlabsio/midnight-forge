@@ -1,27 +1,53 @@
 ---
 name: spec
-description: "Use when defining or revising a non-trivial MDF change before planning or implementation."
+description: "Start spec-driven development — write a structured specification before writing code. Use when defining or revising a non-trivial MDF change before planning or implementation."
 ---
 
 # spec
 
+## Upstream command contract
+
+Invoke the spec-driven-development skill.
+
+Begin by understanding what the user wants to build. Ask clarifying questions
+about:
+
+1. The objective and target users
+2. Core features and acceptance criteria
+3. Tech stack preferences and constraints
+4. Known boundaries (what to always do, ask first about, and never do)
+
+Then generate a structured spec covering all six core areas: objective,
+commands, project structure, code style, testing strategy, and boundaries.
+
+Save the spec as `SPEC.md` in the project root and confirm with the user before
+proceeding.
+
+## MDF/Codex adaptation
+
 MDF specifications are model-led Markdown artifacts, not a replacement for
 the upstream workflow. Resolve the canonical project root and installed plugin
 root from the current checkout before reading or writing project state; an
-unresolved plugin root is a stop. Load and follow the exact
-upstream `../spec-driven-development/SKILL.md`; for non-trivial decisions also
-load `../doubt-driven-development/SKILL.md` and preserve its
-`CLAIM -> EXTRACT -> DOUBT -> RECONCILE -> STOP` process.
+unresolved plugin root is a stop. Load and follow the exact upstream
+`../spec-driven-development/SKILL.md`.
+
+For non-trivial decisions, also load the exact upstream
+`../doubt-driven-development/SKILL.md` and preserve its
+`CLAIM -> EXTRACT -> DOUBT -> RECONCILE -> STOP` process. This is an MDF
+decision-quality adaptation and does not replace the upstream six-area spec
+contract.
 
 ## Create or revise a specification
 
 1. Inspect the relevant project documentation, current task card, existing
-   decisions, and the repository state before drafting.
+   decisions, and repository state before drafting.
 2. Extract the user's goal, non-goals, constraints, observable behavior,
    risks, and acceptance criteria. Ask only the questions needed to resolve a
    material ambiguity.
 3. Write a new Markdown revision under the canonical work item as
    `.mdf/work/<work-id>/spec-NNN.md`. Never overwrite an earlier revision.
+   This is the MDF adaptation of the upstream `SPEC.md` output; do not create
+   an unsynchronized second copy.
 4. Review the complete artifact against the upstream definition of done and
    the applicable doubt-driven-development result. Fix actionable findings
    before presenting the artifact.
