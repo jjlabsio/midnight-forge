@@ -1,41 +1,36 @@
 ---
 name: code-simplify
-description: "Use when the user invokes code-simplify, mdf code-simplify, or asks to simplify code without changing behavior."
+description: "Use when the user invokes code-simplify or asks to simplify code without changing behavior."
 ---
 
 # code-simplify
 
 Resolve the installed plugin root, load the exact upstream
-`../code-simplification/SKILL.md`, and preserve its workflow. Read `AGENTS.md`
-and the established project conventions before changing code. Simplify only the
-requested scope, apply changes incrementally with upstream verification, then
-use the exact upstream `../code-review-and-quality/SKILL.md` for review.
+`../code-simplification/SKILL.md`, and preserve its workflow. Read `AGENTS.md`,
+the relevant project documentation, and established conventions first.
+Simplify only the approved scope, work incrementally, run upstream verification,
+and use `../code-review-and-quality/SKILL.md` for the follow-up review.
 
-In the lifecycle, simplification starts only from the current stable
-whole-build decision. From the resolved plugin root, call production
-`./scripts/mdf-controller.js simplify scope`; the runtime derives eligible
-production paths from lifecycle-linked task/refactor commits and excludes
-tests, vendor, generated surfaces, and public workflow contracts. Run the exact
-upstream simplification primitive against the returned scope, preserving its
-raw report, and call `simplify register` with the exact decision.
+Start only from the current stable whole-build result and the exact approved
+specification/plan. The model determines eligible production paths from the
+reviewed diff and task-owned commits. Exclude tests, vendor, generated files,
+public workflow contracts, and unrelated changes unless the user explicitly
+approves a different scope.
 
-For each accepted behavior-preserving candidate, call `simplify select`, then
-use the ordinary build-task verification, fresh review, downstream-impact,
-authorization, and focused commit gate. Only candidate paths may change and
-the commit subject must start `refactor:`. The resulting tree returns to full
-whole-build verification/review before simplification or later phases proceed.
+For each behavior-preserving candidate:
 
-If there is no accepted change (including rejected candidates), restore and
-verify the exact prior clean baseline and call `simplify no-change`. The
-runtime reuses the passing whole-build review only when it is bound to that
-exact unchanged HEAD; it does not request a duplicate standalone review. Do
-not retain a failed candidate diff, modify tests to make a refactor pass, or
-simplify vendor/generated/public-contract surfaces.
+1. State the candidate, expected behavior preservation, and affected paths.
+2. Change only the candidate paths and run focused verification.
+3. Review the candidate against the full specification and upstream
+   simplification criteria.
+4. If accepted, stage only those paths and create one focused `refactor:`
+   commit, then rerun the complete whole-build matrix and final review.
+5. If rejected or if no candidate is accepted, discard only the candidate
+   change, verify the exact prior clean baseline and exact unchanged HEAD, and
+   record a readable no-change note. Never discard unrelated work.
 
-If an accepted candidate later fails verification or fresh review, call
-`simplify reject` while the failure snapshot is still current, using the exact
-attempt, failure sidecars, raw rejection report, and semantic decision. Restore
-the candidate path to the returned prior HEAD without discarding unrelated
-work, then call `simplify rejected`; it succeeds only on the exact clean prior
-baseline. Then call `simplify no-change`; the rejected candidate never changes
-the reviewed baseline tree.
+If a candidate fails verification or review, preserve and reproduce the
+failure, explain the finding, and either repair it through the ordinary TDD
+loop or reject it. Do not modify tests merely to make a refactor pass. A
+destructive cleanup, public-contract change, or ambiguous behavior stop needs
+current user confirmation.

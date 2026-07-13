@@ -1,41 +1,36 @@
 ---
 name: ship
-description: "Use when the user invokes ship, mdf ship, or asks for the upstream GO/NO-GO launch gate."
+description: "Use when the user invokes ship or asks for the upstream GO/NO-GO launch gate."
 ---
 
 # ship
 
-Resolve the installed plugin root, load and follow the exact upstream
-`../shipping-and-launch/SKILL.md`, and preserve its GO/NO-GO criteria. For its
-parallel fan-out, load the exact upstream persona files from the resolved
-plugin root: `agents/code-reviewer.md`, `agents/security-auditor.md`, and
-`agents/test-engineer.md`. A generic subagent receives the exact selected
-persona prompt; the root validates capability, owns synthesis, and is the only
-writer. If capability cannot be verified, use root fallback or report the
-upstream-defined degraded status; never claim an unavailable persona ran.
+Resolve the installed plugin root, then load and follow the exact upstream
+`../shipping-and-launch/SKILL.md` and
+preserve its GO/NO-GO criteria. Resolve the canonical root and inspect the
+current branch, remote, clean Git status, approved plan, complete diff,
+verification results, review reports, migration notes, monitoring, rollback
+trigger, rollback procedure, and RTO.
 
-Preserve the upstream ship command's parallel `code-reviewer`,
-`security-auditor`, and `test-engineer` fan-out, its merge in root context, and
-its GO/NO-GO and rollback decision. Do not replace that command behavior with a
-new persona protocol.
+Run the applicable reviews in parallel when that independent perspective is
+useful, using the exact upstream `code-reviewer`, `security-auditor`, and
+`test-engineer` personas. The root agent owns the
+merge and rollback synthesis, states which checks actually ran, and records
+any unavailable or degraded review instead of claiming it ran.
 
-From the resolved plugin root, call production
-`./scripts/mdf-controller.js ship context`. It binds the current passing
-standalone review, active plan, clean Git tree, and runtime-computed diff size,
-and returns whether the exact upstream small-change exception applies. Unless
-that exception applies, run all returned personas in parallel through the
-adapter with the context sidecar as their exact input and preserve every raw
-report unchanged.
+GO requires the reviewed tree to match the approved scope, successful
+verification, no unresolved blocking finding, a usable rollback plan, and
+current operational readiness. A clean command is not proof of semantic
+correctness. NO-GO, stale reports, an unsupported review claim, missing
+rollback information, dirty state, remote ambiguity, or a branch mismatch
+blocks the handoff.
 
-Root then performs the upstream merge and rollback synthesis against the exact
-context and report decisions without loading any specialist persona. The
-`ship-synthesis` adapter action is root-owned and persona-less; specialist
-personas remain limited to their individual fan-out reports. Call `ship register`
-with those raw paths and the provenance-bound root synthesis. A rollback
-trigger, procedure, and RTO are mandatory. Missing/stale reports, an unsupported
-persona claim, or NO-GO blocks the PR transition.
+When GO would accept a blocking risk, stop and ask the user for explicit,
+current acceptance of the named risk. Do not infer risk acceptance from report
+prose or reuse it on another tree.
 
-When GO would accept a blocking risk, stop for the user. Only after an explicit
-affirmative action call `ship risk` with exact `risk_ids` and the raw user
-message, then include that acceptance in a newly bound synthesis. Never infer
-risk acceptance from report prose or reuse it on another tree.
+Pushing, creating/updating a PR, merging, deploying, deleting a branch, or
+changing external state is a separate confirmation stop. Before each such
+action, recheck the current remote, branch, diff, and user authority. Report
+the GO/NO-GO decision and exact next action; do not perform external mutation
+as a side effect of a clean ship review.
