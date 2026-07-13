@@ -5,123 +5,48 @@ description: "Show MDF task boards across registered local projects."
 
 # tasks-user
 
-Use this skill when the user invokes `$tasks-user` in Codex.
+Render boards across registered local projects from ~/.mdf/projects.json and
+each canonical project's Markdown cards, index, and locks. Do not invoke a
+task-state CLI, controller, background runner, or network service.
 
-This skill is LLM-orchestrated. From the plugin root, use the deterministic local script `scripts/mdf-task-state.js board --user --json` for mechanical user-level board state when available, then render the human-facing multi-project board from that JSON. Do not use an MCP server, background runner, event store, or network service.
+## Registry and project reads
 
-The LLM remains responsible for concise presentation, recommendation wording, and deciding how to explain warnings. If the script returns a typed JSON error for global user state or registry state, report it clearly and stop.
+Require valid user init, non-empty human language preferences, and a valid
+~/.mdf/projects.json registry. Do not require the current directory to be a
+project and do not initialize storage here.
 
-## Storage
+For every registry entry, use its absolute canonical_root and read only:
 
-Global discovery uses:
+    <canonical-root>/.mdf/project/init.json
+    <canonical-root>/.mdf/index.jsonl
+    <canonical-root>/.mdf/work/
+    <canonical-root>/.mdf/locks/
 
-```text
-~/.mdf/projects.json
-```
+If one project is missing, unreadable, uninitialized, or malformed, show a
+warning for that project and continue with other valid projects. Do not infer a
+different root or repair a project during a read-only board command.
 
-Each registry entry should include the project name, canonical root path, remote when known, and the relative task index path `.mdf/index.jsonl`.
+## Status and rendering
 
-The registry file must use this schema:
+Read item kind and card status, then reconcile task status with locks:
 
-```json
-{
-  "version": 1,
-  "projects": {
-    "/absolute/project/root": {
-      "id": "1d55c7f13adf",
-      "name": "project-basename",
-      "canonical_root": "/absolute/project/root",
-      "remote": "git@github.com:user/project.git",
-      "index": ".mdf/index.jsonl",
-      "last_seen": "2026-05-08T00:00:00Z"
-    }
-  }
-}
-```
+- matching lock: active
+- no lock and status: "done": done
+- otherwise: queue
 
-For each registered project, project task state is read from:
+The card is authoritative; the latest valid index line is the read projection.
+Duplicate index lines are history. A lock on a queued or done card is a
+consistency warning, never an automatic cleanup. Legacy cards without kind are
+tasks. Tracks, notes, inbox, and routine items are context only.
 
-```text
-<canonical-root>/.mdf/
-├── project.json
-├── project/init.json
-├── index.jsonl
-├── work/
-└── locks/
-```
+Render each valid project with:
 
-## Init Requirements
+- Active tasks and their branch/worktree/runtime facts
+- Queue sorted by due date, order, then created date
+- Five most recent done tasks
+- Tracks and context items separately
+- Warnings with exact project and item paths
+- A recommendation chosen only from executable queued tasks
 
-Before reading user-level MDF task board state, verify only global user state:
-
-1. User init exists at `~/.mdf/user/init.json`.
-2. `~/.mdf/user/preferences.json` exists and has a non-empty `human_language`.
-3. `~/.mdf/projects.json` exists and matches the registry schema above.
-
-Malformed or missing user init, user preferences, or global registry state is a hard error. Stop and report the registry or user-state problem clearly; do not guess another shape.
-
-Do not require the current working directory to be inside a git repository. Do not resolve a canonical root from the current directory. `tasks-user` does not require current project init merely because the user invoked it from a non-project directory. After `mdf init` has completed User Init from any directory, `tasks-user` can run from anywhere as long as `~/.mdf/projects.json` is valid.
-
-Do not initialize storage for read-only board commands.
-
-## Per-Project Handling
-
-Read project entries from `projects`, keyed by `canonical_root`. For each registered project, treat project MDF state as optional per-entry data:
-
-1. If the canonical root path is missing, unreadable, or not a directory, show a warning for that project and skip it.
-2. If `<canonical-root>/.mdf/project/init.json` is missing, show a warning that the project is not initialized and skip it.
-3. If `<canonical-root>/.mdf/index.jsonl`, `<canonical-root>/.mdf/work/`, or `<canonical-root>/.mdf/locks/` is missing or unreadable, show a warning and skip that project.
-4. If `project.json`, `index.jsonl`, lock JSON, or item frontmatter is malformed for one project, show a warning for that project and skip only the malformed project or malformed item as narrowly as possible.
-5. Continue rendering all other valid projects.
-
-Do not abort the entire user-level board because one registered project store is missing, uninitialized, unreadable, or malformed. Hard-stop only for malformed global registry or user state.
-
-## Status Rules
-
-For each valid project, read `kind` from `.mdf/work/{work_id}/item.md` before deriving status. Existing legacy item cards without `kind` are treated as `kind: "task"`.
-
-For `kind: "task"`, read status from the item card and reconcile it with locks:
-
-1. `.mdf/locks/{task_id}.lock` exists: display as `active`.
-2. Else item frontmatter has `status: "done"` or `completed`: display as `done`.
-3. Else display as `queue`.
-
-If an item has both a lock and `status: "done"` or `completed`, display it as active and show a consistency warning. Do not delete the lock automatically.
-
-Do not derive `active`, `queue`, or `done` for `kind: "inbox"`, `kind: "routine"`, or `kind: "track"`. These kinds are non-executable context and must not be recommended as next tasks.
-
-## Board Format
-
-Group output by project name from the registry or `.mdf/project.json`, including canonical root path.
-
-For each valid project, include:
-
-- `Active`: task items with lock files, showing ID, title, optional `[track: Track title]`, branch, worktree, runtime, and started time when available.
-- `Queue`: queued task items, sorted by `order` ascending. Show task ID, work ID, title, optional `[track: Track title]`, due date when present, order, and created date.
-- `Done`: completed task items, sorted by completion date descending. Show the most recent five tasks by default.
-- `Tracks`: track items, showing track ID, title, outcome when present, active/queued/done task counts, and next ready executable task when one exists.
-- `Routine Review Prompts`: routine items whose `next_review` is today or earlier, showing item ID, title, optional `[track: Track title]`, project name, canonical root path, and `review_prompt` when present. These are review prompts only; they are not next-task recommendations.
-
-Include a `Warnings` section for skipped projects and malformed items.
-
-Add a `Recommendation` section.
-
-Recommendation chooses only executable `kind: "task"` queue items across valid projects. Exclude `kind: "inbox"`, `kind: "routine"`, and `kind: "track"` even when they have `due`, `order`, `next_review`, or other date-like fields.
-
-1. Earliest due date first when due dates are present.
-2. Then lowest `order`.
-3. Then oldest `created`.
-
-Show the recommended project name, task ID, work ID, title, optional `[track: Track title]`, due date when present, and canonical root path. If no queue tasks exist, report that there is no recommended next task. If due routine prompts exist but no executable queue tasks exist, say there are due review prompts but no recommended next task.
-
-## Commands
-
-### no args
-
-Show all local project boards from the user registry.
-
-## Error Handling
-
-Report clear hard errors for missing or malformed user init, missing or malformed user preferences, missing or malformed `~/.mdf/projects.json`, unknown subcommands, and registry entries that do not match the required schema.
-
-Report warnings and continue for missing project roots, uninitialized project stores, unreadable project files, malformed per-project `project.json`, malformed per-project `index.jsonl`, malformed item frontmatter, unreadable item files, and unreadable lock JSON.
+Never recommend a track, note, inbox, or routine item as a next task. If no
+queued executable task exists, say so even when context review prompts are due.
