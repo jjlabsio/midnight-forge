@@ -2,7 +2,7 @@ const { spawnSync } = require("child_process");
 const { ControllerError } = require("./context");
 const { verifyAdapterDecision } = require("./adapter");
 const { recordDecision, recordInteraction, verifySidecar } = require("./evidence");
-const { current, recordEvent, transitionEvidence } = require("./lifecycle");
+const { assertLifecycleReviewEvidence, current, recordEvent, transitionEvidence } = require("./lifecycle");
 
 const PERSONAS = new Map([["code-reviewer", "agents/code-reviewer.md"], ["security-auditor", "agents/security-auditor.md"], ["test-engineer", "agents/test-engineer.md"]]);
 const nonempty = (value) => typeof value === "string" && value.trim().length > 0;
@@ -12,7 +12,9 @@ function createShipContext(context) {
   if (current(context).phase !== "ship" || git(context, ["status", "--porcelain"])) throw new ControllerError("MDF_SHIP_PHASE_INVALID", "Ship context requires clean ship phase.");
   const reviewEvent = transitionEvidence(context, "review", "ship").at(-1);
   const simplifyEvent = transitionEvidence(context, "simplify", "ship").at(-1);
-  const standaloneFile = reviewEvent?.evidence_files.find((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass"; });
+  reviewEvent?.evidence_files.forEach((file) => assertLifecycleReviewEvidence(context, file));
+  simplifyEvent?.evidence_files.forEach((file) => assertLifecycleReviewEvidence(context, file));
+  const standaloneFile = reviewEvent?.evidence_files.find((file) => { const value = verifySidecar(context, file, { fresh: false }); return value.conclusion?.kind === "standalone-review" && value.conclusion.disposition === "pass" && value.conclusion.review_mode === "lifecycle-review"; });
   const noChangeFile = simplifyEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).conclusion?.kind === "simplification-no-change");
   const planEvent = transitionEvidence(context, "plan", "build-task").at(-1);
   const planFile = planEvent?.evidence_files.find((file) => verifySidecar(context, file, { fresh: false }).invocation?.agent_id === "mdf-plan");
@@ -26,6 +28,7 @@ function createShipContext(context) {
     const noChange = verifySidecar(context, noChangeFile); const noChangeInteraction = verifySidecar(context, noChange.interaction.file);
     const stable = verifySidecar(context, noChange.conclusion.stable_file); const stableInteraction = verifySidecar(context, stable.interaction.file);
     const review = verifySidecar(context, noChange.conclusion.review_file);
+    assertLifecycleReviewEvidence(context, noChange.conclusion.review_file);
     if (noChangeInteraction.invocation?.agent_id !== "mdf-simplification-no-change" || stableInteraction.invocation?.agent_id !== "mdf-whole-build-stable" || noChange.conclusion.stable_file !== noChangeInteraction.invocation.stable_file || noChange.conclusion.review_file !== stableInteraction.invocation.review_decision_file || noChange.conclusion.head !== head || stable.conclusion.head !== head || review.conclusion?.disposition !== "pass") throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship whole-build review must be provenance-bound to the unchanged current tree.");
     reviewFile = noChange.conclusion.review_file;
   }
@@ -53,9 +56,11 @@ function blockedRiskSet(context, contextFile, reportFiles) {
 }
 
 function recordRiskAcceptance(context, { context_file: contextFile, user_message_path: userPath, report_decision_files: reportFiles, risk_ids: riskIds, affirmative }) {
+  const shipContext = verifySidecar(context, contextFile);
+  if (shipContext.invocation?.agent_id !== "mdf-ship-context" || current(context).phase !== "ship") throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Risk acceptance requires the current ship context.");
+  assertLifecycleReviewEvidence(context, shipContext.invocation.review_file);
   const blockedRisks = blockedRiskSet(context, contextFile, reportFiles);
   if (affirmative !== true || !Array.isArray(riskIds) || JSON.stringify([...riskIds].sort()) !== JSON.stringify(blockedRisks) || blockedRisks.length === 0) throw new ControllerError("MDF_SHIP_RISK_ACCEPTANCE_INVALID", "Risk acceptance requires explicit affirmative action and exact current blocking risks.");
-  const shipContext = verifySidecar(context, contextFile);
   const sortedReports = [...reportFiles].sort();
   const interaction = recordInteraction(context, { invocation: { agent_id: "user-risk-acceptance", invocation_id: `risk-${Date.now()}`, executor: "human", context_file: contextFile, report_decision_files: sortedReports, risk_ids: blockedRisks, affirmative: true }, input_paths: [userPath, `evidence/${contextFile}`, ...sortedReports.map((file) => `evidence/${file}`)] });
   const decision = recordDecision(context, { interaction_file: interaction.file, conclusion: { kind: "ship-risk-acceptance", context_file: contextFile, head: shipContext.invocation.head, report_decision_files: sortedReports, risk_ids: blockedRisks, affirmative: true } });
@@ -65,6 +70,7 @@ function recordRiskAcceptance(context, { context_file: contextFile, user_message
 function registerShip(context, { context_file: contextFile, reports, output_path: outputPath, decision_file: decisionFile, risk_acceptance_file: acceptanceFile = null }) {
   const shipContext = verifySidecar(context, contextFile);
   if (shipContext.invocation?.agent_id !== "mdf-ship-context" || current(context).phase !== "ship") throw new ControllerError("MDF_SHIP_CONTEXT_INVALID", "Ship decision requires current ship context.");
+  assertLifecycleReviewEvidence(context, shipContext.invocation.review_file);
   if (!Array.isArray(reports)) throw new ControllerError("MDF_SHIP_REPORTS_INVALID", "Ship reports must be an array.");
   const required = shipContext.invocation.required_personas;
   if (reports.length !== required.length || new Set(reports.map((report) => report.persona)).size !== reports.length || reports.some((report) => !required.includes(report.persona))) throw new ControllerError("MDF_SHIP_REPORTS_INVALID", "Ship persona reports do not match required fan-out or exact exception.");
