@@ -109,7 +109,20 @@ function runTests() {
     assert.strictEqual(reviewRegister.status, 1);
     assert.notStrictEqual(JSON.parse(reviewRegister.stderr).error.code, "MDF_ACTIVE_LOCK_MISSING");
     const reviewContext = recordInteraction(context, {
-      invocation: { agent_id: "mdf-review-context", invocation_id: "route-context", executor: "deterministic-runtime" },
+      invocation: {
+        agent_id: "mdf-review-context",
+        invocation_id: "route-context",
+        executor: "deterministic-runtime",
+        review_mode: "lifecycle-review",
+        task_id: context.task.task_id,
+        work_id: context.task.work_id,
+        task_card_sha256: context.task.card_sha256,
+        canonical_root: context.canonical_root,
+        worktree: context.worktree,
+        branch: context.task.branch,
+        lock_path: null,
+        lock: null,
+      },
       input_paths: [],
     });
     const outputPath = "routed-review.md";
