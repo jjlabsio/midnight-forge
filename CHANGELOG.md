@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.2 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.1...v2.0.2)
+
+### Changes
+
+- chore: update vendored agent-skills and harden workflow ([#60](https://github.com/jjlabsio/midnight-forge/pull/60))
 ## v2.0.1 - 2026-07-13
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.0...v2.0.1)
