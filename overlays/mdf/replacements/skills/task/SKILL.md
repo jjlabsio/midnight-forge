@@ -28,6 +28,21 @@ task_id from canonical .mdf/work/*/item.md before touching a branch, worktree,
 lock, card, or implementation file. Duplicate or missing matches stop; do not
 infer from titles or branches.
 
+## Task creation and semantic fidelity
+
+When creating a task, record the user's request verbatim at the beginning of
+Context. Do not summarize, reinterpret, or add unstated goals, files, criteria,
+dependencies, priority, due dates, or technical solutions.
+
+Leave unspecified fields empty or explicitly unknown. Only deterministic MDF
+metadata such as task_id, work_id, created, status, worktree, branch, and
+latest may be generated without user input.
+
+Incomplete tasks are valid: create them with status queue. Creation does not
+activate the task or create a branch, worktree, or lock. Later card updates may
+add only semantic information the user has explicitly provided; lifecycle
+metadata may be updated by the task workflow.
+
 ## Card and index protocol
 
 item.md is the source of truth. index.jsonl is an append-only read model;
