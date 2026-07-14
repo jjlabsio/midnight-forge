@@ -65,6 +65,23 @@ pinned source. MDF entry skills may adapt an upstream command into a Codex
 skill, but the adaptation is model guidance and does not redefine upstream
 success criteria.
 
+### Upstream update boundary
+
+The project-level `update-agent-skills-upstream` skill updates the vendor
+snapshot before it touches generated output. It compares the complete
+`skills/**`, `references/**`, `commands/**`, `agents/**`, and `hooks/**` trees,
+including skill-local scripts and newly added files. Upstream root scripts and
+ordinary docs remain preserved and reportable but are explicit runtime-import
+exclusions; imported references to them fail closed. Hooks remain preserved in
+the vendor tree and require a separate Codex-native event/payload/output/trust
+port record before they can be considered available.
+
+Each update records the previous and target commits, classifies additions,
+deletions, modifications, and renames, refreshes source hashes and inventory,
+regenerates the complete surface, and stores a categorized report. This keeps
+upstream-owned bytes, MDF-only inputs, adapter decisions, generated files, and
+unresolved port gaps distinct.
+
 ## Release metadata
 
 Plugin manifests are generated output. The release version and marketplace ref

@@ -47,6 +47,18 @@ function overlayKind(entry) {
 const inventory = loadInventory(inventoryPath);
 const releaseMetadata = readJson(releaseMetadataPath);
 
+const requiredSurfaceRoots = ["skills", "references", "commands", "agents", "hooks"];
+const requiredRuntimeExclusions = ["scripts", "docs"];
+if (JSON.stringify(inventory.upstream?.surfaceRoots) !== JSON.stringify(requiredSurfaceRoots)) {
+  throw new Error("Inventory upstream.surfaceRoots must compare skills, references, commands, agents, and hooks in that order");
+}
+if (JSON.stringify(inventory.upstream?.runtimeExcludedRoots) !== JSON.stringify(requiredRuntimeExclusions)) {
+  throw new Error("Inventory upstream.runtimeExcludedRoots must explicitly exclude root scripts and docs");
+}
+if (inventory.upstream?.skillLocalRuntimeGlob !== "skills/**/scripts/**") {
+  throw new Error("Inventory must preserve skills/**/scripts/** as skill-local runtime resources");
+}
+
 function setJsonPath(target, pathParts, value) {
   let node = target;
   for (let index = 0; index < pathParts.length - 1; index += 1) {

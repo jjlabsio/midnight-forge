@@ -47,7 +47,23 @@ const immutable = [
   "docs/agents.md",
 ];
 
+assert(!inventory.generated.entries.some((entry) => entry.output.startsWith("hooks/")), "Hooks must remain preserved vendor files, not generated output.");
+assert(!inventory.generated.entries.some((entry) => entry.output.startsWith("scripts/")), "Root scripts must remain runtime exclusions.");
+assert(
+  !inventory.generated.entries.some((entry) => entry.output.startsWith("docs/") && entry.output !== "docs/agents.md"),
+  "Ordinary docs must remain runtime exclusions."
+);
+
 assert(inventory.schemaVersion === 2, "Inventory schemaVersion must be 2.");
+assert(
+  JSON.stringify(inventory.upstream?.surfaceRoots) === JSON.stringify(["skills", "references", "commands", "agents", "hooks"]),
+  "Inventory must define the complete upstream comparison surface."
+);
+assert(
+  JSON.stringify(inventory.upstream?.runtimeExcludedRoots) === JSON.stringify(["scripts", "docs"]),
+  "Inventory must define explicit root scripts/docs runtime exclusions."
+);
+assert(inventory.upstream?.skillLocalRuntimeGlob === "skills/**/scripts/**", "Inventory must define skill-local script handling.");
 assert(Array.isArray(inventory.generated.entryFiles), "Inventory must declare generated entryFiles.");
 assert(inventory.generated.entryFiles.length > 0, "Inventory entryFiles must not be empty.");
 assert(inventory.task0041SurfaceClasses?.active?.owningTask === "0041", "Task 0041 active inventory is missing.");
@@ -102,6 +118,26 @@ for (const output of immutable) {
 for (const removed of ["agents/spec-evaluator.md", "agents/plan-evaluator.md"]) {
   assert(!entryFor(removed), `${removed} must not remain in inventory.`);
   assert(!exists(path.join(root, removed)), `${removed} must not be generated.`);
+}
+
+for (const requiredOutput of [
+  "skills/update-agent-skills-upstream/SKILL.md",
+  "references/upstream-agent-skills-update-policy.md",
+  "references/upstream-agent-skills-surface-map.md",
+]) {
+  const entry = entryFor(requiredOutput);
+  assert(entry, `Missing required upstream-update surface ${requiredOutput}.`);
+  assert(entry?.classification === "mdf-only", `${requiredOutput} must be MDF-only.`);
+  assert((entry?.overlayKind || "copy") === "mdfOnly", `${requiredOutput} must use mdfOnly.`);
+}
+
+for (const hook of filesUnder(vendorRoot, "hooks")) {
+  assert(exists(path.join(vendorRoot, hook)), `Pinned upstream hook is missing: ${hook}.`);
+}
+try {
+  JSON.parse(text(path.join(vendorRoot, "hooks", "hooks.json")));
+} catch (error) {
+  assert(false, `Pinned upstream hook manifest is not valid JSON: ${error.message}`);
 }
 
 const sync = spawnSync(process.execPath, [path.join(root, "scripts", "sync-agent-skills.js"), "--dry-run"], {

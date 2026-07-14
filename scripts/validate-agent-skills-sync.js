@@ -126,8 +126,23 @@ const allowedClassifications = new Set([
   "mdf-rename-or-adapter",
   "mdf-only",
 ]);
+assert(!entries.some((entry) => entry.output.startsWith("hooks/")), "Upstream hooks must remain preserved vendor files, not generated runtime output.");
+assert(!entries.some((entry) => entry.output.startsWith("scripts/")), "Upstream root scripts must remain explicit runtime exclusions.");
+assert(
+  !entries.some((entry) => entry.output.startsWith("docs/") && entry.output !== "docs/agents.md"),
+  "Ordinary upstream docs must remain explicit runtime exclusions."
+);
 
 assert(inventory.schemaVersion === 2, "Inventory schemaVersion must be 2 for overlay v2.");
+assert(
+  JSON.stringify(inventory.upstream?.surfaceRoots) === JSON.stringify(["skills", "references", "commands", "agents", "hooks"]),
+  "Inventory must compare the complete upstream skills/references/commands/agents/hooks surface."
+);
+assert(
+  JSON.stringify(inventory.upstream?.runtimeExcludedRoots) === JSON.stringify(["scripts", "docs"]),
+  "Inventory must explicitly exclude upstream root scripts and docs from runtime import."
+);
+assert(inventory.upstream?.skillLocalRuntimeGlob === "skills/**/scripts/**", "Inventory must preserve skill-local scripts.");
 assert(!Array.isArray(inventoryRoot.generated?.entries), "Inventory root must load generated entries from shards, not generated.entries.");
 assert(
   Array.isArray(inventoryRoot.generated?.entryFiles) && inventoryRoot.generated.entryFiles.length > 0,
@@ -287,6 +302,15 @@ assert(!useMdf?.source, "use-mdf must not claim an upstream source.");
 assert(!useMdf?.baseSha256, "use-mdf must not claim an upstream source hash.");
 const usingAgentSkills = entries.find((entry) => entry.output === "skills/using-agent-skills/SKILL.md");
 assert(usingAgentSkills?.classification === "upstream-identical", "using-agent-skills must remain an exact upstream primitive.");
+for (const requiredOutput of [
+  "skills/update-agent-skills-upstream/SKILL.md",
+  "references/upstream-agent-skills-update-policy.md",
+  "references/upstream-agent-skills-surface-map.md",
+]) {
+  const entry = entryByOutput.get(requiredOutput);
+  assert(entry?.classification === "mdf-only", `${requiredOutput} must be an MDF-only generated surface.`);
+  assert((entry?.overlayKind || "copy") === "mdfOnly", `${requiredOutput} must use the mdfOnly overlay kind.`);
+}
 
 const manual = entries.filter((entry) => entry.classification === "manual-review-required");
 assert(manual.length === 0, `Manual review entries remain: ${manual.map((entry) => entry.output).join(", ")}`);
