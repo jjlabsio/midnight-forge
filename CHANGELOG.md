@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.0 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.2...v2.1.0)
+
+### Changes
+
+- feat: add GPT-5.6 dynamic subagent model routing ([#61](https://github.com/jjlabsio/midnight-forge/pull/61))
 ## v2.0.2 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.1...v2.0.2)
