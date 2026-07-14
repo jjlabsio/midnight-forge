@@ -80,6 +80,47 @@ authority for design, security, implementation, lifecycle, or external
 actions. If unavailable, choose a suitable GPT-5.6 read-only fallback or do
 the exploration in the root and record the result.
 
+## Review and first-slice validation
+
+Review execution is mandatory. This includes the existing task review and
+whole-build review; a simple task is not a reason to skip them. An
+`independent reviewer` is an additional fresh-context reviewer, so omitting
+that subagent is not the same as omitting review. The root may perform a
+single-pass review for a mechanical, non-user-facing, low-risk change. Use an
+independent reviewer when the change affects a user-facing or core flow, a
+public API or data contract, security or permissions, or when risk or intent
+is materially uncertain. Decide from user impact, risk, and uncertainty, not
+changed-line count, and do not spawn another reviewer just to repeat the same
+finding.
+
+After the first meaningful task or vertical slice reaches the normal
+build/test checkpoint (`acceptance/context -> RED -> GREEN -> full test suite
+-> build`), validate the result before starting the next plan task. This is a
+nested checkpoint in the existing build/test orchestration, not a new
+lifecycle phase and not a replacement for task review. Validate the actual
+consumer: use the browser-testing skill for UI changes and attach a screenshot
+plus relevant runtime evidence, inspecting console, network, or accessibility
+when affected; use the real CLI, API, or integration boundary for other
+changes. Add or run one minimal Playwright E2E smoke path for a critical user
+flow that exercises the changed behavior, including any changed integration
+boundary. Purely visual or non-critical changes need browser evidence only and
+do not require E2E. Pass the resulting evidence, including screenshot paths
+when applicable, to the task review and PR handoff. Then continue the existing
+`review/gates -> commit -> complete` steps; do not start the next plan task
+until those steps pass.
+
+This checkpoint must not modify the standalone build or test skill contract,
+their overlays, or the upstream agent-skills source. If the observed result
+does not support the intended user value, record the finding through the
+existing review once and stop to re-plan or request a decision; do not enter
+an automatic fix-and-retest loop.
+
+Only promote a review finding into a new test or production change when it is
+directly tied to acceptance criteria, an existing supported contract or
+regression, security or permissions, or data integrity. Record and defer
+unrelated, speculative, or purely mechanical suggestions without expanding
+the implementation.
+
 ## Defensive parallel writers
 
 The default is one writer per worktree. Before using parallel writers, the root
