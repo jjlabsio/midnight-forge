@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.1 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.0...v2.1.1)
+
+### Changes
+
+- refactor: make auto-workflow policy documentation-only ([#62](https://github.com/jjlabsio/midnight-forge/pull/62))
 ## v2.1.0 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.0.2...v2.1.0)

@@ -1,6 +1,6 @@
 {
   "name": "mdf",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Midnight Forge ships MDF init/task skills plus agent-skills workflows for auto-workflow, spec, plan, build, test, review, simplify, ship, and web performance audits.",
   "author": {
     "name": "Jaejin Song"
