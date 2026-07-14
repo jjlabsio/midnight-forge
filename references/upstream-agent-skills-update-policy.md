@@ -8,6 +8,23 @@ vendor snapshot and provenance before regenerating any Codex surface. A file
 that exists upstream remains upstream-owned; do not rewrite it as an MDF
 overlay or preserve an old generated wording by hand.
 
+## Target resolution and freshness
+
+The lock's exact `commit` is the update baseline. Its `source` path records how
+the snapshot was obtained; it is not authority for the next target, so a
+checkout's `HEAD` must not be used automatically. Resolve a target in this
+order: an exact SHA or immutable ref named by the user, then the live default
+branch of the lock's `repository` via `git ls-remote --symref` or a refreshed
+fetch. Use a local checkout only when the user explicitly selects its exact
+commit or ref. Record the SHA, date, subject, and origin of rejected local or
+stale candidates as well as the selected target.
+
+Before mutation, verify the target commit and require the locked baseline to be
+an ancestor of it. Equal commits are a no-op; an ancestor target is a
+downgrade candidate; unrelated histories are invalid. Stop and report all
+three cases rather than describing a stale local checkout as the current
+upstream state.
+
 ## Complete comparison surface
 
 Every update compares the complete file list and content under:

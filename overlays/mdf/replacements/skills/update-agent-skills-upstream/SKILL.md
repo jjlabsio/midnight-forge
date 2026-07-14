@@ -21,12 +21,26 @@ as an MDF port decision with provenance, source hashes, and a recorded gap.
    `../../references/upstream-agent-skills-surface-map.md`, and
    `../../references/agent-skills-port-notes.md` before changing any source,
    overlay, inventory, or generated file.
-3. Record the current lock commit as `previous_commit`. Resolve exactly one
-   target commit or immutable ref as `target_commit`; stop when the target is
-   ambiguous, unavailable, or not a commit that can be verified locally.
-4. Require a clean implementation worktree and a task-owned path list. Do not
+3. Record the exact lock commit as `previous_commit`. Treat the lock's
+   `source` path as provenance only; never infer `target_commit` from the
+   working-tree `HEAD` of that checkout. A local checkout may be stale, ahead,
+   or behind the pinned baseline.
+4. Resolve exactly one `target_commit` in this order: an exact SHA or immutable
+   ref explicitly named by the user; otherwise the live default branch of the
+   lock's `repository`, resolved with `git ls-remote --symref` or a refreshed
+   remote fetch. Do not trust an unrefreshed local `origin/main` (or another
+   tracking ref). Use a local checkout `HEAD` only when the user explicitly
+   names that checkout or exact commit. Record every candidate's SHA, date,
+   subject, and origin, including rejected local or stale candidates.
+5. Before mutation, verify that `target_commit` is a reachable commit and run
+   `git merge-base --is-ancestor previous_commit target_commit`. Treat equal
+   commits as a no-op. Stop and report a downgrade when the target is an
+   ancestor of `previous_commit`, and stop for unrelated histories. Only a
+   descendant target is an update candidate. Report both commits' SHA, date,
+   subject, and the local-versus-live resolution decision.
+6. Require a clean implementation worktree and a task-owned path list. Do not
    stage `.mdf` state, generated build output, secrets, or unrelated changes.
-5. Treat upstream source, not an existing MDF output, as the authority. Do not
+7. Treat upstream source, not an existing MDF output, as the authority. Do not
    overwrite an upstream-owned skill with an overlay merely to preserve local
    wording.
 
@@ -126,6 +140,8 @@ example `.mdf/work/<work_id>/upstream-update-report-001.md`. Include:
   review decisions;
 - generated surface and inventory changes, source hashes, deleted/renamed
   handling, MDF-only boundary checks, and all validation results.
+- target resolution method, rejected local or stale candidates, commit dates and
+  subjects, and the ancestry/no-op/downgrade checks.
 
 Show the user a concise summary of that report, including the commits, counts,
 port gaps, generated impact, exclusions, and the exact commands that passed.
@@ -135,9 +151,11 @@ manual-review item remains unresolved.
 ## Stop conditions
 
 Stop before mutation when the source or target commit is ambiguous, the
-baseline lock is malformed, the worktree is dirty, the candidate is not
-reachable, an upstream-owned file would be rewritten as an overlay, an
-imported file references an excluded root artifact, a hook port lacks a
-Codex-native contract, inventory/source hashes disagree, or any required
-validator cannot run. Preserve the existing vendor snapshot and report the
-blocker with the affected paths.
+baseline lock is malformed, the target came only from an unrefreshed local
+checkout or stale remote-tracking ref, the candidate is equal to/older than
+the baseline or from an unrelated history, the worktree is dirty, the
+candidate is not reachable, an upstream-owned file would be rewritten as an
+overlay, an imported file references an excluded root artifact, a hook port
+lacks a Codex-native contract, inventory/source hashes disagree, or any
+required validator cannot run. Preserve the existing vendor snapshot and
+report the blocker with the affected paths.
