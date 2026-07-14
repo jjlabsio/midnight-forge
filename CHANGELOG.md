@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.6 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.5...v2.1.6)
+
+### Changes
+
+- fix(auto-workflow): make value review explicit ([#67](https://github.com/jjlabsio/midnight-forge/pull/67))
 ## v2.1.5 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.4...v2.1.5)
