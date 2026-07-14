@@ -13,12 +13,12 @@ overrides those defaults while preserving the persona prompt and perspective.
 {
   "family": "gpt-5.6",
   "allowed_variants": ["sol", "terra", "luna"],
-  "allowed_efforts": ["high", "xhigh"],
-  "forbidden_efforts": ["fast", "speed-only"],
+  "allowed_efforts": ["light", "medium", "high", "xhigh"],
+  "forbidden_profile_labels": ["fast", "speed-only"],
   "profiles": [
-    {"variant": "sol", "efforts": ["high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"},
-    {"variant": "terra", "efforts": ["high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"},
-    {"variant": "luna", "efforts": ["high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"}
+    {"variant": "sol", "efforts": ["light", "medium", "high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"},
+    {"variant": "terra", "efforts": ["light", "medium", "high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"},
+    {"variant": "luna", "efforts": ["light", "medium", "high", "xhigh"], "quality_signal": "runtime-measured", "cost_signal": "runtime-measured"}
   ]
 }
 ```
@@ -33,13 +33,16 @@ overrides those defaults while preserving the persona prompt and perspective.
 - High-risk design, security, review, and doubt-driven work should prefer the
   strongest verified quality signal, even when a cheaper candidate is on the
   frontier.
-- Sol, Terra, and Luna are all eligible only at `high` or `xhigh`; no fast or
-  speed-only profile enters the frontier.
+- `light`, `medium`, `high`, and `xhigh` are the only effort values. Current MDF
+  delegation floors filter candidates below `high` (or `xhigh` for design and
+  architecture); `fast` and `speed-only` are forbidden profile labels, not
+  effort values, and never enter the frontier.
 
 ## Dynamic selection algorithm
 
 1. Reject every capability whose family is not exactly `gpt-5.6`, whose variant
-   is not `sol`, `terra`, or `luna`, or whose effort is not `high`/`xhigh`.
+   is not `sol`, `terra`, or `luna`, whose effort is not `light`/`medium`/
+   `high`/`xhigh`, or whose profile label is `fast`/`speed-only`.
 2. Reject candidates below the work-kind quality floor.
 3. For high-risk work, choose the highest verified quality signal, breaking
    ties with cost.

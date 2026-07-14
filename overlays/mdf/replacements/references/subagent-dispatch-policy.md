@@ -62,10 +62,11 @@ root fallback instead.
 | Implementation or testing | `high` | A cheaper candidate is allowed only when measured quality is equivalent. |
 | Web performance | `high` | Use the same risk and evidence rules as implementation. |
 
-`high` and `xhigh` are reasoning requirements, not claims that a model is
-correct. Fast or speed-only profiles are forbidden. The candidate family is
-strictly GPT-5.6: do not silently downgrade to GPT-5.5 or adopt an unreviewed
-future profile.
+`light`, `medium`, `high`, and `xhigh` are the only supported effort values.
+The work-kind floors above determine which values are eligible for MDF-managed
+delegation. `fast` and `speed-only` are forbidden profile labels, not effort
+values. The candidate family is strictly GPT-5.6: do not silently downgrade to
+GPT-5.5 or adopt an unreviewed future profile.
 
 ## Spawn boundary
 

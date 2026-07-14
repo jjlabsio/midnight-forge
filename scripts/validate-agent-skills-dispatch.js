@@ -54,12 +54,12 @@ assert(
   "routing variants must be exactly sol, terra, and luna"
 );
 assert(
-  JSON.stringify(routing?.allowed_efforts) === JSON.stringify(["high", "xhigh"]),
-  "routing efforts must be exactly high and xhigh"
+  JSON.stringify(routing?.allowed_efforts) === JSON.stringify(["light", "medium", "high", "xhigh"]),
+  "routing efforts must be exactly light, medium, high, and xhigh"
 );
 assert(
-  routing?.forbidden_efforts?.includes("fast") && routing?.forbidden_efforts?.includes("speed-only"),
-  "routing must forbid fast and speed-only efforts"
+  routing?.forbidden_profile_labels?.includes("fast") && routing?.forbidden_profile_labels?.includes("speed-only"),
+  "routing must forbid fast and speed-only profile labels"
 );
 for (const profile of routing?.profiles || []) {
   assert(profile.family === undefined || profile.family === "gpt-5.6", `${profile.variant} profile has an invalid family`);
@@ -71,6 +71,7 @@ for (const profile of routing?.profiles || []) {
 }
 
 const policy = read("references/subagent-dispatch-policy.md");
+const normalizedPolicy = policy.replace(/\s+/g, " ");
 for (const term of [
   "plugin-installed",
   "root orchestrator",
@@ -79,11 +80,11 @@ for (const term of [
   "capability",
   "degraded",
   "GPT-5.6",
-  "Fast or speed-only profiles are forbidden",
+  "`fast` and `speed-only` are forbidden profile labels, not effort values",
   "Precedence for persona settings",
   "root-selected model, effort, fallback"
 ]) {
-  assert(policy.includes(term), `subagent-dispatch-policy.md is missing: ${term}`);
+  assert(normalizedPolicy.includes(term), `subagent-dispatch-policy.md is missing: ${term}`);
 }
 assert(!/depends on|loads|resolves from|overrides?\s+(?:repository-local|project-local)/i.test(policy), "central policy must not depend on repository-local agent configuration");
 
@@ -166,7 +167,8 @@ function selectCandidate(request, capabilities) {
     candidate.verified === true &&
     candidate.family === "gpt-5.6" &&
     ["sol", "terra", "luna"].includes(candidate.variant) &&
-    ["high", "xhigh"].includes(candidate.effort) &&
+    ["light", "medium", "high", "xhigh"].includes(candidate.effort) &&
+    !["fast", "speed-only"].includes(candidate.profileLabel) &&
     effortRank(candidate.effort) >= effortRank(request.qualityFloor)
   ));
   if (eligible.length === 0) return { degraded: true, fallback: "root" };
@@ -189,7 +191,7 @@ function runRoutingSelfTests() {
     { family: "gpt-5.6", variant: "luna", effort: "xhigh", verified: true, qualitySignal: 8, costSignal: 3, benchmarkEquivalent: true },
     { family: "gpt-5.6", variant: "terra", effort: "xhigh", verified: true, qualitySignal: 10, costSignal: 9, benchmarkEquivalent: false },
     { family: "gpt-5.5", variant: "terra", effort: "xhigh", verified: true, qualitySignal: 99, costSignal: 1, benchmarkEquivalent: true },
-    { family: "gpt-5.6", variant: "sol", effort: "fast", verified: true, qualitySignal: 99, costSignal: 1, benchmarkEquivalent: true }
+    { family: "gpt-5.6", variant: "sol", effort: "high", profileLabel: "fast", verified: true, qualitySignal: 99, costSignal: 1, benchmarkEquivalent: true }
   ];
   const implementation = selectCandidate({ qualityFloor: "high", risk: "medium" }, capabilities);
   assert(implementation.variant === "luna" && implementation.effort === "xhigh", "Pareto selection did not prefer equivalent Luna xhigh efficiency");
