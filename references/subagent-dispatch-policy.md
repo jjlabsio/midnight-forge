@@ -51,6 +51,10 @@ precedence order:
 1. The persona's `model` or `effort` frontmatter.
 2. The platform default.
 
+The upstream guidance about using per-persona model settings to optimize cost is
+scoped to this ordinary direct-invocation mode. It does not authorize a persona
+to choose or override model/effort for an MDF-managed delegation.
+
 Persona prompt content and perspective remain intact. If a named-persona
 invocation applies persona model or effort frontmatter before the root can pass
 the selected dispatch record, that invocation cannot provide an MDF-managed
