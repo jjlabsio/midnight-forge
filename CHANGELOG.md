@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.4 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.3...v2.1.4)
+
+### Changes
+
+- docs(task): add automatic MDF index self-healing ([#64](https://github.com/jjlabsio/midnight-forge/pull/64))
 ## v2.1.3 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.2...v2.1.3)
