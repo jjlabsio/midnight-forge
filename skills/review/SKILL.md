@@ -30,6 +30,15 @@ criteria. Resolve the canonical root, then
 read the exact specification, plan, task card, current diff, tests, and
 verification notes that are relevant to the requested review.
 
+When an independent reviewer is delegated, the root must first load the
+plugin-installed `../../references/subagent-dispatch-policy.md` and
+`../../references/model-routing-5.6.md`. Classify review difficulty and risk,
+verify GPT-5.6 capability at the `high` floor, and pass the root-selected
+dispatch record with the exact persona prompt through the generic runtime spawn
+path. Personas do not select models or effort. If capability is unavailable,
+use a visible degraded root fallback or stop; never silently use a fast, older,
+or future profile.
+
 ## Review modes
 
 The review-specific resolver is a model inspection step; writes still require

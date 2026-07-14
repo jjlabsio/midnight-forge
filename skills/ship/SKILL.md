@@ -17,6 +17,16 @@ useful here.
 
 ### Phase A — Parallel fan-out
 
+Before issuing any of the three calls, the root loads the plugin-installed
+`../../references/subagent-dispatch-policy.md` and
+`../../references/model-routing-5.6.md`. Classify the release difficulty and
+risk once, verify GPT-5.6 capability, and select a separate dispatch record for
+each persona through the generic runtime spawn path. Pass the exact persona
+prompt plus that record; personas never select models or reasoning settings.
+If capability is missing, use the root fallback with `degraded: true` or stop
+the gate explicitly. Never silently downgrade, select a fast profile, or let a
+persona write the ship decision.
+
 Spawn three subagents concurrently. The CLI exposes each custom subagent in
 `agents/` as a tool with the same name — so `code-reviewer.md` becomes a
 `code-reviewer` tool the main agent can call, and `@code-reviewer` works as an

@@ -1,1 +1,12 @@
-{"output":"skills/doubt-driven-development/SKILL.md","source":"skills/doubt-driven-development/SKILL.md","classification":"upstream-identical","overlayKind":"copy"}
+{
+  "output": "skills/doubt-driven-development/SKILL.md",
+  "source": "skills/doubt-driven-development/SKILL.md",
+  "classification": "mdf-rename-or-adapter",
+  "overlay": "replacements/skills/doubt-driven-development/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Preserves upstream DDD while routing fresh-context and cross-model delegation through the central policy.",
+  "baseSha256": "59aef769adeae40aad67a1d54474aaf914ea7ecdfc2a4752a54840a8d29f80de",
+  "overlayKind": "renameAdapter",
+  "adapterRationale": "Adds the MDF root-owned dispatch boundary without changing the upstream CLAIM/EXTRACT/DOUBT/RECONCILE/STOP workflow.",
+  "reviewRisk": "Full adapter replacement can hide upstream DDD changes; validation pins the upstream source hash and preserves the full upstream body."
+}

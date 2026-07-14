@@ -40,12 +40,17 @@ function inside(parent, child) {
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== "..");
 }
 
+const dispatchAdapted = new Set([
+  "skills/doubt-driven-development/SKILL.md",
+  "skills/test-driven-development/SKILL.md",
+]);
+
 const immutable = [
   ...filesUnder(vendorRoot, "skills"),
   ...filesUnder(vendorRoot, "agents"),
   ...filesUnder(vendorRoot, "references"),
   "docs/agents.md",
-];
+].filter((output) => !dispatchAdapted.has(output));
 
 assert(!inventory.generated.entries.some((entry) => entry.output.startsWith("hooks/")), "Hooks must remain preserved vendor files, not generated output.");
 assert(!inventory.generated.entries.some((entry) => entry.output.startsWith("scripts/")), "Root scripts must remain runtime exclusions.");
@@ -112,6 +117,24 @@ for (const output of immutable) {
   assert(exists(generatedPath), `Missing generated immutable surface ${output}.`);
   if (exists(vendorPath) && exists(generatedPath)) {
     assert(Buffer.compare(bytes(vendorPath), bytes(generatedPath)) === 0, `${output} differs from pinned upstream bytes.`);
+  }
+}
+
+for (const output of dispatchAdapted) {
+  const entry = entryFor(output);
+  const vendorPath = path.join(vendorRoot, output);
+  const generatedPath = path.join(root, output);
+  assert(entry, `Missing dispatch-adapted inventory entry for ${output}.`);
+  if (entry) {
+    assert(entry.source === output, `${output} dispatch adapter must source ${output}.`);
+    assert(entry.classification === "mdf-rename-or-adapter", `${output} dispatch adapter classification is invalid.`);
+    assert((entry.overlayKind || "copy") === "renameAdapter", `${output} dispatch adapter must use renameAdapter.`);
+    assert(Boolean(entry.overlay), `${output} dispatch adapter must declare an overlay.`);
+  }
+  assert(exists(vendorPath), `Missing pinned upstream source ${output}.`);
+  assert(exists(generatedPath), `Missing generated dispatch-adapted surface ${output}.`);
+  if (exists(vendorPath) && exists(generatedPath)) {
+    assert(Buffer.compare(bytes(vendorPath), bytes(generatedPath)) !== 0, `${output} dispatch adapter did not add an MDF boundary.`);
   }
 }
 

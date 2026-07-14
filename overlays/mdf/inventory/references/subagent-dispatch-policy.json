@@ -1,0 +1,9 @@
+{
+  "output": "references/subagent-dispatch-policy.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/references/subagent-dispatch-policy.md",
+  "artifactStorageOverride": false,
+  "notes": "Plugin-installed root-owned dispatch contract for dynamic GPT-5.6 subagent routing.",
+  "overlayKind": "mdfOnly"
+}

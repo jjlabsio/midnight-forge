@@ -26,6 +26,15 @@ structural anti-patterns and label every finding as `potential impact`.
 
 ## Run the audit
 
+Before spawning, load the plugin-installed
+`../../references/subagent-dispatch-policy.md` and
+`../../references/model-routing-5.6.md`. The root classifies audit difficulty
+and risk, verifies a GPT-5.6 capability at the `high` floor, and passes the
+selected dispatch record through the generic runtime spawn path with the exact
+persona prompt. The persona does not choose a model or effort. Missing
+capability requires a visible root fallback with degraded status or an
+explicit stop; never silently use a fast, older, or future profile.
+
 Spawn the `web-performance-auditor` subagent (the CLI exposes each custom subagent in `agents/` as a tool with the same name). Pass it explicitly:
 
 - The files, components, or diff under review
