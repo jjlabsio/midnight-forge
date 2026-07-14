@@ -6,10 +6,8 @@ description: "Use when the user asks MDF to run the approved workflow automatica
 # auto-workflow
 
 Load the plugin-installed `../../references/auto-workflow-contract.md` before
-starting. The root must issue and persist a validated handoff record before
-downstream skills may bypass standalone checkpoints. The contract applies only
-to this invocation; standalone MDF and upstream skills retain their own
-approval and stop semantics.
+starting. The contract applies only to this invocation; standalone MDF and
+upstream skills retain their own approval and stop semantics.
 
 The root runs the in-scope MDF lifecycle as one bounded execution:
 
@@ -28,10 +26,10 @@ unrelated cleanup.
 
 ## Mandatory intent preflight
 
-Before `spec`, evaluate the existing upstream `interview-me` skill's `When to
-Use` conditions. Use the machine-checkable `interviewGate` policy when the
-runtime is available, then preserve the readable reasons in the work-item log.
-Invoke `interview-me` when any condition requires it:
+Before `spec`, read the upstream `interview-me` skill and evaluate its `When to
+Use` conditions. This is a model judgment recorded in the readable work-item
+notes, not a scripted gate. Invoke `interview-me` when any condition requires
+it:
 
 - missing user/target, purpose, success condition, or binding constraint;
 - materially different interpretations are possible;
@@ -46,19 +44,18 @@ live user; in a non-interactive run, stop with the exact missing information.
 Its explicit intent confirmation is the only semantic confirmation before
 spec. Do not turn it into a fake spec or plan approval.
 
-## Auto handoff context
+## Readable run handoff
 
-Pass the canonical `../../references/auto-workflow-handoff-schema.json` record
-plus its `handoffRecord.path` and `handoffRecord.sha256` pointer to every
-downstream skill and subagent. Persist the record at
-`.mdf/work/{work_id}/handoff-NNN.json`; do not maintain a second handoff field
-list in this skill.
+Create a concise Markdown handoff note under the canonical work item and pass
+its contents as context to downstream skills and subagents. Record the run's
+intent, current phase, assumptions, applicable MDF skills, allowed external
+actions, relevant artifact paths, and any capability or fallback decision.
 
-`mode: auto-workflow` plus a verifier-approved root-issued handoff is required
-to bypass only ceremonial standalone checkpoints. A missing, stale, or
-conflicting context uses standalone rules.
-Any change to spec/plan bytes, path, scope, or task order invalidates the
-corresponding continuation authorization and requires a new revision.
+The handoff is readable workflow context, not a JSON protocol, hash gate, or
+runtime authority verifier. The root AI owns the note, updates it when the
+phase or scope changes, and re-reads the actual task, Git, and artifact state
+before continuing. A changed spec, plan, scope, or task order requires the root
+to reassess the handoff rather than treating the old note as approval.
 
 ## Subagent orchestration
 
@@ -77,33 +74,24 @@ Recommended fan-out:
 - ship: the existing parallel code-reviewer, security-auditor, and
   test-engineer fan-out.
 
-For read-only codebase exploration, consult the central routing reference and
-prefer the exploration candidate only when capability and transport are
-verified. It has no authority for design, security, implementation,
-lifecycle, or external actions. If unavailable, use the approved fallback or
-root fallback and record the result as fallback/degraded where applicable.
+For read-only codebase exploration, follow the central routing reference and
+prefer `gpt-5.3-codex-spark` when the runtime can use it safely. Spark has no
+authority for design, security, implementation, lifecycle, or external
+actions. If unavailable, choose a suitable GPT-5.6 read-only fallback or do
+the exploration in the root and record the result.
 
 ## Defensive parallel writers
 
-The default is one writer per worktree. Before starting a parallel writer
-group, construct task facts containing `dependsOn`, normalized `ownedPaths`,
-worktree/branch/base revision, lock ownership, shared-contract flags, and
-independence evidence. Evaluate them with
-`./scripts/auto-workflow-policy.js`'s `parallelWriterEligibility`.
+The default is one writer per worktree. Before using parallel writers, the root
+AI must reason through dependency-free tasks, disjoint owned paths, isolated
+worktrees and branches from one base, distinct locks, and the absence of shared
+contracts, generated outputs, lockfiles, migrations, global configuration,
+fixtures, external resources, or `.mdf` state.
 
-Only an eligible group may run in parallel. The proof must establish:
-
-- pairwise disjoint owned paths, including directory-prefix overlap;
-- no dependency edge within the group;
-- no shared API/type contract, generated output, lockfile, migration, global
-  config, fixture, external resource, or `.mdf` state;
-- distinct clean isolated worktrees, branches, and task locks from one base;
-- an explicit independence review with evidence.
-
-Missing or unknown evidence falls back to serial execution. Each writer owns
-only its task paths. The root remains the only writer of canonical state and
-the only merger. Validate every returned diff, merge sequentially, and run the
-complete verification matrix before external mutation. A semantic conflict or
+If any independence fact is unknown or uncertain, use serial execution. Each
+writer owns only its task paths. The root remains the only writer of canonical
+state and the only merger. Review every returned diff, merge sequentially, and
+run the relevant verification before external mutation. A semantic conflict or
 scope violation is a blocker; a mechanical, in-scope conflict may be repaired
 and reverified automatically.
 

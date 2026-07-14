@@ -1,9 +1,0 @@
-{
-  "output": "references/auto-workflow-handoff-schema.json",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/references/auto-workflow-handoff-schema.json",
-  "artifactStorageOverride": false,
-  "notes": "Canonical persisted auto-workflow handoff and downstream context schema.",
-  "overlayKind": "mdfOnly"
-}

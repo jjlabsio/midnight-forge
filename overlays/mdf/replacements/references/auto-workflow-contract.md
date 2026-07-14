@@ -1,57 +1,43 @@
 # Auto-workflow contract
 
-This contract applies only when the root invocation carries a validated,
-root-issued handoff with `mode: auto-workflow`. The mode string alone never
-grants authority. It does not change the standalone meaning of any upstream
-skill or MDF command.
+This is a readable, run-scoped contract for the root AI. It applies only when
+the user invokes `mode: auto-workflow`; it does not change the standalone
+meaning of any upstream skill or MDF command.
 
 ## Handoff context
 
-Every downstream MDF skill receives a bounded context containing:
+The root keeps a concise Markdown handoff note under the canonical work item.
+The note records the settled intent, current phase, assumptions, applicable
+MDF skills, allowed external actions, relevant artifact paths, subagent
+reports, and capability or fallback decisions. Downstream skills receive the
+note as bounded context and re-read the actual task, Git, and artifact state
+before making decisions.
 
-the canonical `auto-workflow-handoff-schema.json` record plus its
-`handoffRecord.path` and `handoffRecord.sha256` pointer. The persisted record
-is written as `.mdf/work/{work_id}/handoff-NNN.json`; the downstream context
-must use the exact same field names and phase-dependent spec/plan fields.
-
-Before bypassing any standalone checkpoint, the downstream skill must run
-`skills/auto-workflow/scripts/verify-auto-handoff.js` from the installed
-auto-workflow skill with
-the canonical root, record path, and supplied SHA-256. The verifier reads the
-record, rejects traversal/symlink escapes, computes the actual SHA-256, checks
-the canonical schema, requires the exact external-action allowlist, and
-compares the current phase and artifact hashes. A missing, stale, or
-conflicting handoff follows standalone rules and cannot use auto authority.
-
-The root owns this context, canonical `.mdf` state, task locks, lifecycle
-advance, synthesis, merge, and external mutations. A downstream skill may
-return a report or a bounded task result, but it must not invent authority
-from an artifact's existence or from a green command alone.
+This is model-led context, not a JSON protocol, script-enforced schema, hash
+gate, or lifecycle controller. A missing, stale, or conflicting note causes
+the root to reassess the actual state and use standalone rules where the auto
+contract no longer applies.
 
 ## Mandatory intent preflight
 
-At the beginning of an auto-workflow run, evaluate the existing upstream
-`interview-me` skill's `When to Use` conditions. This is an invocation gate,
-not a replacement skill. Invoke `interview-me` when any of the following is
-true:
+At the beginning of an auto-workflow run, read the existing upstream
+`interview-me` skill and evaluate its `When to Use` conditions. Invoke it when
+any of the following is true:
 
 - the ask is missing its user/target, purpose, success condition, or binding
   constraint;
-- the request is conventional and has more than one materially different
-  interpretation;
+- the request has more than one materially different interpretation;
 - the root would need an unsurfaced assumption before spec, plan, or code;
 - two reasonable optimization goals conflict and the user has not chosen one;
 - the root cannot defend at least 95% confidence in the next three answers;
 - the user explicitly asks to be interviewed.
 
 Do not invoke it for an unambiguous, self-contained mechanical operation or
-when the user explicitly asks for speed over verification and no positive
-ambiguity condition remains. A short request can pass when repository
-evidence makes its target and outcome unique. A long request can still require
-an interview. In auto-workflow, a positive ambiguity/material-decision
-condition takes precedence over the speed exception because the root may not
-guess a critical requirement. If the run is not interactive and the gate
-requires an interview, stop rather than guessing.
+when the user explicitly asks for speed over verification and no ambiguity
+condition remains. A short request can pass when repository evidence makes its
+target and outcome unique. A long request can still require an interview. If
+the run is not interactive and the intent requires an interview, stop rather
+than guessing.
 
 The interview's explicit intent confirmation is the only semantic confirmation
 required before spec in auto mode. It is not reused as a fake spec or plan
@@ -71,8 +57,8 @@ handoff. It also authorizes these external actions after fresh preflight:
 It does not authorize merge, deploy, data deletion, branch deletion, worktree
 deletion, stale-lock takeover, force operations, or unrelated cleanup.
 
-Auto mode replaces only ceremonial repeated approvals after its intent gate.
-It does not auto-accept a product decision, public-contract change, security or
+Auto mode replaces only ceremonial repeated approvals after its intent gate. It
+does not auto-accept a product decision, public-contract change, security or
 privacy boundary, permission change, destructive data operation, material cost
 change, unknown external target, failed verification, or repeated no-progress.
 Routine implementation details and reversible repairs are decided by the root,
@@ -80,38 +66,37 @@ recorded as assumptions, verified, and continued without asking.
 
 ## Subagent dispatch
 
-All lifecycle phases may use subagents through the central dispatch policy.
-Read-only exploration returns only bounded evidence and never writes shared
-artifacts or advances state. The root synthesizes every report and records
-capability, fallback, and degraded status. Subagents do not spawn other
-subagents.
+All lifecycle phases may use subagents through the central readable dispatch
+policy. Read-only exploration returns only bounded evidence and never writes
+shared artifacts or advances state. The root synthesizes every report and
+records capability, fallback, and degraded status. Subagents do not spawn
+other subagents.
 
-The routing reference may prefer GPT-5.3-Codex-Spark for read-only codebase
-exploration only when the runtime verifies a compatible transport. Spark is
+Quality-critical work uses GPT-5.6. Narrow codebase exploration may prefer the
+exact model `gpt-5.3-codex-spark` when the runtime can use it safely. Spark is
 never authoritative for design, security, implementation, lifecycle, or
-external mutation decisions. If the probe fails, use the approved GPT-5.6
-fallback or the root with an explicit fallback record.
+external mutation decisions. If it is unavailable, the root chooses a suitable
+GPT-5.6 read-only fallback or performs the exploration itself.
 
 ## Defensive writer parallelism
 
-The default is one writer per worktree. Parallel writers are allowed only
-after a proof gate establishes all of the following:
+The default is one writer per worktree. Parallel writers are allowed only when
+the root can explain all of the following in its readable notes:
 
-- explicit dependency-free parallel group;
-- normalized owned paths are pairwise disjoint, including directory-prefix
-  overlap;
+- an explicit dependency-free parallel group;
+- owned paths are disjoint, including directory-prefix overlap;
 - no shared API/type contract, generated output, lockfile, migration, global
   config, fixture, external resource, or `.mdf` state;
 - every writer has a distinct clean worktree, branch, and task lock from the
   same base revision;
 - no task consumes another parallel task's output;
-- an independence review and machine-checkable evidence are present.
+- an independence review supports the decision.
 
 Missing evidence, unknown coupling, path overlap, shared state, or a merge
 conflict changes the execution mode to serial. Parallel workers never write
 canonical `.mdf` state, never share a worktree, and never push or create PRs.
-The root validates each returned diff, merges sequentially, runs the complete
-verification matrix, and only then performs external mutation.
+The root validates each returned diff, merges sequentially, and performs the
+relevant verification before external mutation.
 
 ## PR idempotency
 

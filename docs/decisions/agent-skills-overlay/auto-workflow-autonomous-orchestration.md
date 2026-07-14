@@ -23,13 +23,12 @@ and permit parallel writers only when independence can be defended.
 
 ## Decision
 
-Add an MDF-only `auto-workflow` contract and pure policy helpers. The contract
-is active only when the caller supplies `mode: auto-workflow` and a run
-identity. It requires `interview-me` before spec when intent is materially
-unclear, including missing intent fields, materially different
-interpretations, unsurfaced assumptions, conflicting goals, confidence below
-95%, or an explicit interview request. Clear mechanical requests do not need
-an interview.
+Add an MDF-only readable `auto-workflow` contract. The contract is active only
+when the caller supplies `mode: auto-workflow` and a run context. It requires
+`interview-me` before spec when intent is materially unclear, including missing
+intent fields, materially different interpretations, unsurfaced assumptions,
+conflicting goals, confidence below 95%, or an explicit interview request.
+Clear mechanical requests do not need an interview.
 
 Once intent is settled, the root may run the complete in-scope lifecycle and
 use the explicit auto authority for commit, push, and PR create/update. It
@@ -40,11 +39,12 @@ state, or scope expansion. Merge, deploy, deletion, stale-lock takeover, and
 unrelated cleanup are never implied.
 
 Subagents are bounded and report-only by default. Spark is preferred only for
-read-only exploration after a capability/transport probe; incompatible Spark
-transport falls back to a verified GPT-5.6 read-only candidate or the root.
-Writer parallelism requires dependency, path, shared-state, worktree, lock,
-base-revision, and independence evidence. Any unknown fact selects serial
-execution. The root owns synthesis, merges, final verification, and state.
+read-only exploration when the runtime can use it; incompatible Spark
+transport falls back to a suitable GPT-5.6 read-only candidate or the root.
+Writer parallelism requires the root to reason through dependency, path,
+shared-state, worktree, lock, base-revision, and independence evidence. Any
+unknown fact selects serial execution. The root owns synthesis, merges, final
+verification, and state.
 
 ## Consequences
 
@@ -52,8 +52,8 @@ execution. The root owns synthesis, merges, final verification, and state.
 - Auto-workflow can complete routine work without repeated approval prompts.
 - The automatic grant is explicit and bounded, so it does not turn ambiguity
   into consent or silently authorize high-impact actions.
-- The pure policy surface is mechanically testable, while intent meaning,
-  review quality, and ship readiness remain model judgments.
+- The readable policy is flexible and model-led; intent meaning, review
+  quality, and ship readiness remain model judgments.
 - Defensive serial fallback may be slower, but it avoids parallel write races
   when independence cannot be proven.
 - Generated runtime files remain derived from overlays and inventory; the

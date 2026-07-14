@@ -260,7 +260,7 @@ for (const cleanTarget of inventory.generated.clean) {
 }
 
 const generatedMarkdown = [...outputs].filter((output) => output.endsWith(".md"));
-const referencedPathPattern = /(?:\.agents\/skills\/[A-Za-z0-9._/-]+\/SKILL\.md|\b(?:references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/(?:SKILL\.md|scripts\/[A-Za-z0-9._/-]+)|scripts\/[A-Za-z0-9._/-]+))/g;
+const referencedPathPattern = /(?:\.agents\/skills\/[A-Za-z0-9._/-]+\/SKILL\.md|\b(?:references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/SKILL\.md|scripts\/[A-Za-z0-9._/-]+))/g;
 function isExternalUrlPath(content, index) {
   const tokenStart = Math.max(
     content.lastIndexOf(" ", index),

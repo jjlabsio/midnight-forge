@@ -7,9 +7,10 @@ Codex/MDF runtime adapter.
 - Resolve persona prompts from the installed plugin root, never from a fixed
   cache location or the user project working directory.
 - Before every delegation, the root loads the plugin-installed
-  `../references/subagent-dispatch-policy.md`, verifies GPT-5.6 capability,
-  and passes the root-selected dispatch record through the generic runtime
-  spawn path. Persona selection and model selection are separate concerns.
+  `../references/subagent-dispatch-policy.md`, considers the GPT-5.6 or
+  read-only Spark routing guidance, and passes the root-selected model choice
+  through the generic runtime spawn path. Persona selection and model
+  selection are separate concerns.
 - The four upstream personas remain byte-identical under this directory.
 - A generic subagent receives the exact selected persona prompt and bounded
   task inputs. It reports to the root; it does not write shared artifacts,
@@ -19,11 +20,11 @@ Codex/MDF runtime adapter.
   exploration candidate for this role only; it has `report-only` authority and
   no write scope, and is never treated as an independent design or security
   decision.
-- The root verifies capability, uses root fallback for quality-critical work
-  when capability cannot be selected or verified, and records any degraded
+- The root considers capability, uses a root fallback for quality-critical work
+  when a suitable worker cannot be selected, and records any degraded
   freshness status honestly.
 - MDF-owned persona files remain model-agnostic. User-defined or global persona
-  files may declare model or effort defaults for ordinary direct invocation, but
-  the root-selected MDF dispatch record overrides those defaults.
+  files may declare defaults for ordinary direct invocation, but the root's
+  readable MDF choice governs managed delegation.
 - The root model owns canonical artifact storage, approval evidence, and
   root-only synthesis. Persona content remains upstream-owned.

@@ -43,7 +43,6 @@
       "inventory/references/subagent-dispatch-policy.json",
       "inventory/references/model-routing-5.6.json",
       "inventory/references/auto-workflow-contract.json",
-      "inventory/references/auto-workflow-handoff-schema.json",
       "inventory/skills/api-and-interface-design.json",
       "inventory/skills/auto-workflow.json",
       "inventory/skills/browser-testing-with-devtools.json",
@@ -91,8 +90,6 @@
       "inventory/skills/use-mdf.json",
       "inventory/skills/using-agent-skills.json",
       "inventory/skills/using-git-worktrees.json",
-      "inventory/skills/auto-workflow-scripts-auto-workflow-policy.js.json",
-      "inventory/skills/auto-workflow-scripts-verify-auto-handoff.js.json",
       "inventory/skills/webperf.json"
     ]
   },
