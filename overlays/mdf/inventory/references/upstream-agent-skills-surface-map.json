@@ -1,9 +1,0 @@
-{
-  "output": "references/upstream-agent-skills-surface-map.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/references/upstream-agent-skills-surface-map.md",
-  "artifactStorageOverride": false,
-  "notes": "Complete comparison map for upstream skills, references, commands, agents, hooks, skill-local scripts, and explicit runtime exclusions.",
-  "overlayKind": "mdfOnly"
-}

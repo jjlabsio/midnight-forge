@@ -23,9 +23,9 @@ as an MDF port decision with provenance, source hashes, and a recorded gap.
    `vendor/agent-skills`, `vendor/agent-skills.lock.json`,
    `overlays/mdf/inventory.json`, the sync renderer, and both packaging
    validators exist under `implementation_root`.
-2. Read `../../references/upstream-agent-skills-update-policy.md`,
-   `../../references/upstream-agent-skills-surface-map.md`, and
-   `../../references/agent-skills-port-notes.md` before changing any source,
+2. Read `references/upstream-agent-skills-update-policy.md`,
+   `references/upstream-agent-skills-surface-map.md`, and
+   `references/agent-skills-port-notes.md` before changing any source,
    overlay, inventory, or generated file.
 3. Record the exact lock commit as `previous_commit`. Treat the lock's
    `source` path as provenance only; never infer `target_commit` from the
@@ -117,7 +117,7 @@ After the target surface passes the inventory and import check:
 Preserve every upstream hook under `vendor/agent-skills/hooks/**`, including
 Claude-specific manifests and scripts. Do not activate a Claude hook directly.
 For each hook that should have a Codex counterpart, record in
-`../../references/agent-skills-port-notes.md`:
+`references/agent-skills-port-notes.md`:
 
 - source path and target Codex port path;
 - lifecycle event and the exact payload supplied to the port;

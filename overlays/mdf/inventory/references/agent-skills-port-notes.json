@@ -1,9 +1,0 @@
-{
-  "output": "references/agent-skills-port-notes.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/references/agent-skills-port-notes.md",
-  "artifactStorageOverride": false,
-  "notes": "Packaging contract for pinned upstream, overlay inputs, generated outputs, and packaging-only validation.",
-  "overlayKind": "mdfOnly"
-}

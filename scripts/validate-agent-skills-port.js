@@ -120,16 +120,6 @@ for (const removed of ["agents/spec-evaluator.md", "agents/plan-evaluator.md"]) 
   assert(!exists(path.join(root, removed)), `${removed} must not be generated.`);
 }
 
-for (const requiredOutput of [
-  "references/upstream-agent-skills-update-policy.md",
-  "references/upstream-agent-skills-surface-map.md",
-]) {
-  const entry = entryFor(requiredOutput);
-  assert(entry, `Missing required upstream-update surface ${requiredOutput}.`);
-  assert(entry?.classification === "mdf-only", `${requiredOutput} must be MDF-only.`);
-  assert((entry?.overlayKind || "copy") === "mdfOnly", `${requiredOutput} must use mdfOnly.`);
-}
-
 for (const hook of filesUnder(vendorRoot, "hooks")) {
   assert(exists(path.join(vendorRoot, hook)), `Pinned upstream hook is missing: ${hook}.`);
 }

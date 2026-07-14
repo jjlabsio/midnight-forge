@@ -170,7 +170,10 @@ for (const kind of ["copy", "mdfOnly", "renameAdapter"]) {
 }
 assert(lock.repository === inventory.upstream.repository, "Vendor lock repository must match inventory.");
 assert(lock.commit === inventory.upstream.commit, "Vendor lock commit must match inventory.");
-assert(exists(path.join(overlayRoot, "replacements", "references", "agent-skills-port-notes.md")), "Missing MDF packaging reference.");
+assert(
+  exists(path.join(root, ".agents", "skills", "update-agent-skills-upstream", "references", "agent-skills-port-notes.md")),
+  "Missing repository-local upstream update packaging reference."
+);
 for (const entry of entries) {
   outputCounts.set(entry.output, (outputCounts.get(entry.output) || 0) + 1);
 }
@@ -302,15 +305,6 @@ assert(!useMdf?.source, "use-mdf must not claim an upstream source.");
 assert(!useMdf?.baseSha256, "use-mdf must not claim an upstream source hash.");
 const usingAgentSkills = entries.find((entry) => entry.output === "skills/using-agent-skills/SKILL.md");
 assert(usingAgentSkills?.classification === "upstream-identical", "using-agent-skills must remain an exact upstream primitive.");
-for (const requiredOutput of [
-  "references/upstream-agent-skills-update-policy.md",
-  "references/upstream-agent-skills-surface-map.md",
-]) {
-  const entry = entryByOutput.get(requiredOutput);
-  assert(entry?.classification === "mdf-only", `${requiredOutput} must be an MDF-only generated surface.`);
-  assert((entry?.overlayKind || "copy") === "mdfOnly", `${requiredOutput} must use the mdfOnly overlay kind.`);
-}
-
 const manual = entries.filter((entry) => entry.classification === "manual-review-required");
 assert(manual.length === 0, `Manual review entries remain: ${manual.map((entry) => entry.output).join(", ")}`);
 

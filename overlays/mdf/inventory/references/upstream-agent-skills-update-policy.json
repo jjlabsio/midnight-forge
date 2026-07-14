@@ -1,9 +1,0 @@
-{
-  "output": "references/upstream-agent-skills-update-policy.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/references/upstream-agent-skills-update-policy.md",
-  "artifactStorageOverride": false,
-  "notes": "Source-first update policy, complete upstream surface comparison, exclusion boundary, hook port contract, provenance, and report requirements.",
-  "overlayKind": "mdfOnly"
-}
