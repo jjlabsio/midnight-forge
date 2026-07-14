@@ -2,7 +2,10 @@
   "schemaVersion": 2,
   "upstream": {
     "repository": "https://github.com/addyosmani/agent-skills.git",
-    "commit": "8c6530305396f341b5da7201cf1f7e390fdb863f"
+    "commit": "98967c45a42b88d6b8fb3a88b7ff6273920763d6",
+    "surfaceRoots": ["skills", "references", "commands", "agents", "hooks"],
+    "runtimeExcludedRoots": ["scripts", "docs"],
+    "skillLocalRuntimeGlob": "skills/**/scripts/**"
   },
   "generated": {
     "clean": [
@@ -31,7 +34,6 @@
       "inventory/references/mdf-preserved-contract.json",
       "inventory/references/definition-of-done.json",
       "inventory/references/artifact-storage-override.json",
-      "inventory/references/agent-skills-port-notes.json",
       "inventory/references/human-facing-language.json",
       "inventory/references/orchestration-patterns.json",
       "inventory/references/observability-checklist.json",

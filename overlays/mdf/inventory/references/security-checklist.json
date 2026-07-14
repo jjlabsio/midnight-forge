@@ -2,5 +2,6 @@
   "output": "references/security-checklist.md",
   "source": "references/security-checklist.md",
   "classification": "upstream-identical",
-  "overlayKind": "copy"
+  "overlayKind": "copy",
+  "baseSha256": "3ab8aed0bfc37f60e2293d0139522ad470b4beea1938f456617eb6fa8b3b7fc8"
 }
