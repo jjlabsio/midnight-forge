@@ -35,6 +35,13 @@ This remains a standalone workflow even though `build` may invoke test logic
 internally. Use it for independent verification, manual changes, debugging,
 PR preparation, and pre-ship checks.
 
+When called with `mode: auto-workflow`, the root may delegate bounded
+reproduction, coverage, and regression analysis to the central subagent
+dispatch policy. The root or task writer still owns shared writes and final
+synthesis. Do not ask for a ceremonial approval in auto mode; stop only for a
+critical decision, failed verification without an obvious in-scope repair, or
+untrusted test provenance.
+
 When saving a test plan or test result report, verify MDF user and project init
 state, resolve the current MDF work item, and write
 `.mdf/work/{work_id}/test-NNN.md`. If init state is missing, stop and instruct

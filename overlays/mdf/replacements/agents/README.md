@@ -14,6 +14,11 @@ Codex/MDF runtime adapter.
 - A generic subagent receives the exact selected persona prompt and bounded
   task inputs. It reports to the root; it does not write shared artifacts,
   invoke another persona, or advance lifecycle state.
+- Auto-workflow may also use a generic read-only `explorer` dispatch for
+  bounded codebase inventory. The routing reference may prefer the verified
+  exploration candidate for this role only; it has `report-only` authority and
+  no write scope, and is never treated as an independent design or security
+  decision.
 - The root verifies capability, uses root fallback for quality-critical work
   when capability cannot be selected or verified, and records any degraded
   freshness status honestly.

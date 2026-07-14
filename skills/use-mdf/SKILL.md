@@ -10,6 +10,15 @@ primitive workflows. Resolve the installed skill or reference location before
 loading a skill, persona, documentation file, or supporting material. Do not
 rely on a fixed cache path; unresolved paths are a stop.
 
+When the caller carries `mode: auto-workflow`, also load
+`../../references/auto-workflow-contract.md`. This mode grants in-scope MDF
+skill invocation and the explicitly listed push/PR handoff, but it does not
+change standalone skill semantics or authorize merge, deploy, deletion, or
+stale-lock takeover.
+Validate the root-issued handoff record and exact phase/artifact hashes before
+using any auto-only checkpoint bypass; a bare mode string follows standalone
+rules.
+
 ## Routing
 
 Route public MDF commands to their named skills (`spec`, `plan`, `build`,
@@ -32,19 +41,22 @@ and user authority.
 When a selected skill delegates to a subagent, load the plugin-installed
 `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. The root classifies difficulty and
-risk, verifies the available GPT-5.6 capability, and chooses among the Sol,
-Terra, and Luna profiles using the chart-derived prior and its own judgment of
-the task. This is dynamic selection, not a fixed task-to-model table or a
-measured quality/cost calculation. Fast, speed-only, older, and unreviewed
-future profiles are never eligible.
+risk, verifies the available capability, and chooses among the reviewed
+quality-critical candidates or the narrow read-only exploration candidate
+using the chart-derived prior and its own judgment of the task. This is dynamic
+selection, not a fixed task-to-model table or a measured quality/cost
+calculation. Fast, speed-only, older, and unreviewed future profiles are never
+eligible for quality-critical work.
 
 Pass the root-selected dispatch record plus the exact persona prompt to the
 generic runtime spawn path. Persona model or effort frontmatter is a default
 for ordinary direct invocation; the root-selected record overrides it for MDF
-dispatch while preserving the persona's perspective. If GPT-5.6 capability
-cannot be verified, stop or use a root fallback with an explicit degraded
-status; never hide the fallback. Root-only synthesis owns reports, artifacts,
-and lifecycle state.
+dispatch while preserving the persona's perspective. If the selected
+quality-critical GPT-5.6 capability cannot be verified, stop or use a root
+fallback with an explicit degraded status; never hide the fallback. A
+read-only explorer may use the routing reference's exploration preference only
+with verified compatible transport. Root-only synthesis owns reports,
+artifacts, and lifecycle state.
 
 ## Executor and persona adapter
 
@@ -53,7 +65,9 @@ a generic subagent is appropriate, it receives the exact selected persona prompt
 from the plugin root plus bounded task inputs. If that capability is unavailable
 or cannot be verified, the root fallback performs quality-critical work; record
 degraded status rather than claiming independent freshness. One writer operates
-in a shared worktree; root-only synthesis owns artifacts and lifecycle advance.
+in each shared worktree; auto-workflow may use multiple isolated worktrees
+only after its defensive parallel-writer proof gate passes. Root-only
+synthesis owns artifacts and lifecycle advance.
 
 ## DDD parity
 

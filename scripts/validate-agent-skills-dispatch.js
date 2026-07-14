@@ -61,6 +61,11 @@ assert(
   routing?.forbidden_profile_labels?.includes("fast") && routing?.forbidden_profile_labels?.includes("speed-only"),
   "routing must forbid fast and speed-only profile labels"
 );
+assert(routing?.exploration?.preferred_model === "gpt-5.3-codex-spark", "exploration routing must prefer GPT-5.3-Codex-Spark");
+assert(routing?.exploration?.read_only === true, "exploration routing must be read-only");
+assert(routing?.exploration?.authority === "report-only", "exploration routing must be report-only");
+assert(routing?.exploration?.write_scope === "none", "exploration routing must have no write scope");
+assert(typeof routing?.exploration?.transport === "string", "exploration routing must declare transport requirements");
 for (const profile of routing?.profiles || []) {
   assert(profile.family === undefined || profile.family === "gpt-5.6", `${profile.variant} profile has an invalid family`);
   assert(routing.allowed_variants.includes(profile.variant), `${profile.variant} is not an allowed variant`);
@@ -122,6 +127,21 @@ for (const entry of fs.readdirSync(path.join(root, "agents"))) {
   assert(!hardCodedModelPattern.test(content), `persona agents/${entry} hard-codes a model or vendor profile`);
 }
 
+const autoContract = read("references/auto-workflow-contract.md").replace(/\s+/g, " ").toLowerCase();
+for (const term of [
+  "mode: auto-workflow",
+  "interview-me",
+  "parallel writers",
+  "serial",
+  "push",
+  "pr create operation",
+  "merge",
+  "deploy",
+  "canonical `.mdf`"
+]) {
+  assert(autoContract.includes(term), `auto-workflow-contract.md is missing: ${term}`);
+}
+
 const inventoryRoot = readJson("overlays/mdf/inventory.json");
 const inventoryEntries = new Map();
 for (const entryFile of inventoryRoot?.generated?.entryFiles || []) {
@@ -131,6 +151,7 @@ for (const entryFile of inventoryRoot?.generated?.entryFiles || []) {
 for (const output of [
   "references/subagent-dispatch-policy.md",
   "references/model-routing-5.6.md",
+  "references/auto-workflow-contract.md",
   "agents/README.md",
   ...delegatedSkills
 ]) {

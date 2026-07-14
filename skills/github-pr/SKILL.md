@@ -5,6 +5,10 @@ description: "Use when creating or updating a GitHub pull request for MDF work, 
 
 # GitHub PR
 
+When called with `mode: auto-workflow`, load
+`../../references/auto-workflow-contract.md`. Its run-scoped authority permits
+only the final push and PR create/update mutation after fresh preflight.
+
 This skill completes an incomplete current-session task or validates handoff
 for an already-completed task. It has two handoff paths and is model-led. Use
 local Git state, the GitHub CLI, and the connected GitHub surface when
@@ -50,8 +54,9 @@ create lifecycle evidence or satisfy ship.
    the card directly. If already completed, report that its read-only handoff
    validation passed.
 
-Callers pass only user-confirmed intent and current session context; never pass
-asserted Git/GitHub facts. Preserve raw command outputs in the readable
+Callers pass only user-confirmed intent, or the explicit
+`mode: auto-workflow` run authorization, plus current session context; never
+pass asserted Git/GitHub facts. Preserve raw command outputs in the readable
 preflight report. If uncommitted changes remain, use `github-commit` and
 recheck the clean tree before continuing. Stage only intended paths; do not
 use a PR as a commit gate.
@@ -74,11 +79,14 @@ plan even when a check was not run.
 ## External authority
 
 Release selection and all external mutations remain authoritative in this
-skill. This invocation requests PR preparation. Before pushing or creating/updating
-the PR, recheck the current branch, remote, diff, language, release signal,
-and open-PR status. Keep the PR ready for review unless the user explicitly
-requested a draft. Do not merge, deploy, delete branches, or discard dirty
-worktrees as a side effect; those are separate current-confirmation actions.
+skill. Before pushing or creating/updating the PR, recheck the current branch,
+remote, diff, language, release signal, authentication, mergeability, and
+open-PR status. Keep the PR ready for review unless the user explicitly
+requested a draft. In standalone mode, push and PR mutation require their own
+current confirmation. In `mode: auto-workflow`, a valid root-issued handoff
+from the initial invocation allows only push and PR create/update. A bare mode
+string is insufficient. Do not merge, deploy, delete branches,
+delete worktrees, or discard dirty worktrees as a side effect.
 
 GitHub is the source of truth for whether an open PR already exists. Push the
 current branch, check for an existing open PR, update it when its
@@ -91,5 +99,5 @@ CI, merge, default-branch sync, and cleanup happen in later skills.
 Stop for a missing or ambiguous session task, malformed task state, lock or
 worktree mismatch, default branch, dirty unrelated changes, missing origin or
 GitHub authentication, unmergeable base, unclear release signal, wrong PR
-language, failed push, failed PR command, or any requested external action
-whose current authority is unclear.
+language, failed push, failed PR command, duplicate/uncertain PR state, or an
+external action outside the auto-workflow authority.

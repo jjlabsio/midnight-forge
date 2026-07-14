@@ -7,6 +7,7 @@
 - [Use generated runtime files](agent-skills-overlay/generated-runtime-files.md)
 - [Keep artifact and task state readable](agent-skills-overlay/overlay-v2-artifact-storage.md)
 - [Use a Codex-only plugin surface](agent-skills-overlay/codex-only-plugin-surface.md)
+- [Orchestrate auto-workflow autonomously within a scoped contract](agent-skills-overlay/auto-workflow-autonomous-orchestration.md)
 
 ## MDF Task System
 

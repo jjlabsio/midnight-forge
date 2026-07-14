@@ -42,6 +42,12 @@ reviewed diff and task-owned commits. Exclude tests, vendor, generated files,
 public workflow contracts, and unrelated changes unless the user explicitly
 approves a different scope.
 
+In `mode: auto-workflow`, the run-scoped authorization removes the ceremonial
+step-by-step confirmation for behavior-preserving candidates. The root may
+delegate read-only candidate discovery and verification, but canonical state
+and accepted refactor commits remain root-owned. A candidate that changes a
+public contract, security boundary, or destructive behavior remains a stop.
+
 For each behavior-preserving candidate:
 
 1. State the candidate, expected behavior preservation, and affected paths.
@@ -57,5 +63,6 @@ For each behavior-preserving candidate:
 If a candidate fails verification or review, preserve and reproduce the
 failure, explain the finding, and either repair it through the ordinary TDD
 loop or reject it. Do not modify tests merely to make a refactor pass. A
-destructive cleanup, public-contract change, or ambiguous behavior stop needs
-current user confirmation.
+destructive cleanup, public-contract change, or materially ambiguous behavior
+remains a user-decision stop in every mode. Routine simplification ambiguity is
+resolved by the root and recorded as an assumption.

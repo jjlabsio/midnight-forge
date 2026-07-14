@@ -1,9 +1,10 @@
 # GPT-5.6 Model Routing Reference
 
-This reference defines the reviewed candidate family for MDF subagent
-dispatch. The names below are routing profiles, not measured quality/cost
-values or guarantees about semantic correctness. Runtime capability inspection
-must verify that a profile exists before it can be selected.
+This reference defines the reviewed candidate family for quality-critical MDF
+subagent dispatch and one deliberately narrow read-only exploration preference.
+The names below are routing profiles, not measured quality/cost values or
+guarantees about semantic correctness. Runtime capability inspection must
+verify a profile and its transport before it can be selected.
 
 Persona frontmatter may provide a default model or effort for ordinary direct
 invocation. For MDF-managed delegation, the root-selected dispatch record
@@ -19,9 +20,26 @@ overrides those defaults while preserving the persona prompt and perspective.
     {"variant": "sol", "efforts": ["light", "medium", "high", "xhigh"]},
     {"variant": "terra", "efforts": ["light", "medium", "high", "xhigh"]},
     {"variant": "luna", "efforts": ["light", "medium", "high", "xhigh"]}
-  ]
+  ],
+  "exploration": {
+    "preferred_model": "gpt-5.3-codex-spark",
+    "family": "gpt-5.3-codex",
+    "variant": "spark",
+    "read_only": true,
+    "authority": "report-only",
+    "write_scope": "none",
+    "transport": "must-omit-unsupported-reasoning-summary",
+    "fallback": "verified-gpt-5.6-read-only-candidate-or-root"
+  }
 }
 ```
+
+The exploration entry is not a general downgrade. It is eligible only for a
+bounded codebase inventory or evidence search with no write or lifecycle
+authority. The current runtime may reject the model's unsupported reasoning
+transport; a capability probe must detect that before work begins and record a
+verified fallback. The exploration report is never independent proof of a
+design, security, implementation, ship, or external-action decision.
 
 ## Frontier signals
 
@@ -91,18 +109,22 @@ considering current runtime capability, task difficulty, risk, and uncertainty.
 
 ## Dynamic selection guidance
 
-1. Reject every capability whose family is not exactly `gpt-5.6`, whose variant
-   is not `sol`, `terra`, or `luna`, whose effort is not `light`/`medium`/
-   `high`/`xhigh`, or whose profile label is `fast`/`speed-only`.
-2. Reject candidates below the work-kind quality floor.
-3. Judge difficulty, risk, ambiguity, novelty, consequence, and the chart
+1. For quality-critical work, reject every capability whose family is not
+   exactly `gpt-5.6`, whose variant is not `sol`, `terra`, or `luna`, whose
+   effort is not `light`/`medium`/`high`/`xhigh`, or whose profile label is
+   `fast`/`speed-only`.
+2. For exploration, accept the preferred entry only when the capability is
+   verified, transport-compatible, read-only, report-only, and has no write
+   scope. Otherwise use the verified fallback.
+3. Reject candidates below the work-kind quality floor.
+4. Judge difficulty, risk, ambiguity, novelty, consequence, and the chart
    prior. High-risk work should favor the candidate the root judges most
    capable; bounded lower-risk work may favor a cheaper frontier candidate.
-4. Do not turn the judgment into a fixed score, benchmark-equivalence gate, or
+5. Do not turn the judgment into a fixed score, benchmark-equivalence gate, or
    task-to-model table. Do not present chart readings as measured facts.
-5. If no eligible GPT-5.6 capability remains, stop or use the root fallback with
-   an explicit degraded status. Never silently use an older or future model
-   family.
+6. If no eligible quality-critical GPT-5.6 capability remains, stop or use the
+   root fallback with an explicit degraded status. Never silently use an older
+   or future model family for quality-critical work.
 
 Every dispatch should preserve the selected family, variant, effort, quality
 floor, risk, capability evidence, and fallback/degraded outcome for synthesis.

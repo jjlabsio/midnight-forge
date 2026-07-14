@@ -1,0 +1,7 @@
+{
+  "output": "references/auto-workflow-contract.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/references/auto-workflow-contract.md",
+  "overlayKind": "mdfOnly",
+  "notes": "Auto-only lifecycle authority, interview preflight, subagent, writer parallelism, and PR idempotency contract."
+}
