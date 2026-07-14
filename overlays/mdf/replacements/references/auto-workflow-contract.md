@@ -9,25 +9,19 @@ skill or MDF command.
 
 Every downstream MDF skill receives a bounded context containing:
 
-```text
-mode
-run_id
-intent_digest
-current_phase
-spec_path + spec_sha256
-plan_path + plan_sha256
-allowed_mdf_skills
-allowed_external_actions
-rootIssued: true
-handoffRecord.path + handoffRecord.sha256
-```
+the canonical `auto-workflow-handoff-schema.json` record plus its
+`handoffRecord.path` and `handoffRecord.sha256` pointer. The persisted record
+is written as `.mdf/work/{work_id}/handoff-NNN.json`; the downstream context
+must use the exact same field names and phase-dependent spec/plan fields.
 
-Before bypassing any standalone checkpoint, the downstream skill must evaluate
-`scripts/auto-workflow-policy.js`'s `autoHandoffGate`, then verify
-the handoff record exists under canonical `.mdf`, its bytes match the supplied
-SHA-256, the record is root-issued for this run, and the phase/spec/plan hashes
-are current. A missing, stale, or conflicting handoff follows standalone rules
-and cannot use auto authority.
+Before bypassing any standalone checkpoint, the downstream skill must run
+`skills/auto-workflow/scripts/verify-auto-handoff.js` from the installed
+auto-workflow skill with
+the canonical root, record path, and supplied SHA-256. The verifier reads the
+record, rejects traversal/symlink escapes, computes the actual SHA-256, checks
+the canonical schema, requires the exact external-action allowlist, and
+compares the current phase and artifact hashes. A missing, stale, or
+conflicting handoff follows standalone rules and cannot use auto authority.
 
 The root owns this context, canonical `.mdf` state, task locks, lifecycle
 advance, synthesis, merge, and external mutations. A downstream skill may

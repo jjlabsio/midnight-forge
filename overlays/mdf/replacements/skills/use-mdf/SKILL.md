@@ -15,7 +15,9 @@ When the caller carries `mode: auto-workflow`, also load
 skill invocation and the explicitly listed push/PR handoff, but it does not
 change standalone skill semantics or authorize merge, deploy, deletion, or
 stale-lock takeover.
-Validate the root-issued handoff record and exact phase/artifact hashes before
+Run the installed auto-workflow skill's
+`skills/auto-workflow/scripts/verify-auto-handoff.js` and
+validate the canonical handoff record plus exact phase/artifact hashes before
 using any auto-only checkpoint bypass; a bare mode string follows standalone
 rules.
 

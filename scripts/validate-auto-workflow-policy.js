@@ -14,26 +14,25 @@ assert.strictEqual(interviewGate({ selfContained: true, confidence: 100 }).requi
 assert.strictEqual(interviewGate({ selfContained: true, speedOverVerification: true }).speedException, true);
 assert.strictEqual(interviewGate({ speedOverVerification: true, unsurfacedAssumption: true }).required, true);
 assert.strictEqual(autoHandoffGate({ mode: "auto-workflow" }).valid, false);
-assert.strictEqual(autoHandoffGate({
+const handoffRecord = {
+  schema_version: 1,
   mode: "auto-workflow",
   rootIssued: true,
   run_id: "run-1",
   intent_digest: "intent-1",
-  handoffRecord: { path: ".mdf/work/run/handoff-001.md", sha256: "a".repeat(64) },
   current_phase: "intent",
   allowed_mdf_skills: ["spec"],
   allowed_external_actions: []
-}).valid, true);
+};
 assert.strictEqual(autoHandoffGate({
-  mode: "auto-workflow",
-  rootIssued: true,
-  run_id: "run-1",
-  intent_digest: "intent-1",
-  handoffRecord: { path: ".mdf/work/run/handoff-001.md", sha256: "a".repeat(64) },
-  current_phase: "intent",
-  allowed_mdf_skills: ["spec"],
+  ...handoffRecord,
+  handoffRecord: { path: ".mdf/work/run/handoff-001.json", sha256: "a".repeat(64) }
+}, handoffRecord).valid, true);
+assert.strictEqual(autoHandoffGate({
+  ...handoffRecord,
+  handoffRecord: { path: ".mdf/work/run/handoff-001.json", sha256: "a".repeat(64) },
   allowed_external_actions: ["merge"]
-}).valid, false);
+}, { ...handoffRecord, allowed_external_actions: ["merge"] }).valid, false);
 assert.strictEqual(normalizeOwnedPath("src\\feature\\file.js"), "src/feature/file.js");
 assert.strictEqual(normalizeOwnedPath("../escape.js"), null);
 assert.strictEqual(pathsOverlap("src/a", "src/a/test.js"), true);

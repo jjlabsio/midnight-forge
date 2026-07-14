@@ -48,22 +48,15 @@ spec. Do not turn it into a fake spec or plan approval.
 
 ## Auto handoff context
 
-Pass this context to every downstream skill and subagent:
+Pass the canonical `../../references/auto-workflow-handoff-schema.json` record
+plus its `handoffRecord.path` and `handoffRecord.sha256` pointer to every
+downstream skill and subagent. Persist the record at
+`.mdf/work/{work_id}/handoff-NNN.json`; do not maintain a second handoff field
+list in this skill.
 
-```text
-mode: auto-workflow
-run_id
-intent_digest
-current_phase
-spec_path + spec_sha256
-plan_path + plan_sha256
-allowed_mdf_skills
-allowed_external_actions
-```
-
-`mode: auto-workflow` plus a valid root-issued handoff is required to bypass
-only ceremonial standalone checkpoints. A missing, stale, or conflicting
-context uses standalone rules.
+`mode: auto-workflow` plus a verifier-approved root-issued handoff is required
+to bypass only ceremonial standalone checkpoints. A missing, stale, or
+conflicting context uses standalone rules.
 Any change to spec/plan bytes, path, scope, or task order invalidates the
 corresponding continuation authorization and requires a new revision.
 
@@ -96,7 +89,7 @@ The default is one writer per worktree. Before starting a parallel writer
 group, construct task facts containing `dependsOn`, normalized `ownedPaths`,
 worktree/branch/base revision, lock ownership, shared-contract flags, and
 independence evidence. Evaluate them with
-`scripts/auto-workflow-policy.js`'s `parallelWriterEligibility`.
+`./scripts/auto-workflow-policy.js`'s `parallelWriterEligibility`.
 
 Only an eligible group may run in parallel. The proof must establish:
 

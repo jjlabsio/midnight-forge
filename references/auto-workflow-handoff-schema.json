@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://midnight-forge.local/schemas/auto-workflow-handoff.json",
+  "title": "MDF auto-workflow handoff",
+  "description": "The single schema for the persisted root handoff and its downstream context.",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "record": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "mode",
+        "run_id",
+        "intent_digest",
+        "rootIssued",
+        "current_phase",
+        "allowed_mdf_skills",
+        "allowed_external_actions"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "mode": { "const": "auto-workflow" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "intent_digest": { "type": "string", "minLength": 1 },
+        "rootIssued": { "const": true },
+        "current_phase": {
+          "enum": ["intent", "spec", "plan", "build", "test", "review", "simplify", "ship", "pr"]
+        },
+        "spec_path": { "type": "string", "minLength": 1 },
+        "spec_sha256": { "$ref": "#/$defs/sha256" },
+        "plan_path": { "type": "string", "minLength": 1 },
+        "plan_sha256": { "$ref": "#/$defs/sha256" },
+        "allowed_mdf_skills": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "allowed_external_actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["commit", "push", "pr-create", "pr-update"] }
+        },
+        "handoffRecord": {
+          "type": "object",
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^\\.mdf/work/[^/]+/handoff-[0-9]{3}\\.json$"
+            },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "current_phase": { "enum": ["plan", "build", "test", "review", "simplify", "ship", "pr"] } } },
+          "then": { "required": ["spec_path", "spec_sha256"] }
+        },
+        {
+          "if": { "properties": { "current_phase": { "enum": ["build", "test", "review", "simplify", "ship", "pr"] } } },
+          "then": { "required": ["plan_path", "plan_sha256"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "allOf": [
+        { "$ref": "#/$defs/record" },
+        { "required": ["handoffRecord"] }
+      ]
+    }
+  },
+  "$ref": "#/$defs/context"
+}
