@@ -33,9 +33,10 @@ When a selected skill delegates to a subagent, load the plugin-installed
 `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. The root classifies difficulty and
 risk, verifies the available GPT-5.6 capability, and chooses among the Sol,
-Terra, and Luna `high`/`xhigh` profiles using the measured quality/cost
-frontier. This is dynamic selection, not a fixed task-to-model table. Fast,
-speed-only, older, and unreviewed future profiles are never eligible.
+Terra, and Luna profiles using the chart-derived prior and its own judgment of
+the task. This is dynamic selection, not a fixed task-to-model table or a
+measured quality/cost calculation. Fast, speed-only, older, and unreviewed
+future profiles are never eligible.
 
 Pass the root-selected dispatch record plus the exact persona prompt to the
 generic runtime spawn path. Persona model or effort frontmatter is a default
