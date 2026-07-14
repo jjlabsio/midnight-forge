@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.3 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.2...v2.1.3)
+
+### Changes
+
+- docs(task): preserve task creation intent ([#65](https://github.com/jjlabsio/midnight-forge/pull/65))
 ## v2.1.2 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.1...v2.1.2)
