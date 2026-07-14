@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.2 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.1...v2.1.2)
+
+### Changes
+
+- docs(task): generalize worktree environment file copying ([#63](https://github.com/jjlabsio/midnight-forge/pull/63))
 ## v2.1.1 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.0...v2.1.1)
