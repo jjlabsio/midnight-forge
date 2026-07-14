@@ -89,7 +89,6 @@
       "inventory/skills/test.json",
       "inventory/skills/use-mdf.json",
       "inventory/skills/using-agent-skills.json",
-      "inventory/skills/update-agent-skills-upstream.json",
       "inventory/skills/using-git-worktrees.json",
       "inventory/skills/webperf.json"
     ]

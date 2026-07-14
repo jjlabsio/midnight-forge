@@ -67,8 +67,9 @@ success criteria.
 
 ### Upstream update boundary
 
-The project-level `update-agent-skills-upstream` skill updates the vendor
-snapshot before it touches generated output. It compares the complete
+The repository-local `.agents/skills/update-agent-skills-upstream/SKILL.md`
+skill updates the vendor snapshot before it touches generated output. It
+belongs to the project rather than the MDF plugin. It compares the complete
 `skills/**`, `references/**`, `commands/**`, `agents/**`, and `hooks/**` trees,
 including skill-local scripts and newly added files. Upstream root scripts and
 ordinary docs remain preserved and reportable but are explicit runtime-import

@@ -27,8 +27,8 @@ producer is removed.
 
 ## Upstream update contract
 
-The project-level `update-agent-skills-upstream` skill is source-first. It
-records the previous and target commits, compares the complete upstream
+The repository-local `.agents/skills/update-agent-skills-upstream/SKILL.md`
+skill is source-first. It records the previous and target commits, compares the complete upstream
 `skills/**`, `references/**`, `commands/**`, `agents/**`, and `hooks/**` trees,
 and reports additions, deletions, modifications, and renames. It includes
 skill-local scripts in the owning skill surface. Upstream root `scripts/**`

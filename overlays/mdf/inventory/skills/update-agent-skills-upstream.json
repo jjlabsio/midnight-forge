@@ -1,9 +1,0 @@
-{
-  "output": "skills/update-agent-skills-upstream/SKILL.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/skills/update-agent-skills-upstream/SKILL.md",
-  "artifactStorageOverride": false,
-  "notes": "Source-first project skill for complete upstream agent-skills updates, Codex hook ports, generated regeneration, and categorized reporting.",
-  "overlayKind": "mdfOnly"
-}

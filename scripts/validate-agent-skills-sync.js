@@ -257,7 +257,7 @@ for (const cleanTarget of inventory.generated.clean) {
 }
 
 const generatedMarkdown = [...outputs].filter((output) => output.endsWith(".md"));
-const referencedPathPattern = /\b(?:references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/SKILL\.md|scripts\/[A-Za-z0-9._/-]+)/g;
+const referencedPathPattern = /(?:\.agents\/skills\/[A-Za-z0-9._/-]+\/SKILL\.md|\b(?:references\/[A-Za-z0-9._/-]+\.md|agents\/[A-Za-z0-9._/-]+\.md|skills\/[A-Za-z0-9._/-]+\/SKILL\.md|scripts\/[A-Za-z0-9._/-]+))/g;
 function isExternalUrlPath(content, index) {
   const tokenStart = Math.max(
     content.lastIndexOf(" ", index),
@@ -303,7 +303,6 @@ assert(!useMdf?.baseSha256, "use-mdf must not claim an upstream source hash.");
 const usingAgentSkills = entries.find((entry) => entry.output === "skills/using-agent-skills/SKILL.md");
 assert(usingAgentSkills?.classification === "upstream-identical", "using-agent-skills must remain an exact upstream primitive.");
 for (const requiredOutput of [
-  "skills/update-agent-skills-upstream/SKILL.md",
   "references/upstream-agent-skills-update-policy.md",
   "references/upstream-agent-skills-surface-map.md",
 ]) {

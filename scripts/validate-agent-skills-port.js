@@ -121,7 +121,6 @@ for (const removed of ["agents/spec-evaluator.md", "agents/plan-evaluator.md"]) 
 }
 
 for (const requiredOutput of [
-  "skills/update-agent-skills-upstream/SKILL.md",
   "references/upstream-agent-skills-update-policy.md",
   "references/upstream-agent-skills-surface-map.md",
 ]) {
