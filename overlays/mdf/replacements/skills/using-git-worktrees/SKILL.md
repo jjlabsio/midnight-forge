@@ -127,11 +127,11 @@ If creation fails, stop and report the exact failure. Do not continue in the nor
 
 ## Step 4: Copy Environment Files
 
-After the worktree is created, copy every root-level local environment file from the source project root to the new worktree when it exists in the source and does not already exist in the worktree.
-
-Root-level environment files are regular files directly under `<project-root>` whose basename starts with `.env`, such as `.env`, `.env.local`, `.env.development`, `.env.development.local`, `.env.test`, and `.env.production.local`.
-
-Do not overwrite existing files in the worktree. Do not recursively copy app-level or package-level environment files such as `apps/web/.env.local` or `packages/api/.env`. Do not copy files outside the root-level `.env*` pattern unless the user asks.
+After creating the worktree, inspect the repository and copy any local
+environment files required by the target app, package, or workflow, wherever
+they are located. This includes `.env` and `.env.*` files. Preserve relative
+paths, do not overwrite existing files, and use best judgment to skip
+unrelated, example, template, or unnecessary production-only files.
 
 ## Step 5: Install Dependencies
 
