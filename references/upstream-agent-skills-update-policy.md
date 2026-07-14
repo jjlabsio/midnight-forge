@@ -56,6 +56,14 @@ through inventory entries. The inventory must distinguish `upstream-identical`,
 `mdf-rename-or-adapter`, and `mdf-only` classifications and must retain source
 hashes for upstream-derived entries.
 
+## Formatting gate
+
+Apply `git diff --check` to MDF-owned and generated changes with
+`:(exclude)vendor/agent-skills/**`. Run the same check on the vendor snapshot
+separately as an informational upstream quality check. Preserve upstream bytes
+and report upstream-only whitespace findings; do not make them local edits or
+fail an otherwise valid update solely because of them.
+
 ## Hooks and Codex ports
 
 Preserve the complete upstream `hooks/**` tree in the vendor snapshot. Do not

@@ -121,8 +121,14 @@ upstream_validator_dir=vendor/agent-skills
 upstream_script_dir=scripts
 node "$upstream_validator_dir/$upstream_script_dir/validate-skills.js"
 node "$upstream_validator_dir/$upstream_script_dir/validate-commands.js"
-git diff --check
+git diff --check -- . ':(exclude)vendor/agent-skills/**'
 ```
+
+Use the scoped `git diff --check` as the formatting gate for MDF-owned and
+generated changes. Run `git diff --check -- vendor/agent-skills` separately as
+an informational upstream quality check; record any upstream-only whitespace
+finding, but do not edit vendor bytes or fail the update solely because the
+selected upstream snapshot contains it.
 
 If a command or validator is not present in the target snapshot, record that
 fact and use the maintained equivalent only when the policy permits it. Treat
