@@ -333,8 +333,8 @@ loads the plugin-installed `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. Classify implementation/testing
 difficulty and risk, verify a GPT-5.6 capability at the `high` floor, and pass
 the root-selected dispatch record plus the exact bounded task input through the
-generic runtime spawn path. The test persona does not select a model or
-reasoning effort.
+generic runtime spawn path. Test-persona model or effort frontmatter is only a
+direct-invocation default; the root-selected record overrides it for MDF work.
 
 If capability cannot be verified, use an explicit degraded root fallback or
 stop; never silently choose a fast, older, or future profile. The root verifies
@@ -343,15 +343,17 @@ subagent's report-only write scope.
 
 ## When to Use Subagents for Testing
 
-For complex bug fixes, spawn a subagent to write the reproduction test:
+For complex bug fixes, ask a subagent to propose the reproduction test while
+the root retains the write:
 
 ```
 Main agent: "Spawn a subagent to write a test that reproduces this bug:
 [bug description]. The test should fail with the current code."
 
-Subagent: Writes the reproduction test
+Subagent: Returns the proposed reproduction test or patch; it does not write
+shared files
 
-Main agent: Verifies the test fails, then implements the fix,
+Main agent: Writes the proposed test, verifies it fails, then implements the fix,
 then verifies the test passes.
 ```
 

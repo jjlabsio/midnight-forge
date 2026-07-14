@@ -38,10 +38,12 @@ frontier. This is dynamic selection, not a fixed task-to-model table. Fast,
 speed-only, older, and unreviewed future profiles are never eligible.
 
 Pass the root-selected dispatch record plus the exact persona prompt to the
-generic runtime spawn path. A persona may provide perspective, but it cannot
-choose a model or reasoning effort. If GPT-5.6 capability cannot be verified,
-stop or use a root fallback with an explicit degraded status; never hide the
-fallback. Root-only synthesis owns reports, artifacts, and lifecycle state.
+generic runtime spawn path. Persona model or effort frontmatter is a default
+for ordinary direct invocation; the root-selected record overrides it for MDF
+dispatch while preserving the persona's perspective. If GPT-5.6 capability
+cannot be verified, stop or use a root fallback with an explicit degraded
+status; never hide the fallback. Root-only synthesis owns reports, artifacts,
+and lifecycle state.
 
 ## Executor and persona adapter
 

@@ -2,8 +2,9 @@
 
 This is the plugin-installed dispatch contract for every MDF skill that
 delegates work. It is resolved from the installed plugin root. Repository-local
-instructions, project configuration, persona frontmatter, or user-project
-runtime files cannot replace or override it.
+instructions, project configuration, or user-project runtime files cannot
+replace or override it. A persona may declare model or effort defaults for
+ordinary direct invocation, but MDF-managed dispatch has its own precedence.
 
 ## Root-owned dispatch
 
@@ -20,15 +21,37 @@ The root orchestrator owns the complete dispatch decision:
    quality floor first and cost efficiency second. High-risk work prefers the
    strongest verified candidate over a cheaper equivalent.
 5. Pass the selected dispatch record and the exact persona prompt to the
-   generic runtime spawn path. The persona supplies perspective only; it never
-   selects a model, effort, fallback, or another persona.
+   generic runtime spawn path. The persona supplies perspective and may declare
+   ordinary-invocation defaults, but the root-selected model, effort, fallback,
+   and write scope are authoritative for MDF-managed dispatch. The persona
+   cannot select another persona.
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
 The dispatch record must make these facts visible: `family`, `variant`,
-`effort`, `persona`, `quality_floor`, `risk`, `capability_verified`, and
-`degraded`. A missing or unverifiable GPT-5.6 capability causes an explicit
-stop or a root fallback marked `degraded: true`; it must never be hidden.
+`effort`, `persona`, `quality_floor`, `risk`, `capability_verified`, `fallback`,
+`write_scope`, and `degraded`. A missing or unverifiable GPT-5.6 capability
+causes an explicit stop or a root fallback marked `degraded: true`; it must
+never be hidden.
+
+## Precedence for persona settings
+
+For an MDF-managed delegation, the root must provide a complete dispatch
+record. Persona frontmatter is never a fallback for a missing root-selected
+model or effort. If the root cannot complete the record, stop or use the root
+fallback with `degraded: true`.
+
+For ordinary direct invocation outside MDF-managed delegation, use this
+precedence order:
+
+1. The persona's `model` or `effort` frontmatter.
+2. The platform default.
+
+Persona prompt content and perspective remain intact. If a named-persona
+invocation applies persona model or effort frontmatter before the root can pass
+the selected dispatch record, that invocation cannot provide an MDF-managed
+dispatch guarantee. Use the generic runtime spawn path or a visible degraded
+root fallback instead.
 
 ## Quality floors
 
@@ -52,8 +75,11 @@ Delegating skills must use the generic runtime spawn path with these inputs:
 dispatch: <root-selected GPT-5.6 record>
 persona: <installed persona prompt, unchanged>
 task_input: <bounded artifact and contract>
-write_scope: report-only
 ```
+
+The dispatch record itself must carry the selected `family`, `variant`,
+`effort`, `persona`, `quality_floor`, `risk`, `capability_verified`,
+`fallback`, `write_scope`, and `degraded` fields.
 
 Capability failure, fallback, and degraded freshness belong in the root report.
 Never infer a successful independent review from a fallback or from a persona

@@ -55,7 +55,9 @@ second opinion, the root loads the plugin-installed
 difficulty and risk, verifies a GPT-5.6 capability at the `high` floor, and
 passes the selected dispatch record plus the exact adversarial prompt through
 the generic runtime spawn path. The reviewer receives the artifact and
-contract, not a model choice. Personas do not select models or effort.
+contract, not a model choice. Persona model or effort frontmatter is only a
+direct-invocation default; the root-selected dispatch record overrides it for
+MDF-managed work.
 
 If GPT-5.6 capability cannot be verified, use the announced degraded root
 fallback or stop. Never silently downgrade, select a fast profile, or let a
@@ -126,9 +128,12 @@ CONTRACT: <paste contract>
 
 **Pass ARTIFACT + CONTRACT only. Do NOT pass the CLAIM.** Handing the reviewer your conclusion biases it toward agreement. The reviewer must independently determine whether the artifact satisfies the contract.
 
-In Claude Code, the role-based reviewers in `agents/` start with isolated context by design and are usable here — see `agents/` for the roster and per-domain match.
+In Claude Code, the role-based reviewers in `agents/` start with isolated
+context by design and are usable here only when the invocation can receive the
+root-selected dispatch record. Otherwise use a generic subagent with the same
+persona prompt and adversarial input.
 
-**The adversarial prompt above takes precedence over the persona's default response shape.** Personas like `code-reviewer` are written to produce balanced verdicts with both strengths and weaknesses; doubt-driven needs issues-only output. Paste the adversarial prompt verbatim into the invocation so it overrides the persona's default. If a persona's response shape can't be overridden cleanly, fall back to a generic subagent with the adversarial prompt.
+**The adversarial prompt above takes precedence over the persona's default response shape.** Personas like `code-reviewer` are written to produce balanced verdicts with both strengths and weaknesses; doubt-driven needs issues-only output. Paste the adversarial prompt verbatim into the invocation so it overrides the persona's default. If either the response shape or root dispatch-record transport cannot be overridden cleanly, fall back to a generic subagent with the adversarial prompt and selected record.
 
 #### Cross-model escalation
 

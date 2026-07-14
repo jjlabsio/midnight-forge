@@ -22,19 +22,20 @@ Before issuing any of the three calls, the root loads the plugin-installed
 `../../references/model-routing-5.6.md`. Classify the release difficulty and
 risk once, verify GPT-5.6 capability, and select a separate dispatch record for
 each persona through the generic runtime spawn path. Pass the exact persona
-prompt plus that record; personas never select models or reasoning settings.
+prompt plus that record; persona model or effort frontmatter is only a
+direct-invocation default and the root-selected record is authoritative here.
 If capability is missing, use the root fallback with `degraded: true` or stop
 the gate explicitly. Never silently downgrade, select a fast profile, or let a
 persona write the ship decision.
 
-Spawn three subagents concurrently. The CLI exposes each custom subagent in
-`agents/` as a tool with the same name — so `code-reviewer.md` becomes a
-`code-reviewer` tool the main agent can call, and `@code-reviewer` works as an
-explicit invocation in the prompt. Issue all three subagent tool calls in a
-single assistant turn so they execute in parallel; sequential calls defeat the
-purpose of this command.
+Spawn three subagents concurrently. If the platform's named-persona tool can
+accept the root-selected dispatch record, it may be used. Otherwise use the
+generic runtime spawn path with the exact persona prompt and dispatch record.
+Do not rely on persona model or effort frontmatter for an MDF-managed call.
+Issue all three subagent calls in a single assistant turn so they execute in
+parallel; sequential calls defeat the purpose of this command.
 
-Dispatch each persona by tool name:
+Dispatch each persona role through the selected compatible path:
 
 1. **`code-reviewer`** — Run a five-axis review (correctness, readability,
    architecture, security, performance) on the staged changes or recent
@@ -46,9 +47,9 @@ Dispatch each persona by tool name:
    in happy path, edge cases, error paths, and concurrency scenarios. Output
    the standard coverage analysis.
 
-If subagents are unavailable in the current CLI version, invoke each
-persona's system prompt sequentially in the main context and treat their
-outputs as if returned in parallel; the merge phase still works.
+If no compatible named-persona or generic spawn path is available, use the root
+fallback with `degraded: true` or stop the gate explicitly. Do not present
+sequential main-context persona prompts as independent subagent reports.
 
 Constraints from the CLI subagent model:
 
@@ -59,8 +60,10 @@ Constraints from the CLI subagent model:
   instead of just reporting back, see `references/orchestration-patterns.md`.
 
 Persona resolution: user-defined `code-reviewer`, `security-auditor`, or
-`test-engineer` personas in `agents/` or global configuration take precedence
-over plugin versions. `/ship` picks up those customizations automatically.
+`test-engineer` personas in `agents/` or global configuration may customize the
+persona prompt and perspective. Their model and effort settings are defaults
+for direct invocation only; the root-selected dispatch record takes precedence
+for MDF-managed `/ship` calls.
 
 ### Phase B — Merge in main context
 

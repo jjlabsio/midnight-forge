@@ -31,11 +31,15 @@ Before spawning, load the plugin-installed
 `../../references/model-routing-5.6.md`. The root classifies audit difficulty
 and risk, verifies a GPT-5.6 capability at the `high` floor, and passes the
 selected dispatch record through the generic runtime spawn path with the exact
-persona prompt. The persona does not choose a model or effort. Missing
+persona prompt. Persona model or effort frontmatter is only a direct-invocation
+default; the root-selected dispatch record overrides it for MDF-managed work. Missing
 capability requires a visible root fallback with degraded status or an
 explicit stop; never silently use a fast, older, or future profile.
 
-Spawn the `web-performance-auditor` subagent (the CLI exposes each custom subagent in `agents/` as a tool with the same name). Pass it explicitly:
+Spawn the `web-performance-auditor` persona only when the named-persona path
+can receive the root-selected dispatch record. Otherwise use the generic
+runtime spawn path with the exact persona prompt and dispatch record. Pass it
+explicitly:
 
 - The files, components, or diff under review
 - Any artifact paths (Lighthouse JSON, PSI JSON, CrUX response, trace) or pasted JSON content
@@ -59,12 +63,14 @@ for a web performance audit.
 
 From the resolved plugin root, load the exact upstream
 `agents/web-performance-auditor.md` persona prompt and invoke one
-`web-performance-auditor` subagent with that prompt. This is a
-single-persona call; do not fan out to additional reviewers. References from
+`web-performance-auditor` subagent through a path that accepts the root
+dispatch record. This is a single-persona call; do not fan out to additional
+reviewers. References from
 the persona to `performance-optimization` or
 `browser-testing-with-devtools` are guidance and capability references, not
 additional `webperf` subagent calls.
 
-Select the named subagent only when its capability can be verified. Otherwise,
-use a root fallback only if it can receive the same persona prompt, or report
-degraded status honestly. Do not silently omit the audit.
+Select the named subagent only when both its capability and root dispatch-record
+transport can be verified. Otherwise, use the generic runtime spawn path or a
+root fallback with degraded status, or stop explicitly. Do not silently omit
+the audit.

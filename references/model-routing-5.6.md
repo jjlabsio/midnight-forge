@@ -5,6 +5,10 @@ dispatch. The names below are routing profiles, not fabricated guarantees
 about semantic correctness. Runtime capability inspection must verify that a
 profile exists before it can be selected.
 
+Persona frontmatter may provide a default model or effort for ordinary direct
+invocation. For MDF-managed delegation, the root-selected dispatch record
+overrides those defaults while preserving the persona prompt and perspective.
+
 ```json
 {
   "family": "gpt-5.6",

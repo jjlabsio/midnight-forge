@@ -35,7 +35,8 @@ plugin-installed `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. Classify review difficulty and risk,
 verify GPT-5.6 capability at the `high` floor, and pass the root-selected
 dispatch record with the exact persona prompt through the generic runtime spawn
-path. Personas do not select models or effort. If capability is unavailable,
+path. Persona model or effort frontmatter is only a direct-invocation default;
+the root-selected dispatch record overrides it for MDF-managed work. If capability is unavailable,
 use a visible degraded root fallback or stop; never silently use a fast, older,
 or future profile.
 

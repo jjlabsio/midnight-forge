@@ -17,7 +17,8 @@ Codex/MDF runtime adapter.
 - The root verifies capability, uses root fallback for quality-critical work
   when capability cannot be selected or verified, and records any degraded
   freshness status honestly.
-- Persona files must remain model-agnostic: they do not contain model IDs,
-  reasoning settings, or task-specific routing tables.
+- MDF-owned persona files remain model-agnostic. User-defined or global persona
+  files may declare model or effort defaults for ordinary direct invocation, but
+  the root-selected MDF dispatch record overrides those defaults.
 - The root model owns canonical artifact storage, approval evidence, and
   root-only synthesis. Persona content remains upstream-owned.

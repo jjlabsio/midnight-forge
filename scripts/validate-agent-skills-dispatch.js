@@ -79,7 +79,9 @@ for (const term of [
   "capability",
   "degraded",
   "GPT-5.6",
-  "Fast or speed-only profiles are forbidden"
+  "Fast or speed-only profiles are forbidden",
+  "Precedence for persona settings",
+  "root-selected model, effort, fallback"
 ]) {
   assert(policy.includes(term), `subagent-dispatch-policy.md is missing: ${term}`);
 }
@@ -109,6 +111,10 @@ const personaAdapter = read("agents/README.md");
 assert(personaAdapter.includes("../references/subagent-dispatch-policy.md"), "agents/README.md bypasses central dispatch");
 assert(personaAdapter.replace(/\s+/g, " ").includes("generic runtime spawn path"), "agents/README.md omits generic runtime dispatch");
 assert(personaAdapter.includes("model-agnostic"), "agents/README.md does not keep personas model-agnostic");
+assert(
+  personaAdapter.includes("root-selected MDF dispatch record overrides"),
+  "agents/README.md does not define root precedence over persona defaults"
+);
 for (const entry of fs.readdirSync(path.join(root, "agents"))) {
   if (entry === "README.md" || !entry.endsWith(".md")) continue;
   const content = read(path.join("agents", entry));
@@ -130,6 +136,25 @@ for (const output of [
   const entry = inventoryEntries.get(output);
   assert(entry, `${output} is missing from generated inventory`);
   assert(entry?.overlay, `${output} has no overlay coverage for the dispatch policy`);
+}
+
+const ship = read("skills/ship/SKILL.md");
+const normalizedShip = ship.replace(/-\s+/g, "").replace(/\s+/g, " ");
+assert(
+  normalizedShip.includes("defaults for direct invocation only") && normalizedShip.includes("root-selected dispatch record takes precedence"),
+  "skills/ship/SKILL.md does not define root precedence over persona defaults"
+);
+assert(
+  normalizedShip.includes("named-persona tool can accept the root-selected dispatch record"),
+  "skills/ship/SKILL.md does not define the named-persona dispatch boundary"
+);
+
+for (const pathName of ["skills/webperf/SKILL.md", "skills/doubt-driven-development/SKILL.md"]) {
+  const content = read(pathName).replace(/\s+/g, " ");
+  assert(
+    content.includes("root-selected dispatch record") && content.includes("generic runtime spawn path"),
+    `${pathName} does not define the root dispatch transport boundary`
+  );
 }
 
 function effortRank(effort) {
