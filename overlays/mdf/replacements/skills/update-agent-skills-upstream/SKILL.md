@@ -14,9 +14,15 @@ as an MDF port decision with provenance, source hashes, and a recorded gap.
 
 ## Preconditions and authority
 
-1. Resolve the canonical project root and confirm that `vendor/agent-skills`,
-   `vendor/agent-skills.lock.json`, `overlays/mdf/inventory.json`, the sync
-   renderer, and both packaging validators exist.
+1. Resolve the canonical project root before reading or writing state. Keep
+   `implementation_root` (the current worktree) separate from `mdf_root` (the
+   root containing canonical `.mdf/work`, `.mdf/index.jsonl`, or `.mdf/locks`).
+   When the current worktree has no canonical `.mdf` state, inspect
+   `git worktree list --porcelain` and use the matching project root for
+   reports; never assume the current worktree owns MDF state. Confirm that
+   `vendor/agent-skills`, `vendor/agent-skills.lock.json`,
+   `overlays/mdf/inventory.json`, the sync renderer, and both packaging
+   validators exist under `implementation_root`.
 2. Read `../../references/upstream-agent-skills-update-policy.md`,
    `../../references/upstream-agent-skills-surface-map.md`, and
    `../../references/agent-skills-port-notes.md` before changing any source,
@@ -40,7 +46,16 @@ as an MDF port decision with provenance, source hashes, and a recorded gap.
    subject, and the local-versus-live resolution decision.
 6. Require a clean implementation worktree and a task-owned path list. Do not
    stage `.mdf` state, generated build output, secrets, or unrelated changes.
-7. Treat upstream source, not an existing MDF output, as the authority. Do not
+7. Before deleting or replacing any vendor file, materialize the verified target
+   archive in an isolated temporary directory and verify its tree manifest.
+   Bind `source_repo` to the repository that contains the verified target
+   object and invoke `git -C "$source_repo" archive "$target_commit"`; never
+   invoke `git archive` from the MDF project repository by accident. If the
+   target object is absent from `source_repo`, fetch or clone the lock
+   repository into a temporary source checkout and stop if the archive cannot
+   be produced. Replace `vendor/agent-skills` only after archive creation and
+   verification succeed.
+8. Treat upstream source, not an existing MDF output, as the authority. Do not
    overwrite an upstream-owned skill with an overlay merely to preserve local
    wording.
 
@@ -72,8 +87,9 @@ and must travel with its owning upstream skill.
 
 After the target surface passes the inventory and import check:
 
-1. Replace `vendor/agent-skills` from the verified target snapshot without
-   hand-editing upstream files.
+1. Replace `vendor/agent-skills` from the already verified target archive
+   without hand-editing upstream files. Do not remove the existing vendor tree
+   until the target archive has been created successfully.
 2. Update `vendor/agent-skills.lock.json` with repository, exact commit, source,
    recording date, and purpose. Preserve the previous commit in the report.
 3. Reconcile inventory entries from the new source. Recompute every
@@ -86,7 +102,13 @@ After the target surface passes the inventory and import check:
 5. Never use an overlay to rewrite or imitate an upstream skill that already
    exists. If an MDF change is needed, document it as a separate port surface
    or stop for a user decision.
-6. Run `node ./scripts/sync-agent-skills.js` to regenerate complete generated
+6. For every changed `commands/**` entry represented by a
+   `renameAdapter`, compare the target command contract with its MDF overlay.
+   Review input requirements, environment variables, tool calls, output and
+   exit behavior, and confirmation rules. Update the adapter or record an
+   explicit port gap; do not declare success while a changed command adapter
+   remains unreviewed.
+7. Run `node ./scripts/sync-agent-skills.js` to regenerate complete generated
    outputs. Never hand-edit generated `skills/`, `references/`, or `agents/`
    files after rendering.
 
@@ -135,8 +157,9 @@ fact and use the maintained equivalent only when the policy permits it. Treat
 any generated mismatch, stale source hash, missing new file, unresolved import,
 MDF/upstream classification conflict, or hook port gap as a failed update.
 
-Write a full report to the current MDF work artifact when one exists, for
-example `.mdf/work/<work_id>/upstream-update-report-001.md`. Include:
+Write a full report to the canonical MDF work artifact when one exists, for
+example `${mdf_root}/.mdf/work/<work_id>/upstream-update-report-001.md`.
+Include:
 
 - previous and target commits, repository, and provenance verification;
 - added, deleted, modified, and renamed files grouped by skill, reference,
@@ -160,8 +183,11 @@ Stop before mutation when the source or target commit is ambiguous, the
 baseline lock is malformed, the target came only from an unrefreshed local
 checkout or stale remote-tracking ref, the candidate is equal to/older than
 the baseline or from an unrelated history, the worktree is dirty, the
-candidate is not reachable, an upstream-owned file would be rewritten as an
-overlay, an imported file references an excluded root artifact, a hook port
-lacks a Codex-native contract, inventory/source hashes disagree, or any
-required validator cannot run. Preserve the existing vendor snapshot and
-report the blocker with the affected paths.
+candidate is not reachable, the target archive cannot be created from the
+verified source repository, the archive was not verified before vendor
+replacement, an upstream-owned file would be rewritten as an overlay, a
+changed command adapter is unreviewed, an imported file references an
+excluded root artifact, a hook port lacks a Codex-native contract,
+inventory/source hashes disagree, or any required validator cannot run.
+Preserve the existing vendor snapshot and report the blocker with the affected
+paths.

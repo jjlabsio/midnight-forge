@@ -25,6 +25,21 @@ downgrade candidate; unrelated histories are invalid. Stop and report all
 three cases rather than describing a stale local checkout as the current
 upstream state.
 
+## Canonical roots and snapshot materialization
+
+Separate the implementation worktree from the canonical MDF state root. When a
+worktree has no `.mdf/work`, `.mdf/index.jsonl`, or `.mdf/locks`, locate the
+project root that owns those paths through `git worktree list --porcelain` and
+write the report there. Do not assume the current worktree owns task state.
+
+Create and verify the target archive in a temporary directory before replacing
+the vendor tree. Use the repository that contains the verified target object,
+for example `git -C "$source_repo" archive "$target_commit"`; never run
+`git archive` from the MDF project repository by accident. If the target object
+is unavailable in the source checkout, fetch or clone the lock repository into
+a temporary checkout. Do not remove the existing vendor snapshot until the
+archive and its manifest have passed verification.
+
 ## Complete comparison surface
 
 Every update compares the complete file list and content under:
@@ -55,6 +70,11 @@ Agents, references, skills, and skill-local resources are generated only
 through inventory entries. The inventory must distinguish `upstream-identical`,
 `mdf-rename-or-adapter`, and `mdf-only` classifications and must retain source
 hashes for upstream-derived entries.
+
+When a changed `commands/**` path is represented by a `renameAdapter`, review
+the upstream command and MDF overlay together. Check inputs, environment
+variables, tool calls, output/exit behavior, and confirmation rules; update the
+adapter or record a port gap before declaring the update successful.
 
 ## Formatting gate
 
