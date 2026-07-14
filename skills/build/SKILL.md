@@ -12,6 +12,8 @@ upstream `../incremental-implementation/SKILL.md` alongside
 `../test-driven-development/SKILL.md`. Also load
 `../code-review-and-quality/SKILL.md` and any other applicable skill when its
 trigger applies.
+For `mode: auto-workflow`, also load
+`../../references/auto-workflow-contract.md`.
 
 Any implementation or testing delegation must first load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
@@ -33,13 +35,19 @@ not remove or reorder these execution steps.
 
 - `/build` implements the next pending task, then stops: one careful slice at a
   time.
-- `/build auto` generates the plan if needed, gets one approval, and then
-  implements every task without stopping between tasks.
+- `/build auto` generates the plan if needed, gets one standalone approval,
+  and then implements every task without stopping between tasks. Inside
+  `mode: auto-workflow`, the run-scoped intent and exact spec/plan handoff
+  replaces that ceremonial checkpoint.
 - Treat `auto` (canonical) or `all` as autonomous mode. Anything else (or
   empty) selects the default single-task mode.
 - Autonomous mode is not a shorter verification path. It runs the same
   test-driven loop for every task; it only removes the human stepping between
   tasks.
+
+When called from `mode: auto-workflow`, the root's run-scoped authorization
+replaces the standalone plan checkpoint. It does not remove RED/GREEN, full
+regression, build, review, task-owned staging, lock, or high-risk checks.
 
 ### Default: one task
 
@@ -73,12 +81,12 @@ commit, and completion status.
    per-task commits must not absorb unrelated local work.
 3. Plan if needed. If there is no `tasks/plan.md`, invoke the
    `planning-and-task-breakdown` skill to generate one.
-4. Use one human checkpoint. Present the full plan and wait for an
-   unambiguous affirmative such as `approve`, `go`, or `yes`. Hedged responses
-   such as “looks reasonable” are not approval. This is the only human gate
-   after which the run proceeds autonomously. If `tasks/plan.md` was generated,
-   commit it as one preparatory commit before the first task so it cannot bleed
-   into that task's commit.
+4. In standalone `/build auto`, use one human checkpoint: present the full
+   plan and wait for an unambiguous affirmative such as `approve`, `go`, or
+   `yes`. In `mode: auto-workflow`, verify the exact spec/plan hashes and
+   run-scoped authorization instead of asking for this ceremonial checkpoint.
+   If `tasks/plan.md` was generated, commit it as one preparatory commit before
+   the first task so it cannot bleed into that task's commit.
 5. Execute every task in dependency order. Use each task's declared
    dependencies; when dependencies are not explicit, use the plan's listed
    order. For each task, run the complete default loop:
@@ -86,10 +94,12 @@ commit, and completion status.
    Stage only the files touched by that task plus its task-status update; never
    use `git add -A` blindly. Make exactly one commit per task so every point
    remains a clean rollback point.
-6. Stop and ask the user instead of pushing through when:
+6. Stop and ask the user instead of pushing through when, even in auto mode:
    - a test cannot be made to pass or the build breaks without an obvious fix;
      follow `../debugging-and-error-recovery/SKILL.md`;
-   - the spec is ambiguous or a task needs a decision not covered by it;
+   - the spec is materially ambiguous or a task needs a critical decision not
+     covered by it; routine implementation details are decided by the root and
+     recorded as assumptions;
    - a task is high-risk or irreversible, including auth/permission changes,
      destructive data migrations, payments, deletions, deploys, secrets, or
      anything that cannot be undone with `git revert`; follow

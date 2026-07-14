@@ -45,11 +45,17 @@ review meaning, downstream impact, recovery choice, and external authority.
 Canonical `.mdf` cards, append-only index projections, locks, and project-local
 worktrees remain preserved contracts.
 
-The only narrow mechanical helper retained by the final design is the lock
-primitive. It may inspect a lock, exclusively acquire it from supplied bytes,
-and release it only when the supplied digest matches the current bytes. It
-does not manage cards, indexes, artifacts, evidence, phases, worktrees,
-branches, commits, review, recovery, or external actions.
+The model-led workflow keeps only the existing task-state primitives needed by
+the repository. Auto-workflow does not add a policy module, JSON protocol, or
+runtime verifier. The root model reads the applicable Markdown contracts and
+ordinary Git/MDF state, makes semantic decisions, and records readable
+handoff, dispatch, and fallback notes.
+
+When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
+contract grants the root authority to complete in-scope MDF skills and to
+commit, push, and create or update the PR. This does not alter standalone
+skill semantics. Merge, deploy, deletion, stale-lock takeover, unrelated
+cleanup, and unresolved critical decisions remain outside the grant.
 
 Everything else is performed by the model and ordinary project commands with
 explicit confirmation where a write is destructive or external. Historical

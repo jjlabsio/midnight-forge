@@ -5,6 +5,11 @@ description: "Run the pre-launch checklist via parallel fan-out to specialist pe
 
 # ship
 
+When called with `mode: auto-workflow`, load
+`../../references/auto-workflow-contract.md`. The run may continue after a GO
+decision to push and create/update its PR, subject to the final preflight; it
+may not merge, deploy, or delete anything.
+
 ## Upstream command contract
 
 Invoke the `shipping-and-launch` skill.
@@ -147,8 +152,11 @@ When GO would accept a blocking risk, stop and ask the user for explicit,
 current acceptance of the named risk. Do not infer risk acceptance from report
 prose or reuse it on another tree.
 
-Pushing, creating or updating a PR, merging, deploying, deleting a branch, or
-changing any external state is a separate confirmation stop. Before each such
-action, recheck the current remote, branch, diff, and user authority. Report
-the GO/NO-GO decision and exact next action; do not perform external mutation
-as a side effect of a clean ship review.
+In standalone mode, pushing, creating or updating a PR, merging, deploying,
+deleting a branch, or changing any external state is a separate confirmation
+stop. In `mode: auto-workflow`, the initial invocation authorizes only push and
+PR create/update. Before those actions, recheck the current remote, branch,
+diff, authentication, mergeability, and open-PR state. Merge, deploy, branch
+or worktree deletion, and data deletion remain prohibited. Report the GO/NO-GO
+decision and exact mutation result; never treat a clean ship review as
+authority for a prohibited action.

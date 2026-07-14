@@ -5,70 +5,123 @@ description: "Use when the user asks MDF to run the approved workflow automatica
 
 # auto-workflow
 
-`auto-workflow` is a flat root orchestrator implemented as a model-led
-sequence over the exact upstream skills. Resolve the installed plugin root
-before loading any skill or reference:
+Load the plugin-installed `../../references/auto-workflow-contract.md` before
+starting. The contract applies only to this invocation; standalone MDF and
+upstream skills retain their own approval and stop semantics.
+
+The root runs the in-scope MDF lifecycle as one bounded execution:
 
 ```text
-spec -> plan -> build all approved plan tasks -> whole-build review -> simplify -> ship -> github-pr
+intent preflight -> interview-me when required -> spec -> plan ->
+build/test -> task review -> whole-build review -> code-simplify -> ship ->
+github-commit -> push -> github-pr create/update
 ```
 
-The root agent owns root-only synthesis, readable Markdown notes, one-writer worktree
-coordination, and user-facing stops. Each skill owns its own checklist and
-does not invoke a hidden phase machine. Resolve the canonical root and current
-task card before reading artifacts or changing the worktree.
+All applicable MDF skills may be loaded during this run, including debugging,
+security, API/UI, source-driven, documentation, observability, and migration
+skills. The initial auto invocation authorizes those in-scope skill calls and
+the final push/PR create-or-update. It does not authorize merge, deploy, data
+deletion, branch/worktree deletion, stale-lock takeover, force operations, or
+unrelated cleanup.
 
-## Required stops and progression
+## Mandatory intent preflight
 
-- Stop after `spec` until explicit spec approval covers the exact saved
-  specification revision and SHA-256.
-- Stop after `plan` until explicit plan approval covers the exact saved plan
-  revision and SHA-256.
-- A byte, path, scope, or task-order change invalidates earlier approval.
-- Build every task in the approved order, using TDD, task-owned paths, focused
-  verification, review, downstream-impact judgment, and one focused commit.
-- Run whole-build verification and final review only after all approved plan
-  tasks complete.
-- Preserve clean-baseline, resume, task-only staging, and high-risk or
-  irreversible sign-off stops.
-- If simplification changes the tree, rerun the whole-build matrix and final
-  review. If it makes no accepted change, record that fact against the same
-  unchanged tree and do not run a duplicate standalone review.
-- Fix actionable findings and review again while progress is material; stop for
-  repeats, regressions, no progress, ambiguity, or a user decision.
-- Never infer a phase result from an artifact's existence or a green command
-  alone.
+Before `spec`, read the upstream `interview-me` skill and evaluate its `When to
+Use` conditions. This is a model judgment recorded in the readable work-item
+notes, not a scripted gate. Invoke `interview-me` when any condition requires
+it:
 
-## Automatic loop
+- missing user/target, purpose, success condition, or binding constraint;
+- materially different interpretations are possible;
+- an unsurfaced assumption is required;
+- conflicting optimization goals have no user choice;
+- confidence is below 95% for the next three answers;
+- the user explicitly requested an interview.
 
-1. Verify MDF initialization, resolve the canonical work item, and read the
-   latest valid card/index state. Stop on malformed or conflicting state.
-2. Select the first incomplete step from the sequence above: definition,
-   planning, an approved pending task, whole-build verification/review,
-   simplification, ship, or PR preparation.
-3. Load the exact selected upstream skill and follow it completely. Keep
-   semantic routing, task readiness, downstream impact, and recovery judgment
-   with the model.
-4. Before every task, inspect the clean Git baseline, lock ownership, branch,
-   worktree, exact owned paths, and current approvals. Stage only enumerated
-   task paths with `git add -- <paths>` and resume at the next pending task
-   after a resolved blocker.
-5. Stop for a question, missing information, failed verification, stale
-   approval, unresolved review finding, NO-GO, or Git/PR ambiguity. Explain the
-   exact decision needed; do not retry blindly.
+Do not invoke it for a clear, self-contained mechanical operation. Request
+length alone is not a reason to skip or invoke it. `interview-me` requires a
+live user; in a non-interactive run, stop with the exact missing information.
+Its explicit intent confirmation is the only semantic confirmation before
+spec. Do not turn it into a fake spec or plan approval.
 
-## Recovery
+## Readable run handoff
 
-Preserve a failed check or review in a readable work-item note and reproduce
-it before changing code. Load the exact upstream debugging and recovery skill.
-Do not reopen a completed task; a bounded, reversible, intent-preserving task
-repair returns through the ordinary task workflow and, when planning changes,
-uses a new canonical plan revision. A product, public-contract, architecture,
-scope, material-trade-off, external, destructive, or ambiguous issue returns
-to the user. There is no fixed repair-count limit, but repeated no-progress or
-unexplained regression stops the workflow. Never reuse stale conclusions.
+Create a concise Markdown handoff note under the canonical work item and pass
+its contents as context to downstream skills and subagents. Record the run's
+intent, current phase, assumptions, applicable MDF skills, allowed external
+actions, relevant artifact paths, and any capability or fallback decision.
 
-After all tasks pass, run the plan's complete whole-build matrix, perform a
-fresh final review against the full specification, and hand off to
-`code-simplify`, `ship`, and `github-pr` in order. Each external mutation
-requires its own current user confirmation.
+The handoff is readable workflow context, not a JSON protocol, hash gate, or
+runtime authority verifier. The root AI owns the note, updates it when the
+phase or scope changes, and re-reads the actual task, Git, and artifact state
+before continuing. A changed spec, plan, scope, or task order requires the root
+to reassess the handoff rather than treating the old note as approval.
+
+## Subagent orchestration
+
+Use subagents for bounded work throughout the lifecycle to preserve root
+context. Run independent read-only investigations in parallel and return
+compact reports with paths, facts, findings, confidence, and next action.
+Subagents do not spawn other subagents, write canonical `.mdf` state, or
+advance lifecycle state.
+
+Recommended fan-out:
+
+- before spec: codebase exploration and risk/scope research;
+- before plan: architecture, dependency, and test-strategy research;
+- per task: implementation worker plus read-only test/impact analysis;
+- per task and final review: code, security, and test reviewers;
+- ship: the existing parallel code-reviewer, security-auditor, and
+  test-engineer fan-out.
+
+For read-only codebase exploration, follow the central routing reference and
+prefer `gpt-5.3-codex-spark` when the runtime can use it safely. Spark has no
+authority for design, security, implementation, lifecycle, or external
+actions. If unavailable, choose a suitable GPT-5.6 read-only fallback or do
+the exploration in the root and record the result.
+
+## Defensive parallel writers
+
+The default is one writer per worktree. Before using parallel writers, the root
+AI must reason through dependency-free tasks, disjoint owned paths, isolated
+worktrees and branches from one base, distinct locks, and the absence of shared
+contracts, generated outputs, lockfiles, migrations, global configuration,
+fixtures, external resources, or `.mdf` state.
+
+If any independence fact is unknown or uncertain, use serial execution. Each
+writer owns only its task paths. The root remains the only writer of canonical
+state and the only merger. Review every returned diff, merge sequentially, and
+run the relevant verification before external mutation. A semantic conflict or
+scope violation is a blocker; a mechanical, in-scope conflict may be repaired
+and reverified automatically.
+
+## Progress and stops
+
+Continue automatically for routine implementation choices, tests, docs,
+reversible internal refactors, actionable in-scope review findings, and
+transient failures with a safe retry. Record assumptions and evidence.
+
+Stop for:
+
+- unresolved intent or a user product decision;
+- public-contract, security, privacy, data, permission, or material cost
+  changes;
+- destructive or irreversible work, unknown external targets, or risk
+  acceptance;
+- malformed or conflicting MDF state, lock ownership, worktree, branch, or
+  dependency facts;
+- failed verification without an obvious in-scope fix;
+- repeated findings, regression, no-progress, or untrusted provenance;
+- ship NO-GO/critical findings or unavailable required capability;
+- failed or ambiguous GitHub push/PR mutation after safe retries.
+
+Never infer completion from an artifact's existence, a green command, or a
+review phrase alone.
+
+## PR handoff
+
+After ship GO, recheck branch, remote, clean diff, base mergeability,
+authentication, language, release signal, and open-PR state. Push the current
+branch, then update the existing PR or create one if none exists. Query before
+retrying an uncertain create result so duplicates cannot occur. After the PR
+URL or failure is recorded, stop; do not merge, deploy, or delete anything.

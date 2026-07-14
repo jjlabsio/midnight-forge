@@ -5,6 +5,10 @@ description: "Conduct a five-axis code review — correctness, readability, arch
 
 # review
 
+When called with `mode: auto-workflow`, load
+`../../references/auto-workflow-contract.md` and apply its bounded delegation,
+root-synthesis, and auto-authority rules.
+
 ## Upstream command contract
 
 Invoke the `code-review-and-quality` skill and review the current changes
@@ -75,8 +79,12 @@ findings and rerun the appropriate verification and review while material
 progress continues. Stop for repeated findings, regressions, ambiguity, or a
 material trade-off.
 
-The security and performance skill references are same-context skill loads;
-they do not add subagent fan-out unless the user explicitly requests it.
+The security and performance skill references are same-context skill loads in a
+standalone review. In `mode: auto-workflow`, the user has authorized bounded
+lifecycle delegation, so the root may fan out independent code, security, and
+test review reports in parallel, then synthesize them in the root context.
+Reviewers remain report-only; they do not mutate canonical state or authorize
+ship/PR actions.
 
 Only the root agent writes the report. Keep the report readable, cite paths and
 commands, and state the final disposition and remaining risk. A passing review

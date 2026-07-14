@@ -52,7 +52,7 @@ truth for whether an open PR already exists.
 
 ## Workflow model
 
-The automatic workflow is:
+The standalone workflow is:
 
 ```text
 spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-pr
@@ -64,11 +64,24 @@ earlier approval. `build` follows TDD, focused verification, task-owned
 staging, readable review, downstream-impact judgment, and one focused commit.
 The model chooses the next ready task and explains ambiguity.
 
-`auto-workflow` repeats the same loop over all approved plan tasks, then runs
-the plan's whole-build matrix and final review. Simplification is scoped to the
-reviewed tree and returns through verification when it changes code. Ship
-produces GO/NO-GO and rollback reasoning; push, PR, merge, deploy, and cleanup
-remain explicit external-action boundaries.
+`auto-workflow` adds a run-scoped orchestration policy. Before `spec`, it
+must invoke `interview-me` when required intent fields are missing, materially
+different interpretations exist, an unsurfaced assumption or conflicting goal
+remains, confidence is below 95%, or the user explicitly requests an
+interview. A clear mechanical request skips the interview. After intent is
+settled, the root may carry the same run through spec, plan, build/test,
+review, simplification, ship, commit, push, and PR create/update without
+ceremonial approval prompts. Exact artifact hashes, TDD, review, lock, and
+high-risk checks remain required; changed artifacts invalidate downstream
+authorization. Merge, deploy, deletion, stale-lock takeover, and unresolved
+critical or no-progress conditions still stop.
+
+Research and report-only review fan-outs may run in parallel. Writer tasks may
+run in parallel only when a mechanical proof gate establishes dependency-free
+tasks, normalized disjoint paths, no shared contracts/generated outputs or
+global state, isolated worktrees and locks on the same base, and an explicit
+independence review. Unknown or failed proof falls back to serial execution.
+The root remains responsible for merging, verification, and lifecycle state.
 
 Review has two readable scope labels: `lifecycle-review` for a full approved
 tree and `task-review` for a direct task/diff check. A completed task can be
