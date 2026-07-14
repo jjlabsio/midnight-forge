@@ -82,11 +82,12 @@ Release selection and all external mutations remain authoritative in this
 skill. Before pushing or creating/updating the PR, recheck the current branch,
 remote, diff, language, release signal, authentication, mergeability, and
 open-PR status. Keep the PR ready for review unless the user explicitly
-requested a draft. In standalone mode, push and PR mutation require their own
-current confirmation. In `mode: auto-workflow`, the initial run-scoped
-invocation allows only push and PR create/update after the fresh preflight
-described above. A bare mode string without that readable context follows
-standalone rules. Do not merge, deploy, delete branches,
+requested a draft. In standalone mode, an explicit current-session invocation
+of this skill authorizes push and PR create/update after the fresh preflight;
+do not ask for a second confirmation. In `mode: auto-workflow`, the initial
+run-scoped invocation likewise allows only push and PR create/update after the
+fresh preflight described above. A bare mode string without that readable
+context follows the standalone rule. Do not merge, deploy, delete branches,
 delete worktrees, or discard dirty worktrees as a side effect.
 
 GitHub is the source of truth for whether an open PR already exists. Push the
