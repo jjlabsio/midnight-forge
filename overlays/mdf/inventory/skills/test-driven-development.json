@@ -1,1 +1,12 @@
-{"output":"skills/test-driven-development/SKILL.md","source":"skills/test-driven-development/SKILL.md","classification":"upstream-identical","overlayKind":"copy"}
+{
+  "output": "skills/test-driven-development/SKILL.md",
+  "source": "skills/test-driven-development/SKILL.md",
+  "classification": "mdf-rename-or-adapter",
+  "overlay": "replacements/skills/test-driven-development/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Preserves upstream TDD while routing delegated reproduction-test work through the central policy.",
+  "baseSha256": "6c60e193d77a6c52eb3d9a7ca774f1801b9f798ec34f075720e0425a8094f50e",
+  "overlayKind": "renameAdapter",
+  "adapterRationale": "Adds the MDF root-owned dispatch boundary without weakening the upstream RED/GREEN/REFACTOR contract.",
+  "reviewRisk": "Full adapter replacement can hide upstream TDD changes; validation pins the upstream source hash and preserves the full upstream body."
+}
