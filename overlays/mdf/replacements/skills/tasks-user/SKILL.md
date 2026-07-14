@@ -6,7 +6,7 @@ description: "Show MDF task boards across registered local projects."
 # tasks-user
 
 Render boards across registered local projects from ~/.mdf/projects.json and
-each canonical project's Markdown cards, index, and locks. Do not invoke a
+each canonical project's Markdown cards, derived index, and locks. Do not invoke a
 task-state CLI, controller, background runner, or network service.
 
 ## Registry and project reads
@@ -22,9 +22,14 @@ For every registry entry, use its absolute canonical_root and read only:
     <canonical-root>/.mdf/work/
     <canonical-root>/.mdf/locks/
 
-If one project is missing, unreadable, uninitialized, or malformed, show a
-warning for that project and continue with other valid projects. Do not infer a
-different root or repair a project during a read-only board command.
+For each project, run the AI-led self-healing preflight after reading cards and
+locks. Normalize known legacy index rows and automatically compact/rewrite only
+the derived index when the authoritative project state is unambiguous. This is
+part of the board operation, not a separate repair command or runtime
+migration; it never rewrites cards or project code. If one project is missing,
+unreadable, uninitialized, or has ambiguous authoritative state, show a warning
+for that project and continue with other valid projects. Do not infer a
+different root.
 
 ## Status and rendering
 
@@ -34,8 +39,10 @@ Read item kind and card status, then reconcile task status with locks:
 - no lock and status: "done": done
 - otherwise: queue
 
-The card is authoritative; the latest valid index line is the read projection.
-Duplicate index lines are history. A lock on a queued or done card is a
+The card is authoritative; the latest normalized index projection is a read
+cache. Duplicate lines and malformed legacy index rows are historical input and
+must not block an unambiguous board rebuild. Preserve one recovery copy before
+an automatic rewrite. A lock on a queued or done card is a
 consistency warning, never an automatic cleanup. Legacy cards without kind are
 tasks. Tracks, notes, inbox, and routine items are context only.
 

@@ -24,10 +24,20 @@ The global `~/.mdf/projects.json` file is only a lightweight registry. A
 linked worktree under `<canonical-root>/.worktrees/<branch>` reads the
 canonical root `.mdf/` directory and never creates independent state.
 
-`item.md` is the source of truth for a work item. `index.jsonl` is an
-append-only read model: read the card first, then use the latest valid line for
-board rendering. Malformed cards, invalid index rows, path escapes, and
-conflicting facts stop the current operation.
+`item.md` is the source of truth for a work item. `index.jsonl` is a derived
+read model, not an independent state store. Normal task lifecycle changes
+append a current projection, but task and board skills also run an AI-led
+self-healing preflight. The preflight reads cards and locks first, normalizes
+legacy rows (rows without `schema_version` are version 0), and automatically
+compacts the index when the authoritative state is unambiguous. New projections
+use the current schema version. A recovery copy may be kept before a rewrite;
+cards and their history are never rewritten by index maintenance.
+
+Malformed historical index rows alone do not stop a task or board operation.
+Malformed cards, duplicate task IDs, conflicting current locks, unknown future
+schema versions, or ambiguous tombstones stop only the affected operation; a
+multi-project board continues with other unambiguous projects. No separate
+repair command, runtime migration, or per-repository migration is required.
 
 ## Task lifecycle and ownership
 
@@ -104,11 +114,19 @@ and [references/mdf-preserved-contract.md](../../references/mdf-preserved-contra
 
 ## Recovery and historical state
 
-Failures are reproduced and recorded in readable notes before a repair. A
-bounded, reversible, task-owned repair can return through TDD and review;
-scope changes, ambiguity, repeated no-progress, destructive actions, or
-external effects stop for the user. Technical revisions create fresh spec and
-plan revisions.
+Task and board entrypoints perform bounded, reversible index self-healing as
+part of their normal preflight. The AI reconstructs projections from
+authoritative cards, locks, and clearly identifiable tombstones, keeps a local
+recovery copy before rewriting the derived index, re-reads the result, and
+continues only when the result is unambiguous. It never guesses a current card
+state from an incomplete historical row and never rewrites or deletes card
+history.
+
+If the authoritative state is ambiguous, the affected task operation stops with
+an actionable warning. Project and user board scans isolate the affected item or
+project and continue elsewhere. Scope changes, repeated no-progress,
+destructive actions, or external effects still stop for the user. Technical
+revisions create fresh spec and plan revisions.
 
 Historical `.mdf/work/` artifacts are read-only evidence of prior work and are
 not rewritten or deleted by packaging cleanup. The current card, lock, branch,
