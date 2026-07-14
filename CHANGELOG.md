@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.5 - 2026-07-14
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.4...v2.1.5)
+
+### Changes
+
+- chore(github-pr): remove redundant standalone confirmation ([#66](https://github.com/jjlabsio/midnight-forge/pull/66))
 ## v2.1.4 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.3...v2.1.4)
