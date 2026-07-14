@@ -12,8 +12,9 @@ The final maintained boundary is:
 - Model-led MDF skills for task interpretation, canonical state decisions,
   approvals, workflow routing, review, simplification, ship, GitHub handoff,
   and cleanup confirmation.
-- Canonical project-root `.mdf/` cards, append-only index projections, locks,
-  readable Markdown artifacts, and project-local worktrees.
+- Canonical project-root `.mdf/` cards, rebuildable index projections (append-only
+  for normal lifecycle writes), locks, readable Markdown artifacts, and
+  project-local worktrees.
 - Packaging-only sync, inventory, and validation scripts.
 - One narrow lock helper for inspect, exclusive acquire, and byte-conditional
   release.
@@ -31,8 +32,9 @@ task 0041 and the applicable upstream primitive.
 
 Historical `.mdf/work/` cards, Markdown artifacts, index rows, locks from
 completed work, and decision records remain readable. Their producer or old
-format is not an active dependency. They are not rewritten or deleted by this
-task.
+format is not an active dependency. Task and board skills may compact the
+derived index during automatic self-healing, but do not rewrite or delete card
+history or historical artifacts.
 
 ### Packaging
 

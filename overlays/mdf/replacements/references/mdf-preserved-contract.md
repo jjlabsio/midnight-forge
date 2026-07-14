@@ -11,8 +11,10 @@ and readable.
   create a second state store in the worktree.
 - Resolve the exact `.mdf/work/{work_id}/item.md` card before interpreting an
   index row or card text.
-- Read `item.md` as the source of truth. `index.jsonl` is append-only board
-  state, and the latest valid line for the item wins.
+- Read `item.md` as the source of truth. `index.jsonl` is a rebuildable board
+  projection. Normal mutations append a current-schema row; task and board
+  skills normalize known legacy rows and compact the projection automatically
+  when cards and locks make the result unambiguous.
 - A complete card mutation precedes one complete index projection append.
 
 ## Locks and contention
@@ -29,9 +31,11 @@ and readable.
 
 ## Malformed state and paths
 
-- Stop on malformed JSON or Markdown frontmatter, missing required fields,
-  contradictory status/completion data, invalid index rows, or ambiguous
-  ownership.
+- Stop on malformed JSON or Markdown frontmatter in authoritative state,
+  missing required fields, contradictory status/completion data, unknown future
+  index schema versions, or ambiguous ownership. Known legacy index rows are
+  normalized by the task/board self-healing preflight; an ambiguous index
+  tombstone affects only the affected operation.
 - Resolve every card, artifact, lock, and worktree path component-by-component
   beneath its allowed root. Reject absolute paths, `..` escapes, unexpected
   symlinks, and paths outside task-owned scope.
@@ -41,10 +45,12 @@ and readable.
 ## Interruption repair
 
 If a process stops after writing a card but before appending its projection,
-read the card first, inspect the latest valid index line, and append exactly one
-complete projection only when the intended transition is unambiguous. If the
-state is contradictory or ownership is unclear, stop for model or user
-judgment. Do not replay a non-idempotent mutation from a stale transcript.
+read the card first, normalize the index, and append exactly one complete
+current-schema projection only when the intended transition is unambiguous. If
+legacy rows prevent a clean projection, the normal task/board preflight may
+compact the derived index after preserving a recovery copy. If the state is
+contradictory or ownership is unclear, stop for model or user judgment. Do not
+replay a non-idempotent mutation from a stale transcript.
 
 If a lock remains after interruption, preserve it until the current owner and
 worktree facts are confirmed. Never infer staleness from elapsed time alone.

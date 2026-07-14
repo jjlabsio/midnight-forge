@@ -6,7 +6,7 @@ description: "Show and clean the current project's MDF task board."
 # tasks-project
 
 Render the current project's board directly from canonical Markdown cards,
-append-only index state, and lock files. Do not invoke a task-state CLI,
+derived index state, and lock files. Do not invoke a task-state CLI,
 controller, background runner, or network service.
 
 ## Read the board
@@ -14,12 +14,20 @@ controller, background runner, or network service.
 Resolve the canonical root by walking from the current path to the project
 directory that owns .mdf/project/init.json; a linked worktree must use its
 parent root. Require readable project init, .mdf/work/, .mdf/locks/, and
-.mdf/index.jsonl. Do not initialize or repair state for a read-only board.
+.mdf/index.jsonl. Do not initialize state here. Before rendering, run the
+AI-led self-healing preflight: read cards and locks first, normalize known
+legacy index rows, and automatically compact/rewrite only the derived index
+when the authoritative state is unambiguous. This local metadata maintenance
+is part of the board operation; it is not a separate repair command or
+runtime migration.
 
-Read each .mdf/work/*/item.md and its kind. For each work ID, the latest valid
-index.jsonl line is the read projection, but the card remains authoritative.
-Duplicate lines are history. Malformed cards, JSON, or locks are warnings with
-exact paths; do not rewrite them.
+Read each .mdf/work/*/item.md and its kind. For each work ID, the latest
+normalized index projection is only a read cache, while the card remains
+authoritative. Duplicate historical lines and malformed legacy index rows do
+not block the board when cards and locks allow an unambiguous rebuild. Preserve
+one recovery copy before an automatic rewrite. Malformed cards, duplicate task
+IDs, conflicting current locks, or ambiguous tombstones remain warnings with
+exact paths; skip only the affected item rather than guessing.
 
 For executable task cards, reconcile status as follows:
 
@@ -51,6 +59,8 @@ or anything with a lock.
 
 Find done or expired tasks eligible for cleanup, show every exact
 .mdf/work/{work_id}/ directory, and ask for explicit confirmation. After
-confirmation only, delete the listed directories and append index tombstones.
-Never clean a lock-bearing item or context item. If state is malformed, stop
-the affected cleanup rather than infer a safe target.
+confirmation only, delete the listed directories and append current-version
+index tombstones.
+Never clean a lock-bearing item or context item. If authoritative state remains
+ambiguous after the self-healing preflight, stop the affected cleanup rather
+than infer a safe target.

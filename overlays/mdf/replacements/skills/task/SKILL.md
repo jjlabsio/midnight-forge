@@ -23,6 +23,24 @@ Resolve the canonical root before reading or writing:
 Require readable user init/preferences and project init, plus .mdf/index.jsonl,
 .mdf/work/, and .mdf/locks/. Do not initialize missing state here.
 
+Before any task operation, perform an AI-led index self-healing preflight. Read
+the complete `item.md` cards and lock directory first; treat `index.jsonl` as a
+derived read model, not as the source of current state. Normalize known legacy
+rows in memory and, when the cards, locks, and tombstones make the result
+unambiguous, automatically compact/rewrite the derived index and re-read it
+before continuing. This is an automatic part of every task invocation, not a
+separate repair command, controller, runtime migration, or per-project setup
+step.
+
+The self-healing preflight may create one local recovery copy of the previous
+index before a rewrite. It must never rewrite or delete `item.md` history. A
+legacy row without `schema_version` is version 0; new projections use the
+current version 2 shape. Unknown future versions, malformed authoritative
+cards, duplicate task IDs, conflicting current locks, or ambiguous orphaned
+tombstones must not be guessed. Stop the affected task operation with an
+actionable warning, while board scans may skip only the affected project or
+item and continue with other unambiguous projects.
+
 Task IDs are exact four-digit identifiers. Resolve exactly one matching
 task_id from canonical .mdf/work/*/item.md before touching a branch, worktree,
 lock, card, or implementation file. Duplicate or missing matches stop; do not
@@ -30,20 +48,26 @@ infer from titles or branches.
 
 ## Card and index protocol
 
-item.md is the source of truth. index.jsonl is an append-only read model;
-duplicate lines are expected and the latest valid line for a work_id wins.
-Malformed frontmatter, JSON, required fields, or conflicting current state is a
-stop condition.
+item.md is the source of truth. index.jsonl is a derived read model. Normal
+task lifecycle mutations append one projection and duplicate lines are
+expected; the latest normalized line for a work_id wins. Automatic
+self-healing may compact/rewrite this derived file when the authoritative
+cards and locks make the result unambiguous. Malformed historical index rows
+alone are not a stop condition. Malformed authoritative cards, duplicate task
+IDs, conflicting current state, or ambiguous tombstones are stop conditions
+for the affected operation.
 
 For every mutation:
 
 1. Read the complete current card and preserve all sections and history.
 2. Make one complete card write first, changing only the intended fields.
-3. Append exactly one complete index object containing work_id, kind, task_id,
-   title, status, order, item, latest, and worktree / branch when present.
+3. Append exactly one complete current-version index object containing
+   `schema_version: 2`, work_id, kind, task_id, title, status, order, item,
+   latest, and worktree / branch when present.
 4. Re-read the card and latest index line. If the card and projection disagree,
-   repair by rereading the card and appending a new projection; never rewrite
-   or delete old index lines.
+   repair by rereading the card and appending a new current-version projection.
+   Do not rewrite historical lines during normal mutation; only the automatic
+   self-healing preflight may compact the derived index.
 
 Keep Context, Files, Criteria, and Log headings. Record failure or abandonment
 in Log while status remains active. A card's Files list defines task-owned

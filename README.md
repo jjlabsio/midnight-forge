@@ -95,9 +95,11 @@ MDF task state and readable workflow artifacts are local by default:
 
 Linked worktrees under `<canonical-project-root>/.worktrees/<branch>` use the
 canonical root `.mdf/` directory and never create independent state. `item.md`
-is the card source of truth; `index.jsonl` is an append-only board projection
-whose latest valid line wins. Locks are ownership markers, not semantic
-authorization.
+is the card source of truth; `index.jsonl` is a rebuildable board projection.
+Normal task mutations append a current-schema projection, while task and board
+skills automatically normalize known legacy rows and compact the index when
+cards and locks make the result unambiguous. Locks are ownership markers, not
+semantic authorization.
 
 ## Validation
 

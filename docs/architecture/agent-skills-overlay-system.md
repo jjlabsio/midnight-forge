@@ -42,8 +42,10 @@ approval, review meaning, lifecycle progress, recovery, or ship success.
 Public MDF skills are readable workflow guidance over the upstream primitives.
 The model owns semantic routing, task interpretation, exact artifact approval,
 review meaning, downstream impact, recovery choice, and external authority.
-Canonical `.mdf` cards, append-only index projections, locks, and project-local
-worktrees remain preserved contracts.
+Canonical `.mdf` cards, rebuildable index projections (append-only for normal
+lifecycle writes), locks, and project-local worktrees remain preserved
+contracts. Task and board skills own automatic self-healing of that derived
+projection from authoritative cards and locks.
 
 The model-led workflow keeps only the existing task-state primitives needed by
 the repository. Auto-workflow does not add a policy module, JSON protocol, or
