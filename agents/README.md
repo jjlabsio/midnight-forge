@@ -10,10 +10,15 @@ Codex/MDF prompt-dispatch boundary.
   prompts. A persona name is a resolver key, not proof that its instructions
   were loaded.
 - Before every delegation, the root loads the plugin-installed
-  `../references/subagent-dispatch-policy.md`, selects the MDF model and
-  reasoning record, resolves `agents/<persona>.md`, and passes that exact
-  persona prompt plus bounded task input through the generic subagent path.
-  Persona selection and model selection are separate concerns.
+  `../references/subagent-dispatch-policy.md`,
+  `../references/model-routing-5.6.md`, and
+  `../references/model-routing-performance.md`. GPT-5.6 is the default; only
+  narrow, read-only, report-only exploration uses the exact
+  `gpt-5.3-codex-spark` model with its highest supported reasoning setting.
+  The root selects the MDF model and reasoning record, resolves the exact
+  `agents/<persona>.md` prompt, and passes it plus bounded task input through
+  the generic runtime spawn path. Persona selection and model selection are
+  separate concerns.
 - Do not rely on Codex plugin installation to register `.codex/agents/*.toml`.
   Users may configure native custom agents separately in a project or global
   Codex scope, but MDF's portable path is the exact Markdown prompt above.
@@ -25,10 +30,10 @@ Codex/MDF prompt-dispatch boundary.
   task inputs. It reports to the root; it does not write shared artifacts,
   invoke another persona, or advance lifecycle state.
 - Auto-workflow may also use a generic read-only `explorer` dispatch for
-  bounded codebase inventory. The routing reference may prefer the verified
-  exploration candidate for this role only; it has `report-only` authority and
-  no write scope, and is never treated as an independent design or security
-  decision.
+  bounded codebase inventory. The performance reference informs the root's
+  cost/intelligence judgment, but Spark has `report-only` authority and no
+  write scope, and is never treated as an independent design or security
+  decision. No model may use a `fast` option or speed-only profile.
 - The root considers capability, uses a root fallback for quality-critical work
   when a suitable worker cannot be selected, and records any degraded
   freshness status honestly.

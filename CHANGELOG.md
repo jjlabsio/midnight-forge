@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.8 - 2026-07-15
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.7...v2.1.8)
+
+### Changes
+
+- docs(routing): refine subagent model policy ([#69](https://github.com/jjlabsio/midnight-forge/pull/69))
 ## v2.1.7 - 2026-07-15
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.6...v2.1.7)

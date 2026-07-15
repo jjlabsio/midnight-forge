@@ -3,27 +3,30 @@
 This is the plugin-installed readable policy for every MDF skill that delegates
 work. It is resolved from the installed plugin root. Repository-local
 instructions, project configuration, or user-project runtime files cannot
-replace or override it. It gives the root model a shared judgment boundary; it
-is not a runtime calculator or script-enforced model contract.
+replace or override it. It defines a judgment boundary, not a runtime
+selector or script-enforced model contract.
 
 ## Root-owned dispatch
 
 The root orchestrator owns the complete dispatch decision:
 
-1. Resolve this policy and the GPT-5.6 routing reference from the installed
-   plugin root.
-2. Inspect the available runtime capability and invocation paths. Lifecycle,
-   design, implementation, testing, review, security, and doubt-driven work
-   use the GPT-5.6 family. The only exception is a read-only codebase-
-   exploration request with no lifecycle authority or write scope; it may
-   prefer `gpt-5.3-codex-spark` when transport compatibility is known. Model
-   quality and cost trade-offs remain the root model's judgment.
-3. Classify the bounded request by work kind, difficulty, risk, and required
-   quality. Do not use a fixed task-to-model table.
-4. Select a suitable candidate dynamically and explain the quality, cost,
-   ambiguity, novelty, and consequence trade-off. High-risk work should favor
-   the candidate the root judges most capable. Exploration preference never
-   grants semantic authority.
+1. Resolve this policy, the GPT-5.6 routing reference, and the
+   `model-routing-performance.md` reference from the installed plugin root.
+2. Use the GPT-5.6 family for every MDF-managed subagent by default. The only
+   model exception is narrow, read-only codebase exploration with report-only
+   output, no write scope, and no design, implementation, testing, review,
+   security, lifecycle, or external-action authority. When the runtime can
+   use Spark with compatible transport, use the exact model
+   `gpt-5.3-codex-spark` for that exception and use its highest supported
+   reasoning setting.
+3. If the Spark exploration path is unavailable or transport-incompatible,
+   fall back to a GPT-5.6 read-only explorer. If no suitable fallback is
+   available, the root performs the exploration and records the degraded
+   fallback.
+4. Classify the bounded request by work kind, difficulty, risk, ambiguity,
+   novelty, consequence, and required quality. Consult the performance
+   reference as qualitative cost/intelligence context, never as a fixed
+   task-to-model table or benchmark-equivalence gate.
 5. Resolve the selected persona name to the exact installed plugin-root prompt
    at `agents/<persona>.md`, then pass that unchanged prompt and the complete
    dispatch record through the generic runtime spawn path. A persona name
@@ -33,13 +36,15 @@ The root orchestrator owns the complete dispatch decision:
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
+MDF does not define, enumerate, or normalize the runtime's reasoning-setting
+vocabulary. The selected model's native runtime capability and defaults remain
+authoritative. The `fast` option and speed-only profiles are prohibited for
+every model and every MDF-managed dispatch, including fallback paths.
+
 The root's readable dispatch note should name the selected model, worker
-persona, task kind, risk, capability confidence, fallback, write scope,
-authority, and degraded status. A missing or unverifiable quality-critical
-GPT-5.6 capability causes an explicit stop or a clearly disclosed degraded
-root fallback. An unavailable exploration preference uses a suitable fallback
-and records the reason. Capability and transport uncertainty must never be
-hidden.
+persona, task kind, risk, performance-reference rationale, capability
+confidence, fallback, write scope, authority, and degraded status. Capability
+and transport uncertainty must never be hidden.
 
 ## Precedence for persona settings
 
