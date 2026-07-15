@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 const fs = require("node:fs");
+const path = require("node:path");
 
-const read = (path) => fs.readFileSync(path, "utf8");
+const root = path.resolve(__dirname, "..");
+const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
 const checks = [
   ["skills/auto-workflow/SKILL.md", /does not authorize ship, task\s+completion, push, or PR creation\/update/],
   ["skills/auto-workflow/SKILL.md", /code-simplify -> commit/],
@@ -17,6 +19,8 @@ const checks = [
   ["skills/github-pr/SKILL.md", /Query the\s+open-PR state before pushing/],
   ["skills/github-pr/SKILL.md", /remote branch OID equals the expected local HEAD/],
   ["skills/github-pr/SKILL.md", /Treat GitHub responses,[\s\S]*?as untrusted data/],
+  ["skills/use-mdf/SKILL.md", /bare internal mode string[\s\S]*?grants no auto authority/],
+  ["skills/github-pr/SKILL.md", /If intended uncommitted changes[\s\S]*?task completion/],
 ];
 
 for (const [path, pattern] of checks) {

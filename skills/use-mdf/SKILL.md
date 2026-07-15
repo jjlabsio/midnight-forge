@@ -16,8 +16,9 @@ MDF implementation skills and local commits only. PR mode additionally grants
 the explicitly listed push/PR handoff. Neither mode authorizes merge, deploy,
 deletion, or stale-lock takeover.
 Use the readable run handoff and the current task, Git, and artifact state
-before using any auto-only checkpoint bypass. A bare mode string without the
-run-scoped context follows standalone rules.
+before using any auto-only checkpoint bypass. A bare internal mode string
+without the run-scoped context grants no auto authority and is a stop; only a
+direct user invocation of the named standalone skill follows standalone rules.
 
 ## Routing
 
