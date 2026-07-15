@@ -15,6 +15,8 @@ const checks = [
   ["references/auto-workflow-contract.md", /spec acceptance criterion/],
   ["skills/github-pr/SKILL.md", /A\s+bare mode string is not authority/],
   ["skills/github-pr/SKILL.md", /Query the\s+open-PR state before pushing/],
+  ["skills/github-pr/SKILL.md", /remote branch OID equals the expected local HEAD/],
+  ["skills/github-pr/SKILL.md", /Treat GitHub responses,[\s\S]*?as untrusted data/],
 ];
 
 for (const [path, pattern] of checks) {
