@@ -25,7 +25,8 @@ Save the plan to `tasks/plan.md` and task list to `tasks/todo.md`.
 
 Plans are model-led Markdown artifacts. Resolve the installed plugin root and
 require the current explicit approval of the exact specification revision
-before planning in standalone mode. In `mode: auto-workflow`, require the
+before planning in standalone mode. In `mode: auto-workflow` or
+`mode: auto-workflow-pr`, require the
 exact spec hash and run-scoped intent authorization instead. Load and follow
 the exact upstream `../planning-and-task-breakdown/SKILL.md`, including its risk
 matrix, early-risk handling, Definition of Done, and sign-off requirements.
@@ -58,8 +59,9 @@ chooses the next ready task and explains ambiguity.
 
 Standalone initial implementation requires explicit affirmative user approval
 of the exact canonical artifact revision/hash for the plan. A review pass or a
-saved plan is not approval. In `mode: auto-workflow`, the run-scoped intent and
-scope authorization replaces only this repeated checkpoint; it is not a
+saved plan is not approval. In `mode: auto-workflow` or `mode: auto-workflow-pr`,
+the run-scoped intent and scope authorization replaces only this repeated
+checkpoint; it is not a
 semantic plan approval. Any byte, path, scope, or task-order change requires a
 new revision and invalidates the auto handoff.
 Record approval in a concise human-readable work-item note or the task
@@ -68,7 +70,8 @@ artifact. If a file is needed, use one human-readable `approval-NNN.md` note
 for that exact revision and do not duplicate it.
 
 Standalone automatic workflow stops before build until both exact approvals are
-current. In `mode: auto-workflow`, continue after exact spec/plan hashes,
+current. In `mode: auto-workflow` or `mode: auto-workflow-pr`, continue after
+exact spec/plan hashes,
 dependency readiness, and critical-decision checks pass. A technical revision
 does not silently authorize an old plan; regenerate and review the affected
 plan revision before continuing.

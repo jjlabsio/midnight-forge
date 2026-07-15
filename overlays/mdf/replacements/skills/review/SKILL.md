@@ -5,7 +5,7 @@ description: "Conduct a five-axis code review — correctness, readability, arch
 
 # review
 
-When called with `mode: auto-workflow`, load
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load
 `../../references/auto-workflow-contract.md` and apply its bounded delegation,
 root-synthesis, and auto-authority rules.
 
@@ -80,7 +80,8 @@ progress continues. Stop for repeated findings, regressions, ambiguity, or a
 material trade-off.
 
 The security and performance skill references are same-context skill loads in a
-standalone review. In `mode: auto-workflow`, the user has authorized bounded
+standalone review. In `mode: auto-workflow` or `mode: auto-workflow-pr`, the
+user has authorized bounded
 lifecycle delegation, so the root may fan out independent code, security, and
 test review reports in parallel, then synthesize them in the root context.
 Reviewers remain report-only; they do not mutate canonical state or authorize

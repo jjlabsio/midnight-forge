@@ -74,17 +74,22 @@ earlier approval. `build` follows TDD, focused verification, task-owned
 staging, readable review, downstream-impact judgment, and one focused commit.
 The model chooses the next ready task and explains ambiguity.
 
-`auto-workflow` adds a run-scoped orchestration policy. Before `spec`, it
+`auto-workflow` adds a local run-scoped orchestration policy. Before `spec`, it
 must invoke `interview-me` when required intent fields are missing, materially
 different interpretations exist, an unsurfaced assumption or conflicting goal
 remains, confidence is below 95%, or the user explicitly requests an
 interview. A clear mechanical request skips the interview. After intent is
 settled, the root may carry the same run through spec, plan, build/test,
-review, simplification, ship, commit, push, and PR create/update without
-ceremonial approval prompts. Exact artifact hashes, TDD, review, lock, and
-high-risk checks remain required; changed artifacts invalidate downstream
-authorization. Merge, deploy, deletion, stale-lock takeover, and unresolved
-critical or no-progress conditions still stop.
+review, simplification, and local commit without ceremonial approval prompts.
+It does not ship, complete the whole task, push, or create/update a PR.
+`auto-workflow-pr` is the former full auto workflow: it resumes local work,
+finishes pending plan slices when needed, uses the full spec as its acceptance
+baseline even when no plan work remains, then runs ship, completes the whole
+MDF task after ship GO, and performs push and PR create/update. Exact artifact
+hashes, TDD, review, lock, and high-risk checks remain required; changed
+artifacts invalidate downstream authorization. Merge, deploy, deletion,
+stale-lock takeover, and unresolved critical or no-progress conditions still
+stop.
 
 Research and report-only review fan-outs may run in parallel. Writer tasks may
 run in parallel only when a mechanical proof gate establishes dependency-free
@@ -93,8 +98,11 @@ global state, isolated worktrees and locks on the same base, and an explicit
 independence review. Unknown or failed proof falls back to serial execution.
 The root remains responsible for merging, verification, and lifecycle state.
 
-Review has two readable scope labels: `lifecycle-review` for a full approved
-tree and `task-review` for a direct task/diff check. A completed task can be
+Plan-slice completion and whole-task completion are separate: a local build
+commit records an implementation slice while the MDF card remains active until
+the PR-capable final handoff. Review has two readable scope labels:
+`lifecycle-review` for a full approved tree and `task-review` for a direct
+task/diff check. A completed task can be
 reviewed read-only after its lock is released. `review_mode` is descriptive,
 not a permission to mutate state; a task review cannot create lifecycle
 evidence or promote itself to ship.

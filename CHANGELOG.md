@@ -130,6 +130,7 @@
 
 ### Changed
 
+- feat(workflow): split local auto-workflow from auto-workflow-pr delivery
 - Restore protected agent-skills workflows, personas, documentation, and
   security references as byte-identical pinned upstream copies.
 - Move MDF lifecycle, approval, executor, and artifact policy into thin Codex

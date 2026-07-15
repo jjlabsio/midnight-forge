@@ -1,170 +1,87 @@
 ---
 name: auto-workflow
-description: "Use when the user asks MDF to run the approved workflow automatically through PR preparation."
+description: "Run MDF's local implementation workflow through review, simplification, and commit without ship or PR delivery."
 ---
 
 # auto-workflow
 
-Load the plugin-installed `../../references/auto-workflow-contract.md` before
-starting. The contract applies only to this invocation; standalone MDF and
-upstream skills retain their own approval and stop semantics.
+Use this skill for the repeatable local implementation loop. It is intentionally
+separate from `auto-workflow-pr`: this skill does not authorize ship, task
+completion, push, or PR creation/update.
 
-The root runs the in-scope MDF lifecycle as one bounded execution:
+Load the plugin-installed `../../references/auto-workflow-contract.md` and use
+`mode: auto-workflow` for downstream MDF skills. The contract is run-scoped and
+does not grant external GitHub authority in this mode.
+
+## Lifecycle
+
+Run the bounded lifecycle:
 
 ```text
 intent preflight -> interview-me when required -> spec -> plan ->
-build/test -> task review -> whole-build review -> code-simplify -> ship ->
-github-commit -> push -> github-pr create/update
+build/test -> task review -> whole-build review -> code-simplify -> commit
 ```
 
-All applicable MDF skills may be loaded during this run, including debugging,
-security, API/UI, source-driven, documentation, observability, and migration
-skills. The initial auto invocation authorizes those in-scope skill calls and
-the final push/PR create-or-update. It does not authorize merge, deploy, data
-deletion, branch/worktree deletion, stale-lock takeover, force operations, or
-unrelated cleanup.
+Reuse the current approved spec, plan, task card, worktree, commits, and
+handoff evidence when they remain current. If the intent, spec, plan, scope,
+or task order is materially changed, reassess the handoff and regenerate the
+affected artifact instead of silently continuing with stale evidence.
 
-## Mandatory intent preflight
+## Intent preflight
 
-Before `spec`, read the upstream `interview-me` skill and evaluate its `When to
-Use` conditions. This is a model judgment recorded in the readable work-item
-notes, not a scripted gate. Invoke `interview-me` when any condition requires
-it:
+Before `spec`, read the upstream `interview-me` skill and evaluate its existing
+`When to Use` conditions. Invoke it when the target, purpose, success
+condition, constraint, interpretation, assumption, optimization choice, or
+confidence is materially unresolved, or when the user explicitly asks for an
+interview. Clear mechanical requests skip the interview. Record the settled
+intent in the readable work-item handoff.
 
-- missing user/target, purpose, success condition, or binding constraint;
-- materially different interpretations are possible;
-- an unsurfaced assumption is required;
-- conflicting optimization goals have no user choice;
-- confidence is below 95% for the next three answers;
-- the user explicitly requested an interview.
+## Implementation and completion boundary
 
-Do not invoke it for a clear, self-contained mechanical operation. Request
-length alone is not a reason to skip or invoke it. `interview-me` requires a
-live user; in a non-interactive run, stop with the exact missing information.
-Its explicit intent confirmation is the only semantic confirmation before
-spec. Do not turn it into a fake spec or plan approval.
+For every ready plan task, preserve the full TDD and verification loop:
 
-## Readable run handoff
+```text
+acceptance/context -> RED -> GREEN -> full test suite -> build ->
+review/gates -> code-simplify -> focused commit
+```
 
-Create a concise Markdown handoff note under the canonical work item and pass
-its contents as context to downstream skills and subagents. Record the run's
-intent, current phase, assumptions, applicable MDF skills, allowed external
-actions, relevant artifact paths, and any capability or fallback decision.
+A plan task is an implementation slice, not the whole MDF task. After the
+commit, record the slice's commit and verification evidence, but do not mark
+the whole MDF task `done`. Keep the active task ownership needed for a later
+`auto-workflow` invocation to continue. Do not release the task lock until the
+whole task handoff is complete or the separate PR workflow completes it.
 
-The handoff is readable workflow context, not a JSON protocol, hash gate, or
-runtime authority verifier. The root AI owns the note, updates it when the
-phase or scope changes, and re-reads the actual task, Git, and artifact state
-before continuing. A changed spec, plan, scope, or task order requires the root
-to reassess the handoff rather than treating the old note as approval.
+Run the required task review and whole-build review. Fix actionable in-scope
+findings, but stop for unresolved product decisions, public-contract changes,
+security/privacy/permission boundaries, destructive work, failed verification,
+repeated no-progress, or ambiguous task/lock/worktree state.
 
-## Subagent orchestration
+## Stop boundary
 
-Use subagents for bounded work throughout the lifecycle to preserve root
-context. Run independent read-only investigations in parallel and return
-compact reports with paths, facts, findings, confidence, and next action.
-Subagents do not spawn other subagents, write canonical `.mdf` state, or
-advance lifecycle state.
+After the local commit and readable handoff, stop. This skill must not:
 
-Recommended fan-out:
+- invoke `ship`;
+- mark the whole MDF task `done`;
+- push a branch;
+- create or update a GitHub PR;
+- merge, deploy, delete, force, or perform unrelated cleanup.
 
-- before spec: codebase exploration and risk/scope research;
-- before plan: architecture, dependency, and test-strategy research;
-- per task: implementation worker plus read-only test/impact analysis;
-- per task and final review: code, security, and test reviewers;
-- ship: the existing parallel code-reviewer, security-auditor, and
-  test-engineer fan-out.
+When the user is ready for delivery, invoke `auto-workflow-pr`. That skill may
+resume from the latest valid local artifacts and commits rather than repeating
+completed implementation work.
 
-For read-only codebase exploration, follow the central routing policy and its
-performance reference. Use the exact `gpt-5.3-codex-spark` model with its
-highest supported reasoning setting when compatible transport is available.
-Spark is report-only and has no authority for design, security, implementation,
-lifecycle, or external actions. If unavailable or incompatible, choose a
-GPT-5.6 read-only fallback or do the exploration in the root and record the
-degraded result. Never select or pass a `fast` option or speed-only profile.
+## Subagents and review
 
-## Review and first-slice validation
+Use the central MDF dispatch policy for bounded read-only exploration and
+review reports. The root agent owns task state, artifact synthesis, shared
+writes, commit scope, and lifecycle decisions. Use serial writers unless
+independence is proven with disjoint paths, isolated worktrees, locks, and no
+shared contracts or generated outputs.
 
-Review execution is mandatory. This includes the existing task review and
-whole-build review; a simple task is not a reason to skip them. An
-`independent reviewer` is an additional fresh-context reviewer, so omitting
-that subagent is not the same as omitting review. The root may perform a
-single-pass review for a mechanical, non-user-facing, low-risk change. Use an
-independent reviewer when the change affects a user-facing or core flow, a
-public API or data contract, security or permissions, or when risk or intent
-is materially uncertain. Decide from user impact, risk, and uncertainty, not
-changed-line count, and do not spawn another reviewer just to repeat the same
-finding.
+## Required handoff
 
-After the first meaningful task or vertical slice reaches the normal
-build/test checkpoint (`acceptance/context -> RED -> GREEN -> full test suite
--> build`), validate the result before starting the next plan task. This is a
-nested checkpoint in the existing build/test orchestration, not a new
-lifecycle phase and not a replacement for task review. Validate the actual
-consumer: use the browser-testing skill for UI changes and attach a screenshot
-plus relevant runtime evidence, inspecting console, network, or accessibility
-when affected; use the real CLI, API, or integration boundary for other
-changes. Add or run one minimal Playwright E2E smoke path for a critical user
-flow that exercises the changed behavior, including any changed integration
-boundary. Purely visual or non-critical changes need browser evidence only and
-do not require E2E. Pass the resulting evidence, including screenshot paths
-when applicable, to the task review and PR handoff. Then continue the existing
-`review/gates -> commit -> complete` steps; do not start the next plan task
-until those steps pass.
-
-This checkpoint must not modify the standalone build or test skill contract,
-their overlays, or the upstream agent-skills source. If the observed result
-does not support the intended user value, record the finding through the
-existing review once and stop to re-plan or request a decision; do not enter
-an automatic fix-and-retest loop.
-
-Only promote a review finding into a new test or production change when it is
-directly tied to acceptance criteria, an existing supported contract or
-regression, security or permissions, or data integrity. Record and defer
-unrelated, speculative, or purely mechanical suggestions without expanding
-the implementation.
-
-## Defensive parallel writers
-
-The default is one writer per worktree. Before using parallel writers, the root
-AI must reason through dependency-free tasks, disjoint owned paths, isolated
-worktrees and branches from one base, distinct locks, and the absence of shared
-contracts, generated outputs, lockfiles, migrations, global configuration,
-fixtures, external resources, or `.mdf` state.
-
-If any independence fact is unknown or uncertain, use serial execution. Each
-writer owns only its task paths. The root remains the only writer of canonical
-state and the only merger. Review every returned diff, merge sequentially, and
-run the relevant verification before external mutation. A semantic conflict or
-scope violation is a blocker; a mechanical, in-scope conflict may be repaired
-and reverified automatically.
-
-## Progress and stops
-
-Continue automatically for routine implementation choices, tests, docs,
-reversible internal refactors, actionable in-scope review findings, and
-transient failures with a safe retry. Record assumptions and evidence.
-
-Stop for:
-
-- unresolved intent or a user product decision;
-- public-contract, security, privacy, data, permission, or material cost
-  changes;
-- destructive or irreversible work, unknown external targets, or risk
-  acceptance;
-- malformed or conflicting MDF state, lock ownership, worktree, branch, or
-  dependency facts;
-- failed verification without an obvious in-scope fix;
-- repeated findings, regression, no-progress, or untrusted provenance;
-- ship NO-GO/critical findings or unavailable required capability;
-- failed or ambiguous GitHub push/PR mutation after safe retries.
-
-Never infer completion from an artifact's existence, a green command, or a
-review phrase alone.
-
-## PR handoff
-
-After ship GO, recheck branch, remote, clean diff, base mergeability,
-authentication, language, release signal, and open-PR state. Push the current
-branch, then update the existing PR or create one if none exists. Query before
-retrying an uncertain create result so duplicates cannot occur. After the PR
-URL or failure is recorded, stop; do not merge, deploy, or delete anything.
+Record the current phase, settled intent, exact spec/plan paths and hashes,
+completed plan slices, commit IDs, verification outcomes, review evidence,
+remaining plan work, assumptions, and the explicit fact that ship/push/PR were
+not performed. Re-read the actual task, Git, and artifact state before any
+continuation.

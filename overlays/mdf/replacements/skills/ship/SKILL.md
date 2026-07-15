@@ -5,10 +5,15 @@ description: "Run the pre-launch checklist via parallel fan-out to specialist pe
 
 # ship
 
-When called with `mode: auto-workflow`, load
-`../../references/auto-workflow-contract.md`. The run may continue after a GO
-decision to push and create/update its PR, subject to the final preflight; it
-may not merge, deploy, or delete anything.
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load
+`../../references/auto-workflow-contract.md`. Local `auto-workflow` mode does
+not invoke ship. In `auto-workflow-pr` mode, a GO decision may continue to push
+and create/update its PR, subject to the final preflight; it may not merge,
+deploy, or delete anything.
+
+The `mode` string is not authority by itself. Require the current run handoff,
+matching task/lock/worktree/branch facts, approved artifact hashes, and the
+PR-mode final preflight before treating a GO result as delivery authority.
 
 ## Upstream command contract
 
@@ -154,9 +159,10 @@ prose or reuse it on another tree.
 
 In standalone mode, pushing, creating or updating a PR, merging, deploying,
 deleting a branch, or changing any external state is a separate confirmation
-stop. In `mode: auto-workflow`, the initial invocation authorizes only push and
-PR create/update. Before those actions, recheck the current remote, branch,
+stop. In `mode: auto-workflow-pr`, the initial invocation authorizes only push
+and PR create/update. Before those actions, recheck the current remote, branch,
 diff, authentication, mergeability, and open-PR state. Merge, deploy, branch
 or worktree deletion, and data deletion remain prohibited. Report the GO/NO-GO
 decision and exact mutation result; never treat a clean ship review as
-authority for a prohibited action.
+authority for a prohibited action. Local `auto-workflow` mode has no external
+mutation authority and must not invoke this handoff.

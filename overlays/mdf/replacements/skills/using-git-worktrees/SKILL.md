@@ -17,7 +17,7 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
-In `mode: auto-workflow`, multiple worktrees may be prepared for a parallel
+In `mode: auto-workflow` or `mode: auto-workflow-pr`, multiple worktrees may be prepared for a parallel
 writer group only after the root AI explains the disjoint owned paths, lack of
 dependency edges, common base revision, distinct branches and locks, and lack
 of shared contracts, generated output, lockfiles, migrations, global
