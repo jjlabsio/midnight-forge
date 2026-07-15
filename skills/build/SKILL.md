@@ -48,9 +48,9 @@ not remove or reorder these execution steps.
 When called from `mode: auto-workflow` or `mode: auto-workflow-pr`, the root's
 run-scoped authorization replaces the standalone plan checkpoint. Neither mode
 removes RED/GREEN, full regression, build, review, task-owned staging, lock, or
-high-risk checks. `mode: auto-workflow` commits each completed plan slice but
-keeps the MDF task active; `mode: auto-workflow-pr` preserves full task
-completion for the PR-capable workflow.
+high-risk checks. Both auto modes commit each completed plan slice and keep the
+MDF task active; `auto-workflow-pr` performs whole-task completion only after
+ship GO and final PR preflight.
 
 ### Default: one task
 
