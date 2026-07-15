@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.0 - 2026-07-15
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.9...v2.2.0)
+
+### Changes
+
+- feat(workflow): split auto workflow from PR delivery ([#70](https://github.com/jjlabsio/midnight-forge/pull/70))
 ## v2.1.9 - 2026-07-15
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.8...v2.1.9)
