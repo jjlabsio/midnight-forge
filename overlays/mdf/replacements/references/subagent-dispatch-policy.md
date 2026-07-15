@@ -27,9 +27,12 @@ The root orchestrator owns the complete dispatch decision:
    novelty, consequence, and required quality. Consult the performance
    reference as qualitative cost/intelligence context, never as a fixed
    task-to-model table or benchmark-equivalence gate.
-5. Pass the selected model choice, exact persona prompt, and bounded task
-   input through the generic runtime spawn path. The persona supplies
-   perspective but cannot select another persona or expand its authority.
+5. Resolve the selected persona name to the exact installed plugin-root prompt
+   at `agents/<persona>.md`, then pass that unchanged prompt and the complete
+   dispatch record through the generic runtime spawn path. A persona name
+   written into task text is only a resolver key, not proof that the persona was
+   loaded. The persona supplies perspective but cannot select another persona
+   or expand its authority.
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
@@ -55,18 +58,18 @@ For ordinary direct invocation outside MDF-managed delegation, use the persona's
 model settings first and the platform default second. That ordinary-invocation
 precedence does not override the root's choice for MDF-managed work.
 
-Persona prompt content and perspective remain intact. If a named-persona
-invocation applies its own model settings before the root can make an
-MDF-managed choice, that invocation cannot provide an MDF-managed dispatch
-guarantee. Use the generic runtime path or a visible degraded root fallback.
+Persona prompt content and perspective remain intact. The generic runtime path
+is MDF-compatible only when it receives the exact installed persona prompt and
+the root-selected dispatch record. If the prompt or dispatch transport cannot
+be resolved, use a visible degraded root fallback or stop.
 
 ## Spawn boundary
 
-Delegating skills pass three things through the generic runtime path:
+Delegating skills pass these fields through the generic runtime path:
 
 ```text
 model choice: <root-selected candidate>
-persona: <installed persona prompt, unchanged>
+persona: <exact installed persona prompt, unchanged>
 task input: <bounded artifact and contract>
 ```
 
