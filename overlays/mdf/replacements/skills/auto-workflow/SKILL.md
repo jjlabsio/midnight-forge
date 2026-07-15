@@ -74,11 +74,13 @@ Recommended fan-out:
 - ship: the existing parallel code-reviewer, security-auditor, and
   test-engineer fan-out.
 
-For read-only codebase exploration, follow the central routing reference and
-prefer `gpt-5.3-codex-spark` when the runtime can use it safely. Spark has no
-authority for design, security, implementation, lifecycle, or external
-actions. If unavailable, choose a suitable GPT-5.6 read-only fallback or do
-the exploration in the root and record the result.
+For read-only codebase exploration, follow the central routing policy and its
+performance reference. Use the exact `gpt-5.3-codex-spark` model with its
+highest supported reasoning setting when compatible transport is available.
+Spark is report-only and has no authority for design, security, implementation,
+lifecycle, or external actions. If unavailable or incompatible, choose a
+GPT-5.6 read-only fallback or do the exploration in the root and record the
+degraded result. Never select or pass a `fast` option or speed-only profile.
 
 ## Review and first-slice validation
 
