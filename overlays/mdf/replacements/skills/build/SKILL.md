@@ -12,7 +12,7 @@ upstream `../incremental-implementation/SKILL.md` alongside
 `../test-driven-development/SKILL.md`. Also load
 `../code-review-and-quality/SKILL.md` and any other applicable skill when its
 trigger applies.
-For `mode: auto-workflow`, also load
+For `mode: auto-workflow` or `mode: auto-workflow-pr`, also load
 `../../references/auto-workflow-contract.md`.
 
 Any implementation or testing delegation must first load the
@@ -37,17 +37,20 @@ not remove or reorder these execution steps.
   time.
 - `/build auto` generates the plan if needed, gets one standalone approval,
   and then implements every task without stopping between tasks. Inside
-  `mode: auto-workflow`, the run-scoped intent and exact spec/plan handoff
-  replaces that ceremonial checkpoint.
+  `mode: auto-workflow` or `mode: auto-workflow-pr`, the run-scoped intent and
+  exact spec/plan handoff replaces that ceremonial checkpoint.
 - Treat `auto` (canonical) or `all` as autonomous mode. Anything else (or
   empty) selects the default single-task mode.
 - Autonomous mode is not a shorter verification path. It runs the same
   test-driven loop for every task; it only removes the human stepping between
   tasks.
 
-When called from `mode: auto-workflow`, the root's run-scoped authorization
-replaces the standalone plan checkpoint. It does not remove RED/GREEN, full
-regression, build, review, task-owned staging, lock, or high-risk checks.
+When called from `mode: auto-workflow` or `mode: auto-workflow-pr`, the root's
+run-scoped authorization replaces the standalone plan checkpoint. Neither mode
+removes RED/GREEN, full regression, build, review, task-owned staging, lock, or
+high-risk checks. `mode: auto-workflow` commits each completed plan slice but
+keeps the MDF task active; `mode: auto-workflow-pr` preserves full task
+completion for the PR-capable workflow.
 
 ### Default: one task
 
@@ -61,14 +64,18 @@ sequence:
 5. Run the full test suite to check for regressions.
 6. Run the build to verify compilation.
 7. Commit with a descriptive message.
-8. Mark the task complete and stop.
+8. In standalone `/build`, preserve the existing selected-task completion
+   behavior. In `mode: auto-workflow` or `mode: auto-workflow-pr`, record the
+   completed plan slice, commit, and verification evidence, keep the MDF task
+   active, and stop without whole-card completion. The PR orchestrator performs
+   whole-card completion only after ship GO.
 
 ### Autonomous: the whole plan (`/build auto`)
 
 Use this once a spec exists when plan and build should run in one approved pass.
 It removes manual stepping between tasks, not verification. Every task still
 earns a passing test, the full regression suite, a successful build, its own
-commit, and completion status.
+commit, and readable plan-slice completion evidence.
 
 1. Require a spec. Look only for a spec at a known path: `SPEC.md` at the repo
    root, `docs/SPEC.md`, or a file under `spec/`. A README or arbitrary
@@ -83,17 +90,20 @@ commit, and completion status.
    `planning-and-task-breakdown` skill to generate one.
 4. In standalone `/build auto`, use one human checkpoint: present the full
    plan and wait for an unambiguous affirmative such as `approve`, `go`, or
-   `yes`. In `mode: auto-workflow`, verify the exact spec/plan hashes and
-   run-scoped authorization instead of asking for this ceremonial checkpoint.
+   `yes`. In `mode: auto-workflow` or `mode: auto-workflow-pr`, verify the exact
+   spec/plan hashes and run-scoped authorization instead of asking for this
+   ceremonial checkpoint.
    If `tasks/plan.md` was generated, commit it as one preparatory commit before
    the first task so it cannot bleed into that task's commit.
 5. Execute every task in dependency order. Use each task's declared
    dependencies; when dependencies are not explicit, use the plan's listed
    order. For each task, run the complete default loop:
-   `RED → GREEN → full regression suite → build → commit → mark complete`.
-   Stage only the files touched by that task plus its task-status update; never
-   use `git add -A` blindly. Make exactly one commit per task so every point
-   remains a clean rollback point.
+   `RED → GREEN → full regression suite → build → review → commit`. Record the
+   plan-slice evidence; both auto modes leave the MDF task active for the PR
+   orchestrator's final ship-and-handoff completion.
+   Stage only files touched by that plan slice; never use `git add -A` blindly
+   and never stage a whole-card MDF status update in either auto mode. Make
+   exactly one commit per slice so every point remains a clean rollback point.
 6. Stop and ask the user instead of pushing through when, even in auto mode:
    - a test cannot be made to pass or the build breaks without an obvious fix;
      follow `../debugging-and-error-recovery/SKILL.md`;
@@ -104,8 +114,8 @@ commit, and completion status.
      destructive data migrations, payments, deletions, deploys, secrets, or
      anything that cannot be undone with `git revert`; follow
      `../doubt-driven-development/SKILL.md` and obtain explicit sign-off.
-   After the user resolves a blocker, they re-invoke `/build auto`; it resumes
-   from the next pending task.
+   After the user resolves a blocker, they re-invoke the applicable workflow;
+   it resumes from the next pending plan task.
 7. Summarize tasks completed, tests added, commits made, and anything skipped,
    flagged, or left for the user.
 
@@ -128,10 +138,12 @@ loop or reduce its verification.
    traceable to the known spec/plan contract above; a README or arbitrary
    document still cannot satisfy it.
 2. Read the task card and current index projection. Choose exactly one
-   selected or next pending task that is ready, confirm its owned paths and
-   dependencies, and acquire the task lock through the approved task
-   procedure. Do not infer readiness from card text that conflicts with
-   canonical state, a live lock, or the approved plan.
+   selected or next pending plan task that is ready, confirm its owned paths and
+   dependencies, and use the matching task lock through the approved task
+   procedure. A local auto-workflow continuation may use its matching active
+   lock; the PR workflow uses the normal task ownership path. Do not infer
+   readiness from card text that conflicts with canonical state, a live lock,
+   or the approved plan.
 3. Confirm that the current worktree is the locked worktree, the expected
    branch is checked out, and the baseline is clean. Stop for unrelated dirt,
    lock conflict, ambiguous ownership, or missing worktree setup. This is the
@@ -143,7 +155,9 @@ loop or reduce its verification.
    review, and downstream-impact gate are additional checks; they do not stand
    in for the required full test suite or build. The required order is:
 
-   `acceptance/context → RED → GREEN → full test suite → build → review/gates → commit → complete`
+   `acceptance/context → RED → GREEN → full test suite → build → review/gates →
+   code-simplify → commit → plan-slice evidence`. Whole MDF task completion is
+   not part of either auto-mode build slice.
 
 5. Review the diff and all verification results against the full
    specification, plan, task acceptance, and relevant project documentation.
@@ -160,15 +174,17 @@ loop or reduce its verification.
 ### Commit, completion, and artifacts
 
 7. Stage only the exact task-owned project paths and create one focused commit
-   with a descriptive message. The upstream “task-status update” maps to the
-   MDF task completion mutation: after the commit, update the canonical card
-   and append its index projection through the task owner, recording the commit
-   and verification evidence. `.mdf` state is local workflow metadata and is
-   not blindly staged into the project commit.
-8. Release the lock only after the task handoff is complete, using the exact
-   lock-owner and digest checks. Re-read the card and index projection and
-   report the commit, full-test result, build result, review result, remaining
-   tasks, and any explicit follow-up decision.
+   with a descriptive message. Record the commit, full-test result, build
+   result, review result, remaining plan tasks, and follow-up decision in
+   readable evidence. In `mode: auto-workflow`, do not mark the MDF task done
+   or release its active lock; the lock remains owned for continuation. In
+   both auto modes keep the task active for the PR orchestrator. The
+   `auto-workflow-pr` orchestrator performs the task completion mutation and
+   releases the lock after ship GO. `.mdf` state is local workflow metadata and
+   is not blindly staged into the project commit.
+8. Re-read the card and index projection and report plan-slice completion and
+   whole-task completion separately. The PR workflow may complete an active
+   task after ship GO and before push/PR handoff.
 9. If the plan was generated as a project-visible `tasks/plan.md`, preserve the
    upstream preparatory-commit rule. If the MDF plan adapter created only the
    canonical `.mdf/work/<work-id>/plan-NNN.md` artifact, record it in MDF state
@@ -180,8 +196,10 @@ loop or reduce its verification.
 `build auto` and `build all` repeat the same upstream loop over all approved
 plan tasks. Before each task, recheck approval, exact spec/plan hashes, lock
 ownership, clean baseline, dependency readiness, and exact task scope; inspect
-`git status --porcelain`, stage with `git add --`, create one commit per task,
-complete the task in MDF state, and resume at the next pending task.
+`git status --porcelain`, stage with `git add --`, create one commit per plan
+task, record plan-slice evidence, and resume at the next pending task. Both
+auto modes leave the whole MDF task active until the PR orchestrator's ship GO
+and final handoff.
 
 After every approved plan task completes, run the whole-build verification
 matrix from the plan and perform a final review against the full

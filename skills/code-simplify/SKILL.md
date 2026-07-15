@@ -42,7 +42,8 @@ reviewed diff and task-owned commits. Exclude tests, vendor, generated files,
 public workflow contracts, and unrelated changes unless the user explicitly
 approves a different scope.
 
-In `mode: auto-workflow`, the run-scoped authorization removes the ceremonial
+In `mode: auto-workflow` or `mode: auto-workflow-pr`, the run-scoped
+authorization removes the ceremonial
 step-by-step confirmation for behavior-preserving candidates. The root may
 delegate read-only candidate discovery and verification, but canonical state
 and accepted refactor commits remain root-owned. A candidate that changes a

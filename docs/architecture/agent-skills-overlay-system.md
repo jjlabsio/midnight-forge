@@ -54,10 +54,15 @@ ordinary Git/MDF state, makes semantic decisions, and records readable
 handoff, dispatch, and fallback notes.
 
 When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
-contract grants the root authority to complete in-scope MDF skills and to
-commit, push, and create or update the PR. This does not alter standalone
-skill semantics. Merge, deploy, deletion, stale-lock takeover, unrelated
-cleanup, and unresolved critical decisions remain outside the grant.
+contract grants the root authority to complete in-scope local MDF skills and
+to commit plan slices, but not to ship, complete the whole task, push, or
+create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
+after its final preflight and ship GO, it may complete the whole task, push,
+and create/update the PR. A mode string alone is not authority; the current
+handoff, task/lock/worktree/branch facts, approved artifact hashes, and fresh
+preflight are required. Neither mode alters standalone skill semantics.
+Merge, deploy, deletion, stale-lock takeover, unrelated cleanup, and
+unresolved critical decisions remain outside the grant.
 
 Everything else is performed by the model and ordinary project commands with
 explicit confirmation where a write is destructive or external. Historical

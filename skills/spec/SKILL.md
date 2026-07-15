@@ -21,7 +21,8 @@ Then generate a structured spec covering all six core areas: objective,
 commands, project structure, code style, testing strategy, and boundaries.
 
 Save the spec as `SPEC.md` in the project root and confirm with the user before
-proceeding in a standalone invocation. In `mode: auto-workflow`, report the
+proceeding in a standalone invocation. In `mode: auto-workflow` or
+`mode: auto-workflow-pr`, report the
 exact canonical path and SHA-256, verify the mandatory `interview-me` preflight
 and absence of a critical unresolved question, then continue under the
 run-scoped auto authorization without asking for a ceremonial approval.
@@ -33,7 +34,7 @@ the upstream workflow. Resolve the canonical project root and installed plugin
 root from the current checkout before reading or writing project state; an
 unresolved plugin root is a stop. Load and follow the exact upstream
 `../spec-driven-development/SKILL.md`.
-When the caller carries `mode: auto-workflow`, also load
+When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`, also load
 `../../references/auto-workflow-contract.md`.
 
 For non-trivial decisions, also load the exact upstream
@@ -65,14 +66,16 @@ do not silently replace it. Historical specifications remain readable.
 
 Standalone initial planning requires an explicit affirmative user approval of
 the exact canonical artifact revision/hash just reported. A saved artifact or
-a review pass is not approval. In `mode: auto-workflow`, the run-scoped intent
+a review pass is not approval. In `mode: auto-workflow` or
+`mode: auto-workflow-pr`, the run-scoped intent
 authorization replaces only this repeated checkpoint; it is not semantic
 approval and may be used only while the intent, scope, path, and bytes remain
 unchanged. If the bytes, path, scope, or latest revision changes, invalidate
 the auto handoff and create a new revision.
 
 In a standalone automatic-looking invocation, stop after presenting the
-specification until that approval is observed. In `mode: auto-workflow`, do
+specification until that approval is observed. In `mode: auto-workflow` or
+`mode: auto-workflow-pr`, do
 not write a fake `approval-NNN.md`; record the auto handoff and exact hash in
 the run/work-item log. Never plan or build on an unapproved standalone or
 ambiguous auto revision.

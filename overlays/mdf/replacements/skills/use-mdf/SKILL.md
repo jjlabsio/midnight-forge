@@ -10,11 +10,11 @@ primitive workflows. Resolve the installed skill or reference location before
 loading a skill, persona, documentation file, or supporting material. Do not
 rely on a fixed cache path; unresolved paths are a stop.
 
-When the caller carries `mode: auto-workflow`, also load
-`../../references/auto-workflow-contract.md`. This mode grants in-scope MDF
-skill invocation and the explicitly listed push/PR handoff, but it does not
-change standalone skill semantics or authorize merge, deploy, deletion, or
-stale-lock takeover.
+When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`, also
+load `../../references/auto-workflow-contract.md`. Local mode grants in-scope
+MDF implementation skills and local commits only. PR mode additionally grants
+the explicitly listed push/PR handoff. Neither mode authorizes merge, deploy,
+deletion, or stale-lock takeover.
 Use the readable run handoff and the current task, Git, and artifact state
 before using any auto-only checkpoint bypass. A bare mode string without the
 run-scoped context follows standalone rules.
@@ -22,7 +22,7 @@ run-scoped context follows standalone rules.
 ## Routing
 
 Route public MDF commands to their named skills (`spec`, `plan`, `build`,
-`review`, `auto-workflow`, `code-simplify`, `ship`, `webperf`, task, and Git
+`review`, `auto-workflow`, `auto-workflow-pr`, `code-simplify`, `ship`, `webperf`, task, and Git
 skills), then load every applicable exact upstream primitive. Keep
 `using-agent-skills` as a separately accessible exact upstream primitive;
 `use-mdf` does not replace its skill discovery, lifecycle stages, or Definition
@@ -65,7 +65,7 @@ When a generic subagent is appropriate, it receives the selected persona
 prompt from the plugin root plus bounded task inputs. If that capability is
 unavailable or uncertain, the root fallback performs quality-critical work;
 record degraded status rather than claiming independent freshness. One writer
-operates in each shared worktree; auto-workflow may use multiple isolated
+operates in each shared worktree; auto-workflow and auto-workflow-pr may use multiple isolated
 worktrees only when the root can explain why the work is independent. Root-only
 synthesis owns artifacts and lifecycle advance.
 

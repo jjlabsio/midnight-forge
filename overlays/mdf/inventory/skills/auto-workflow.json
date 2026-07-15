@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/auto-workflow/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "Active model-led continuation over approved Markdown spec, plan, tasks, review, ship, and PR handoff.",
+  "notes": "Local model-led implementation workflow through review, simplification, and commit without ship or PR delivery.",
   "overlayKind": "mdfOnly"
 }

@@ -23,15 +23,21 @@ and permit parallel writers only when independence can be defended.
 
 ## Decision
 
-Add an MDF-only readable `auto-workflow` contract. The contract is active only
-when the caller supplies `mode: auto-workflow` and a run context. It requires
+Add an MDF-only readable contract with separate local `auto-workflow` and
+delivery `auto-workflow-pr` modes. The contract is active only when the caller
+supplies the exact mode and a current run context. A bare mode string grants no
+authority; the current handoff, task/lock/worktree/branch facts, and approved
+artifact hashes are required. It requires
 `interview-me` before spec when intent is materially unclear, including missing
 intent fields, materially different interpretations, unsurfaced assumptions,
 conflicting goals, confidence below 95%, or an explicit interview request.
 Clear mechanical requests do not need an interview.
 
-Once intent is settled, the root may run the complete in-scope lifecycle and
-use the explicit auto authority for commit, push, and PR create/update. It
+Once intent is settled, local `auto-workflow` may run the in-scope
+spec/plan/build/test/review/simplify loop and commit each plan slice while
+leaving the whole MDF task active. `auto-workflow-pr` may resume those slices,
+use the latest spec as its acceptance baseline, run ship, and—only after final
+preflight—complete the whole task, push, and create/update the PR. Both modes
 must still stop for critical product/public-contract/security/privacy/data/
 permission/cost/destructive/irreversible decisions, failed verification,
 repeated no-progress, lock conflicts, changed artifact hashes, uncertain PR

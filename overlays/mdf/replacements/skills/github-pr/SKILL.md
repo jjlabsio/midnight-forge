@@ -5,9 +5,11 @@ description: "Use when creating or updating a GitHub pull request for MDF work, 
 
 # GitHub PR
 
-When called with `mode: auto-workflow`, load
+When called with `mode: auto-workflow-pr`, load
 `../../references/auto-workflow-contract.md`. Its run-scoped authority permits
-only the final push and PR create/update mutation after fresh preflight.
+only the final push and PR create/update mutation after fresh preflight. A
+bare mode string is not authority; require the current handoff, matching
+task/lock/worktree/branch facts, approved artifact hashes, and fresh preflight.
 
 This skill completes an incomplete current-session task or validates handoff
 for an already-completed task. It has two handoff paths and is model-led. Use
@@ -55,7 +57,7 @@ create lifecycle evidence or satisfy ship.
    validation passed.
 
 Callers pass only user-confirmed intent, or the explicit
-`mode: auto-workflow` run authorization, plus current session context; never
+`mode: auto-workflow-pr` run authorization, plus current session context; never
 pass asserted Git/GitHub facts. Preserve raw command outputs in the readable
 preflight report. If uncommitted changes remain, use `github-commit` and
 recheck the clean tree before continuing. Stage only intended paths; do not
@@ -84,7 +86,7 @@ remote, diff, language, release signal, authentication, mergeability, and
 open-PR status. Keep the PR ready for review unless the user explicitly
 requested a draft. In standalone mode, an explicit current-session invocation
 of this skill authorizes push and PR create/update after the fresh preflight;
-do not ask for a second confirmation. In `mode: auto-workflow`, the initial
+do not ask for a second confirmation. In `mode: auto-workflow-pr`, the initial
 run-scoped invocation likewise allows only push and PR create/update after the
 fresh preflight described above. A bare mode string without that readable
 context follows the standalone rule. Do not merge, deploy, delete branches,
@@ -102,4 +104,4 @@ Stop for a missing or ambiguous session task, malformed task state, lock or
 worktree mismatch, default branch, dirty unrelated changes, missing origin or
 GitHub authentication, unmergeable base, unclear release signal, wrong PR
 language, failed push, failed PR command, duplicate/uncertain PR state, or an
-external action outside the auto-workflow authority.
+external action outside the auto-workflow-pr authority.

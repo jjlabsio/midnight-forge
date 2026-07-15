@@ -45,7 +45,9 @@ A developer initializes MDF, creates or starts a task, works in an isolated git 
 
 - `init` prepares local MDF state and ignore setup.
 - `task` manages local work items and task locks.
-- `auto-workflow` coordinates spec, plan, build, review, ship, and PR preparation.
+- `auto-workflow` coordinates local spec, plan, build, review, simplification,
+  and commit work.
+- `auto-workflow-pr` resumes that work through ship and GitHub PR preparation.
 - `sync-agent-skills.js` regenerates runtime skill files from vendor and overlay inputs.
 - `validate-agent-skills-sync.js` and `validate-agent-skills-port.js` verify the generated surface.
 

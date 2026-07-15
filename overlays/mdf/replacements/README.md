@@ -43,6 +43,7 @@ $task work 001
 $tasks-project
 $tasks-user
 $auto-workflow
+$auto-workflow-pr
 $spec
 $plan
 $build
@@ -58,6 +59,13 @@ cards and artifacts, explain ambiguity, and stop for current human or
 external confirmation. No broad workflow runtime owns routing or semantic
 success. The narrow lock helper, when used, only inspects, exclusively
 acquires, and byte-conditionally releases a lock.
+
+`$auto-workflow` runs the repeatable local implementation loop through review,
+code simplification, and commit. It keeps the whole MDF task active and does
+not ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow:
+it resumes valid local work, uses the full spec as its acceptance baseline,
+ships, completes the whole task after ship GO, and then pushes and creates or
+updates the PR. Plan-slice completion and whole-task completion are distinct.
 
 ## Architecture
 
