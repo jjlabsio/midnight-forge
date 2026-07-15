@@ -72,11 +72,14 @@ shared artifacts or advances state. The root synthesizes every report and
 records capability, fallback, and degraded status. Subagents do not spawn
 other subagents.
 
-Quality-critical work uses GPT-5.6. Narrow codebase exploration may prefer the
-exact model `gpt-5.3-codex-spark` when the runtime can use it safely. Spark is
-never authoritative for design, security, implementation, lifecycle, or
-external mutation decisions. If it is unavailable, the root chooses a suitable
-GPT-5.6 read-only fallback or performs the exploration itself.
+Quality-critical work uses GPT-5.6 by default. For narrow, read-only,
+report-only codebase exploration, consult the central routing policy and
+performance reference, then use the exact model `gpt-5.3-codex-spark` with its
+highest supported reasoning setting when compatible transport is available.
+Spark is never authoritative for design, security, implementation, lifecycle,
+or external mutation decisions. If it is unavailable or incompatible, the root
+chooses a suitable GPT-5.6 read-only fallback or performs the exploration
+itself. Never use a `fast` option or speed-only profile for any model.
 
 ## Defensive writer parallelism
 

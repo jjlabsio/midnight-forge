@@ -40,22 +40,22 @@ and user authority.
 
 When a selected skill delegates to a subagent, load the plugin-installed
 `../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md`. The root classifies difficulty and
-risk, verifies the available capability, and chooses among the reviewed
-quality-critical candidates or the narrow read-only exploration candidate
-using the document's routing guidance and its own judgment of the task. This is
-dynamic selection, not a fixed task-to-model table or a measured quality/cost
-calculation. Quality-critical work uses GPT-5.6; narrow read-only exploration
-may prefer `gpt-5.3-codex-spark`.
+`../../references/model-routing-5.6.md` plus
+`../../references/model-routing-performance.md`. The root classifies
+difficulty, risk, ambiguity, novelty, and consequence, then uses the
+performance document as qualitative cost/intelligence context. GPT-5.6 is the
+default family. Only narrow, read-only, report-only codebase exploration may
+use the exact `gpt-5.3-codex-spark` model with its highest supported reasoning
+setting. This is dynamic selection, not a fixed task-to-model table or a
+runtime benchmark calculation.
 
 Pass the root-selected model choice, exact persona prompt, and bounded task
 input through the generic runtime spawn path. Persona model settings are a
 default for ordinary direct invocation; the root's readable choice governs MDF
-dispatch while preserving the persona's perspective. If the selected
-quality-critical GPT-5.6 capability is unavailable or uncertain, stop or use a
-root fallback with an explicit degraded status; never hide the fallback. A
-read-only explorer may use the routing reference's exploration preference only
-when the root judges the transport compatible. Root-only synthesis owns
+dispatch while preserving the persona's perspective. Never select or pass a
+`fast` option or speed-only profile for any model. If Spark is unavailable or
+transport-incompatible, use a GPT-5.6 read-only fallback or perform the
+exploration in the root and record degraded status. Root-only synthesis owns
 reports, artifacts, and lifecycle state.
 
 ## Executor and persona adapter
