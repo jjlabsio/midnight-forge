@@ -3,26 +3,37 @@
 This is a readable routing guide for MDF-managed subagents. It is not a
 runtime selector or script-enforced model contract.
 
-Quality-critical lifecycle work uses the GPT-5.6 family. The root AI selects
-the appropriate currently available profile and reasoning setting from that
-family based on task difficulty, risk, ambiguity, novelty, consequence, and
-the required quality. Do not silently use an older or unreviewed future family.
+Before selecting a GPT-5.6 candidate, consult
+`model-routing-performance.md`. That document records the reviewed
+intelligence-versus-cost comparison as a qualitative prior. It does not define
+an MDF capability contract or guarantee semantic quality.
 
-For narrow, read-only codebase exploration, prefer the exact model
-`gpt-5.3-codex-spark` when the current runtime can use it. Spark is report-only,
-has no write scope, and cannot decide design, security, implementation,
-lifecycle, ship, or external-action questions.
+Use the GPT-5.6 family by default for quality-critical lifecycle work. Select
+the currently available profile and its native reasoning configuration based
+on task difficulty, risk, ambiguity, novelty, consequence, required quality,
+runtime capability, and transport compatibility. Do not silently use an older
+or unreviewed future model family.
 
-If Spark is unavailable or its transport is incompatible, the root AI may use
-a suitable GPT-5.6 read-only explorer. If that is also unavailable, the root
-performs the exploration itself and records the degraded fallback in its
-readable work-item notes.
+The only model exception is narrow, read-only codebase exploration with
+report-only output and no write, design, implementation, testing, review,
+security, lifecycle, or external-action authority. When compatible Spark
+transport is available, use the exact model `gpt-5.3-codex-spark` and its
+highest supported reasoning setting for that exception.
+
+If Spark is unavailable or incompatible, use a suitable GPT-5.6 read-only
+fallback. If no suitable fallback is available, the root performs the
+exploration and records the degraded result.
+
+MDF does not define, enumerate, or normalize the runtime's reasoning-setting
+vocabulary. The `fast` option and speed-only profiles are prohibited for every
+model. Runtime-native model configuration remains authoritative.
 
 Persona model settings are defaults for ordinary direct invocation. For
 MDF-managed delegation, the root AI chooses the model and preserves the
 persona's perspective without allowing the persona to expand its authority.
 
-The selected model, the reason for selection, capability uncertainty, any
-fallback, and the worker's read/write authority belong in the root's readable
-dispatch note. Model selection remains AI judgment; it is not a fixed task
-table, benchmark calculator, or lifecycle controller.
+The selected model, the reason for selection, the performance-reference
+context, capability uncertainty, any fallback, and the worker's read/write
+authority belong in the root's readable dispatch note. Model selection remains
+AI judgment; it is not a fixed task table, benchmark calculator, or lifecycle
+controller.

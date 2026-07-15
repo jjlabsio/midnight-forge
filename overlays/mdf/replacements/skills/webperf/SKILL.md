@@ -36,10 +36,9 @@ default; the root-selected dispatch record overrides it for MDF-managed work. Mi
 capability requires a visible root fallback with degraded status or an
 explicit stop; never silently use a fast, older, or future profile.
 
-Spawn the `web-performance-auditor` persona only when the named-persona path
-can receive the root-selected dispatch record. Otherwise use the generic
-runtime spawn path with the exact persona prompt and dispatch record. Pass it
-explicitly:
+Spawn one generic subagent with the exact `web-performance-auditor` persona
+prompt resolved from the installed plugin root and the root-selected dispatch
+record. Pass it explicitly:
 
 - The files, components, or diff under review
 - Any artifact paths (Lighthouse JSON, PSI JSON, CrUX response, trace) or pasted JSON content
@@ -62,15 +61,13 @@ entrypoint when the user invokes `webperf`, `mdf webperf`, `$webperf`, or asks
 for a web performance audit.
 
 From the resolved plugin root, load the exact upstream
-`agents/web-performance-auditor.md` persona prompt and invoke one
-`web-performance-auditor` subagent through a path that accepts the root
-dispatch record. This is a single-persona call; do not fan out to additional
-reviewers. References from
+`agents/web-performance-auditor.md` persona prompt and invoke one generic
+subagent with the root dispatch record. This is a single-persona call; do not
+fan out to additional reviewers. References from
 the persona to `performance-optimization` or
 `browser-testing-with-devtools` are guidance and capability references, not
 additional `webperf` subagent calls.
 
-Select the named subagent only when both its capability and root dispatch-record
-transport can be verified. Otherwise, use the generic runtime spawn path or a
-root fallback with degraded status, or stop explicitly. Do not silently omit
-the audit.
+If the generic runtime, exact persona prompt, or root dispatch record cannot be
+resolved, use a root fallback with degraded status or stop explicitly. Do not
+silently omit the audit.

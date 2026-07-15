@@ -62,11 +62,12 @@ reports, artifacts, and lifecycle state.
 ## Executor and persona adapter
 
 The root assesses executor capability instead of hard-coding a model choice.
-When a generic subagent is appropriate, it receives the selected persona
-prompt from the plugin root plus bounded task inputs. If that capability is
-unavailable or uncertain, the root fallback performs quality-critical work;
-record degraded status rather than claiming independent freshness. One writer
-operates in each shared worktree; auto-workflow and auto-workflow-pr may use multiple isolated
+The generic subagent receives the selected persona prompt from the installed
+plugin root plus bounded task inputs and the root dispatch record. If the
+selected capability, prompt resolver, or transport is unavailable or
+uncertain, the root fallback performs quality-critical work; record degraded
+status rather than claiming independent freshness. One writer operates in each
+shared worktree; auto-workflow and auto-workflow-pr may use multiple isolated
 worktrees only when the root can explain why the work is independent. Root-only
 synthesis owns artifacts and lifecycle advance.
 

@@ -31,17 +31,17 @@ Before issuing any of the three calls, the root loads the plugin-installed
 `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. Classify the release difficulty and
 risk once, verify GPT-5.6 capability, and select a separate dispatch record for
-each persona through the generic runtime spawn path. Pass the exact persona
-prompt plus that record; persona model or effort frontmatter is only a
-direct-invocation default and the root-selected record is authoritative here.
+each persona through the generic runtime spawn path. Resolve the exact persona
+prompt from the installed plugin root and pass it plus that record; persona
+model or effort frontmatter is not part of MDF dispatch and the root-selected
+record is authoritative here.
 If capability is missing, use the root fallback with `degraded: true` or stop
 the gate explicitly. Never silently downgrade, select a fast profile, or let a
 persona write the ship decision.
 
-Spawn three subagents concurrently. If the platform's named-persona tool can
-accept the root-selected dispatch record, it may be used. Otherwise use the
-generic runtime spawn path with the exact persona prompt and dispatch record.
-Do not rely on persona model or effort frontmatter for an MDF-managed call.
+Spawn three generic subagents concurrently with their exact persona prompts and
+dispatch records. Do not rely on persona model or effort frontmatter for an
+MDF-managed call.
 Issue all three subagent calls in a single assistant turn so they execute in
 parallel; sequential calls defeat the purpose of this command.
 
@@ -57,9 +57,10 @@ Dispatch each persona role through the selected compatible path:
    in happy path, edge cases, error paths, and concurrency scenarios. Output
    the standard coverage analysis.
 
-If no compatible named-persona or generic spawn path is available, use the root
-fallback with `degraded: true` or stop the gate explicitly. Do not present
-sequential main-context persona prompts as independent subagent reports.
+If no compatible generic spawn path or exact persona prompt is available, use
+the root fallback with `degraded: true` or stop the gate explicitly. Do not
+present sequential main-context persona prompts as independent subagent
+reports.
 
 Constraints from the CLI subagent model:
 
@@ -69,11 +70,10 @@ Constraints from the CLI subagent model:
 - For richer multi-agent collaboration where teammates talk to each other
   instead of just reporting back, see `references/orchestration-patterns.md`.
 
-Persona resolution: user-defined `code-reviewer`, `security-auditor`, or
-`test-engineer` personas in `agents/` or global configuration may customize the
-persona prompt and perspective. Their model and effort settings are defaults
-for direct invocation only; the root-selected dispatch record takes precedence
-for MDF-managed `/ship` calls.
+Persona resolution: resolve `code-reviewer`, `security-auditor`, and
+`test-engineer` from the installed plugin root's `agents/<persona>.md` files.
+The root-selected dispatch record takes precedence for every MDF-managed
+`/ship` call.
 
 ### Phase B — Merge in main context
 
