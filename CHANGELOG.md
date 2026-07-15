@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.9 - 2026-07-15
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.8...v2.1.9)
+
+### Changes
+
+- docs(dispatch): use exact persona prompts for Codex subagents ([#71](https://github.com/jjlabsio/midnight-forge/pull/71))
 ## v2.1.8 - 2026-07-15
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.7...v2.1.8)
