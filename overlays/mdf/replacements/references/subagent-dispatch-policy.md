@@ -24,14 +24,12 @@ The root orchestrator owns the complete dispatch decision:
    ambiguity, novelty, and consequence trade-off. High-risk work should favor
    the candidate the root judges most capable. Exploration preference never
    grants semantic authority.
-5. Resolve the selected persona through the strongest compatible invocation
-   path. If the runtime has a native named-agent definition and accepts the
-   root-selected model plus its native reasoning/service overrides, invoke the
-   named agent and pass the complete dispatch record. Otherwise use the generic
-   runtime spawn path with the exact installed persona prompt. A persona name
-   written into task text is not proof that the persona was loaded. The
-   persona supplies perspective but cannot select another persona or expand
-   its authority.
+5. Resolve the selected persona name to the exact installed plugin-root prompt
+   at `agents/<persona>.md`, then pass that unchanged prompt and the complete
+   dispatch record through the generic runtime spawn path. A persona name
+   written into task text is only a resolver key, not proof that the persona was
+   loaded. The persona supplies perspective but cannot select another persona
+   or expand its authority.
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
@@ -55,25 +53,20 @@ For ordinary direct invocation outside MDF-managed delegation, use the persona's
 model settings first and the platform default second. That ordinary-invocation
 precedence does not override the root's choice for MDF-managed work.
 
-Persona prompt content and perspective remain intact. If a named-persona
-invocation applies its own model settings before the root can make an
-MDF-managed choice, or cannot receive the root's native override fields, that
-invocation cannot provide an MDF-managed dispatch guarantee. Use the generic
-runtime path or a visible degraded root fallback.
+Persona prompt content and perspective remain intact. The generic runtime path
+is MDF-compatible only when it receives the exact installed persona prompt and
+the root-selected dispatch record. If the prompt or dispatch transport cannot
+be resolved, use a visible degraded root fallback or stop.
 
 ## Spawn boundary
 
-Delegating skills pass these fields through the selected compatible path:
+Delegating skills pass these fields through the generic runtime path:
 
 ```text
 model choice: <root-selected candidate>
+persona: <exact installed persona prompt, unchanged>
 task input: <bounded artifact and contract>
 ```
-
-For a native named-agent path, pass `agent_type: <persona name>` and the
-runtime's supported model/reasoning/service override fields alongside the
-dispatch record; the registered custom agent supplies the persona prompt. For
-the generic path, pass `persona: <installed persona prompt, unchanged>`.
 
 Capability failure, fallback, and degraded freshness belong in the root's
 readable report. When the choice is uncertain, the root may disclose its
