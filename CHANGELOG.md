@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.1.7 - 2026-07-15
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.6...v2.1.7)
+
+### Changes
+
+- docs(github): apply original gone branch cleanup ([#68](https://github.com/jjlabsio/midnight-forge/pull/68))
 ## v2.1.6 - 2026-07-14
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.5...v2.1.6)
