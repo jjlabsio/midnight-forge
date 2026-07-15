@@ -14,6 +14,7 @@ const checks = [
   ["references/auto-workflow-contract.md", /A mode string alone grants no authority/],
   ["references/auto-workflow-contract.md", /spec acceptance criterion/],
   ["skills/github-pr/SKILL.md", /A\s+bare mode string is not authority/],
+  ["skills/github-pr/SKILL.md", /Query the\s+open-PR state before pushing/],
 ];
 
 for (const [path, pattern] of checks) {

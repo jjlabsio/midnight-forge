@@ -94,6 +94,7 @@ worktree, lock, or base-revision independence is uncertain.
 
 In `mode: auto-workflow-pr`, before push or PR mutation recheck branch, remote,
 clean diff, base mergeability, authentication, release language, and open-PR
-state. Query before retrying an uncertain create result. Update an existing
-open PR or create one when none exists. After the PR URL or failure is recorded,
-stop; merge, deploy, and cleanup remain separate actions.
+state. Query open-PR state before push and again after push; query again before
+retrying an uncertain create result. Update an existing open PR or create one
+when none exists. After the PR URL or failure is recorded, stop; merge, deploy,
+and cleanup remain separate actions.

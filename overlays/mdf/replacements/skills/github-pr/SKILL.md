@@ -92,11 +92,13 @@ fresh preflight described above. A bare mode string without that readable
 context follows the standalone rule. Do not merge, deploy, delete branches,
 delete worktrees, or discard dirty worktrees as a side effect.
 
-GitHub is the source of truth for whether an open PR already exists. Push the
-current branch, check for an existing open PR, update it when its
-intended title/body changed, or create one with `gh pr create` when none exists.
-Do not create a duplicate. After reporting the PR URL or failure, stop; review,
-CI, merge, default-branch sync, and cleanup happen in later skills.
+GitHub is the source of truth for whether an open PR already exists. Query the
+open-PR state before pushing to detect an existing handoff, push the current
+branch, then query again after the push before updating or creating a PR. Update
+the matching open PR when its intended title/body changed, or create one with
+`gh pr create` when none exists. Do not create a duplicate. After reporting
+the PR URL or failure, stop; review, CI, merge, default-branch sync, and cleanup
+happen in later skills.
 
 ## Stop conditions
 
