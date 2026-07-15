@@ -24,9 +24,14 @@ The root orchestrator owns the complete dispatch decision:
    ambiguity, novelty, and consequence trade-off. High-risk work should favor
    the candidate the root judges most capable. Exploration preference never
    grants semantic authority.
-5. Pass the selected model choice and exact persona prompt to the generic
-   runtime spawn path. The persona supplies perspective but cannot select
-   another persona or expand its authority.
+5. Resolve the selected persona through the strongest compatible invocation
+   path. If the runtime has a native named-agent definition and accepts the
+   root-selected model plus its native reasoning/service overrides, invoke the
+   named agent and pass the complete dispatch record. Otherwise use the generic
+   runtime spawn path with the exact installed persona prompt. A persona name
+   written into task text is not proof that the persona was loaded. The
+   persona supplies perspective but cannot select another persona or expand
+   its authority.
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
@@ -52,18 +57,23 @@ precedence does not override the root's choice for MDF-managed work.
 
 Persona prompt content and perspective remain intact. If a named-persona
 invocation applies its own model settings before the root can make an
-MDF-managed choice, that invocation cannot provide an MDF-managed dispatch
-guarantee. Use the generic runtime path or a visible degraded root fallback.
+MDF-managed choice, or cannot receive the root's native override fields, that
+invocation cannot provide an MDF-managed dispatch guarantee. Use the generic
+runtime path or a visible degraded root fallback.
 
 ## Spawn boundary
 
-Delegating skills pass three things through the generic runtime path:
+Delegating skills pass these fields through the selected compatible path:
 
 ```text
 model choice: <root-selected candidate>
-persona: <installed persona prompt, unchanged>
 task input: <bounded artifact and contract>
 ```
+
+For a native named-agent path, pass `agent_type: <persona name>` and the
+runtime's supported model/reasoning/service override fields alongside the
+dispatch record; the registered custom agent supplies the persona prompt. For
+the generic path, pass `persona: <installed persona prompt, unchanged>`.
 
 Capability failure, fallback, and degraded freshness belong in the root's
 readable report. When the choice is uncertain, the root may disclose its

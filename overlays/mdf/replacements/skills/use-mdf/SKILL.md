@@ -48,22 +48,27 @@ dynamic selection, not a fixed task-to-model table or a measured quality/cost
 calculation. Quality-critical work uses GPT-5.6; narrow read-only exploration
 may prefer `gpt-5.3-codex-spark`.
 
-Pass the root-selected model choice, exact persona prompt, and bounded task
-input through the generic runtime spawn path. Persona model settings are a
-default for ordinary direct invocation; the root's readable choice governs MDF
-dispatch while preserving the persona's perspective. If the selected
-quality-critical GPT-5.6 capability is unavailable or uncertain, stop or use a
-root fallback with an explicit degraded status; never hide the fallback. A
-read-only explorer may use the routing reference's exploration preference only
-when the root judges the transport compatible. Root-only synthesis owns
-reports, artifacts, and lifecycle state.
+Pass the root-selected model choice and bounded task input through a compatible
+native named-agent path when it accepts the root dispatch record; otherwise
+pass the exact persona prompt through the generic runtime spawn path. Persona
+model settings are a default for ordinary direct invocation; the root's
+readable choice governs MDF dispatch while preserving the persona's
+perspective. A native named-agent call is not compatible if it cannot receive
+the root-selected model and native reasoning/service overrides. If the
+selected quality-critical GPT-5.6 capability is unavailable or uncertain, stop
+or use a root fallback with an explicit degraded status; never hide the
+fallback. A read-only explorer may use the routing reference's exploration
+preference only when the root judges the transport compatible. Root-only
+synthesis owns reports, artifacts, and lifecycle state.
 
 ## Executor and persona adapter
 
 The root assesses executor capability instead of hard-coding a model choice.
-When a generic subagent is appropriate, it receives the selected persona
-prompt from the plugin root plus bounded task inputs. If that capability is
-unavailable or uncertain, the root fallback performs quality-critical work;
+When a native named agent is appropriate, it is resolved from the Codex custom
+agent definition and invoked with the root dispatch record. When a generic
+subagent is appropriate, it receives the selected persona prompt from the
+plugin root plus bounded task inputs. If the selected capability or transport
+is unavailable or uncertain, the root fallback performs quality-critical work;
 record degraded status rather than claiming independent freshness. One writer
 operates in each shared worktree; auto-workflow may use multiple isolated
 worktrees only when the root can explain why the work is independent. Root-only
