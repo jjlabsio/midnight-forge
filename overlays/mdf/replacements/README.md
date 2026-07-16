@@ -44,6 +44,7 @@ $tasks-project
 $tasks-user
 $auto-workflow
 $auto-workflow-pr
+$quick-workflow-pr
 $spec
 $plan
 $build
@@ -65,7 +66,11 @@ code simplification, and commit. It keeps the whole MDF task active and does
 not ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow:
 it resumes valid local work, uses the full spec as its acceptance baseline,
 ships, completes the whole task after ship GO, and then pushes and creates or
-updates the PR. Plan-slice completion and whole-task completion are distinct.
+updates the PR. `$quick-workflow-pr` is the explicit lightweight delivery
+workflow for small documentation or implementation changes: it always skips
+spec and plan, reuses the canonical build/review/GitHub PR skills, loops back
+to build for actionable review findings, and does not invoke ship or
+code-simplify. Plan-slice completion and whole-task completion are distinct.
 
 ## Architecture
 

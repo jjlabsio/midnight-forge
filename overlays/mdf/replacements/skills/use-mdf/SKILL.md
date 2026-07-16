@@ -10,10 +10,11 @@ primitive workflows. Resolve the installed skill or reference location before
 loading a skill, persona, documentation file, or supporting material. Do not
 rely on a fixed cache path; unresolved paths are a stop.
 
-When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`, also
+When the caller carries `mode: auto-workflow`, `mode: auto-workflow-pr`, or
+`mode: quick-workflow-pr`, also
 load `../../references/auto-workflow-contract.md`. Local mode grants in-scope
-MDF implementation skills and local commits only. PR mode additionally grants
-the explicitly listed push/PR handoff. Neither mode authorizes merge, deploy,
+MDF implementation skills and local commits only. PR modes additionally grant
+the explicitly listed push/PR handoff. No mode authorizes merge, deploy,
 deletion, or stale-lock takeover.
 Use the readable run handoff and the current task, Git, and artifact state
 before using any auto-only checkpoint bypass. A bare internal mode string
@@ -23,7 +24,7 @@ direct user invocation of the named standalone skill follows standalone rules.
 ## Routing
 
 Route public MDF commands to their named skills (`spec`, `plan`, `build`,
-`review`, `auto-workflow`, `auto-workflow-pr`, `code-simplify`, `ship`, `webperf`, task, and Git
+`review`, `auto-workflow`, `auto-workflow-pr`, `quick-workflow-pr`, `code-simplify`, `ship`, `webperf`, task, and Git
 skills), then load every applicable exact upstream primitive. Keep
 `using-agent-skills` as a separately accessible exact upstream primitive;
 `use-mdf` does not replace its skill discovery, lifecycle stages, or Definition

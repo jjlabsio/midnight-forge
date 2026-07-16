@@ -33,6 +33,28 @@ the complete in-scope lifecycle plus push and GitHub PR create/update after
 fresh preflight. It does not authorize merge, deploy, deletion, stale-lock
 takeover, force operations, or unrelated cleanup.
 
+### `mode: quick-workflow-pr`
+
+This is the explicit lightweight delivery mode for small documentation or
+implementation changes. It authorizes the canonical `build`, `review`, and
+`github-pr` skills without requiring or creating spec and plan artifacts. It
+does not authorize `ship`, `code-simplify`, merge, deploy, deletion,
+stale-lock takeover, force operations, or unrelated cleanup.
+
+The current user request, active task Context, current branch and HEAD,
+intended paths, and verification evidence replace the spec/plan acceptance
+baseline for this mode. The root must keep a readable quick handoff with the
+task/work IDs, worktree, branch, lock ownership, scope, assumptions, allowed
+skills, completed build/review loop, and allowed PR actions. A bare mode string
+or a quick handoff without current task-specific context grants no authority.
+
+The mode may repeat `build -> review` when review finds actionable issues.
+Canonical build, review, and GitHub PR quality and safety rules remain in
+force; this mode changes only the planning-artifact prerequisite and lifecycle
+composition. If ambiguity, scope expansion, a public or security boundary,
+destructive work, failed verification, repeated no-progress, or uncertain PR
+state appears, stop rather than generating a spec or plan automatically.
+
 ## Intent preflight
 
 At the beginning of either mode, read the upstream `interview-me` skill and

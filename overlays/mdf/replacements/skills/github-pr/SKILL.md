@@ -10,6 +10,11 @@ When called with `mode: auto-workflow-pr`, load
 only the final push and PR create/update mutation after fresh preflight. A
 bare mode string is not authority; require the current handoff, matching
 task/lock/worktree/branch facts, approved artifact hashes, and fresh preflight.
+When called with `mode: quick-workflow-pr`, load the same contract. The direct
+quick-workflow-pr invocation supplies the current user-authorized handoff, but
+the active task, matching lock/worktree/branch facts, quick handoff, and fresh
+preflight remain required. Spec and plan hashes are intentionally absent in
+this mode; do not invent them.
 
 This skill completes an incomplete current-session task or validates handoff
 for an already-completed task. It has two handoff paths and is model-led. Use
@@ -31,7 +36,9 @@ readable review scope labels are `lifecycle-review` for a full approved-tree
 review and `task-review` for exact task/diff/verification context. The
 `review_mode` label is descriptive only: lifecycle and ship consumers accept
 only `lifecycle-review`, while `task-review` remains standalone and cannot
-create lifecycle evidence or satisfy ship.
+create lifecycle evidence or satisfy ship. In `mode: quick-workflow-pr`,
+`task-review` evidence may be based on the quick handoff and task Context
+without a spec or plan.
 
 ## Handoff and preflight
 
@@ -60,11 +67,11 @@ create lifecycle evidence or satisfy ship.
    validation passed.
 
 Callers pass only user-confirmed intent, or the explicit
-`mode: auto-workflow-pr` run authorization, plus current session context; never
-pass asserted Git/GitHub facts. Preserve raw command outputs in the readable
-preflight report. If uncommitted changes remain, use `github-commit` and
-recheck the clean tree before continuing. Stage only intended paths; do not
-use a PR as a commit gate.
+`mode: auto-workflow-pr` / `mode: quick-workflow-pr` run authorization, plus
+current session context; never pass asserted Git/GitHub facts. Preserve raw
+command outputs in the readable preflight report. If uncommitted changes
+remain, use `github-commit` and recheck the clean tree before continuing. Stage
+only intended paths; do not use a PR as a commit gate.
 
 ## PR language and content
 
@@ -91,8 +98,10 @@ requested a draft. In standalone mode, an explicit current-session invocation
 of this skill authorizes push and PR create/update after the fresh preflight;
 do not ask for a second confirmation. In `mode: auto-workflow-pr`, the initial
 run-scoped invocation likewise allows only push and PR create/update after the
-fresh preflight described above. A bare mode string without that readable
-context grants no auto authority and is a stop. Only a direct user invocation
+fresh preflight described above. In `mode: quick-workflow-pr`, the direct
+quick-workflow-pr invocation likewise authorizes only push and PR create/update
+after the fresh preflight. A bare mode string without that readable context
+grants no auto authority and is a stop. Only a direct user invocation
 of this standalone skill follows the standalone rule. Do not merge, deploy,
 delete branches, delete worktrees, or discard dirty worktrees as a side effect.
 

@@ -1,7 +1,7 @@
 {
   "name": "mdf",
   "version": "2.2.1",
-  "description": "Midnight Forge ships MDF init/task skills plus local auto-workflow and PR-capable auto-workflow-pr delivery workflows.",
+  "description": "Midnight Forge ships MDF init/task skills plus auto-workflow, quick-workflow-pr, and PR-capable delivery workflows.",
   "author": {
     "name": "Jaejin Song"
   },
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Midnight Forge",
     "shortDescription": "MDF init/task skills and agent-skills workflows for Codex.",
-    "longDescription": "Midnight Forge exposes local MDF initialization and task management plus vendored agent-skills workflows. Use auto-workflow for repeated local implementation through review, simplification, and commit; use auto-workflow-pr for final ship, push, and GitHub PR delivery.",
+    "longDescription": "Midnight Forge exposes local MDF initialization and task management plus vendored agent-skills workflows. Use auto-workflow for repeated local implementation through review, simplification, and commit; use quick-workflow-pr for explicit small changes that skip spec and plan while reusing canonical build, review, and GitHub PR delivery; use auto-workflow-pr for the full ship, push, and GitHub PR workflow.",
     "developerName": "Jaejin Song",
     "category": "Coding",
     "capabilities": [
@@ -26,7 +26,7 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Use init before MDF workflows, use the use-mdf skill to choose the right MDF workflow, run auto-workflow for local implementation, or run auto-workflow-pr for final PR delivery."
+      "Use init before MDF workflows, use the use-mdf skill to choose the right MDF workflow, run auto-workflow for local implementation, quick-workflow-pr for small changes that intentionally skip spec and plan, or auto-workflow-pr for final PR delivery."
     ]
   }
 }

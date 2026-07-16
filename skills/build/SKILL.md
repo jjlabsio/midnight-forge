@@ -14,6 +14,11 @@ upstream `../incremental-implementation/SKILL.md` alongside
 trigger applies.
 For `mode: auto-workflow` or `mode: auto-workflow-pr`, also load
 `../../references/auto-workflow-contract.md`.
+For `mode: quick-workflow-pr`, also load the same contract. In that mode, use
+the active task Context, the user's request, current scope, and verification
+evidence as the acceptance baseline; do not require or generate a spec or
+plan. Preserve the upstream implementation, test, regression, build, and
+commit criteria. Treat one bounded request as the single implementation slice.
 
 Any implementation or testing delegation must first load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
@@ -54,15 +59,24 @@ ship GO and final PR preflight.
 
 ### Default: one task
 
-Pick the next pending task from the approved plan. Then execute this exact
-sequence:
+For `mode: quick-workflow-pr`, use the current bounded request as the task and
+read its acceptance context from the quick handoff and active task card. For
+other modes, pick the next pending task from the approved plan. Then execute
+this exact sequence:
 
 1. Read the task's acceptance criteria.
 2. Load relevant context: existing code, patterns, and types.
-3. Write a failing test for the expected behavior (RED).
-4. Implement the minimum code to pass the test (GREEN).
-5. Run the full test suite to check for regressions.
-6. Run the build to verify compilation.
+3. For behavioral changes, write a failing test for the expected behavior
+   (RED). For documentation-only or static-content changes, use the
+   applicable project validation instead of inventing a behavioral test.
+4. For behavioral changes, implement the minimum code to pass the test
+   (GREEN). For documentation-only or static-content changes, make the
+   smallest scoped edit.
+5. For behavioral changes, run the full test suite to check for regressions.
+   For documentation-only or static-content changes, run the applicable
+   project validation instead.
+6. Run the build/typecheck/lint checks when the changed paths affect them;
+   otherwise record the check as not applicable.
 7. Commit with a descriptive message.
 8. In standalone `/build`, preserve the existing selected-task completion
    behavior. In `mode: auto-workflow` or `mode: auto-workflow-pr`, record the
