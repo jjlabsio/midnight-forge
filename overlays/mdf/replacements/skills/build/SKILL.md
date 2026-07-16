@@ -69,8 +69,10 @@ PR preflight.
 
 For `mode: quick-workflow-pr`, use the current bounded request as the task and
 read its acceptance context from the quick handoff and active task card. For
-other modes, pick the next pending task from the approved plan. Then execute
-this exact sequence:
+other modes, pick the selected or next pending task from the approved plan. If
+the current auto-mode handoff identifies a provisional, repair, or
+commit-pending slice, resume that selected slice's recorded stage instead of
+selecting another pending task. Then execute this exact sequence:
 
 1. Read the task's acceptance criteria.
 2. Load relevant context: existing code, patterns, and types.

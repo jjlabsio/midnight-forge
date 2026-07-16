@@ -25,9 +25,11 @@ task-owned local commits required by the implementation loop. It does not
 authorize ship, task completion, push, PR creation/update, merge, deploy,
 deletion, stale-lock takeover, force operations, or unrelated cleanup.
 
-The local mode may keep the active task lock after a clean plan-slice commit so
-the same task can be resumed. A plan-slice commit is not whole MDF task
-completion.
+Both auto modes may keep the current task ownership while a plan slice is
+provisional, awaiting review, or awaiting commit, and after a clean
+plan-slice commit so the same task can be resumed. A provisional slice is not a
+completed plan slice and does not authorize the next task. A plan-slice commit
+is not whole MDF task completion.
 
 ### `mode: auto-workflow-pr`
 
@@ -168,13 +170,25 @@ boundary; add a minimal critical-flow E2E smoke path only when the changed
 behavior has a critical user flow.
 
 Every continuation handoff records the current phase, canonical skill used,
-settled intent, exact spec/plan paths and hashes, completed slices, commit IDs,
-verification and review outcomes, remaining work, assumptions, and the
-mode-specific actions that remain authorized. If a skill delegated a persona,
-record the resolved prompt path and dispatch status; do not record a
-name-only persona label as proof of delegation. A mode-specific entrypoint may
-add delivery steps, but it must use this shared middle-stage result rather than
-paraphrasing it.
+settled intent, exact spec/plan paths and hashes, current slice and slice
+state, completed slices, commit IDs, verification and review outcomes,
+remaining work, assumptions, and the mode-specific actions that remain
+authorized. Use these slice states when applicable:
+
+```text
+provisional-review-pending
+  -> review-failed-repair -> provisional-review-pending
+  -> review-passed-commit-pending -> committed
+```
+
+For a provisional or repair state, also record the selected task, provisional
+base HEAD, exact owned paths, staged/unstaged state, verification result,
+review result if any, and the next canonical skill. Provisional evidence is
+not final slice evidence and must not be used to select another task or create
+a commit. If a skill delegated a persona, record the resolved prompt path and
+dispatch status; do not record a name-only persona label as proof of
+delegation. A mode-specific entrypoint may add delivery steps, but it must use
+this shared middle-stage result rather than paraphrasing it.
 
 ## Intent preflight
 
@@ -190,28 +204,83 @@ evaluate its `When to Use` conditions. Invoke it when:
 - the user explicitly requested an interview.
 
 Do not invoke it for a clear, self-contained mechanical operation. Reuse a
-settled handoff only while the intent and scope remain unchanged. If intent
-requires an interview in a non-interactive run, stop rather than guessing.
+settled handoff for continuity only when the task identity and current state
+match; this does not by itself authorize reuse of the spec, plan, approval, or
+evidence. If intent requires an interview in a non-interactive run, stop rather
+than guessing.
 
 ## Handoff context
 
 The root keeps a concise Markdown handoff note under the canonical work item.
-It records settled intent, current phase, assumptions, applicable skills,
-allowed actions, artifact paths, subagent reports, capability/fallback
-decisions, completed plan slices, commit IDs, verification, and remaining
-work. Downstream skills receive the note as bounded context and re-read the
-actual task, Git, and artifact state before continuing.
+It records settled intent, current phase and slice state, assumptions,
+applicable skills, allowed actions, artifact paths, subagent reports,
+capability/fallback decisions, completed plan slices, commit IDs, verification
+and review report status, and remaining work. Downstream skills receive the
+note as bounded context and re-read the actual task, Git, and artifact state
+before continuing.
 
 This is model-led context, not a JSON protocol, script-enforced schema, hash
 gate, or runtime authority verifier. A stale or conflicting note requires
 reassessment from the actual state.
 
+## Resume and artifact validity
+
+Treat an existing handoff, spec, plan, and evidence as reusable candidates on
+rerun, not as automatically valid authority. Before dispatching a stage, apply
+these checks:
+
+1. **Continuity:** confirm the task/work IDs, worktree, branch, lock, and
+   settled intent belong to the same current work.
+2. **Artifact freshness:** re-read the exact approved spec and plan revisions,
+   paths, and SHA-256 values. A latest-revision, path, byte, scope, or task
+   order change requires the applicable new revision and invalidates the old
+   handoff/approval.
+3. **Semantic validity:** normally reuse unchanged revisions without repeating
+   a full spec/plan review. Revalidate when a user or acceptance change, new
+   constraint, spec/plan contradiction, failed verification or review,
+   unexpected repository/API/dependency change, unmatched evidence, or an
+   explicit concern about the artifact appears.
+4. **Evidence validity:** confirm that each test, build, review, and consumer
+   result belongs to the current spec/plan hashes, code tree, base/HEAD, and
+   owned paths. Expected committed slice changes do not invalidate their own
+   recorded evidence; unexpected or provisional changes do.
+
+If all checks remain current, reuse the exact artifacts and resume from the
+recorded phase instead of regenerating spec/plan or repeating completed work.
+If a check fails, classify the impact before continuing:
+
+- an intent, acceptance, scope, or material-constraint defect requires a new
+  spec revision and downstream plan/evidence reassessment;
+- a spec defect requires a new spec revision and a compatible plan revision
+  before implementation or delivery continues;
+- a plan dependency, task order, owned-path, or task-scope defect requires a
+  new plan revision and invalidates the affected slice evidence;
+- stale or unmatched verification/review evidence requires only the affected
+  checks to run again when the artifacts themselves remain valid.
+
+When a spec or plan revision changes while a provisional slice exists, do not
+commit that provisional diff automatically. Preserve it as unresolved work and
+reassess it against the new revision: if it remains compatible, rerun the
+affected review before committing; if it is incompatible or ambiguous, stop for
+replanning or explicit handling.
+
+Resume a current slice from its recorded state:
+
+- `provisional-review-pending`: stage the recorded paths and run `review`;
+- `review-failed-repair`: invoke `build` for the same selected task;
+- `review-passed-commit-pending`: invoke `github-commit` without repeating
+  build/review unless the diff or evidence changed;
+- `committed`: select the next ready pending slice.
+
+Never infer that a slice is complete from provisional evidence, an artifact's
+existence, a green command, or a review phrase alone.
+
 ## Plan and task completion
 
 For `auto-workflow` and `auto-workflow-pr`, the spec remains the complete
 requirements and acceptance baseline. The plan identifies implementation
-slices. A plan-slice commit and evidence do not mark the MDF task card `done`
-in local mode.
+slices. Provisional build evidence is not slice completion; a plan-slice commit
+and final evidence do not mark the MDF task card `done` in local mode.
 
 In `mode: auto-workflow-pr`, if pending plan slices exist, implement them using
 the local loop. After each local slice, re-read the plan and card and repeat
@@ -228,11 +297,13 @@ GitHub PR handoff's final preflight, complete the active MDF task, and release
 the lock immediately before push and PR create/update. Quick mode does not
 invoke ship or code-simplify.
 
-For auto modes, changed spec, plan, scope, task order, or code invalidates
-affected downstream evidence. For quick mode, a changed request, scope, or
-code invalidates the affected build/review evidence. Do not infer completion
-from an artifact's existence, a green command, a review phrase, or the absence
-of pending plan text alone.
+For auto modes, changed spec, plan, scope, task order, or unexpected code
+invalidates affected downstream evidence. Expected code changes already
+covered by a recorded slice commit retain that slice's evidence, but still
+require the whole-build verification before final completion. For quick mode, a
+changed request, scope, or unexpected code invalidates the affected
+build/review evidence. Do not infer completion from an artifact's existence, a
+green command, a review phrase, or the absence of pending plan text alone.
 
 ## Subagents
 
