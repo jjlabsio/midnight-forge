@@ -22,8 +22,11 @@ skills/ references/ agents/          # generated runtime surface
 ```
 
 Each inventory entry records its output, source or overlay input, hash when
-applicable, classification, and packaging rationale. Maintained surfaces are
-classified as active, historical, or packaging in the task-0041 inventory.
+applicable, classification, and packaging rationale. Entries may also declare
+`contractRefs` for shared generated references; the packaging validator resolves
+those IDs through the inventory root's `contracts` registry. Maintained
+surfaces are classified as active, historical, or packaging in the task-0041
+inventory.
 
 ## Sync and validation
 
@@ -33,9 +36,10 @@ writes complete generated files. Edit overlay inputs first; do not hand-edit a
 generated root file. Dry-run mode compares the result byte-for-byte.
 
 The retained validators check inventory schema and path safety, pinned source
-hashes, generated coverage, source/overlay equality, release metadata, and
-dry-run sync. They are packaging checks. They do not decide task readiness,
-approval, review meaning, lifecycle progress, recovery, or ship success.
+hashes, generated coverage, source/overlay equality, release metadata, the
+declared contract-reference graph, and dry-run sync. They are packaging checks.
+They do not decide task readiness, approval, review meaning, lifecycle
+progress, recovery, or ship success.
 
 ## Model-led workflow boundary
 

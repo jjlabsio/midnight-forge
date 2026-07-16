@@ -158,6 +158,68 @@ for (const entryFile of inventoryRoot.generated?.entryFiles || []) {
 for (const [entryFile, count] of entryFileCounts) {
   assert(count === 1, `${entryFile} appears ${count} times in generated.entryFiles`);
 }
+const entryByOutput = new Map(entries.map((entry) => [entry.output, entry]));
+const contracts = inventory.contracts;
+assert(
+  contracts && typeof contracts === "object" && !Array.isArray(contracts),
+  "Inventory must declare contracts as an object registry."
+);
+const contractOutputOwners = new Map();
+for (const [contractId, contract] of Object.entries(contracts || {})) {
+  assert(
+    /^[a-z0-9][a-z0-9-]*$/.test(contractId),
+    `Contract ID must be lowercase kebab-case: ${contractId}`
+  );
+  assert(
+    contract && typeof contract === "object" && !Array.isArray(contract),
+    `Contract ${contractId} must be an object.`
+  );
+  if (!contract || typeof contract !== "object" || Array.isArray(contract)) continue;
+
+  assert(
+    typeof contract.output === "string" && contract.output.length > 0,
+    `Contract ${contractId} must declare a generated output path.`
+  );
+  if (typeof contract.output === "string" && contract.output.length > 0) {
+    const previous = contractOutputOwners.get(contract.output);
+    assert(!previous, `Contract output ${contract.output} is claimed by both ${previous} and ${contractId}`);
+    contractOutputOwners.set(contract.output, contractId);
+    assert(outputs.has(contract.output), `Contract ${contractId} references missing generated output ${contract.output}`);
+  }
+
+  assert(
+    Array.isArray(contract.requiredConsumers) && contract.requiredConsumers.length > 0,
+    `Contract ${contractId} must declare at least one required consumer.`
+  );
+  const requiredConsumerSet = new Set();
+  for (const consumer of contract.requiredConsumers || []) {
+    assert(typeof consumer === "string" && consumer.length > 0, `Contract ${contractId} has an invalid required consumer.`);
+    if (typeof consumer !== "string" || consumer.length === 0) continue;
+    assert(!requiredConsumerSet.has(consumer), `Contract ${contractId} lists duplicate consumer ${consumer}`);
+    requiredConsumerSet.add(consumer);
+    const entry = entryByOutput.get(consumer);
+    assert(entry, `Contract ${contractId} references missing consumer ${consumer}`);
+    if (entry) {
+      assert(
+        Array.isArray(entry.contractRefs) && entry.contractRefs.includes(contractId),
+        `${consumer} must declare contractRefs including ${contractId}`
+      );
+    }
+  }
+}
+for (const entry of entries) {
+  if (entry.contractRefs === undefined) continue;
+  assert(Array.isArray(entry.contractRefs), `${entry.output} contractRefs must be an array.`);
+  if (!Array.isArray(entry.contractRefs)) continue;
+  const seenContractRefs = new Set();
+  for (const contractId of entry.contractRefs) {
+    assert(typeof contractId === "string" && contractId.length > 0, `${entry.output} has an invalid contract reference.`);
+    if (typeof contractId !== "string" || contractId.length === 0) continue;
+    assert(!seenContractRefs.has(contractId), `${entry.output} lists duplicate contract reference ${contractId}`);
+    seenContractRefs.add(contractId);
+    assert(Object.prototype.hasOwnProperty.call(contracts || {}, contractId), `${entry.output} references unknown contract ${contractId}`);
+  }
+}
 assert(exists(releaseMetadataPath), "Missing overlays/mdf/release-metadata.json.");
 const rendererSource = readText(rendererPath);
 for (const removedHelper of ["artifactStorageParagraph", "applyExactPatches", "applyPolicyInjection"]) {
@@ -275,7 +337,6 @@ function isExternalUrlPath(content, index) {
   return content.slice(tokenStart, index).includes("://");
 }
 
-const entryByOutput = new Map(entries.map((entry) => [entry.output, entry]));
 for (const output of generatedMarkdown) {
   const outputPath = path.join(root, output);
   if (!exists(outputPath)) continue;

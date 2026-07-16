@@ -7,6 +7,15 @@
     "runtimeExcludedRoots": ["scripts", "docs"],
     "skillLocalRuntimeGlob": "skills/**/scripts/**"
   },
+  "contracts": {
+    "auto-workflow-contract": {
+      "output": "references/auto-workflow-contract.md",
+      "requiredConsumers": [
+        "skills/auto-workflow/SKILL.md",
+        "skills/auto-workflow-pr/SKILL.md"
+      ]
+    }
+  },
   "generated": {
     "clean": [
       "skills",

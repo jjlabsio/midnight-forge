@@ -5,5 +5,6 @@
   "overlay": "replacements/skills/auto-workflow-pr/SKILL.md",
   "artifactStorageOverride": false,
   "notes": "PR-capable continuation and delivery workflow for completed local auto-workflow work.",
-  "overlayKind": "mdfOnly"
+  "overlayKind": "mdfOnly",
+  "contractRefs": ["auto-workflow-contract"]
 }
