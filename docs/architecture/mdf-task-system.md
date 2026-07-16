@@ -91,6 +91,14 @@ artifacts invalidate downstream authorization. Merge, deploy, deletion,
 stale-lock takeover, and unresolved critical or no-progress conditions still
 stop.
 
+`quick-workflow-pr` is the explicit lightweight delivery path for small
+documentation or implementation changes. It always skips spec and plan,
+reuses the canonical build, review, and GitHub PR skills, returns to build for
+actionable review findings, and does not invoke code simplification or ship.
+Its acceptance baseline is the user request, active task Context, current
+scope, and verification evidence. The canonical quality and external-action
+guards remain in force.
+
 Research and report-only review fan-outs may run in parallel. Writer tasks may
 run in parallel only when a mechanical proof gate establishes dependency-free
 tasks, normalized disjoint paths, no shared contracts/generated outputs or

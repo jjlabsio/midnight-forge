@@ -8,6 +8,10 @@ description: "Conduct a five-axis code review — correctness, readability, arch
 When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load
 `../../references/auto-workflow-contract.md` and apply its bounded delegation,
 root-synthesis, and auto-authority rules.
+When called with `mode: quick-workflow-pr`, load the same contract and use the
+current user request, active task Context, exact diff, and verification
+evidence as the acceptance baseline. Do not require or create a spec or plan.
+Keep the complete five-axis review and finding categories unchanged.
 
 ## Upstream command contract
 
@@ -30,9 +34,11 @@ recommendations.
 
 Resolve the installed plugin root, then load and follow the exact upstream
 `../code-review-and-quality/SKILL.md` without adding or weakening its
-criteria. Resolve the canonical root, then
-read the exact specification, plan, task card, current diff, tests, and
-verification notes that are relevant to the requested review.
+criteria. Resolve the canonical root, then read the exact specification, plan,
+task card, current diff, tests, and verification notes that are relevant to
+the requested review. In `mode: quick-workflow-pr`, replace the absent
+specification and plan with the current quick handoff and task Context; do not
+invent substitute artifacts.
 
 When an independent reviewer is delegated, the root must first load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
