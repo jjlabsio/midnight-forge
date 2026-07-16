@@ -58,6 +58,62 @@ composition. If ambiguity, scope expansion, a public or security boundary,
 destructive work, failed verification, repeated no-progress, or uncertain PR
 state appears, stop rather than generating a spec or plan automatically.
 
+## Shared auto-mode middle-stage lifecycle
+
+`auto-workflow` and `auto-workflow-pr` use one shared middle-stage contract.
+The entrypoint skills define only their authority boundary and delivery
+continuation; they must not maintain separate copies of the implementation
+loop, review gates, intent preflight, or common stop conditions.
+
+For both auto modes, the common lifecycle is:
+
+```text
+intent preflight -> interview-me when required -> spec -> plan ->
+approved plan-slice loop -> whole-build verification/review ->
+current local handoff
+```
+
+For every ready approved plan slice, use the auto-mode build contract exactly:
+
+```text
+acceptance/context -> RED -> GREEN -> full test suite -> build ->
+review/gates -> code-simplify -> commit -> plan-slice evidence
+```
+
+After each slice, re-read the canonical spec, plan, task card, lock, Git
+state, and latest evidence before selecting the next slice. After all approved
+slices are complete, run the plan's whole-build verification matrix and a
+separate final review against the full spec. Continue until every approved
+plan slice is complete; neither auto mode stops after the first ready slice
+merely because that slice's local build and review passed. Any accepted
+simplification or repair change invalidates affected verification and review
+evidence and must return through the applicable checks before the handoff is
+considered current.
+
+Both modes use the same intent preflight, artifact freshness rules, review
+quality bar, first-meaningful-vertical-slice consumer checkpoint, and stop
+conditions. Stop for unresolved intent or product/public-contract/security/
+privacy/data/permission/cost decisions, destructive or irreversible work,
+failed verification, stale or ambiguous state, repeated no-progress, or a
+scope change requiring user judgment. Clear mechanical requests may skip
+`interview-me` under its existing conditions.
+
+Use serial writers unless disjoint paths, isolated worktrees, independent
+locks, and absence of shared contracts, generated files, global state, MDF
+state, or external resources are proven. The root owns shared writes,
+synthesis, task state, commit scope, and lifecycle decisions.
+
+For UI changes, validate the real browser consumer and retain screenshot or
+runtime evidence. For other changes, validate the real CLI/API/integration
+boundary; add a minimal critical-flow E2E smoke path only when the changed
+behavior has a critical user flow.
+
+Every continuation handoff records the current phase, settled intent, exact
+spec/plan paths and hashes, completed slices, commit IDs, verification and
+review outcomes, remaining work, assumptions, and the mode-specific actions
+that remain authorized. A mode-specific entrypoint may add delivery steps, but
+it must use this shared middle-stage result rather than paraphrasing it.
+
 ## Intent preflight
 
 At the beginning of either mode, read the upstream `interview-me` skill and
