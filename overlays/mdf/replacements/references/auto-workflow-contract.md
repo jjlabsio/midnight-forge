@@ -58,12 +58,46 @@ composition. If ambiguity, scope expansion, a public or security boundary,
 destructive work, failed verification, repeated no-progress, or uncertain PR
 state appears, stop rather than generating a spec or plan automatically.
 
-## Shared auto-mode middle-stage lifecycle
+## Shared auto-mode stage dispatch
 
 `auto-workflow` and `auto-workflow-pr` use one shared middle-stage contract.
 The entrypoint skills define only their authority boundary and delivery
 continuation; they must not maintain separate copies of the implementation
 loop, review gates, intent preflight, or common stop conditions.
+
+The shared contract orchestrates canonical MDF skills, not personas. Resolve the
+installed plugin root and invoke the canonical skill whose name matches the
+stage below. The invoked skill owns its upstream primitive and any persona
+delegation required by its own contract.
+
+Every canonical stage invocation must pass the current workflow mode
+(`mode: auto-workflow` or `mode: auto-workflow-pr`) together with the current
+readable handoff. A bare invocation such as `review` is not a valid auto-mode
+dispatch: it uses standalone semantics and lacks the auto-mode context. The
+mode selects the applicable workflow composition; it does not grant authority
+without the current handoff and state checks above.
+
+| Stage | Canonical MDF skill | Required result |
+| --- | --- | --- |
+| Intent preflight | `interview-me` when its conditions apply | Settled intent and handoff context |
+| Specification | `spec` | Approved spec revision and hash |
+| Planning | `plan` | Approved plan revision and hash |
+| Plan-slice implementation | `build` in default single-task mode | One slice's implementation, verification, and provisional evidence; no commit |
+| Plan-slice review | `review` against the staged current plan-slice diff | Review result before selecting another slice |
+| Plan-slice commit | `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
+| Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
+| Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
+| PR delivery | `ship` -> `task` -> `github-pr` in PR mode only | GO, final preflight, task completion, and PR handoff |
+
+The stage table is a skill-routing contract, not a persona dispatch contract.
+Never encode `persona: <name>` as a stage invocation or treat a persona name
+as evidence that its prompt was loaded. When a canonical skill delegates, that
+skill must apply the installed subagent-dispatch policy: resolve the exact
+installed `agents/<persona>.md` prompt, pass the unchanged prompt and the
+root-selected dispatch record through the generic runtime spawn path, and use
+the declared degraded fallback or stop when prompt or transport resolution
+fails. The shared contract must not duplicate persona lists or bypass the
+delegating skill's dispatch boundary.
 
 For both auto modes, the common lifecycle is:
 
@@ -73,22 +107,47 @@ approved plan-slice loop -> whole-build verification/review ->
 current local handoff
 ```
 
-For every ready approved plan slice, use the auto-mode build contract exactly:
+For every ready approved plan slice, invoke the canonical `build` skill in the
+current auto mode with exactly one selected task. Do not invoke `build auto` or
+`build all`. The build skill owns its complete single-slice TDD, regression,
+build, internal review/gates, and simplification contract. In auto modes it
+returns implementation-complete provisional evidence without committing; the
+shared contract owns the post-review commit boundary.
 
 ```text
-acceptance/context -> RED -> GREEN -> full test suite -> build ->
-review/gates -> code-simplify -> commit -> plan-slice evidence
+canonical build(single slice) -> provisional evidence ->
+stage exact slice paths -> canonical review(staged slice diff) -> canonical github-commit ->
+final slice evidence -> next approved slice
 ```
 
-After each slice, re-read the canonical spec, plan, task card, lock, Git
-state, and latest evidence before selecting the next slice. After all approved
-slices are complete, run the plan's whole-build verification matrix and a
-separate final review against the full spec. Continue until every approved
-plan slice is complete; neither auto mode stops after the first ready slice
-merely because that slice's local build and review passed. Any accepted
-simplification or repair change invalidates affected verification and review
-evidence and must return through the applicable checks before the handoff is
-considered current.
+After build returns, stage only the exact task-owned paths for the current
+slice. This is review-candidate staging, not a commit. The plan-slice review
+receives the task card, staged current slice diff, owned paths, focused
+verification, and downstream-impact context. It is a separate review of the
+implementation returned by build; it is not the build skill's internal
+`review/gates` step. A slice review passes only when required verification is
+green, scope and ownership remain current, and no Critical or Important
+actionable finding remains. Suggestions may be recorded without blocking the
+next slice. An actionable finding returns to the same selected slice; resume
+the canonical `build` fix loop with the known provisional diff, fix only that
+slice, restage the exact slice paths, and do not commit or select the next
+slice until the canonical review passes. The known task-owned provisional diff
+is an allowed repair baseline; unrelated dirt remains a stop condition.
+
+After the canonical review passes, invoke `github-commit` for the exact
+task-owned paths. Record the commit and final slice evidence only after that
+commit succeeds. This is the single focused commit for the slice; no amend
+step is part of the auto-mode loop.
+
+After each slice review, re-read the canonical spec, plan, task card, lock,
+Git state, and latest evidence before selecting the next slice. After all
+approved slices are complete, run the plan's whole-build verification matrix
+and invoke the canonical `review` skill against the complete approved tree and
+full spec. Continue until every approved plan slice is complete; neither auto
+mode stops after the first ready slice merely because its local build and
+review passed. Any accepted simplification or repair change invalidates
+affected verification and review evidence and must return through the
+applicable canonical skill checks before the handoff is considered current.
 
 Both modes use the same intent preflight, artifact freshness rules, review
 quality bar, first-meaningful-vertical-slice consumer checkpoint, and stop
@@ -108,11 +167,14 @@ runtime evidence. For other changes, validate the real CLI/API/integration
 boundary; add a minimal critical-flow E2E smoke path only when the changed
 behavior has a critical user flow.
 
-Every continuation handoff records the current phase, settled intent, exact
-spec/plan paths and hashes, completed slices, commit IDs, verification and
-review outcomes, remaining work, assumptions, and the mode-specific actions
-that remain authorized. A mode-specific entrypoint may add delivery steps, but
-it must use this shared middle-stage result rather than paraphrasing it.
+Every continuation handoff records the current phase, canonical skill used,
+settled intent, exact spec/plan paths and hashes, completed slices, commit IDs,
+verification and review outcomes, remaining work, assumptions, and the
+mode-specific actions that remain authorized. If a skill delegated a persona,
+record the resolved prompt path and dispatch status; do not record a
+name-only persona label as proof of delegation. A mode-specific entrypoint may
+add delivery steps, but it must use this shared middle-stage result rather than
+paraphrasing it.
 
 ## Intent preflight
 
