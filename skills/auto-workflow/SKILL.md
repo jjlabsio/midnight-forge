@@ -17,14 +17,17 @@ defines the local authority boundary below.
 ## Local lifecycle boundary
 
 Follow the shared auto-mode middle-stage lifecycle in the loaded contract.
-This local entrypoint runs it through the final local commit and handoff. A
-plan task is an implementation slice, not the whole MDF task. Keep the active
-task ownership and lock for a later continuation; do not mark the whole MDF
-task `done` or release its lock here.
+This local entrypoint continues through every approved plan slice, the
+whole-build verification/review, and the final local handoff. A plan task is an
+implementation slice, not the whole MDF task. Keep the active task ownership
+and lock for a later continuation; do not mark the whole MDF task `done` or
+release its lock here.
 
 ## Stop boundary
 
-After the local commit and readable handoff, stop. This skill must not:
+After all approved plan slices, whole-build verification/review, and the
+readable local handoff are complete, stop. Do not stop after the first slice's
+commit merely because its local build and review passed. This skill must not:
 
 - invoke `ship`;
 - mark the whole MDF task `done`;
