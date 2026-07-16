@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.1 - 2026-07-16
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.0...v2.3.1)
+
+### Changes
+
+- refactor(workflow): unify auto workflow common stages ([#74](https://github.com/jjlabsio/midnight-forge/pull/74))
 ## v2.3.0 - 2026-07-16
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.2.1...v2.3.0)
