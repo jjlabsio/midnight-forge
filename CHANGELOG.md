@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.2.1 - 2026-07-16
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.2.0...v2.2.1)
+
+### Changes
+
+- docs(doubt): disable cross-model escalation ([#72](https://github.com/jjlabsio/midnight-forge/pull/72))
 ## v2.2.0 - 2026-07-15
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.1.9...v2.2.0)
