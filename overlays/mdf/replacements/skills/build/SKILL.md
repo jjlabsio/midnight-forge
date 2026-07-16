@@ -66,17 +66,22 @@ this exact sequence:
 
 1. Read the task's acceptance criteria.
 2. Load relevant context: existing code, patterns, and types.
-3. For behavioral changes, write a failing test for the expected behavior
-   (RED). For documentation-only or static-content changes, use the
-   applicable project validation instead of inventing a behavioral test.
-4. For behavioral changes, implement the minimum code to pass the test
-   (GREEN). For documentation-only or static-content changes, make the
-   smallest scoped edit.
-5. For behavioral changes, run the full test suite to check for regressions.
-   For documentation-only or static-content changes, run the applicable
-   project validation instead.
-6. Run the build/typecheck/lint checks when the changed paths affect them;
-   otherwise record the check as not applicable.
+3. In `mode: quick-workflow-pr`, documentation-only or static-content changes
+   use the applicable project validation instead of inventing a behavioral test.
+   For every other mode, and for behavioral changes in quick mode, write a
+   failing test for the expected behavior (RED).
+4. In `mode: quick-workflow-pr`, documentation-only or static-content changes
+   make the smallest scoped edit. For every other mode, and for behavioral
+   changes in quick mode, implement the minimum code to pass the test (GREEN).
+5. In `mode: quick-workflow-pr`, documentation-only or static-content changes
+   use the applicable project validation instead of an invented behavioral test
+   suite. For every other mode, and for behavioral changes in quick mode, run
+   the full test suite to check for regressions.
+6. Run the build to verify compilation for every mode when the project has a
+   build step. In quick mode, documentation-only or static-content changes may
+   record build/typecheck/lint as not applicable when the changed paths cannot
+   affect them; behavioral changes still run the applicable build, typecheck,
+   and lint checks.
 7. Commit with a descriptive message.
 8. In standalone `/build`, preserve the existing selected-task completion
    behavior. In `mode: auto-workflow` or `mode: auto-workflow-pr`, record the
@@ -144,20 +149,24 @@ loop or reduce its verification.
 
 ### Canonical inputs and task authority
 
-1. Resolve the canonical project root and installed plugin root. Read the exact
-   approved specification and plan revisions and confirm their paths and
-   SHA-256 values are still current. In MDF, the approved canonical
-   `.mdf/work/<work-id>/spec-NNN.md` and `plan-NNN.md` revisions are the
-   project-equivalent artifacts for the upstream spec and plan. They must be
-   traceable to the known spec/plan contract above; a README or arbitrary
-   document still cannot satisfy it.
-2. Read the task card and current index projection. Choose exactly one
-   selected or next pending plan task that is ready, confirm its owned paths and
-   dependencies, and use the matching task lock through the approved task
-   procedure. A local auto-workflow continuation may use its matching active
-   lock; the PR workflow uses the normal task ownership path. Do not infer
-   readiness from card text that conflicts with canonical state, a live lock,
-   or the approved plan.
+1. Resolve the canonical project root and installed plugin root. In
+   `mode: quick-workflow-pr`, read the current quick handoff and active task
+   Context as the acceptance baseline; do not require or generate a spec or
+   plan. In all other modes, read the exact approved specification and plan
+   revisions and confirm their paths and SHA-256 values are still current. In
+   MDF, the approved canonical `.mdf/work/<work-id>/spec-NNN.md` and
+   `plan-NNN.md` revisions are the project-equivalent artifacts for the
+   upstream spec and plan. They must be traceable to the known spec/plan
+   contract above; a README or arbitrary document still cannot satisfy it.
+2. Read the task card and current index projection. In quick mode, use the
+   current bounded request and active task Context as the single task, confirm
+   its owned paths, and use the matching task lock through the approved task
+   procedure. In all other modes, choose exactly one selected or next pending
+   plan task that is ready, confirm its owned paths and dependencies, and use
+   the matching task lock through the approved task procedure. A local
+   auto-workflow continuation may use its matching active lock; the PR workflow
+   uses the normal task ownership path. Do not infer readiness from card text
+   that conflicts with canonical state, a live lock, or the approved scope.
 3. Confirm that the current worktree is the locked worktree, the expected
    branch is checked out, and the baseline is clean. Stop for unrelated dirt,
    lock conflict, ambiguous ownership, or missing worktree setup. This is the
@@ -167,14 +176,26 @@ loop or reduce its verification.
 
 4. Perform the complete upstream per-task sequence. MDF's focused checks,
    review, and downstream-impact gate are additional checks; they do not stand
-   in for the required full test suite or build. The required order is:
+   in for the required full test suite or build in auto modes. For auto modes,
+   the required order is:
 
    `acceptance/context → RED → GREEN → full test suite → build → review/gates →
-   code-simplify → commit → plan-slice evidence`. Whole MDF task completion is
-   not part of either auto-mode build slice.
+   code-simplify → commit → plan-slice evidence`.
+
+   For quick mode, use the bounded-request sequence:
+
+   `acceptance/context → RED → GREEN (behavioral changes) → applicable
+   validation/full regression → build/typecheck/lint when applicable → review →
+   commit`.
+
+   Quick mode omits plan-slice evidence and code-simplify. Whole MDF task
+   completion is not part of the build slice; the quick PR handoff completes it
+   only after review and final preflight.
 
 5. Review the diff and all verification results against the full
-   specification, plan, task acceptance, and relevant project documentation.
+   specification, plan, task acceptance, and relevant project documentation in
+   auto modes. In quick mode, use the quick handoff, task Context, bounded
+   request, and relevant project documentation instead.
    Record readable Markdown notes in the work item when reasoning or
    downstream impact needs to be preserved. Aim for a fresh-context upstream
    code review when an independent reviewer is available; if unavailable,
@@ -188,32 +209,35 @@ loop or reduce its verification.
 ### Commit, completion, and artifacts
 
 7. Stage only the exact task-owned project paths and create one focused commit
-   with a descriptive message. Record the commit, full-test result, build
-   result, review result, remaining plan tasks, and follow-up decision in
-   readable evidence. In `mode: auto-workflow`, do not mark the MDF task done
+   with a descriptive message. Record the commit, verification result, review
+   result, and follow-up decision in readable evidence. In auto modes, also
+   record the full-test result, build result, remaining plan tasks, and
+   plan-slice evidence. In `mode: auto-workflow`, do not mark the MDF task done
    or release its active lock; the lock remains owned for continuation. In
-   both auto modes keep the task active for the PR orchestrator. The
-   `auto-workflow-pr` orchestrator performs the task completion mutation and
-   releases the lock after ship GO. `.mdf` state is local workflow metadata and
-   is not blindly staged into the project commit.
-8. Re-read the card and index projection and report plan-slice completion and
-   whole-task completion separately. The PR workflow may complete an active
-   task after ship GO and before push/PR handoff.
-9. If the plan was generated as a project-visible `tasks/plan.md`, preserve the
-   upstream preparatory-commit rule. If the MDF plan adapter created only the
-   canonical `.mdf/work/<work-id>/plan-NNN.md` artifact, record it in MDF state
-   and do not create an unsynchronized duplicate or stage local `.mdf` state as
-   implementation code.
+   `mode: auto-workflow-pr`, the orchestrator performs task completion after
+   ship GO and final preflight. In quick mode, task completion occurs after the
+   review loop and final PR preflight. `.mdf` state is local workflow metadata
+   and is not blindly staged into the project commit.
+8. Re-read the card and index projection. Auto modes report plan-slice and
+   whole-task completion separately; quick mode reports the bounded request's
+   build/review completion and whole-task completion separately. The PR
+   workflows may complete an active task immediately before push/PR handoff.
+9. If an auto-mode plan was generated as a project-visible `tasks/plan.md`,
+   preserve the upstream preparatory-commit rule. If the MDF plan adapter
+   created only the canonical `.mdf/work/<work-id>/plan-NNN.md` artifact, record
+   it in MDF state and do not create an unsynchronized duplicate or stage local
+   `.mdf` state as implementation code. This rule does not apply to quick mode.
 
 ### Automatic continuation and final verification
 
-`build auto` and `build all` repeat the same upstream loop over all approved
-plan tasks. Before each task, recheck approval, exact spec/plan hashes, lock
-ownership, clean baseline, dependency readiness, and exact task scope; inspect
-`git status --porcelain`, stage with `git add --`, create one commit per plan
-task, record plan-slice evidence, and resume at the next pending task. Both
-auto modes leave the whole MDF task active until the PR orchestrator's ship GO
-and final handoff.
+`build auto` and `build all` in the auto modes repeat the same upstream loop
+over all approved plan tasks. Before each task, recheck approval, exact
+spec/plan hashes, lock ownership, clean baseline, dependency readiness, and
+exact task scope; inspect `git status --porcelain`, stage with `git add --`,
+create one commit per plan task, record plan-slice evidence, and resume at the
+next pending task. Both auto modes leave the whole MDF task active until the
+PR orchestrator's ship GO and final handoff. Quick mode is one bounded task and
+does not enter this plan loop.
 
 After every approved plan task completes, run the whole-build verification
 matrix from the plan and perform a final review against the full
