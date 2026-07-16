@@ -8,5 +8,6 @@
   "baseSha256": "a7ae7259a9e080731e0dd91368da728b89919d31488192e067b751cf472d5a8d",
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream review command is converted from a command prompt into a readable report workflow with task and full-tree review scopes.",
-  "reviewRisk": "Full adapter replacement can hide upstream review command changes; validation pins the upstream command hash and requires explicit review when it changes."
+  "reviewRisk": "Full adapter replacement can hide upstream review command changes; validation pins the upstream command hash and requires explicit review when it changes.",
+  "contractRefs": ["auto-workflow-contract"]
 }

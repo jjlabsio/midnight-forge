@@ -13,7 +13,11 @@ upstream `../incremental-implementation/SKILL.md` alongside
 `../code-review-and-quality/SKILL.md` and any other applicable skill when its
 trigger applies.
 For `mode: auto-workflow` or `mode: auto-workflow-pr`, also load
-`../../references/auto-workflow-contract.md`.
+`../../references/auto-workflow-contract.md`. In those modes, the shared
+contract composes this one-slice implementation stage with a post-build review
+and `github-commit`; this skill returns provisional evidence without creating
+the slice commit. Standalone `/build` and quick mode retain their normal
+commit behavior.
 For `mode: quick-workflow-pr`, also load the same contract. In that mode, use
 the active task Context, the user's request, current scope, and verification
 evidence as the acceptance baseline; do not require or generate a spec or
@@ -33,8 +37,11 @@ profiles are never selected silently.
 ## Upstream command contract
 
 The following command behavior is preserved from the upstream build command.
-MDF state and artifact rules below adapt how this behavior is recorded; they do
-not remove or reorder these execution steps.
+MDF state and artifact rules below adapt how this behavior is recorded. In
+standalone `/build` and quick mode, they do not remove or reorder the upstream
+execution steps. In the two auto modes, the shared contract intentionally
+places the existing commit criterion after the post-build slice review; the
+implementation, verification, and risk checks remain unchanged.
 
 ### Modes and arguments
 
@@ -53,16 +60,19 @@ not remove or reorder these execution steps.
 When called from `mode: auto-workflow` or `mode: auto-workflow-pr`, the root's
 run-scoped authorization replaces the standalone plan checkpoint. Neither mode
 removes RED/GREEN, full regression, build, review, task-owned staging, lock, or
-high-risk checks. Both auto modes commit each completed plan slice and keep the
-MDF task active; `auto-workflow-pr` performs whole-task completion only after
-ship GO and final PR preflight.
+high-risk checks. Both auto modes commit each plan slice only after the shared
+contract's canonical slice review passes and keep the MDF task active;
+`auto-workflow-pr` performs whole-task completion only after ship GO and final
+PR preflight.
 
 ### Default: one task
 
 For `mode: quick-workflow-pr`, use the current bounded request as the task and
 read its acceptance context from the quick handoff and active task card. For
-other modes, pick the next pending task from the approved plan. Then execute
-this exact sequence:
+other modes, pick the selected or next pending task from the approved plan. If
+the current auto-mode handoff identifies a provisional, repair, or
+commit-pending slice, resume that selected slice's recorded stage instead of
+selecting another pending task. Then execute this exact sequence:
 
 1. Read the task's acceptance criteria.
 2. Load relevant context: existing code, patterns, and types.
@@ -82,12 +92,17 @@ this exact sequence:
    record build/typecheck/lint as not applicable when the changed paths cannot
    affect them; behavioral changes still run the applicable build, typecheck,
    and lint checks.
-7. Commit with a descriptive message.
+7. In standalone `/build` and `mode: quick-workflow-pr`, commit with a
+   descriptive message. In `mode: auto-workflow` or `mode: auto-workflow-pr`,
+   stop after implementation, verification, and simplification with
+   implementation-complete provisional evidence; do not commit here. The
+   shared contract invokes canonical `review` and then `github-commit` after
+   that review passes.
 8. In standalone `/build`, preserve the existing selected-task completion
-   behavior. In `mode: auto-workflow` or `mode: auto-workflow-pr`, record the
-   completed plan slice, commit, and verification evidence, keep the MDF task
-   active, and stop without whole-card completion. The PR orchestrator performs
-   whole-card completion only after ship GO.
+   behavior. In the auto modes, keep the MDF task active and return the
+   provisional slice result to the shared orchestrator. The orchestrator
+   records the final slice commit/evidence after review; the PR orchestrator
+   performs whole-card completion only after ship GO.
 
 ### Autonomous: the whole plan (`/build auto`)
 
@@ -167,10 +182,14 @@ loop or reduce its verification.
    auto-workflow continuation may use its matching active lock; the PR workflow
    uses the normal task ownership path. Do not infer readiness from card text
    that conflicts with canonical state, a live lock, or the approved scope.
-3. Confirm that the current worktree is the locked worktree, the expected
-   branch is checked out, and the baseline is clean. Stop for unrelated dirt,
-   lock conflict, ambiguous ownership, or missing worktree setup. This is the
-   MDF equivalent of the upstream autonomous clean-baseline guarantee.
+3. Confirm that the current worktree is the locked worktree and the expected
+   branch is checked out. The initial slice requires a clean baseline. During
+   an auto-mode repair continuation after a failed canonical slice review, the
+   known provisional diff for the same selected task may remain staged or
+   unstaged; verify that it is limited to the task-owned paths instead. Stop
+   for unrelated dirt, lock conflict, ambiguous ownership, or missing worktree
+   setup. This is the MDF equivalent of the upstream autonomous clean-baseline
+   guarantee.
 
 ### Execution, verification, and review
 
@@ -180,7 +199,7 @@ loop or reduce its verification.
    the required order is:
 
    `acceptance/context → RED → GREEN → full test suite → build → review/gates →
-   code-simplify → commit → plan-slice evidence`.
+   code-simplify → provisional plan-slice evidence`.
 
    For quick mode, use the bounded-request sequence:
 
@@ -208,12 +227,13 @@ loop or reduce its verification.
 
 ### Commit, completion, and artifacts
 
-7. Stage only the exact task-owned project paths and create one focused commit
-   with a descriptive message. Record the commit, verification result, review
-   result, and follow-up decision in readable evidence. In auto modes, also
-   record the full-test result, build result, remaining plan tasks, and
-   plan-slice evidence. In `mode: auto-workflow`, do not mark the MDF task done
-   or release its active lock; the lock remains owned for continuation. In
+7. In standalone `/build` and quick mode, stage only the exact task-owned
+   project paths and create one focused commit with a descriptive message. In
+   auto modes, invoke canonical `github-commit` only after the shared
+   post-build slice review passes; stage only that slice's paths and record the
+   commit, verification result, review result, and final slice evidence. In
+   `mode: auto-workflow`, do not mark the MDF task done or release its active
+   lock; the lock remains owned for continuation. In
    `mode: auto-workflow-pr`, the orchestrator performs task completion after
    ship GO and final preflight. In quick mode, task completion occurs after the
    review loop and final PR preflight. `.mdf` state is local workflow metadata
@@ -230,14 +250,12 @@ loop or reduce its verification.
 
 ### Automatic continuation and final verification
 
-`build auto` and `build all` in the auto modes repeat the same upstream loop
-over all approved plan tasks. Before each task, recheck approval, exact
-spec/plan hashes, lock ownership, clean baseline, dependency readiness, and
-exact task scope; inspect `git status --porcelain`, stage with `git add --`,
-create one commit per plan task, record plan-slice evidence, and resume at the
-next pending task. Both auto modes leave the whole MDF task active until the
-PR orchestrator's ship GO and final handoff. Quick mode is one bounded task and
-does not enter this plan loop.
+Standalone `/build auto` and `/build all` repeat the same upstream loop over
+all approved plan tasks. They are not the auto-workflow loop. In
+`mode: auto-workflow` and `mode: auto-workflow-pr`, never enter this whole-plan
+mode: the shared contract invokes default single-task `build`, then canonical
+`review`, then `github-commit` before selecting the next slice. Quick mode is
+one bounded task and does not enter this plan loop.
 
 After every approved plan task completes, run the whole-build verification
 matrix from the plan and perform a final review against the full
