@@ -65,12 +65,17 @@ acquires, and byte-conditionally releases a lock.
 code simplification, and commit. It keeps the whole MDF task active and does
 not ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow:
 it resumes valid local work, uses the full spec as its acceptance baseline,
-ships, completes the whole task after ship GO, and then pushes and creates or
-updates the PR. `$quick-workflow-pr` is the explicit lightweight delivery
+ships, keeps the task active through PR creation/update and the latest PR
+checks/mergeability/conflict gates, and completes the whole task only after
+those gates pass. `$quick-workflow-pr` is the explicit lightweight delivery
 workflow for small documentation or implementation changes: it always skips
 spec and plan, reuses the canonical build/review/GitHub PR skills, loops back
 to build for actionable review findings, and does not invoke ship or
-code-simplify. Plan-slice completion and whole-task completion are distinct.
+code-simplify. CI or conflict failures stay on the same task, worktree,
+branch, and lock and re-enter the shared evidence/spec-validity/
+plan-compatibility/current-tree recovery protocol; they do not create a new
+lifecycle state or repair task.
+Plan-slice completion and whole-task completion are distinct.
 
 ## Architecture
 

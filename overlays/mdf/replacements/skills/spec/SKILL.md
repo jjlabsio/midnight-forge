@@ -59,6 +59,18 @@ contract.
    before presenting the artifact.
 5. Compute the SHA-256 of the exact saved bytes and report the path and hash.
 
+When a whole-build or PR consumer failure triggers recovery, first validate
+the existing spec against the current evidence and tree. Reuse the spec when
+the user goal, acceptance, scope, public behavior, security/privacy/data/
+permission constraints, and material operational constraints are unchanged
+and the problem is an implementation defect. Create a new spec revision first
+when acceptance is contradictory or unmet because the goal, scope, public
+behavior, material constraint, or required user decision has changed. A plan
+must then be created or revised to remain compatible with that spec; do not
+revise the plan independently to conceal a spec change. Record the current
+head/base, failure evidence, and current-tree reconciliation that justified
+the reuse or revision decision.
+
 The root agent owns the artifact write. Reviewers may comment on the draft but
 do not silently replace it. Historical specifications remain readable.
 

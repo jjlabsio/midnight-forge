@@ -73,8 +73,15 @@ Do not invoke `code-simplify` as a separate phase.
 After review passes, invoke the canonical `github-pr` skill with
 `mode: quick-workflow-pr`. It retains the full branch, clean-tree,
 authentication, mergeability, open-PR, remote-HEAD, push, and duplicate-PR
-preflight. It may complete the active task and release its lock immediately
-before push and PR create/update. Do not merge, deploy, delete, or clean up
+preflight. Keep the task active and the lock held through push, PR
+create/update, latest-head check completion, and mergeability/conflict
+validation. If the PR consumer fails, return to the shared evidence,
+spec-validity, plan-compatibility, and current-tree reconciliation protocol
+and re-enter canonical `build -> review -> commit` on the same task when
+source changes. Quick mode does not invent spec/plan artifacts; if recovery
+requires a material spec or plan revision, stop and select the full workflow.
+Complete the task and release the lock only after the latest PR head passes
+all required delivery gates. Do not merge, deploy, delete, or clean up
 branches or worktrees.
 
 The PR must truthfully summarize the request, changed files, verification

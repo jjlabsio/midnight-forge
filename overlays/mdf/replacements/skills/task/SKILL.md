@@ -91,9 +91,26 @@ code.
 
 ## Locks and lifecycle
 
-Tasks use only queue, active, and done. A lock is an ownership marker, not a
-status substitute. A present lock must contain task_id, work_id, canonical_root,
-worktree, branch, started, and runtime.
+Tasks use only `queue`, `active`, and `done`; never add delivery-pending,
+delivery-repair, or another lifecycle state. A lock is an ownership marker,
+not a status substitute. A present lock must contain task_id, work_id,
+canonical_root, worktree, branch, started, and runtime.
+
+Once activated, keep the task card `active` and its matching lock through the
+entire authorized workflow: implementation, build/review/ship, commit/push,
+PR creation or update, the latest PR head's related and required checks
+reaching a terminal passing state, mergeability confirmation, conflict
+resolution, and all resulting re-verification. A PR existing or local
+implementation completing does not make the task `done`. For a delivery task,
+perform the normal `done` mutation only after every delivery gate passes, then
+release the lock after rereading the consistent card and projection.
+
+If CI fails, checks remain pending, mergeability fails, or a conflict appears,
+keep the same task, worktree, branch, and lock. Record the failure in the
+handoff or Log and return to the canonical recovery/build/review/commit flow;
+do not create a repair task, change the task state, release the lock, or infer
+a new state. External provider failures or ambiguous repair scope remain
+explicit stops for the user.
 
 Before activation, re-read the card, branch, worktree, and lock directory.
 Create a missing lock only after confirming the task is queued, the isolated
@@ -109,10 +126,14 @@ the byte-conditional release/acquire protocol; the helper is not an identity
 or security credential.
 
 Release only after the task owner has finished and the card is consistent.
-Re-read the lock bytes and use the exact current digest with the lock helper.
-done means implementation work is complete, not merged, pushed, or published.
-Dropping a task is separate, destructive, confirmation-gated, and preserves an
-index tombstone.
+For delivery-capable workflows, this means the latest PR consumer checks and
+mergeability/conflict gates have passed as well as the local implementation
+checks. Re-read the lock bytes and use the exact current digest with the lock
+helper. In a local-only workflow, `done` means implementation work is complete
+and does not imply merged, pushed, or published; in a delivery workflow, the
+`done` mutation is deliberately deferred until the external delivery gates
+pass. Dropping a task is separate, destructive, confirmation-gated, and
+preserves an index tombstone.
 
 ## Completed-task handoff
 

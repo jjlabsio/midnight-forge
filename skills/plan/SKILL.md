@@ -51,6 +51,20 @@ adaptations; they do not replace the upstream planning sequence.
    Definition of Done. Fix actionable findings before presenting it.
 6. Compute the SHA-256 of the exact saved bytes and report the path and hash.
 
+For recovery after a whole-build or PR consumer failure, a plan-only revision
+is exceptional. First confirm that the spec, its acceptance, and its material
+constraints remain valid. Allow plan-only revision only for a genuine
+dependency, order, owned-path, or scope-representation defect. The new plan
+must be a delta/recovery plan that starts from completed commits and the
+current tree, identifies remaining work and dependencies, and does not
+reimplement completed slices. Before build, pass a current-tree/spec/plan
+reconciliation gate covering implemented slices, remaining slices, owned
+paths, dependencies, and duplicate/conflicting/missing work. If the proposed
+change affects the user goal, acceptance, scope, public behavior,
+security/privacy/data/permission constraints, material architecture or
+operations, compatibility, or requires a new user decision, revise the spec
+first and then produce a compatible plan.
+
 The root agent owns the plan artifact write. The plan is a checklist and
 decision aid, not a replacement task state machine: ordinary model judgment
 chooses the next ready task and explains ambiguity.
