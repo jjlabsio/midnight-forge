@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.2 - 2026-07-18
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.1...v2.3.2)
+
+### Changes
+
+- docs(workflow): add PR consumer recovery lifecycle ([#75](https://github.com/jjlabsio/midnight-forge/pull/75))
 ## v2.3.1 - 2026-07-16
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.0...v2.3.1)
