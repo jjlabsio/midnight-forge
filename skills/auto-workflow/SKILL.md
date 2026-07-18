@@ -21,7 +21,9 @@ This local entrypoint continues through every approved plan slice, the
 whole-build verification/review, and the final local handoff. A plan task is an
 implementation slice, not the whole MDF task. Keep the active task ownership
 and lock for a later continuation; do not mark the whole MDF task `done` or
-release its lock here.
+release its lock here. If whole-build, final review, or another local consumer
+fails, record the evidence and use the shared earliest-invalidated-stage
+recovery protocol on the same task and lock.
 
 ## Stop boundary
 
