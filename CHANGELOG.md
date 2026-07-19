@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.5 - 2026-07-19
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.4...v2.3.5)
+
+### Changes
+
+- docs: define agent-skills preservation policy ([#78](https://github.com/jjlabsio/midnight-forge/pull/78))
 ## v2.3.4 - 2026-07-19
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.3...v2.3.4)
