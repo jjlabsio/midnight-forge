@@ -1,6 +1,6 @@
 ---
 schema_version: 3
-method_version: 3
+method_version: 4
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0

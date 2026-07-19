@@ -2,7 +2,7 @@
 
 ```yaml
 schema_version: 3
-method_version: 3
+method_version: 4
 ```
 
 This method produces comparable factual observations. It does not calculate an
