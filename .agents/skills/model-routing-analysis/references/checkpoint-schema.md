@@ -6,13 +6,13 @@ The checkpoint is a small, stable JSON document at:
 .mdf/analysis/model-routing/checkpoint.json
 ```
 
-Use `schema_version: 2` and `method_version: 2`. `status` is exactly
+Use `schema_version: 3` and `method_version: 3`. `status` is exactly
 `included` or `excluded`. The top-level shape is:
 
 ```json
 {
-  "schema_version": 2,
-  "method_version": 2,
+  "schema_version": 3,
+  "method_version": 3,
   "projects": [
     {
       "registry_id": "<stable ~/.mdf/projects.json id>",
@@ -42,11 +42,14 @@ hash, with `reason: "no_observation_log"`. For an invalid or inaccessible
 registered project, use `status: "excluded"`, zero and the empty-prefix hash,
 and record a concise reason. Never silently drop a registered project.
 
-Reuse a saved project watermark only when its `registry_id`,
+Reuse a saved checkpoint only when its top-level `schema_version` and
+`method_version` match the current contract. Then reuse a saved project
+watermark only when its `registry_id`,
 `canonical_root_sha256`, line count, and exact consumed-prefix hash all match
-the current registry and source log. On any mismatch, perform a full rescan,
-disclose the reset in the run record, and replace that project's checkpoint
-entry only after the new run record is written.
+the current registry and source log. On any version or identity mismatch, do
+not migrate the checkpoint in place: perform a full rescan, disclose the reset
+in the run record, and replace that project's checkpoint entry only after the
+new run record is written.
 
 Set `latest_run_id` to the run that produced the current entry. Advance every
 entry only after the immutable run record has been written successfully. A

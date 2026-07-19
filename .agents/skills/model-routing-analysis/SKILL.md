@@ -50,10 +50,11 @@ mutate source-project task cards, indexes, locks, worktrees, or other MDF state.
 ## Analysis procedure
 
 1. Read `checkpoint.json`, the project registry, and each available source log.
-2. Validate the saved checkpoint against `checkpoint-schema.md`, including the
-   project identity, consumed line count, and consumed-prefix hash, before
-   reusing it. Reset and disclose a full project scan when the saved prefix no
-   longer matches.
+2. Validate the saved checkpoint against `checkpoint-schema.md` before reusing
+   it. The checkpoint's `schema_version` and `method_version` must both match
+   the current contract. Also validate the project identity, consumed line
+   count, and consumed-prefix hash. On any mismatch, do not migrate in place;
+   perform and disclose a full project scan.
 3. Select all events after each project watermark. Pair dispatch and terminal
    events only by exact `invocation_id`; load an earlier matching event when a
    new event completes an existing pair. If an earlier run recorded that exact

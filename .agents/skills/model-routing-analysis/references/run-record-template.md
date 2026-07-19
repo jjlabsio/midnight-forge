@@ -1,6 +1,6 @@
 ---
-schema_version: 2
-method_version: 2
+schema_version: 3
+method_version: 3
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0
@@ -17,7 +17,7 @@ resolution_count: 0
 
 ## Invocation Facts
 
-| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Status | Dispatched at | Completed at | Observed duration (s) |
+| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Dispatched at | Completed at | Observed duration (s) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
 | — | — | — | — | — | — | — | — | — | — | — | — | — |
 

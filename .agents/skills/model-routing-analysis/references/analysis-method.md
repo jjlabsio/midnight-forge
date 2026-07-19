@@ -1,8 +1,8 @@
 # Model Routing Observation Analysis Method
 
 ```yaml
-schema_version: 2
-method_version: 2
+schema_version: 3
+method_version: 3
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -48,6 +48,12 @@ For each analyzed row, also record:
 record_role: initial | resolution
 supersedes_run_id: <run-id> | none
 ```
+
+In `run-record-template.md`, the `Invocation Facts` `Raw status` column is the
+exact source status when one exists. The aggregate status columns are derived
+analysis buckets and must not overwrite that raw value. For an incomplete or
+structurally malformed observation, preserve every available raw status in
+`Unknowns and Conflicts` and use the derived bucket only in aggregates.
 
 When combining immutable run records, count only the latest resolution for an
 invocation. Keep the earlier incomplete row as audit history, but do not count
