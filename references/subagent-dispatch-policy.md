@@ -63,6 +63,59 @@ is MDF-compatible only when it receives the exact installed persona prompt and
 the root-selected dispatch record. If the prompt or dispatch transport cannot
 be resolved, use a visible degraded root fallback or stop.
 
+## Minimal execution observation
+
+Every MDF-managed generic subagent dispatch records a small append-only
+observation in the canonical project's gitignored `.mdf` state. This is
+workflow instrumentation, not a runtime contract or a quality score.
+
+Use the per-project file:
+
+```text
+<canonical-root>/.mdf/observations/subagent-invocations.jsonl
+```
+
+On first use, create only the local `observations/` directory and this
+gitignored file as needed. Do not initialize or rewrite `.mdf/project`, task
+cards, indexes, locks, or other existing MDF state for instrumentation.
+
+The root writes one JSON object immediately before the generic spawn and one
+terminal JSON object after the worker returns. Capture the return timestamp
+immediately when the worker returns, then materialize the direct result
+artifact and write the terminal object with that captured timestamp. This
+keeps artifact linkage reliable without calculating elapsed time or delaying
+the observed completion timestamp. The two objects share `invocation_id`:
+
+```json
+{"event":"dispatch","invocation_id":"<unique-id>","requested_model":"<selected-model>","requested_effort":"<native-setting>","purpose":"workflow|analysis","work_id":null,"status":"dispatched","dispatched_at":"<observed-UTC-timestamp>"}
+{"event":"terminal","invocation_id":"<same-id>","status":"completed|failed|timed_out|interrupted","completed_at":"<observed-UTC-timestamp>","artifact_refs":["<project-relative-result-artifact>"]}
+```
+
+`artifact_refs` is optional only when no result artifact exists; use an empty
+array for a known artifact-free result. Paths are project-relative and must
+not contain absolute paths, traversal, prompts, responses, or secrets. When a
+worker is used for retrospective model-routing analysis, set `purpose` to
+`analysis`; normal implementation, testing, review, and lifecycle workers use
+`workflow`. `work_id` is the existing MDF work-item identity when one exists,
+not a new task classification.
+
+The observation contains only requested model/effort, invocation identity,
+fixed purpose/work linkage, terminal status, timestamps, and result-artifact
+references. Never add orchestrator model/effort, host-reported actual
+model/effort, task-factor judgments, rationale, or manual review fields. Do
+not calculate elapsed time during workflow execution. The analysis skill
+derives dispatch-to-return duration from the two observed timestamps.
+
+The root is the sole writer for these lines, including when dispatches run in
+parallel. This is an automatic step at the shared MDF generic-dispatch
+boundary, not a user-entered review command and not a host-runtime hook. Every
+delegating skill that reaches that boundary follows this same record-before,
+record-after sequence. If a dispatch or terminal line cannot be recorded,
+continue only when the workflow itself remains safe and let the analysis
+report the missing observation as insufficient evidence; never reconstruct it
+from memory or host metadata. A dispatch without a terminal event is an
+incomplete/censored observation, not a successful result.
+
 ## Spawn boundary
 
 Delegating skills pass these fields through the generic runtime path:
