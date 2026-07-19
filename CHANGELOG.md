@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.3 - 2026-07-19
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.2...v2.3.3)
+
+### Changes
+
+- docs(github-pr): allow task-optional standalone handoff ([#76](https://github.com/jjlabsio/midnight-forge/pull/76))
 ## v2.3.2 - 2026-07-18
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.1...v2.3.2)
