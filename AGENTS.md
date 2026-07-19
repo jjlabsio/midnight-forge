@@ -19,6 +19,18 @@ upstream skill exactly. Add MDF behavior only for Codex representation,
 routing, context, local task state, authority, safety, packaging, or explicit,
 documented MDF needs that do not alter upstream semantics.
 
+## Thin, model-led harness
+
+MDF intentionally uses a thin, best-effort harness. Assume the model is
+capable of following clear instructions; do not add runtime machinery merely
+to compensate for verbose or ambiguous guidance. Keep skill instructions
+short, explicit, and intent-preserving, with required actions, outputs,
+authority boundaries, and stop conditions stated plainly. Prefer model-followed
+recording and judgment over new hooks, schemas, validators, or orchestration
+layers. This principle does not relax safety, authorization, or destructive
+action boundaries; when hard enforcement is necessary, keep it narrow and
+proportionate to the risk.
+
 ## Non-negotiable source boundaries
 
 1. Each checked-in `vendor/agent-skills` tree is an immutable snapshot of one
