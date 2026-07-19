@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.0 - 2026-07-19
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.5...v2.4.0)
+
+### Changes
+
+- feat(observability): add model routing analysis ([#79](https://github.com/jjlabsio/midnight-forge/pull/79))
 ## v2.3.5 - 2026-07-19
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.4...v2.3.5)
