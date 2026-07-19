@@ -6,13 +6,11 @@ Current operational checks are encoded in repository scripts and PR workflow:
 - `node scripts/validate-agent-skills-sync.js`
 - `node scripts/validate-agent-skills-port.js`
 
-Model-routing evidence is maintained in
-[Model Routing Analysis](model-routing-analysis.md). Raw subagent invocation
-observations remain local to each registered project's gitignored `.mdf`
-state; the tracked report contains only analysis summaries and checkpoints.
-The analysis workflow itself is the project-local
-`.agents/skills/model-routing-analysis/SKILL.md` skill, not an MDF plugin
-runtime skill.
+Model-routing strategy is maintained manually in
+[Model Routing Analysis](model-routing-analysis.md). Automated, factual run
+records remain in the Midnight Forge repository's gitignored `.mdf` state;
+the project-local `.agents/skills/model-routing-analysis/SKILL.md` skill does
+not update tracked documents.
 
 Release history is tracked in the root `CHANGELOG.md`.
 

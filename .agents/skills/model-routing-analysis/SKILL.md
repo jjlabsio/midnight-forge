@@ -1,6 +1,6 @@
 ---
 name: model-routing-analysis
-description: "Analyze newly observed MDF subagent invocations and maintain model-efficiency evidence."
+description: "Analyze newly observed MDF subagent invocations and maintain factual run records."
 ---
 
 # model-routing-analysis
@@ -12,21 +12,26 @@ runtime selector, scheduler, controller, or automatic policy updater.
 ## Resolve the analysis repository
 
 Resolve the repository that contains this skill. Require that the same
-repository contains `docs/operations/model-routing-analysis.md`. If that
-anchor cannot be found from the skill's repository, stop and ask the caller to
-run this project skill from the MDF repository. Never fall back to the current
-working directory or a registered consumer project for the report write.
+repository contains `docs/operations/index.md` and the `.mdf/` directory is
+owned by that repository's canonical root. If that anchor cannot be found from
+the skill's repository, stop and ask the caller to run this project skill from
+the MDF repository. Never fall back to the current working directory or a
+registered consumer project for the analysis write.
 
 The source observations live in each registered project's local, gitignored
-MDF state. The analysis report and its checkpoint live in this repository at:
+MDF state. The analysis records and checkpoint live in this repository's
+gitignored state at:
 
 ```text
-docs/operations/model-routing-analysis.md
+.mdf/analysis/model-routing/
+  checkpoint.json
+  runs/<run-id>.md
 ```
 
 Do not mutate any source project's task card, index, lock, worktree, or other
-MDF state. Read source projects and write only this repository's analysis
-document.
+MDF state. Read source projects and write only new run records and the
+checkpoint under this repository's `.mdf/analysis/model-routing/` directory.
+Never update an earlier run record or a tracked document as part of analysis.
 
 ## Scope and schedule
 
@@ -37,7 +42,7 @@ new invocation observations added after the previous checkpoint.
 
 If a registry entry is missing, malformed, inaccessible, or no longer owns a
 valid `.mdf/project/init.json`, exclude it from the run and disclose the exact
-reason in the report. Do not silently replace a registered root with a
+reason in the new run record. Do not silently replace a registered root with a
 similarly named directory or a linked worktree.
 
 ## Checkpointed incremental scan
@@ -48,18 +53,19 @@ Use the per-project append-only source log:
 <canonical-root>/.mdf/observations/subagent-invocations.jsonl
 ```
 
-The report's `Checkpoint` section stores, for every included or excluded
-project, the registry ID, a SHA-256 digest of the normalized canonical-root
-identity, the last analyzed source-log line number, a SHA-256 hash of the exact
-consumed prefix bytes, the latest run identifier, and the reason when no
-observations were available. The root digest is stored instead of the absolute
-path. Apply this procedure:
+`checkpoint.json` stores, for every included or excluded project, the registry
+ID, a SHA-256 digest of the normalized canonical-root identity, the last
+analyzed source-log line number, a SHA-256 hash of the exact consumed prefix
+bytes, the latest run identifier, and the reason when no observations were
+available. The root digest is stored instead of the absolute path. Apply this
+procedure:
 
-1. Read the previous report and all source-log lines without changing them.
+1. Read the previous checkpoint and all source-log lines without changing
+   them.
 2. Before reusing a checkpoint, compare its stored registry ID and
    canonical-root digest with the current `~/.mdf/projects.json` entry. Compute
    the digest as SHA-256 of the normalized absolute `canonical_root` string,
-   but never write that path to the tracked report. If either identity differs,
+   but never write that path to the run record. If either identity differs,
    the checkpoint is invalid for that project: perform and disclose a full
    rescan. If no checkpoint exists, treat the complete available log as the
    initial batch. If the checkpoint is malformed, the line count moved
@@ -73,12 +79,13 @@ path. Apply this procedure:
    timestamp, task title, branch, or neighboring lines. Duplicate dispatches,
    duplicate terminals, terminal-before-dispatch events, conflicting statuses,
    or conflicting timestamps are malformed observations: retain them in the
-   report as malformed/insufficient evidence and exclude them from efficiency
+   run record as malformed/insufficient evidence and exclude them from efficiency
    comparisons. A dispatch without a terminal event remains an incomplete or
    censored observation.
-5. Advance the checkpoint only after the current batch has been analyzed and
-   the analysis report has been written. A failed report write must not be
-   described as a successful checkpoint.
+5. Create exactly one new immutable run record for the current analysis,
+   including a no-new-observations record when the batch is empty. Advance the
+   checkpoint only after that run record has been written successfully. A
+   failed run-record write must not be described as a successful checkpoint.
 
 The source log is an observation stream, not a truth database. Preserve raw
 values exactly. Do not normalize model aliases, effort labels, timestamps, or
@@ -129,15 +136,15 @@ that they are linked evidence. If the terminal event has no reliable artifact
 link, or the linked artifact does not contain enough evidence to support an
 outcome, record `unknown` or `insufficient evidence` explicitly.
 
-Keep these layers separate in the report:
+Keep these layers separate in the run record:
 
 1. **Raw observation** — the exact recorded dispatch/terminal facts.
 2. **Artifact evidence** — the linked files read and the objective signals they
    contain, with relative references.
 3. **Retrospective interpretation** — an inferred task shape, outcome signal,
    rework signal, and confidence, always labeled as inference.
-4. **Routing insight** — a cautious comparison or recommendation, never an
-   automatic model-policy change.
+4. **Processing analysis** — a factual description of how the requested model
+   and effort handled the work, with observations and limitations only.
 
 An LLM interpretation is not ground truth. Prefer explicit verification,
 review, changed-file, test, and shipped-result evidence. When evidence
@@ -161,7 +168,9 @@ Compare exact `requested_model` + `requested_effort` pairs using descriptive
 statistics only when the evidence supports them. Keep terminal failures,
 timeouts, missing terminals, unknown outcomes, and insufficient-evidence
 records visible. Separate unlike inferred task shapes when possible, but do
-not present retrospective task classification as a recorded fact.
+not present retrospective task classification as a recorded fact. These
+comparisons describe observed differences; they must not become a model
+recommendation or routing-policy judgment.
 
 Account for the main confounders in every meaningful comparison: task mix,
 novelty, risk, required quality, verification strength, rework, parallelism,
@@ -169,67 +178,62 @@ sample size, and censoring. A small or unbalanced cohort can support a
 directional observation only; it cannot prove that one model or effort caused
 the difference or is universally better.
 
-The one-person-builder objective is time-to-acceptable-core-value at an
-acceptable quality floor, not maximal code perfection. Where artifacts
-support it, report speed, rework, verification, and core-value signals
-together. Do not invent product-value evidence when the artifacts do not
-contain it.
+Where artifacts support it, report speed, rework, verification, and core-value
+signals together as separate observations. Do not choose or rank those values
+for the user, and do not invent product-value evidence when the artifacts do
+not contain it.
 
-## Analysis model and provenance
+## Run provenance
 
-Use the strongest currently available model and native effort setting for
-retrospective semantic synthesis. If the analysis delegates that synthesis,
-keep that delegation outside the MDF workflow observation logs. The report may
-record explicitly known analysis provenance, but must not claim a host-reported
-actual model or effort value and must not mix the analysis delegation into the
-workflow cohorts. If the root performs the synthesis, record root-context
-synthesis without inventing a model or effort value.
-
-Every run records its analysis provenance: run timestamp, source-project
-registry snapshot, included/excluded project counts, source-log watermarks,
-new invocation count, evidence limitations, and any explicitly known analysis
-dispatch pair. This provenance describes the analysis operation; it is not an
-orchestrator observation.
+Every run record includes only analysis provenance needed to reproduce the
+scan: run timestamp, source-project registry snapshot, included/excluded
+project counts, source-log watermarks, new invocation count, evidence
+limitations, and the run identifier. Do not record or infer the analysis
+orchestrator's model or effort. A registry snapshot may contain registry IDs,
+project names, and root digests, but never absolute canonical paths. If the
+analysis delegates semantic synthesis,
+keep that delegation outside the MDF workflow observation logs and do not mix
+it into workflow cohorts.
 
 Generate a readable run ID from the UTC run timestamp plus a short unique
 suffix (for example, `analysis-20260719T120000Z-a1b2`). The run ID identifies
-the report checkpoint only; it is not a model identity or runtime value.
+the run record and checkpoint only; it is not a model identity or runtime
+value.
 
-## Maintained report
+## Immutable run record
 
-Update `docs/operations/model-routing-analysis.md` after analyzing the batch.
-Keep the document readable and structured with these sections:
+Write one new Markdown document at
+`.mdf/analysis/model-routing/runs/<run-id>.md` for every analysis execution.
+Never update or append to an earlier run record. Keep each document readable
+and structured with these sections:
 
-- `Method and evidence policy`
-- `Analysis provenance`
-- `Checkpoint` — registry ID, one prefix watermark/hash, and
-  inclusion/exclusion reason per registered project
-- `Run history` — one concise entry per analysis run, including no-op runs,
-  resets, and report-write failures
-- `Raw observations` — new exact model/effort/status/timestamp counts
-- `Artifact evidence and inferred outcomes` — evidence references, explicit
-  unknown/insufficient-evidence rows, confidence, and any conflicts
-- `Model and effort comparisons` — descriptive observations with sample sizes,
-  durations, rework/verification signals, and confounders
-- `Routing insights` — cautious proposals for future routing experiments; no
-  automatic policy change
+- `Run provenance`
+- `Source-log batch`
+- `Raw observations`
+- `Artifact evidence`
+- `Observed processing analysis`
+- `Evidence limitations`
 
-Use project names and project-relative artifact identifiers in the tracked
-report. Do not copy raw prompts, worker responses, secrets, or absolute local
-paths into it. Preserve older findings and checkpoint history in the same
-document so the report remains an auditable record.
+Use project names and project-relative artifact identifiers in the local run
+record. Do not copy raw prompts, worker responses, secrets, or absolute local
+paths into it. The run record may describe observed model/effort differences,
+durations, verification, rework, and outcomes, but must not contain routing
+recommendations, one-person-builder utility judgments, quality-versus-speed
+preferences, or automatic policy changes.
 
-If there are no new invocations, write a no-new-observations run entry with
-unchanged watermarks rather than pretending that the prior batch was new. If
-the run is blocked by an inaccessible registry or report path, record the
-failure only when the report can be written; otherwise stop and report the
-unrecorded failure to the caller.
+If there are no new invocations, write a no-new-observations run record with
+unchanged watermarks. If the run is blocked by an inaccessible registry or
+analysis path, record the failure only when the new run record can be written;
+otherwise stop and report the unrecorded failure to the caller. A later manual
+workflow may read these run records and update the routing strategy document;
+that is outside this skill's authority.
 
 ## Completion boundary
 
 The skill is complete only when the new batch has been inspected, linked
 artifacts have been checked, elapsed intervals have been derived where valid,
-unknown evidence has been disclosed, the report and checkpoint have been
-updated, and all source projects remain unchanged. It does not schedule
-itself, edit the MDF dispatch policy, alter the routing reference, or change
-future model selection automatically.
+unknown evidence has been disclosed, one new immutable run record has been
+written, the checkpoint has been advanced successfully, and all source
+projects remain unchanged. It does not schedule itself, edit the MDF dispatch
+policy, alter the routing reference, update a tracked strategy document, or
+change future model selection automatically.
