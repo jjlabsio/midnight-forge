@@ -1,8 +1,8 @@
 # Model Routing Observation Analysis Method
 
 ```yaml
-schema_version: 1
-method_version: 1
+schema_version: 2
+method_version: 2
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -25,8 +25,12 @@ business content into a run record.
 
 ## Invocation identity and raw facts
 
-Use one record per exact `invocation_id`. Preserve these values without alias
-normalization:
+Use the exact `invocation_id` as the invocation identity. A normal dispatch /
+terminal pair appears once. If a later terminal completes an invocation that
+an earlier immutable run recorded as incomplete, write a new resolution row
+with `record_role: resolution` and `supersedes_run_id`; this is a new
+observation revision, not a second invocation. Preserve these values without
+alias normalization:
 
 - `project_id`
 - `work_id`, when present
@@ -37,6 +41,22 @@ normalization:
 - `dispatched_at`
 - `completed_at`, when present
 - project-relative `artifact_refs`
+
+For each analyzed row, also record:
+
+```text
+record_role: initial | resolution
+supersedes_run_id: <run-id> | none
+```
+
+When combining immutable run records, count only the latest resolution for an
+invocation. Keep the earlier incomplete row as audit history, but do not count
+it as an additional sample.
+
+For run-level counts, `new_invocation_count` is the number of distinct
+invocation IDs first observed in this batch. A late terminal for an already
+seen invocation does not increase that count; increment `resolution_count`
+instead.
 
 Pair events only by `invocation_id`. A missing terminal is `incomplete`.
 Duplicate or conflicting events are `malformed`. Preserve failed, timed-out,
@@ -148,10 +168,23 @@ Aggregate only by the exact combination:
 requested_model + requested_effort + task_kind
 ```
 
-Keep failure and censoring counts visible. Report:
+Keep failure and censoring counts visible. Use these mutually exclusive
+aggregate status buckets:
+
+```text
+completed | failed | timed_out | interrupted | incomplete | malformed | unknown
+```
+
+`failed` means the raw terminal status is exactly `failed`. Keep `timed_out`
+and `interrupted` separate; do not silently fold them into `failed`.
+`incomplete` is a dispatch without a terminal, `malformed` is a duplicate,
+conflicting, terminal-before-dispatch, or otherwise structurally invalid
+observation, and `unknown` is a missing or unrecognized status. Preserve the
+raw status separately in the invocation facts. Report:
 
 - total sample count
-- completed, failed, incomplete, and malformed counts
+- completed, failed, timed-out, interrupted, incomplete, malformed, and unknown
+  counts
 - duration median, minimum, and maximum when valid
 - accepted and changes-requested counts
 - verification-strength distribution

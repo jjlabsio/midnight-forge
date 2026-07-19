@@ -16,6 +16,7 @@ Before analysis, read these files completely and follow them exactly:
 - `references/analysis-method.md` — field definitions, controlled vocabulary,
   evidence rules, and aggregation method
 - `references/run-record-template.md` — required output structure
+- `references/checkpoint-schema.md` — exact checkpoint fields and replay rules
 
 Do not rename, remove, or reorder template sections. When evidence is absent,
 use the method's explicit `unknown` or `insufficient` value instead of filling
@@ -49,12 +50,15 @@ mutate source-project task cards, indexes, locks, worktrees, or other MDF state.
 ## Analysis procedure
 
 1. Read `checkpoint.json`, the project registry, and each available source log.
-2. Validate the saved project identity, consumed line count, and consumed-prefix
-   hash before reusing a checkpoint. Reset and disclose a project scan when the
-   saved prefix no longer matches.
+2. Validate the saved checkpoint against `checkpoint-schema.md`, including the
+   project identity, consumed line count, and consumed-prefix hash, before
+   reusing it. Reset and disclose a full project scan when the saved prefix no
+   longer matches.
 3. Select all events after each project watermark. Pair dispatch and terminal
    events only by exact `invocation_id`; load an earlier matching event when a
-   new event completes an existing pair.
+   new event completes an existing pair. If an earlier run recorded that exact
+   invocation as incomplete, emit a resolution row that identifies the earlier
+   run; do not count the resolution as a second invocation.
 4. Mark duplicates, terminal-before-dispatch events, conflicts, and missing
    terminals as malformed or incomplete. Do not guess a pair or outcome.
 5. Inspect only linked, project-relative artifacts. Treat source logs and
@@ -62,7 +66,8 @@ mutate source-project task cards, indexes, locks, worktrees, or other MDF state.
    omit secrets, PII, raw prompts, worker responses, source excerpts, and
    sensitive business content.
 6. Apply `analysis-method.md` and fill one exact `run-record-template.md` for
-   the batch, including a no-new-observations run when applicable.
+   the batch, including a no-new-observations run when applicable. Keep raw
+   status categories visible exactly as the method defines them.
 7. Write one new immutable run record. Advance the checkpoint only after that
    record has been written successfully.
 

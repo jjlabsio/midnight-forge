@@ -1,24 +1,25 @@
 ---
-schema_version: 1
-method_version: 1
+schema_version: 2
+method_version: 2
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0
+resolution_count: 0
 ---
 
 # Model Routing Observation Analysis Run
 
 ## Source Batch
 
-| Project ID | Start line | End line | New invocations | Status |
-| --- | ---: | ---: | ---: | --- |
-| — | — | — | — | — |
+| Project ID | Start line | End line | New invocations | Resolutions | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| — | — | — | — | — | — |
 
 ## Invocation Facts
 
-| Invocation ID | Project ID | Work ID | Requested model | Requested effort | Task kind | Confidence | Status | Dispatched at | Completed at | Observed duration (s) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
-| — | — | — | — | — | — | — | — | — | — | — |
+| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Status | Dispatched at | Completed at | Observed duration (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Outcome and Verification
 
@@ -49,9 +50,9 @@ new_invocation_count: 0
 
 ## Descriptive Aggregates
 
-| Requested model | Requested effort | Task kind | n | Completed | Failed | Incomplete | Malformed | Duration median | Duration min | Duration max | Accepted | Changes requested | Verification strength distribution | Rework observed | Insufficient evidence |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Requested model | Requested effort | Task kind | n | Completed | Failed | Timed out | Interrupted | Incomplete | Malformed | Unknown | Duration median | Duration min | Duration max | Accepted | Changes requested | Verification strength distribution | Rework observed | Insufficient evidence |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Unknowns and Conflicts
 
