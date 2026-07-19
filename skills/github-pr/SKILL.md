@@ -17,20 +17,42 @@ preflight remain required. Spec and plan hashes are intentionally absent in
 this mode; do not invent them.
 
 This skill owns the external PR consumer state for an incomplete current-session
-task. It keeps that task `active` and its matching lock held through PR
-creation/update, latest-head checks, mergeability, and conflict validation;
-the task is completed only after those gates pass. It also validates handoff
-for an already-completed task through a separate read-only path. Use local Git
-state, the GitHub CLI, and the connected GitHub surface when available; do not
-use a background workflow runner or a machine-readable helper contract.
-GitHub is the source of truth for PR state, and PR reports do not belong in
-`.mdf/`.
+task or an already-isolated worktree. For a task-linked handoff, it keeps the
+task `active` and its matching lock held through PR creation/update,
+latest-head checks, mergeability, and conflict validation; the task is
+completed only after those gates pass. For a worktree-only handoff, it uses the
+current isolated worktree and branch as the delivery scope without creating
+MDF task state. Use local Git state, the GitHub CLI, and the connected GitHub
+surface when available; do not use a background workflow runner or a
+machine-readable helper contract. GitHub is the source of truth for PR state,
+and PR reports do not belong in `.mdf/`.
 
-The skill has two task handoff paths. An incomplete task remains active until
-the PR consumer gates pass, then uses the task skill's normal completion and
+The skill has three handoff paths. An incomplete task remains active until the
+PR consumer gates pass, then uses the task skill's normal completion and
 lock-release behavior. An already-completed task is validated for read-only
-handoff without repeating completion. The latter path never recreates,
-replaces, or deletes a lock and never mutates the task card.
+handoff without repeating completion. A worktree-only handoff is valid only
+for a direct standalone invocation with no unambiguous task match; it does not
+read, create, or mutate a task card, index projection, or lock.
+
+## Task linkage and handoff selection
+
+Resolve task linkage from the current MDF and Git state independently of
+workflow mode. Do not treat a mode string as evidence that a task exists.
+
+1. If the current request provides a task ID, resolve that exact four-digit ID
+   from the canonical `.mdf/work/*/item.md` cards.
+2. Otherwise, if the current worktree and branch exactly match the persisted
+   `worktree` and `branch` facts of one task card, use that task.
+3. If no task matches the current request and checkout, use the worktree-only
+   path only when this is a direct standalone invocation.
+4. If multiple tasks match, or task/card/lock/worktree/branch facts conflict,
+   stop without guessing.
+
+The `auto-workflow-pr` and `quick-workflow-pr` contracts remain task-based.
+Those callers require a current task, matching worktree and branch, lock, and
+the applicable handoff before this skill can authorize its external actions.
+Missing task state in either mode is an invalid handoff and remains a stop;
+this does not change how standalone task linkage is resolved.
 
 ## Review provenance boundary
 
@@ -42,21 +64,22 @@ review and `task-review` for exact task/diff/verification context. The
 only `lifecycle-review`, while `task-review` remains standalone and cannot
 create lifecycle evidence or satisfy ship. In `mode: quick-workflow-pr`,
 `task-review` evidence may be based on the quick handoff and task Context
-without a spec or plan.
+without a spec or plan. A worktree-only handoff has no task review or
+lifecycle evidence; its provenance is the exact current diff and verification
+context.
 
 ## Handoff and preflight
 
-1. Identify exactly one session task from the user's task ID, the worktree or
-   branch reported in this session, or the current task description. Stop if
-   the session identifies zero or multiple task IDs.
-2. Resolve the canonical root and find the unique matching
-   `.mdf/work/*/item.md`. Stop on missing, duplicate, unreadable, or malformed
-   cards.
-3. For an incomplete task, require `status: "active"` and a matching lock with
+1. Resolve the canonical root and apply the task-linkage rules above before
+   touching any task state or preparing the PR.
+2. For an incomplete task, require `status: "active"` and a matching lock with
    task and work IDs. For an already-completed task, require persisted
    `worktree` and `branch` fields that match the current checkout; this path
    does not require a lock. A completed task with a matching lock is a
    consistency stop, and do not call `task done` for it.
+3. For a worktree-only handoff, require the current checkout to be an
+   isolated, non-default worktree and do not read, create, or mutate task
+   cards, index projections, or locks.
 4. Check the current worktree, branch, `git status --short`, origin remote,
    GitHub authentication, and default branch. Never prepare a PR from the
    default branch or unrelated dirty work. If intended uncommitted changes
@@ -75,7 +98,8 @@ without a spec or plan.
    card directly. If a consumer gate fails, record the failure evidence and
    hand back to the shared recovery protocol; do not complete the task, release
    the lock, create a repair task, or add a new lifecycle state. If already
-   completed, report that its read-only handoff validation passed.
+   completed, report that its read-only handoff validation passed. For a
+   worktree-only handoff, skip task completion and lock release entirely.
 
 Callers pass only user-confirmed intent, or the explicit
 `mode: auto-workflow-pr` / `mode: quick-workflow-pr` run authorization, plus
@@ -100,14 +124,16 @@ is:
    whether the consumer gate passed.
 
 If checks fail, remain pending, the head is unmergeable, or a conflict exists,
-do not mark the task `done` or release its lock. Return the failure evidence to
-the orchestrator, which applies the shared evidence, spec-validity,
-plan-compatibility, and current-tree reconciliation protocol with the
-earliest-invalidated-stage rule. If source changes are needed, the
-orchestrator re-enters canonical `build -> review -> commit` on the same
-task/worktree/branch. `github-pr` must not add a direct repair path,
-repair skill, repair task, or controller. A provider or external-infrastructure
-failure that is not a clear in-scope source defect is a user-reporting stop.
+do not mark a task `done` or release its lock. For a task-linked handoff,
+return the failure evidence to the orchestrator, which applies the shared
+evidence, spec-validity, plan-compatibility, and current-tree reconciliation
+protocol with the earliest-invalidated-stage rule. If source changes are
+needed, the orchestrator re-enters canonical `build -> review -> commit` on
+the same task/worktree/branch. For a worktree-only handoff, report the failure
+and stop without creating task state or a repair task. `github-pr` must not add
+a direct repair path, repair skill, repair task, or controller. A provider or
+external-infrastructure failure that is not a clear in-scope source defect is
+a user-reporting stop.
 
 ## PR language and content
 
@@ -157,8 +183,10 @@ as completed delivery.
 
 ## Stop conditions
 
-Stop for a missing or ambiguous session task, malformed task state, lock or
-worktree mismatch, default branch, dirty unrelated changes, missing origin or
-GitHub authentication, unmergeable base, unclear release signal, wrong PR
-language, failed push, failed PR command, duplicate/uncertain PR state, or an
-external action outside the auto-workflow-pr authority.
+Stop for ambiguous task linkage, malformed task state or lock/worktree mismatch
+on a task-linked path, a missing task in `auto-workflow-pr` or
+`quick-workflow-pr`, a non-isolated or default-branch worktree-only checkout,
+dirty unrelated changes, missing origin or GitHub authentication, unmergeable
+base, unclear release signal, wrong PR language, failed push, failed PR
+command, duplicate/uncertain PR state, or an external action outside the
+auto-workflow-pr authority.
