@@ -145,6 +145,14 @@ to prove that intent changed, and a technically plausible fix is not enough to
 prove that intent was preserved. If any condition is unclear, stop for user
 judgment instead of guessing.
 
+Before making an intent-preserving revision, record the classification in the
+current continuation handoff: `intent-preserving: yes`, the evidence for each
+of the five conditions above with references to the current task, artifacts,
+failure evidence, and tree, the affected spec/plan/evidence revisions and
+hashes, the earliest invalidated stage, and the absence of any unresolved
+uncertainty or user decision boundary. This improves resumability and
+auditability; it does not replace any artifact, approval, lock, or review gate.
+
 When every condition holds, `auto-workflow` and `auto-workflow-pr` may make the
 technical revision under their existing run-scoped authorization. Preserve the
 normal artifact protocol: write a new canonical spec revision when the
