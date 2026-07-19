@@ -11,12 +11,31 @@ runtime selector, scheduler, controller, or automatic policy updater.
 
 ## Resolve the analysis repository
 
-Resolve the repository that contains this skill. Require that the same
-repository contains `docs/operations/index.md` and the `.mdf/` directory is
-owned by that repository's canonical root. If that anchor cannot be found from
-the skill's repository, stop and ask the caller to run this project skill from
-the MDF repository. Never fall back to the current working directory or a
-registered consumer project for the analysis write.
+Resolve the repository that contains this skill, then resolve its canonical
+root before reading or writing any analysis state. Do not use the current
+working directory, the nearest Git worktree root, the first worktree listed by
+Git, or a remote URL alone as the output target.
+
+Use this mandatory resolution sequence:
+
+1. Resolve the actual path of this `SKILL.md`, then identify the Git worktree
+   that contains it.
+2. From that worktree, resolve the absolute Git common directory (the shared
+   repository directory returned by `git rev-parse --git-common-dir`).
+3. Read `~/.mdf/projects.json` and consider only entries with an absolute
+   `canonical_root`.
+4. For each candidate, resolve its Git common directory and compare its
+   canonical identity with the skill worktree's common directory. A remote
+   URL, project name, or path basename is not sufficient for a match.
+5. Require exactly one matching registry entry. Verify that its
+   `canonical_root` owns a valid `.mdf/project/init.json`,
+   `overlays/mdf/inventory.json`, and `docs/operations/index.md`. If no entry
+   or more than one entry matches, stop and report the ambiguity.
+6. Use that registry entry's resolved `canonical_root` as the only analysis
+   root. All worktrees for the same repository must resolve to this same root.
+
+If any resolution step fails, stop. Never fall back to the current working
+directory, a worktree-local `.mdf`, or a similarly named registered project.
 
 The source observations live in each registered project's local, gitignored
 MDF state. The analysis records and checkpoint live in this repository's
@@ -32,6 +51,14 @@ Do not mutate any source project's task card, index, lock, worktree, or other
 MDF state. Read source projects and write only new run records and the
 checkpoint under this repository's `.mdf/analysis/model-routing/` directory.
 Never update an earlier run record or a tracked document as part of analysis.
+
+Before writing, verify that `.mdf/analysis/model-routing/` and its parents are
+not symlinks escaping the resolved canonical root. Create missing directories
+with restrictive permissions where supported (`0700` for directories and
+`0600` for files). Use a single analysis lock under this directory; if another
+analysis holds it, stop without taking over a stale lock or advancing the
+checkpoint. Write run records and checkpoints to same-directory temporary
+files and atomically rename them into place.
 
 ## Scope and schedule
 
