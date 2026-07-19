@@ -125,6 +125,41 @@ Use these decisions:
 - An invalid or changed spec: revise the spec first, then create or revise a
   compatible plan and pass current-tree/spec/plan reconciliation before build.
 
+### Intent-preserving technical revisions
+
+A new artifact revision does not by itself mean that the user's intent
+changed. During recovery, the root agent may classify a revision as
+intent-preserving only when current evidence supports all of the following:
+
+- the user's goal and core value remain the same;
+- external and public behavior remain the same;
+- acceptance meaning, scope, and task boundaries remain the same;
+- no material architecture, compatibility, operational, cost, or rollback
+  trade-off changes; and
+- security, privacy, data, permission, and other explicit constraints remain
+  the same, with no new user decision required.
+
+This is a semantic judgment over the current task, artifacts, failure evidence,
+and tree. A wording change, a new file, or a new revision number is not enough
+to prove that intent changed, and a technically plausible fix is not enough to
+prove that intent was preserved. If any condition is unclear, stop for user
+judgment instead of guessing.
+
+When every condition holds, `auto-workflow` and `auto-workflow-pr` may make the
+technical revision under their existing run-scoped authorization. Preserve the
+normal artifact protocol: write a new canonical spec revision when the
+constraint must be recorded, re-evaluate and revise the affected plan when
+needed, invalidate affected downstream evidence, and re-enter the existing
+`build -> verification -> review -> commit` flow from the earliest invalidated
+stage. The revision must not silently reuse an invalidated approval or evidence
+record. Standalone `spec` and `plan` keep their existing explicit human
+approval gates.
+
+This rule changes only MDF orchestration and recovery judgment. It does not
+change the upstream spec, planning, incremental-implementation, test, or
+review workflow, and it does not add a repair skill, repair task, lifecycle
+state, or controller.
+
 A plan-only revision is allowed only for a real dependency, order, owned-path,
 or scope representation defect while the spec and its material constraints
 remain valid. If a proposed plan change alters acceptance, user goal, scope,
