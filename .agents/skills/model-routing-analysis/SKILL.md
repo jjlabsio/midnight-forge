@@ -5,30 +5,27 @@ description: "Analyze newly observed MDF subagent invocations and maintain model
 
 # model-routing-analysis
 
-Use this repository skill when reviewing the empirical evidence collected for
-MDF subagent model and effort routing. It is an analysis workflow, not a
+Use this project-local skill when reviewing the empirical evidence collected
+for MDF subagent model and effort routing. It is an analysis workflow, not a
 runtime selector, scheduler, controller, or automatic policy updater.
 
 ## Resolve the analysis repository
 
-Before reading or writing anything, resolve the plugin repository from the
-skill's own source location. Require the same repository to contain
-`overlays/mdf/inventory.json` and
-`docs/operations/model-routing-analysis.md`. If those anchors cannot be found
-from the skill source location, stop and ask the caller to run this repository
-skill from the plugin repository. Never fall back to the current working
-directory or a registered consumer project for the report write.
+Resolve the repository that contains this skill. Require that the same
+repository contains `docs/operations/model-routing-analysis.md`. If that
+anchor cannot be found from the skill's repository, stop and ask the caller to
+run this project skill from the MDF repository. Never fall back to the current
+working directory or a registered consumer project for the report write.
 
 The source observations live in each registered project's local, gitignored
-MDF state. The analysis report and its checkpoint live in the plugin
-repository at:
+MDF state. The analysis report and its checkpoint live in this repository at:
 
 ```text
 docs/operations/model-routing-analysis.md
 ```
 
 Do not mutate any source project's task card, index, lock, worktree, or other
-MDF state. Read source projects and write only the plugin-repository analysis
+MDF state. Read source projects and write only this repository's analysis
 document.
 
 ## Scope and schedule
@@ -64,11 +61,11 @@ path. Apply this procedure:
    the digest as SHA-256 of the normalized absolute `canonical_root` string,
    but never write that path to the tracked report. If either identity differs,
    the checkpoint is invalid for that project: perform and disclose a full
-   rescan.
-   If no checkpoint exists, treat the complete available log as the initial
-   batch. If the checkpoint is malformed, the line count moved backwards, or
-   the SHA-256 of the previously consumed prefix does not match, perform a
-   full rescan and disclose the reset instead of guessing what was missed.
+   rescan. If no checkpoint exists, treat the complete available log as the
+   initial batch. If the checkpoint is malformed, the line count moved
+   backwards, or the SHA-256 of the previously consumed prefix does not match,
+   perform a full rescan and disclose the reset instead of guessing what was
+   missed.
 3. Select every source-log event after that project's recorded line number.
    Include an invocation when either its dispatch or terminal event is in the
    new range, and load its matching event from the earlier range when needed.
@@ -77,10 +74,10 @@ path. Apply this procedure:
    duplicate terminals, terminal-before-dispatch events, conflicting statuses,
    or conflicting timestamps are malformed observations: retain them in the
    report as malformed/insufficient evidence and exclude them from efficiency
-   comparisons. A dispatch without a terminal event remains an
-   incomplete/censored observation.
+   comparisons. A dispatch without a terminal event remains an incomplete or
+   censored observation.
 5. Advance the checkpoint only after the current batch has been analyzed and
-   the plugin report has been written. A failed report write must not be
+   the analysis report has been written. A failed report write must not be
    described as a successful checkpoint.
 
 The source log is an observation stream, not a truth database. Preserve raw
@@ -90,25 +87,29 @@ cohort key.
 
 ## Raw observation contract
 
-Accept only the minimal facts defined by the dispatch policy:
+Accept only the minimal facts defined by the MDF dispatch policy:
 
 - `invocation_id`
 - `requested_model`
 - `requested_effort`
 - `status`
 - `dispatched_at` and, when present, `completed_at`
-- fixed `purpose` (`workflow` or `analysis`) and existing `work_id` linkage
+- existing `work_id` linkage when one exists
 - project-relative `artifact_refs`
 
 Do not add or reconstruct orchestrator model/effort, host-reported actual
 model/effort, task-factor judgments, routing rationale, prompts, responses,
-manual review fields, secrets, or absolute local paths. If a required raw
-field is missing or malformed, retain the observation as invalid or
-insufficient evidence and say why.
+manual review fields, secrets, or absolute local paths. If a required raw field
+is missing or malformed, retain the observation as invalid or insufficient
+evidence and say why.
 
-`purpose: analysis` observations are kept for provenance but excluded from
-workflow model-efficiency cohorts. A missing or unknown purpose is not
-silently treated as workflow; place it in an explicitly unknown cohort.
+The source log contains MDF workflow observations only. The analysis skill's
+own execution is not a workflow observation and must not be inserted into the
+source logs or mixed into workflow model-efficiency cohorts.
+
+Older observations may contain the former `purpose` field. Treat it as legacy
+extra metadata, do not use it to split or filter cohorts, and do not emit it in
+new records or reconstructed report fields.
 
 ## Artifact and outcome evidence
 
@@ -117,22 +118,22 @@ result artifacts together. Read every safe, project-relative path in
 `artifact_refs`, including changed-file summaries, test results, review or
 validation records, and shipped-outcome records when those artifacts are
 actually linked. Before opening any artifact, enforce these per-invocation
-limits: at most 32 artifact references, at most 1 MiB per regular file, and
-at most 8 MiB total bytes across that invocation's artifacts. Reject
-directories, non-regular files, and artifacts that exceed these limits;
-disclose the omitted evidence instead of reading an unbounded blob.
+limits: at most 32 artifact references, at most 1 MiB per regular file, and at
+most 8 MiB total bytes across that invocation's artifacts. Reject directories,
+non-regular files, and artifacts that exceed these limits; disclose the omitted
+evidence instead of reading an unbounded blob.
 
-Reject absolute paths, traversal, symlink escapes, unreadable paths, and
-links outside the registered canonical root. Do not search nearby files and
-pretend that they are linked evidence. If the terminal event has no reliable
-artifact link, or the linked artifact does not contain enough evidence to
-support an outcome, record `unknown` or `insufficient evidence` explicitly.
+Reject absolute paths, traversal, symlink escapes, unreadable paths, and links
+outside the registered canonical root. Do not search nearby files and pretend
+that they are linked evidence. If the terminal event has no reliable artifact
+link, or the linked artifact does not contain enough evidence to support an
+outcome, record `unknown` or `insufficient evidence` explicitly.
 
 Keep these layers separate in the report:
 
 1. **Raw observation** — the exact recorded dispatch/terminal facts.
-2. **Artifact evidence** — the linked files read and the objective signals
-   they contain, with relative references.
+2. **Artifact evidence** — the linked files read and the objective signals they
+   contain, with relative references.
 3. **Retrospective interpretation** — an inferred task shape, outcome signal,
    rework signal, and confidence, always labeled as inference.
 4. **Routing insight** — a cautious comparison or recommendation, never an
@@ -178,17 +179,17 @@ contain it.
 
 Use the strongest currently available model and native effort setting for
 retrospective semantic synthesis. If the analysis delegates that synthesis,
-follow the central dispatch policy, use `purpose: analysis`, and record the
-requested model/effort pair and the delegated invocation reference in the
-plugin report. If the root performs the synthesis, record root-context
-synthesis without inventing a model or effort value. Never use a host runtime
-return value as evidence of the model or effort.
+keep that delegation outside the MDF workflow observation logs. The report may
+record explicitly known analysis provenance, but must not claim a host-reported
+actual model or effort value and must not mix the analysis delegation into the
+workflow cohorts. If the root performs the synthesis, record root-context
+synthesis without inventing a model or effort value.
 
 Every run records its analysis provenance: run timestamp, source-project
 registry snapshot, included/excluded project counts, source-log watermarks,
-new invocation count, evidence limitations, and the requested analysis
-dispatch pair when one was explicitly selected. This provenance describes the
-analysis operation; it is not an orchestrator observation.
+new invocation count, evidence limitations, and any explicitly known analysis
+dispatch pair. This provenance describes the analysis operation; it is not an
+orchestrator observation.
 
 Generate a readable run ID from the UTC run timestamp plus a short unique
 suffix (for example, `analysis-20260719T120000Z-a1b2`). The run ID identifies
@@ -205,8 +206,7 @@ Keep the document readable and structured with these sections:
   inclusion/exclusion reason per registered project
 - `Run history` — one concise entry per analysis run, including no-op runs,
   resets, and report-write failures
-- `Raw observations` — new exact model/effort/status/timestamp counts, with
-  analysis-purpose rows separated
+- `Raw observations` — new exact model/effort/status/timestamp counts
 - `Artifact evidence and inferred outcomes` — evidence references, explicit
   unknown/insufficient-evidence rows, confidence, and any conflicts
 - `Model and effort comparisons` — descriptive observations with sample sizes,
@@ -222,14 +222,14 @@ document so the report remains an auditable record.
 If there are no new invocations, write a no-new-observations run entry with
 unchanged watermarks rather than pretending that the prior batch was new. If
 the run is blocked by an inaccessible registry or report path, record the
-failure only when the plugin report can be written; otherwise stop and report
-the unrecorded failure to the caller.
+failure only when the report can be written; otherwise stop and report the
+unrecorded failure to the caller.
 
 ## Completion boundary
 
 The skill is complete only when the new batch has been inspected, linked
 artifacts have been checked, elapsed intervals have been derived where valid,
-unknown evidence has been disclosed, the plugin report and checkpoint have
-been updated, and all source projects remain unchanged. It does not schedule
-itself, edit `subagent-dispatch-policy.md`, alter the routing reference, or
-change future model selection automatically.
+unknown evidence has been disclosed, the report and checkpoint have been
+updated, and all source projects remain unchanged. It does not schedule
+itself, edit the MDF dispatch policy, alter the routing reference, or change
+future model selection automatically.

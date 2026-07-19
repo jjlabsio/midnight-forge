@@ -87,24 +87,23 @@ keeps artifact linkage reliable without calculating elapsed time or delaying
 the observed completion timestamp. The two objects share `invocation_id`:
 
 ```json
-{"event":"dispatch","invocation_id":"<unique-id>","requested_model":"<selected-model>","requested_effort":"<native-setting>","purpose":"workflow|analysis","work_id":null,"status":"dispatched","dispatched_at":"<observed-UTC-timestamp>"}
+{"event":"dispatch","invocation_id":"<unique-id>","requested_model":"<selected-model>","requested_effort":"<native-setting>","work_id":null,"status":"dispatched","dispatched_at":"<observed-UTC-timestamp>"}
 {"event":"terminal","invocation_id":"<same-id>","status":"completed|failed|timed_out|interrupted","completed_at":"<observed-UTC-timestamp>","artifact_refs":["<project-relative-result-artifact>"]}
 ```
 
 `artifact_refs` is optional only when no result artifact exists; use an empty
 array for a known artifact-free result. Paths are project-relative and must
-not contain absolute paths, traversal, prompts, responses, or secrets. When a
-worker is used for retrospective model-routing analysis, set `purpose` to
-`analysis`; normal implementation, testing, review, and lifecycle workers use
-`workflow`. `work_id` is the existing MDF work-item identity when one exists,
-not a new task classification.
+not contain absolute paths, traversal, prompts, responses, or secrets.
+`work_id` is the existing MDF work-item identity when one exists, not a new
+task classification.
 
 The observation contains only requested model/effort, invocation identity,
-fixed purpose/work linkage, terminal status, timestamps, and result-artifact
+existing work linkage, terminal status, timestamps, and result-artifact
 references. Never add orchestrator model/effort, host-reported actual
 model/effort, task-factor judgments, rationale, or manual review fields. Do
-not calculate elapsed time during workflow execution. The analysis skill
-derives dispatch-to-return duration from the two observed timestamps.
+not calculate elapsed time during workflow execution. The project-level
+analysis skill derives dispatch-to-return duration from the two observed
+timestamps.
 
 The root is the sole writer for these lines, including when dispatches run in
 parallel. This is an automatic step at the shared MDF generic-dispatch

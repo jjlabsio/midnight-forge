@@ -10,6 +10,9 @@ Model-routing evidence is maintained in
 [Model Routing Analysis](model-routing-analysis.md). Raw subagent invocation
 observations remain local to each registered project's gitignored `.mdf`
 state; the tracked report contains only analysis summaries and checkpoints.
+The analysis workflow itself is the project-local
+`.agents/skills/model-routing-analysis/SKILL.md` skill, not an MDF plugin
+runtime skill.
 
 Release history is tracked in the root `CHANGELOG.md`.
 

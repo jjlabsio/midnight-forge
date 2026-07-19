@@ -36,10 +36,9 @@ analysis dispatch provenance when applicable, and evidence limitations below.
 Run IDs should use the UTC timestamp plus a short unique suffix and identify
 the report checkpoint only; they are not model identities or runtime values.
 
-Analysis-purpose workers are retained for provenance but excluded from normal
-workflow efficiency cohorts. The report must never contain raw prompts,
-worker responses, secrets, host-reported actual model/effort values, or
-absolute local paths.
+The analysis operation is separate from the workflow observation stream. The
+report must never contain raw prompts, worker responses, secrets,
+host-reported actual model/effort values, or absolute local paths.
 
 ## Checkpoint
 
@@ -62,9 +61,9 @@ report-write failure that prevented a checkpoint from advancing.
 ## Raw observations
 
 No invocation batch has been analyzed yet. Future entries must preserve the
-exact `requested_model`, `requested_effort`, status, purpose, timestamps, and
-invocation identity from source observations without normalizing aliases or
-effort labels.
+exact `requested_model`, `requested_effort`, status, timestamps, and invocation
+identity from source observations without normalizing aliases or effort
+labels.
 
 ## Artifact evidence and inferred outcomes
 

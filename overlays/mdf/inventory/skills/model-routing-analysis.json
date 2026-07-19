@@ -1,9 +1,0 @@
-{
-  "output": "skills/model-routing-analysis/SKILL.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/skills/model-routing-analysis/SKILL.md",
-  "artifactStorageOverride": false,
-  "notes": "Incremental empirical analysis of MDF subagent model and effort observations across registered local projects.",
-  "overlayKind": "mdfOnly"
-}
