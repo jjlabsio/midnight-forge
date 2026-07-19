@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.4 - 2026-07-19
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.3...v2.3.4)
+
+### Changes
+
+- docs(workflow): preserve intent-revision evidence in handoffs ([#77](https://github.com/jjlabsio/midnight-forge/pull/77))
 ## v2.3.3 - 2026-07-19
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.2...v2.3.3)
