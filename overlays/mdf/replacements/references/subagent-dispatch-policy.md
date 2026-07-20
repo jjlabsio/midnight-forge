@@ -115,6 +115,32 @@ report the missing observation as insufficient evidence; never reconstruct it
 from memory or host metadata. A dispatch without a terminal event is an
 incomplete/censored observation, not a successful result.
 
+## Condition-based completion and fan-out joins
+
+The dispatch observation is not the worker result. A caller may consume a
+subagent report only after the actual response condition has occurred: the
+generic runtime returned the worker response and the caller can read the
+report or its declared result artifact. A terminal observation with
+`status: "completed"` is not sufficient when the response or required report
+is absent.
+
+Use event- or return-based waiting when the executor exposes it. An elapsed
+time limit is only a safety guard for an unavailable or unhealthy executor; it
+is never evidence that the worker completed. In particular, do not use a
+caller-specific fixed timeout as a substitute for waiting on the response and
+do not treat `timed_out`, `interrupted`, `failed`, a missing terminal event, or
+a missing/partial report as normal success. Do not merely increase a guessed
+timeout to hide the same completion-contract failure.
+
+For a fan-out, the root establishes a join by checking every required worker's
+actual report, not by counting dispatches or terminal lines. The root may
+retain partial reports as diagnostic evidence, but it must not synthesize them
+as a complete result, advance the consuming stage, or issue a normal GO
+recommendation until every required report has returned. A missing or
+non-success report is an explicit incomplete/degraded outcome or stop under
+the caller's existing contract. This policy does not add a runtime controller,
+heartbeat, retry service, or host-side cleanup mechanism.
+
 ## Spawn boundary
 
 Delegating skills pass these fields through the generic runtime path:
