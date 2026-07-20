@@ -107,22 +107,36 @@ The approved contract must contain readable sections for:
 - completion criteria, which may describe behavior, a test artifact, a
   verification result, a recommendation, or another explicitly agreed outcome
 - verification and required evidence
-- pre-approved risk, data, security, compatibility, operational, and external
-  authority boundaries when they are relevant
+- a risk and authority assessment with an explicit status for each category:
+  `approved`, `excluded`, `not applicable`, or `unresolved`;
+  categories include security/authentication/permission, privacy/data
+  handling, data migration/loss/backfill, public API or user-visible behavior,
+  operational/deployment/rollback impact, and external actions
 - stop and escalation conditions
 
-Store these sections under a clearly labeled `Confirmed task contract` block.
-Store the unknown classification under a clearly labeled `Decision
-boundaries` block. These headings are part of the readable card contract;
-do not leave the same information only in an unstructured summary.
+Store these sections under a clearly labeled `Confirmed task contract` block
+between exact marker lines:
+
+```markdown
+<!-- MDF:CONTRACT E1 BEGIN -->
+[contract payload, including Decision boundaries]
+<!-- MDF:CONTRACT E1 END -->
+```
+
+The canonical contract payload is the exact UTF-8 text between the marker
+lines, with CRLF or CR line endings normalized to LF and all other whitespace
+preserved, including the final newline before the end marker. The revision,
+approval source, digest, mutable frontmatter, and lifecycle `Log` entries are
+outside the payload and are not hashed. These markers and the contract headings
+are part of the readable card contract; do not leave the same information only
+in an unstructured summary.
 
 Each approved task contract must have a readable revision record containing:
 
 - a contract revision such as `E1`;
 - the approving conversation source such as `[C1]`;
 - the exact approved scope and authority boundary; and
-- a SHA-256 digest of the canonical contract payload, excluding this revision
-  record, mutable frontmatter, and lifecycle `Log` entries.
+- a SHA-256 digest of the canonical contract payload defined by the markers.
 
 Approval is valid only for that exact contract revision and digest. A material
 change to the objective, scope, delegated decisions, completion criteria,
@@ -173,10 +187,12 @@ Only deterministic MDF metadata such as task_id, work_id, created, status,
 worktree, branch, latest, and a neutral navigation title may be generated
 without user input.
 
-An execution-ready task must not have a missing approved contract, an
+An execution-ready task must not have a missing approved contract, missing or
+malformed contract markers, a stale or missing contract digest, an
 unclassified material unknown, an unresolved user decision, empty completion
-criteria, or an undefined verification boundary. Incomplete queue tasks remain
-valid only when the user explicitly asks to record an unfinished idea,
+criteria, an undefined verification boundary, a missing risk and authority
+assessment, or an `unresolved` risk/authority category. Incomplete queue tasks
+remain valid only when the user explicitly asks to record an unfinished idea,
 investigation, or other incomplete work item; they must be clearly identified
 as not ready for execution.
 Creation does not activate the task or create a branch, worktree, or lock.
@@ -186,7 +202,9 @@ provided or approved; lifecycle metadata may be updated by the task workflow.
 Before beginning task work, a new session must read `Confirmed intent`, the
 approved task contract, the `Conversation record`, the decision-boundary
 table, and `Open decisions`. It must verify that the approved contract
-revision and digest still match the card. If the card follows a multi-turn
+revision, marker boundaries, canonical payload bytes, and digest still match
+the card, and that every risk/authority category has an explicit non-
+`unresolved` status. If the card follows a multi-turn
 discussion but lacks that context, if the contract was not explicitly
 approved, if its digest is stale or missing, or if a material user decision
 remains open, do not begin from an inferred requirement. Keep a queued task
