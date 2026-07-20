@@ -48,121 +48,77 @@ infer from titles or branches.
 
 ## Task creation and semantic fidelity
 
-Task creation is a conversation-closure and approval step, not a copy of the
-final command and not a requirement that every technical detail be decided in
-advance. The card must preserve the context needed to act safely while making
-the boundary between confirmed intent, delegated judgment, and unresolved user
-decisions explicit.
+Task creation closes the conversation into an approved contract. It must keep
+enough context for a new session to act safely without requiring every
+technical choice to be decided in advance.
 
 Before closing an execution-ready task, load the exact upstream
-`using-agent-skills` primitive and classify the definition state:
+`using-agent-skills` primitive and route definition work:
 
-- Invoke `interview-me` when the user, objective, success condition, binding
-  constraint, or user-owned trade-off is unresolved. Contract approval itself
-  is not an interview condition.
-- Invoke `idea-refine` when a product or conceptual direction requires user
-  comparison and convergence, or the user explicitly requests ideation or
-  stress-testing. Do not use it for delegated technical alternatives.
-- If both apply, run `interview-me` before `idea-refine`.
-- Do not invoke either primitive for explicitly delegated technical decisions
-  or bounded discovery. Record those as agent-delegated decisions or discovery
-  targets instead.
-- Record each primitive's applied/skipped status, reason, and outcome. Do not
-  reimplement upstream workflows or replace applicable downstream skills.
+- `interview-me`: unresolved user intent, objective, success condition, binding
+  constraint, or user-owned trade-off. Contract approval alone is not a reason.
+- `idea-refine`: product or conceptual direction needs user comparison and
+  convergence, or the user requests ideation or stress-testing. Do not use it
+  for delegated technical alternatives.
+- If both apply, run `interview-me` first. Use neither for explicitly delegated
+  technical decisions or bounded discovery; record those as such.
+- Record each primitive as applied or skipped, with reason and outcome. Do not
+  reimplement or replace an applicable upstream or downstream skill.
 
-Begin `Context` with the triggering user's request verbatim. Then keep a
-labeled `Conversation record` for the relevant discussion. Use lightweight
-source and state labels rather than a machine-only schema:
+Begin `Context` with the triggering request verbatim and preserve the relevant
+discussion in a `Conversation record`:
 
-- `[U#][active|superseded|rejected]` — the user's relevant wording, preserved
-  verbatim.
-- `[A#][proposed|evidence]` — an agent proposal, finding, or analysis; it is
-  non-authoritative until the user approves the resulting task contract.
-- `[C#][confirms A#]` — the user's explicit confirmation or restatement of an
-  agent proposal.
-- `[C#][approves E#]` — the user's explicit approval of the complete task
-  contract `E#`, including its scope, delegated decisions, completion
-  criteria, verification, risk boundaries, and stop conditions.
+- `[U#][active|superseded|rejected]`: relevant user wording, verbatim.
+- `[A#][proposed|evidence]`: agent proposal or finding; not authoritative.
+- `[C#][confirms A#]`: explicit user confirmation or restatement.
+- `[C#][approves E#]`: explicit approval of the complete contract `E#`.
 
-Before writing the final card, produce a concise proposed task contract and
-obtain explicit user approval of that contract. A single aggregate approval is
-valid; the user does not need to confirm every agent proposal separately when
-the approved contract clearly includes it. Do not treat a vague response such
-as "sounds good" as approval when the scope or authority boundary is unclear.
-If the user asks to create a task but no complete contract has been presented
-or clearly approved, present the contract and stop for confirmation before
-closing an implementation-ready task.
+Before writing an execution-ready card, present a concise proposed contract and
+obtain clear user approval. One aggregate approval is sufficient when it
+clearly covers scope, delegated judgment, completion, verification, risk,
+authority, and stop conditions. Do not infer approval from vague agreement.
+If the contract is not complete or approved, present it and stop. An explicitly
+requested unfinished queue item may be recorded as not ready for execution.
 
-The approved contract must contain readable sections for:
+The `Confirmed task contract` must contain readable sections for:
 
-- definition-phase skills applied or skipped, with the reason and resulting
-  intent or direction;
-- `Objective` and `Desired result`
-- `Non-goals` and binding constraints
-- current facts and supporting evidence
-- confirmed decisions and design rationale when applicable
-- `Owned paths / discovery boundary`
-- completion criteria, which may describe behavior, a test artifact, a
-  verification result, a recommendation, or another explicitly agreed outcome
-- an `Execution envelope` that bounds one run and the whole task, including the
-  progress unit, allowed actions, phase gates, terminal outcomes, and
-  continuation policy
-- verification and required evidence
-- a risk and authority assessment with an explicit status for each category:
+- definition skills applied/skipped, reason, and outcome;
+- `Objective`, `Desired result`, `Non-goals`, and binding constraints;
+- current facts, evidence, confirmed decisions, and rationale;
+- `Owned paths / discovery boundary`;
+- completion outcomes, including behavior, artifact, verification result,
+  recommendation, or another agreed result;
+- verification and required evidence;
+- risk and authority status for security/authentication/permission,
+  privacy/data, migration/loss/backfill, public or user-visible behavior,
+  operational/deployment/rollback, and external actions. Each is
   `approved`, `excluded`, `not applicable`, or `unresolved`;
-  categories include security/authentication/permission, privacy/data
-  handling, data migration/loss/backfill, public API or user-visible behavior,
-  operational/deployment/rollback impact, and external actions
-- when a high-risk or external action is in scope, a concrete `Approved action
-  allowlist` tied to the contract revision
-- stop and escalation conditions
+- an `Execution envelope` and stop/escalation conditions; and
+- an `Approved action allowlist` when a high-risk or external action is in
+  scope.
 
-`Execution envelope` is required for every task and is not a task type. It
-must define:
+Every task has an `Execution envelope`; this is not a task type. Record the
+progress unit and per-invocation limit, a finite total bound, allowed actions
+and repository-relative scope, phase/iteration gates, an observable completion
+predicate, permitted terminal dispositions, a no-progress threshold, and the
+checkpoint/resume rule. At least one finite bound applies to every autonomous
+action. Mark a resource dimension `not applicable` only with a reason. Do not
+use open-ended goals such as "continue until best" or an agent-expandable
+budget. Budget exhaustion is not success unless the contract says so; state
+which terminal dispositions complete the task and which stop for the user.
 
-- the progress unit and the maximum work for one invocation;
-- the total autonomous bound, such as maximum runs, phases, candidates,
-  iterations, data, time, cost, or another finite resource;
-- the actions and repository-relative scope allowed within that bound;
-- phase or iteration gates that must be met before continuing;
-- an observable completion predicate and the permitted terminal dispositions,
-  such as `success`, `valid-negative-result`, `inconclusive`, `blocked`, or
-  `escalation-required`;
-- the no-progress threshold and escalation condition; and
-- how the next invocation resumes from the recorded checkpoint and remaining
-  bound.
+For every approved high-risk or external action, the allowlist records the
+stable action ID and consuming skill, exact operation and target resource/path/
+branch/lock/destination, parameters and limits, current-state and ownership
+preconditions, verification, rollback/recovery, stop behavior, approving
+`E#`/`C#`, and post-action evidence. It may name merge, deploy, deletion,
+force, or stale-lock operations only when explicitly exact. It is task-specific
+pre-approval, not category-wide authority or a wildcard. A consuming skill may
+use it without another approval only if its contract accepts task-level
+pre-approval and all gates are revalidated. It never bypasses path safety, lock
+exclusivity, current-state checks, verification, or rollback/stop requirements.
 
-At least one finite bound must apply to every autonomous action. A resource
-dimension may be `not applicable` only with a reason; an open-ended search,
-"continue until the best result", or a budget that can be expanded by the
-agent is not execution-ready. Budget exhaustion is not success by default. The
-contract must state which terminal dispositions satisfy completion criteria and
-which require stopping for the user.
-
-An `approved` risk category is risk acceptance, not blanket action authority.
-For every approved high-risk or external action, the contract must list an
-allowlist entry containing:
-
-- a stable action ID and the action-owning or consuming skill;
-- the exact operation and target resource, repository path, branch, lock, or
-  external destination;
-- allowed parameters, maximum extent, and any data or cost limit;
-- required current-state preconditions and identity/ownership checks;
-- verification, rollback or recovery, and stop behavior; and
-- the approving `E#`/`C#` source and the evidence required after execution.
-
-The allowlist is the durable record of the user's pre-approval and exact
-authority boundary for those actions. It may name a merge, deploy, deletion,
-force operation, or stale-lock takeover, but never as a category-wide
-permission or wildcard. It is an approval input, not a generic instruction or
-an authority bypass. An action-owned skill may consume it without another
-ceremonial approval only when its own contract explicitly accepts task-level
-pre-approval and it revalidates every listed precondition. The allowlist does
-not override path safety, lock exclusivity, current-state checks, verification,
-or rollback/stop requirements.
-
-Store these sections under a clearly labeled `Confirmed task contract` block
-between exact marker lines:
+Store the contract between exact marker lines:
 
 ```markdown
 <!-- MDF:CONTRACT E1 BEGIN -->
@@ -170,107 +126,55 @@ between exact marker lines:
 <!-- MDF:CONTRACT E1 END -->
 ```
 
-The canonical contract payload is the exact UTF-8 text between the marker
-lines, with CRLF or CR line endings normalized to LF and all other whitespace
-preserved, including the final newline before the end marker. The revision,
-approval source, digest, mutable frontmatter, and lifecycle `Log` entries are
-outside the payload and are not hashed. These markers and the contract headings
-are part of the readable card contract; do not leave the same information only
-in an unstructured summary.
+Keep the marker lines and contract headings; do not leave the contract only in
+an unstructured summary. The payload is the exact UTF-8 text between markers,
+normalizing CRLF/CR to LF and preserving all other whitespace, including the
+final newline. Keep revision, approval source, digest, frontmatter, and
+lifecycle `Log` outside the payload and exclude them from its hash. Record the
+revision (for example `E1`), approving source (for example `[C1]`), approved
+scope/authority, and SHA-256 digest. Approval applies only to that revision and
+digest. A material change to intent, scope, delegated decisions, criteria,
+verification, envelope, risk, authority, allowlist, or stop conditions requires
+a new revision, digest, and explicit approval. Lifecycle/checkpoint/consumption
+updates may not change those fields.
 
-Each approved task contract must have a readable revision record containing:
+For each material unknown, use a decision-boundary table with: unknown or
+choice, classification (`user decision`, `agent-delegated decision`,
+`discovery target`, or `out of scope`), decision owner, allowed choices or
+discovery boundary, finite envelope, evidence, and escalation condition. A
+technical result explicitly authorized for discovery is not an `Open decision`.
 
-- a contract revision such as `E1`;
-- the approving conversation source such as `[C1]`;
-- the exact approved scope and authority boundary; and
-- a SHA-256 digest of the canonical contract payload defined by the markers.
+Derive `Confirmed intent` and the contract only from active user entries or
+content covered by aggregate approval, citing `U#`, `A#`, or `C#`. Keep
+`Analysis / evidence`, `Open decisions`, and `Superseded decisions` separate;
+record every material discussion item in one of them or link it to the
+contract. Write `No additional active context identified` when applicable.
+Unresolved conflicts remain in `Open decisions` and stop inference. Agent
+proposals cannot silently become intent, scope, Files, or Criteria. Do not add
+unstated goals, dependencies, priority, dates, or solutions. A generated title
+is neutral navigation metadata. Later semantic card updates require
+user-provided or user-approved content; lifecycle metadata may be updated by
+the task workflow. Only deterministic MDF metadata may be generated without
+user input.
 
-Approval is valid only for that exact contract revision and digest. A material
-change to the objective, scope, delegated decisions, completion criteria,
-verification, execution envelope, risk boundary, authority boundary, approved
-action allowlist, or stop conditions requires a new contract revision, a new
-digest, and a new explicit user approval. Do not carry approval forward because
-the task ID, title, or card remains the same. Non-semantic lifecycle,
-checkpoint, and budget-consumption log updates do not require contract
-reapproval; they must not change the approved envelope, allowlist, or authority.
+An execution-ready task has none of these: missing/malformed contract markers,
+missing or stale digest, unclassified unknown, unresolved user decision, empty
+criteria, missing/divergent `Files` or `Criteria` projections, undefined
+verification, missing/unbounded envelope, missing completion predicate or
+terminal disposition, missing no-progress/escalation rule, missing risk/
+authority assessment, `unresolved` risk category, or approved high-risk/
+external action without a concrete non-wildcard allowlist. An explicitly
+requested unfinished queue item may remain queued and must be marked not ready.
+Creation does not activate a task or create branch, worktree, or lock.
 
-Do not force a final technical solution when the task is intentionally meant to
-discover, compare, verify, prototype, or investigate something. Instead, record
-each material unknown in a decision-boundary table with:
-
-- the unknown or choice;
-- whether it is a user decision, an agent-delegated decision, a discovery
-  target, or explicitly out of scope;
-- who may decide it;
-- allowed choices or discovery boundaries;
-- the finite execution envelope for making or discovering the choice;
-- required evidence; and
-- the condition that requires escalation.
-
-An unknown technical result is not automatically an `Open decision`. It is an
-`Open decision` only when a user judgment is required before proceeding. A
-technical value that the task is explicitly authorized to discover is an
-approved discovery target and must not block execution.
-
-Derive `Confirmed intent` and the approved task contract only from active user
-entries or content explicitly covered by the user's aggregate approval, and
-cite their `U#`, `A#`, or `C#` sources. Keep separate `Analysis / evidence`,
-`Open decisions`, and `Superseded decisions` blocks. Every material discussion
-item must appear in one of those blocks or be linked from analysis to the
-confirmed contract. No material design decision may remain only as an abstract
-summary.
-
-If the discussion is multi-turn but yields no additional active context, write
-`No additional active context identified`; never omit the context block
-silently. If an earlier and later decision conflict without clear
-supersession, keep the conflict in `Open decisions` and stop before inferring a
-requirement.
-
-An agent proposal must not silently become user intent, task scope, Files, or
-Criteria. It may become authorized task content only through an explicit
-individual confirmation or approval of the complete task contract. Do not add
-unstated goals, files, criteria, dependencies, priority, due dates, or
-technical solutions. A short generated title is navigation metadata only; it
-must not introduce a solution or scope absent from the approved contract.
-
-Only deterministic MDF metadata such as task_id, work_id, created, status,
-worktree, branch, latest, and a neutral navigation title may be generated
-without user input.
-
-An execution-ready task must not have a missing approved contract, missing or
-malformed contract markers, a stale or missing contract digest, an
-unclassified material unknown, an unresolved user decision, empty completion
-criteria, missing or divergent `Files`/`Criteria` projections, an undefined
-verification boundary, a missing or unbounded execution envelope, a missing
-observable completion predicate or terminal disposition, a missing
-no-progress/escalation condition, a missing risk and authority assessment, an
-`unresolved` risk/authority category, or an approved high-risk or external
-action without a concrete non-wildcard allowlist entry.
-Incomplete queue tasks remain valid only when the user explicitly asks to record
-an unfinished idea,
-investigation, or other incomplete work item; they must be clearly identified
-as not ready for execution.
-Creation does not activate the task or create a branch, worktree, or lock.
-Later card updates may add only semantic information the user has explicitly
-provided or approved; lifecycle metadata may be updated by the task workflow.
-
-Before beginning task work, a new session must read `Confirmed intent`, the
-approved task contract, `Files`, `Criteria`, the `Conversation record`, the
-decision-boundary table, `Execution envelope`, and `Open decisions`. It must
-verify that `Files` and `Criteria` are populated projections of the current
-approved contract, and that the approved contract revision, marker boundaries,
-canonical payload bytes, digest, current phase/checkpoint, consumed versus
-remaining bound, and each applicable allowlist entry still match the card and
-its evidence. Every risk/authority category must have an explicit
-non-`unresolved` status. Before a high-risk or external action, revalidate its
-exact target, current-state preconditions, ownership, limits, and consuming-skill
-contract. If the card follows a multi-turn
-discussion but lacks that context, if the contract was not explicitly
-approved, if its digest is stale or missing, or if a material user decision
-remains open, if the execution envelope is exhausted or contradictory, or if a
-new action would exceed its bound, do not begin from an inferred requirement.
-Keep a queued task queued; if the task is already active, stop without changing
-its lifecycle state, worktree, branch, or lock.
+Before work, read `Confirmed intent`, the contract, `Files`, `Criteria`,
+`Conversation record`, decision boundaries, `Execution envelope`, and `Open
+decisions`. Verify projection, marker, payload, digest, checkpoint, consumed/
+remaining bound, risk statuses, and allowlist entries. Revalidate exact target,
+preconditions, ownership, limits, and consuming-skill contract before each
+high-risk or external action. Missing context, approval, digest, or user
+decision; exhausted/contradictory envelope; or exceeded bound stops without
+changing task lifecycle, worktree, branch, or lock.
 
 ## Card and index protocol
 
