@@ -48,54 +48,133 @@ infer from titles or branches.
 
 ## Task creation and semantic fidelity
 
-Task creation is a conversation-closure step, not a copy of the final command.
-Before creating the card, inspect the discussion that produced the request and
-preserve the relevant decisions and constraints. Apply this by default; do not
-require the user to say "use the previous discussion". Do not copy every turn,
-but do not silently omit a relevant turn either.
+Task creation is a conversation-closure and approval step, not a copy of the
+final command and not a requirement that every technical detail be decided in
+advance. The card must preserve the context needed to act safely while making
+the boundary between confirmed intent, delegated judgment, and unresolved user
+decisions explicit.
 
-Begin Context with the triggering user's request verbatim. Then keep a labeled
-`Conversation record` for the relevant discussion. Use lightweight source and
-state labels rather than a machine-only schema:
+Before closing an executable task, inspect the complete discussion that
+produced the request and run the applicable definition-phase routing:
+
+- Invoke the exact upstream `interview-me` primitive when the user, objective,
+  success condition, or binding constraint is missing or ambiguous, or when a
+  user decision is required to proceed.
+- Invoke the exact upstream `idea-refine` primitive when the problem is clear
+  but materially different product or solution directions still need to be
+  compared and selected.
+- If both primitives apply, run `interview-me` before `idea-refine` so the
+  alternatives are evaluated against settled intent rather than an inferred
+  request.
+- Skip either primitive when its conditions do not apply. Technical details
+  may remain open when the user has explicitly delegated their discovery or
+  selection within a bounded scope.
+- Record which applicable primitive was used or skipped and why. Do not copy
+  either primitive's workflow into this skill.
+
+Begin `Context` with the triggering user's request verbatim. Then keep a
+labeled `Conversation record` for the relevant discussion. Use lightweight
+source and state labels rather than a machine-only schema:
 
 - `[U#][active|superseded|rejected]` — the user's relevant wording, preserved
   verbatim.
-- `[A#][proposed|evidence]` — an agent proposal, finding, or analysis;
-  it is non-authoritative unless the user explicitly confirms it.
+- `[A#][proposed|evidence]` — an agent proposal, finding, or analysis; it is
+  non-authoritative until the user approves the resulting task contract.
 - `[C#][confirms A#]` — the user's explicit confirmation or restatement of an
   agent proposal.
+- `[C#][approves E#]` — the user's explicit approval of the complete task
+  contract `E#`, including its scope, delegated decisions, completion
+  criteria, verification, risk boundaries, and stop conditions.
 
-Derive a `Confirmed intent` block only from active user entries or agent entries
-explicitly confirmed by the user, and cite their `U#`, `A#`, or `C#` sources.
-Keep separate `Analysis / evidence`, `Open decisions`, and `Superseded
-decisions` blocks. If the discussion is multi-turn but yields no additional
-active context, write `No additional active context identified`; never omit the
-context block silently. If an earlier and later decision conflict without clear
+Before writing the final card, produce a concise proposed task contract and
+obtain explicit user approval of that contract. A single aggregate approval is
+valid; the user does not need to confirm every agent proposal separately when
+the approved contract clearly includes it. Do not treat a vague response such
+as "sounds good" as approval when the scope or authority boundary is unclear.
+If the user asks to create a task but no complete contract has been presented
+or clearly approved, present the contract and stop for confirmation before
+closing an implementation-ready task.
+
+The approved contract must contain readable sections for:
+
+- definition-phase skills applied or skipped, with the reason and resulting
+  intent or direction;
+- `Objective` and `Desired result`
+- `Non-goals` and binding constraints
+- current facts and supporting evidence
+- confirmed decisions and design rationale when applicable
+- owned paths or an approved repository-relative discovery boundary
+- completion criteria, which may describe behavior, a test artifact, a
+  verification result, a recommendation, or another explicitly agreed outcome
+- verification and required evidence
+- pre-approved risk, data, security, compatibility, operational, and external
+  authority boundaries when they are relevant
+- stop and escalation conditions
+
+Store these sections under a clearly labeled `Confirmed task contract` block.
+Store the unknown classification under a clearly labeled `Decision
+boundaries` block. These headings are part of the readable card contract;
+do not leave the same information only in an unstructured summary.
+
+Do not force a final technical solution when the task is intentionally meant to
+discover, compare, verify, prototype, or investigate something. Instead, record
+each material unknown in a decision-boundary table with:
+
+- the unknown or choice;
+- whether it is a user decision, an agent-delegated decision, a discovery
+  target, or explicitly out of scope;
+- who may decide it;
+- allowed choices or discovery boundaries;
+- required evidence; and
+- the condition that requires escalation.
+
+An unknown technical result is not automatically an `Open decision`. It is an
+`Open decision` only when a user judgment is required before proceeding. A
+technical value that the task is explicitly authorized to discover is an
+approved discovery target and must not block execution.
+
+Derive `Confirmed intent` and the approved task contract only from active user
+entries or content explicitly covered by the user's aggregate approval, and
+cite their `U#`, `A#`, or `C#` sources. Keep separate `Analysis / evidence`,
+`Open decisions`, and `Superseded decisions` blocks. Every material discussion
+item must appear in one of those blocks or be linked from analysis to the
+confirmed contract. No material design decision may remain only as an abstract
+summary.
+
+If the discussion is multi-turn but yields no additional active context, write
+`No additional active context identified`; never omit the context block
+silently. If an earlier and later decision conflict without clear
 supersession, keep the conflict in `Open decisions` and stop before inferring a
 requirement.
 
-An agent proposal may be recorded as analysis or evidence, but it must not be
-promoted into user intent, task scope, Files, or Criteria without an explicit,
-unambiguous user confirmation. Do not add unstated goals, files, criteria,
-dependencies, priority, due dates, or technical solutions. Leave unspecified
-fields empty or explicitly unknown. A short generated title is navigation
-metadata only; it must not introduce a solution or scope absent from Context.
+An agent proposal must not silently become user intent, task scope, Files, or
+Criteria. It may become authorized task content only through an explicit
+individual confirmation or approval of the complete task contract. Do not add
+unstated goals, files, criteria, dependencies, priority, due dates, or
+technical solutions. A short generated title is navigation metadata only; it
+must not introduce a solution or scope absent from the approved contract.
 
 Only deterministic MDF metadata such as task_id, work_id, created, status,
 worktree, branch, latest, and a neutral navigation title may be generated
 without user input.
 
-Incomplete tasks are valid: create them with status queue. Creation does not
-activate the task or create a branch, worktree, or lock. Later card updates may
-add only semantic information the user has explicitly provided; lifecycle
-metadata may be updated by the task workflow.
+An execution-ready task must not have a missing approved contract, an
+unclassified material unknown, an unresolved user decision, empty completion
+criteria, or an undefined verification boundary. Incomplete queue tasks remain
+valid only when the user explicitly asks to record an unfinished idea,
+investigation, or other incomplete work item; they must be clearly identified
+as not ready for execution.
+Creation does not activate the task or create a branch, worktree, or lock.
+Later card updates may add only semantic information the user has explicitly
+provided or approved; lifecycle metadata may be updated by the task workflow.
 
 Before implementation, a new session must read `Confirmed intent`, the
-`Conversation record`, and `Open decisions`. If the card follows a multi-turn
-discussion but lacks that record, or if a material decision remains open, do
-not activate or begin implementation from an inferred requirement. Keep a
-queued task queued; if the task is already active, stop without changing its
-lifecycle state, worktree, branch, or lock.
+approved task contract, the `Conversation record`, the decision-boundary
+table, and `Open decisions`. If the card follows a multi-turn discussion but
+lacks that context, if the contract was not explicitly approved, or if a
+material user decision remains open, do not begin from an inferred
+requirement. Keep a queued task queued; if the task is already active, stop
+without changing its lifecycle state, worktree, branch, or lock.
 
 ## Card and index protocol
 
@@ -122,8 +201,10 @@ For every mutation:
 
 Keep Context, Files, Criteria, and Log headings. Record failure or abandonment
 in Log while status remains active. A card's Files list defines task-owned
-implementation paths; .mdf state is local metadata and is not staged as project
-code.
+source and evidence paths. When exact source paths are not known yet, it must
+state the approved repository-relative discovery boundary and whether source
+changes are allowed. `.mdf` state is local metadata and is not staged as
+project code.
 
 ## Locks and lifecycle
 
