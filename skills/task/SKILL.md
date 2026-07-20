@@ -48,31 +48,38 @@ infer from titles or branches.
 
 ## Task creation and semantic fidelity
 
-When creating a task, record the triggering user's request verbatim at the
-beginning of Context. If task creation follows a multi-turn discussion, or the
-request refers to prior discussion (for example, "this", "as discussed", or
-"the proposed approach"), carry forward the relevant earlier user statements
-and user-confirmed decisions that remain active. Do not limit the task to the
-final message, and do not copy every historical turn without deciding whether
-it is still relevant.
+Task creation is a conversation-closure step, not a copy of the final command.
+Before creating the card, inspect the discussion that produced the request and
+preserve the relevant decisions and constraints. Apply this by default; do not
+require the user to say "use the previous discussion". Do not copy every turn,
+but do not silently omit a relevant turn either.
 
-Keep the sources distinct in labeled Context blocks:
+Begin Context with the triggering user's request verbatim. Then keep a labeled
+`Conversation record` for the relevant discussion. Use lightweight source and
+state labels rather than a machine-only schema:
 
-- User intent or user-provided context: the user's relevant wording, preserved
+- `[U#][active|superseded|rejected]` — the user's relevant wording, preserved
   verbatim.
-- Confirmed decisions: a decision the user explicitly accepted or restated.
-- Analysis or evidence: model findings and reasoning, clearly non-authoritative
-  and never a substitute for user intent.
-- Open or superseded decisions: unresolved choices or earlier context replaced
-  by a later user statement.
+- `[A#][proposed|evidence]` — an agent proposal, finding, or analysis;
+  it is non-authoritative unless the user explicitly confirms it.
+- `[C#][confirms A#]` — the user's explicit confirmation or restatement of an
+  agent proposal.
 
-Do not summarize, reinterpret, or add unstated goals, files, criteria,
-dependencies, priority, due dates, or technical solutions as user requirements.
+Derive a `Confirmed intent` block only from active user entries or agent entries
+explicitly confirmed by the user, and cite their `U#`, `A#`, or `C#` sources.
+Keep separate `Analysis / evidence`, `Open decisions`, and `Superseded
+decisions` blocks. If the discussion is multi-turn but yields no additional
+active context, write `No additional active context identified`; never omit the
+context block silently. If an earlier and later decision conflict without clear
+supersession, keep the conflict in `Open decisions` and stop before inferring a
+requirement.
+
 An agent proposal may be recorded as analysis or evidence, but it must not be
-promoted into user intent, task scope, Files, or Criteria unless the user
-explicitly confirms it. Leave unspecified fields empty or explicitly unknown.
-A short generated title is navigation metadata only; it must not introduce a
-solution or scope that is absent from the Context.
+promoted into user intent, task scope, Files, or Criteria without an explicit,
+unambiguous user confirmation. Do not add unstated goals, files, criteria,
+dependencies, priority, due dates, or technical solutions. Leave unspecified
+fields empty or explicitly unknown. A short generated title is navigation
+metadata only; it must not introduce a solution or scope absent from Context.
 
 Only deterministic MDF metadata such as task_id, work_id, created, status,
 worktree, branch, latest, and a neutral navigation title may be generated
@@ -82,6 +89,13 @@ Incomplete tasks are valid: create them with status queue. Creation does not
 activate the task or create a branch, worktree, or lock. Later card updates may
 add only semantic information the user has explicitly provided; lifecycle
 metadata may be updated by the task workflow.
+
+Before implementation, a new session must read `Confirmed intent`, the
+`Conversation record`, and `Open decisions`. If the card follows a multi-turn
+discussion but lacks that record, or if a material decision remains open, do
+not activate or begin implementation from an inferred requirement. Keep a
+queued task queued; if the task is already active, stop without changing its
+lifecycle state, worktree, branch, or lock.
 
 ## Card and index protocol
 
