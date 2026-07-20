@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.2 - 2026-07-20
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.1...v2.4.2)
+
+### Changes
+
+- fix(workflow): unify linked worktree continuation resolution ([#82](https://github.com/jjlabsio/midnight-forge/pull/82))
 ## v2.4.1 - 2026-07-20
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.0...v2.4.1)
