@@ -84,7 +84,11 @@ The `Confirmed task contract` must contain readable sections for:
 
 - definition skills applied/skipped, reason, and outcome;
 - `Objective`, `Desired result`, `Non-goals`, and binding constraints;
-- current facts, evidence, confirmed decisions, and rationale;
+- current facts and evidence;
+- confirmed decisions and rationale, when applicable. For each settled
+  material decision that affects execution, record the condition, chosen
+  behavior, exceptional/stop handling, and verification. If none, state
+  `No confirmed implementation decision`; do not invent technical details;
 - `Owned paths / discovery boundary`;
 - completion outcomes, including behavior, artifact, verification result,
   recommendation, or another agreed result;
@@ -132,7 +136,8 @@ For each material unknown, use a decision-boundary table with: unknown or
 choice, classification (`user decision`, `agent-delegated decision`,
 `discovery target`, or `out of scope`), decision owner, allowed choices or
 discovery boundary, evidence, and escalation condition. A technical result
-explicitly authorized for discovery is not an `Open decision`.
+explicitly authorized for discovery is not an `Open decision`; use this table
+instead of filling in unconfirmed implementation details.
 
 Derive `Confirmed intent` and the contract only from active user entries or
 content covered by aggregate approval, citing `U#`, `A#`, or `C#`. Keep
