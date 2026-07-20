@@ -28,8 +28,11 @@ consumer phase; do not release the lock before it completes.
 
 ## Continuation paths
 
-At the start of the run, resolve exactly one task, its canonical work item,
-branch, worktree, lock, current Git state, and latest spec/plan revisions.
+At the start of the run, execute the shared contract's **Shared auto-mode
+startup task/worktree resolution** for the current linked worktree. Then resolve
+the latest spec/plan revisions and current Git state for that same task,
+worktree, branch, and lock. Do not create a replacement task or worktree when
+the shared resolver finds missing, conflicting, or mismatched ownership state.
 
 ### Pending plan work
 

@@ -14,6 +14,12 @@ Load the plugin-installed `../../references/auto-workflow-contract.md` and use
 source of truth for the shared auto-mode middle stages; this entrypoint only
 defines the local authority boundary below.
 
+At the start of every run, execute the contract's **Shared auto-mode startup
+task/worktree resolution** for the current linked worktree before preparing a
+worktree or invoking a downstream stage. Reuse only the matching active task,
+worktree, branch, and lock. If the task, worktree, branch, or lock is missing,
+conflicting, or mismatched, stop without creating a new task or worktree.
+
 ## Local lifecycle boundary
 
 Follow the shared auto-mode middle-stage lifecycle in the loaded contract.
