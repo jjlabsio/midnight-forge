@@ -31,6 +31,16 @@ layers. This principle does not relax safety, authorization, or destructive
 action boundaries; when hard enforcement is necessary, keep it narrow and
 proportionate to the risk.
 
+## Skill writing
+
+Use when designing or writing a skill.
+
+- Keep `description` short and generic. Optimize for routing, not documentation.
+- Keep skill bodies terse and operational.
+- Prefer action-first bullets, numbered workflows, and command examples over explanatory prose.
+- Prefer helper scripts under the skill's `scripts/` directory when a workflow has repeatable commands.
+- Quote `description` in YAML front matter.
+
 ## Non-negotiable source boundaries
 
 1. Each checked-in `vendor/agent-skills` tree is an immutable snapshot of one
