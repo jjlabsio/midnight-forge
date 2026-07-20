@@ -60,6 +60,36 @@ composition. If ambiguity, scope expansion, a public or security boundary,
 destructive work, failed verification, repeated no-progress, or uncertain PR
 state appears, stop rather than generating a spec or plan automatically.
 
+## Shared auto-mode startup task/worktree resolution
+
+This section applies to `mode: auto-workflow` and
+`mode: auto-workflow-pr`. `quick-workflow-pr` keeps its bounded quick-handoff
+preflight. The rule below covers continuation from an existing linked
+worktree; normal checkout cases are outside this contract.
+
+Before preparing a worktree or invoking any downstream stage, resolve the
+current task and ownership from the canonical project root:
+
+1. Resolve exactly one task ID from the current task-specific request or
+   handoff, then read exactly one matching canonical `.mdf/work/*/item.md`
+   card. Do not infer a task from a title, branch, or worktree name.
+2. Read the card, current Git worktree and branch facts, and the complete
+   canonical lock directory. The continuation card must be `active` and its
+   `worktree` and `branch` must match the current linked worktree and branch.
+3. Resolve the matching lock by exact `task_id` and `work_id`. Its
+   `canonical_root`, `worktree`, and `branch` must match both the card and the
+   current Git facts. A missing lock, a second conflicting current lock, or
+   any mismatch is an ambiguous ownership state.
+4. When every identity and ownership value matches, reuse the current linked
+   worktree, branch, task, and lock and continue through the shared lifecycle.
+5. On a missing or ambiguous task, a `queue` or `done` card, a missing or
+   conflicting lock, or any worktree/branch mismatch, stop. Do not create a
+   new task, worktree, branch, or replacement lock to guess the continuation.
+
+This is a model-led startup contract. It does not add a task-state controller,
+identity service, or runtime resolver; the caller records and re-reads the
+canonical Markdown, Git, and lock state directly.
+
 ## Shared task lifecycle and consumer recovery
 
 All MDF task workflows use only `queue -> active -> done`. Activating a task
