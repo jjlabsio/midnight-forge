@@ -106,6 +106,9 @@ The approved contract must contain readable sections for:
 - owned paths or an approved repository-relative discovery boundary
 - completion criteria, which may describe behavior, a test artifact, a
   verification result, a recommendation, or another explicitly agreed outcome
+- an `Execution envelope` that bounds one run and the whole task, including the
+  progress unit, allowed actions, phase gates, terminal outcomes, and
+  continuation policy
 - verification and required evidence
 - a risk and authority assessment with an explicit status for each category:
   `approved`, `excluded`, `not applicable`, or `unresolved`;
@@ -113,6 +116,28 @@ The approved contract must contain readable sections for:
   handling, data migration/loss/backfill, public API or user-visible behavior,
   operational/deployment/rollback impact, and external actions
 - stop and escalation conditions
+
+`Execution envelope` is required for every task and is not a task type. It
+must define:
+
+- the progress unit and the maximum work for one invocation;
+- the total autonomous bound, such as maximum runs, phases, candidates,
+  iterations, data, time, cost, or another finite resource;
+- the actions and repository-relative scope allowed within that bound;
+- phase or iteration gates that must be met before continuing;
+- an observable completion predicate and the permitted terminal dispositions,
+  such as `success`, `valid-negative-result`, `inconclusive`, `blocked`, or
+  `escalation-required`;
+- the no-progress threshold and escalation condition; and
+- how the next invocation resumes from the recorded checkpoint and remaining
+  bound.
+
+At least one finite bound must apply to every autonomous action. A resource
+dimension may be `not applicable` only with a reason; an open-ended search,
+"continue until the best result", or a budget that can be expanded by the
+agent is not execution-ready. Budget exhaustion is not success by default. The
+contract must state which terminal dispositions satisfy completion criteria and
+which require stopping for the user.
 
 Store these sections under a clearly labeled `Confirmed task contract` block
 between exact marker lines:
@@ -140,10 +165,12 @@ Each approved task contract must have a readable revision record containing:
 
 Approval is valid only for that exact contract revision and digest. A material
 change to the objective, scope, delegated decisions, completion criteria,
-verification, risk boundary, authority boundary, or stop conditions requires a
-new contract revision, a new digest, and a new explicit user approval. Do not
-carry approval forward because the task ID, title, or card remains the same.
-Non-semantic lifecycle and log updates do not require contract reapproval.
+verification, execution envelope, risk boundary, authority boundary, or stop
+conditions requires a new contract revision, a new digest, and a new explicit
+user approval. Do not carry approval forward because the task ID, title, or
+card remains the same. Non-semantic lifecycle, checkpoint, and budget-consumption
+log updates do not require contract reapproval; they must not change the
+approved envelope or add authority.
 
 Do not force a final technical solution when the task is intentionally meant to
 discover, compare, verify, prototype, or investigate something. Instead, record
@@ -154,6 +181,7 @@ each material unknown in a decision-boundary table with:
   target, or explicitly out of scope;
 - who may decide it;
 - allowed choices or discovery boundaries;
+- the finite execution envelope for making or discovering the choice;
 - required evidence; and
 - the condition that requires escalation.
 
@@ -190,7 +218,9 @@ without user input.
 An execution-ready task must not have a missing approved contract, missing or
 malformed contract markers, a stale or missing contract digest, an
 unclassified material unknown, an unresolved user decision, empty completion
-criteria, an undefined verification boundary, a missing risk and authority
+criteria, an undefined verification boundary, a missing or unbounded execution
+envelope, a missing observable completion predicate or terminal disposition, a
+missing no-progress/escalation condition, a missing risk and authority
 assessment, or an `unresolved` risk/authority category. Incomplete queue tasks
 remain valid only when the user explicitly asks to record an unfinished idea,
 investigation, or other incomplete work item; they must be clearly identified
@@ -201,15 +231,17 @@ provided or approved; lifecycle metadata may be updated by the task workflow.
 
 Before beginning task work, a new session must read `Confirmed intent`, the
 approved task contract, the `Conversation record`, the decision-boundary
-table, and `Open decisions`. It must verify that the approved contract
-revision, marker boundaries, canonical payload bytes, and digest still match
-the card, and that every risk/authority category has an explicit non-
-`unresolved` status. If the card follows a multi-turn
+table, `Execution envelope`, and `Open decisions`. It must verify that the
+approved contract revision, marker boundaries, canonical payload bytes, digest,
+current phase/checkpoint, and consumed versus remaining bound still match the
+card and its evidence, and that every risk/authority category has an explicit
+non-`unresolved` status. If the card follows a multi-turn
 discussion but lacks that context, if the contract was not explicitly
 approved, if its digest is stale or missing, or if a material user decision
-remains open, do not begin from an inferred requirement. Keep a queued task
-queued; if the task is already active, stop without changing its lifecycle
-state, worktree, branch, or lock.
+remains open, if the execution envelope is exhausted or contradictory, or if a
+new action would exceed its bound, do not begin from an inferred requirement.
+Keep a queued task queued; if the task is already active, stop without changing
+its lifecycle state, worktree, branch, or lock.
 
 ## Card and index protocol
 
@@ -238,8 +270,11 @@ Keep Context, Files, Criteria, and Log headings. Record failure or abandonment
 in Log while status remains active. A card's Files list defines task-owned
 source and evidence paths. When exact source paths are not known yet, it must
 state the approved repository-relative discovery boundary and whether source
-changes are allowed. `.mdf` state is local metadata and is not staged as
-project code.
+changes are allowed. Record each completed progress unit, consumed bound,
+current checkpoint, terminal disposition, and remaining continuation bound in
+Log or a linked handoff. These are lifecycle evidence, not permission to
+expand the approved contract. `.mdf` state is local metadata and is not staged
+as project code.
 
 ## Locks and lifecycle
 
@@ -320,6 +355,8 @@ matching lock. Ambiguous, malformed, stale, or contradictory state stops.
 - clean isolated worktree and matching branch recorded
 - card-first/index-append update verified
 - lock ownership and release verified
+- execution envelope consumption, checkpoint, and terminal disposition
+  reconciled against the approved contract
 - task-specific verification or evidence passed, including tests when the
   approved contract requires them
 - required source and evidence artifacts are present and readable
