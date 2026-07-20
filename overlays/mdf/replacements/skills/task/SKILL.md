@@ -93,19 +93,9 @@ The `Confirmed task contract` must contain readable sections for:
   privacy/data, migration/loss/backfill, public or user-visible behavior,
   operational/deployment/rollback, and external actions. Each is
   `approved`, `excluded`, `not applicable`, or `unresolved`;
-- an `Execution envelope` and stop/escalation conditions; and
+- stop and escalation conditions; and
 - an `Approved action allowlist` when a high-risk or external action is in
   scope.
-
-Every task has an `Execution envelope`; this is not a task type. Record the
-progress unit and per-invocation limit, a finite total bound, allowed actions
-and repository-relative scope, phase/iteration gates, an observable completion
-predicate, permitted terminal dispositions, a no-progress threshold, and the
-checkpoint/resume rule. At least one finite bound applies to every autonomous
-action. Mark a resource dimension `not applicable` only with a reason. Do not
-use open-ended goals such as "continue until best" or an agent-expandable
-budget. Budget exhaustion is not success unless the contract says so; state
-which terminal dispositions complete the task and which stop for the user.
 
 For every approved high-risk or external action, the allowlist records the
 stable action ID and consuming skill, exact operation and target resource/path/
@@ -134,15 +124,15 @@ lifecycle `Log` outside the payload and exclude them from its hash. Record the
 revision (for example `E1`), approving source (for example `[C1]`), approved
 scope/authority, and SHA-256 digest. Approval applies only to that revision and
 digest. A material change to intent, scope, delegated decisions, criteria,
-verification, envelope, risk, authority, allowlist, or stop conditions requires
-a new revision, digest, and explicit approval. Lifecycle/checkpoint/consumption
-updates may not change those fields.
+verification, risk, authority, allowlist, or stop conditions requires a new
+revision, digest, and explicit approval. Lifecycle updates may not change those
+fields.
 
 For each material unknown, use a decision-boundary table with: unknown or
 choice, classification (`user decision`, `agent-delegated decision`,
 `discovery target`, or `out of scope`), decision owner, allowed choices or
-discovery boundary, finite envelope, evidence, and escalation condition. A
-technical result explicitly authorized for discovery is not an `Open decision`.
+discovery boundary, evidence, and escalation condition. A technical result
+explicitly authorized for discovery is not an `Open decision`.
 
 Derive `Confirmed intent` and the contract only from active user entries or
 content covered by aggregate approval, citing `U#`, `A#`, or `C#`. Keep
@@ -160,21 +150,20 @@ user input.
 An execution-ready task has none of these: missing/malformed contract markers,
 missing or stale digest, unclassified unknown, unresolved user decision, empty
 criteria, missing/divergent `Files` or `Criteria` projections, undefined
-verification, missing/unbounded envelope, missing completion predicate or
-terminal disposition, missing no-progress/escalation rule, missing risk/
-authority assessment, `unresolved` risk category, or approved high-risk/
-external action without a concrete non-wildcard allowlist. An explicitly
-requested unfinished queue item may remain queued and must be marked not ready.
+verification, missing stop/escalation conditions, missing risk/authority
+assessment, `unresolved` risk category, or approved high-risk/external action
+without a concrete non-wildcard allowlist. An explicitly requested unfinished
+queue item may remain queued and must be marked not ready.
 Creation does not activate a task or create branch, worktree, or lock.
 
 Before work, read `Confirmed intent`, the contract, `Files`, `Criteria`,
-`Conversation record`, decision boundaries, `Execution envelope`, and `Open
-decisions`. Verify projection, marker, payload, digest, checkpoint, consumed/
-remaining bound, risk statuses, and allowlist entries. Revalidate exact target,
-preconditions, ownership, limits, and consuming-skill contract before each
-high-risk or external action. Missing context, approval, digest, or user
-decision; exhausted/contradictory envelope; or exceeded bound stops without
-changing task lifecycle, worktree, branch, or lock.
+`Conversation record`, decision boundaries, and `Open decisions`. Verify the
+projections, markers, payload, digest, risk statuses, and allowlist entries.
+Revalidate the exact target, preconditions, ownership, limits, and consuming-
+skill contract before each high-risk or external action. Missing context,
+approval, digest, verification, or user decision; contradictory scope or
+decision boundaries; or an unsafe action stops without changing task lifecycle,
+worktree, branch, or lock.
 
 ## Card and index protocol
 
@@ -208,11 +197,10 @@ approved repository-relative discovery boundary and source-change policy.
 recommendation, or other agreed completion outcomes. A missing or divergent
 projection stops execution; do not repair it by choosing a different source.
 Any material projection change requires a new contract revision, digest, and
-approval. Record failure or abandonment in Log while status remains active.
-Record each completed progress unit, consumed bound, current checkpoint,
-terminal disposition, and remaining continuation bound in Log or a linked
-handoff. These are lifecycle evidence, not permission to expand the approved
-contract. `.mdf` state is local metadata and is not staged as project code.
+approval. Record material progress, findings, failure, or abandonment in Log
+or a linked handoff while status remains active. These notes preserve task
+context and cannot expand the approved contract.
+`.mdf` state is local metadata and is not staged as project code.
 
 ## Locks and lifecycle
 
@@ -297,8 +285,6 @@ matching lock. Ambiguous, malformed, stale, or contradictory state stops.
 - clean isolated worktree and matching branch recorded
 - card-first/index-append update verified
 - lock ownership and release verified
-- execution envelope consumption, checkpoint, and terminal disposition
-  reconciled against the approved contract
 - every high-risk or external action reconciled against its exact allowlist
   entry, target, preconditions, and consuming-skill verification
 - task-specific verification or evidence passed, including tests when the
