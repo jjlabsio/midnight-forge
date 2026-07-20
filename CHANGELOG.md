@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.1 - 2026-07-20
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.0...v2.4.1)
+
+### Changes
+
+- docs(task): preserve discussion context provenance ([#80](https://github.com/jjlabsio/midnight-forge/pull/80))
 ## v2.4.0 - 2026-07-19
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.3.5...v2.4.0)
