@@ -48,13 +48,35 @@ infer from titles or branches.
 
 ## Task creation and semantic fidelity
 
-When creating a task, record the user's request verbatim at the beginning of
-Context. Do not summarize, reinterpret, or add unstated goals, files, criteria,
-dependencies, priority, due dates, or technical solutions.
+When creating a task, record the triggering user's request verbatim at the
+beginning of Context. If task creation follows a multi-turn discussion, or the
+request refers to prior discussion (for example, "this", "as discussed", or
+"the proposed approach"), carry forward the relevant earlier user statements
+and user-confirmed decisions that remain active. Do not limit the task to the
+final message, and do not copy every historical turn without deciding whether
+it is still relevant.
 
-Leave unspecified fields empty or explicitly unknown. Only deterministic MDF
-metadata such as task_id, work_id, created, status, worktree, branch, and
-latest may be generated without user input.
+Keep the sources distinct in labeled Context blocks:
+
+- User intent or user-provided context: the user's relevant wording, preserved
+  verbatim.
+- Confirmed decisions: a decision the user explicitly accepted or restated.
+- Analysis or evidence: model findings and reasoning, clearly non-authoritative
+  and never a substitute for user intent.
+- Open or superseded decisions: unresolved choices or earlier context replaced
+  by a later user statement.
+
+Do not summarize, reinterpret, or add unstated goals, files, criteria,
+dependencies, priority, due dates, or technical solutions as user requirements.
+An agent proposal may be recorded as analysis or evidence, but it must not be
+promoted into user intent, task scope, Files, or Criteria unless the user
+explicitly confirms it. Leave unspecified fields empty or explicitly unknown.
+A short generated title is navigation metadata only; it must not introduce a
+solution or scope that is absent from the Context.
+
+Only deterministic MDF metadata such as task_id, work_id, created, status,
+worktree, branch, latest, and a neutral navigation title may be generated
+without user input.
 
 Incomplete tasks are valid: create them with status queue. Creation does not
 activate the task or create a branch, worktree, or lock. Later card updates may
