@@ -54,23 +54,21 @@ advance. The card must preserve the context needed to act safely while making
 the boundary between confirmed intent, delegated judgment, and unresolved user
 decisions explicit.
 
-Before closing an executable task, inspect the complete discussion that
-produced the request and run the applicable definition-phase routing:
+Before closing an execution-ready task, load the exact upstream
+`using-agent-skills` primitive and classify the definition state:
 
-- Invoke the exact upstream `interview-me` primitive when the user, objective,
-  success condition, or binding constraint is missing or ambiguous, or when a
-  user decision is required to proceed.
-- Invoke the exact upstream `idea-refine` primitive when the problem is clear
-  but materially different product or solution directions still need to be
-  compared and selected.
-- If both primitives apply, run `interview-me` before `idea-refine` so the
-  alternatives are evaluated against settled intent rather than an inferred
-  request.
-- Skip either primitive when its conditions do not apply. Technical details
-  may remain open when the user has explicitly delegated their discovery or
-  selection within a bounded scope.
-- Record which applicable primitive was used or skipped and why. Do not copy
-  either primitive's workflow into this skill.
+- Invoke `interview-me` when the user, objective, success condition, binding
+  constraint, or user-owned trade-off is unresolved. Contract approval itself
+  is not an interview condition.
+- Invoke `idea-refine` when a product or conceptual direction requires user
+  comparison and convergence, or the user explicitly requests ideation or
+  stress-testing. Do not use it for delegated technical alternatives.
+- If both apply, run `interview-me` before `idea-refine`.
+- Do not invoke either primitive for explicitly delegated technical decisions
+  or bounded discovery. Record those as agent-delegated decisions or discovery
+  targets instead.
+- Record each primitive's applied/skipped status, reason, and outcome. Do not
+  reimplement upstream workflows or replace applicable downstream skills.
 
 Begin `Context` with the triggering user's request verbatim. Then keep a
 labeled `Conversation record` for the relevant discussion. Use lightweight
@@ -103,7 +101,7 @@ The approved contract must contain readable sections for:
 - `Non-goals` and binding constraints
 - current facts and supporting evidence
 - confirmed decisions and design rationale when applicable
-- owned paths or an approved repository-relative discovery boundary
+- `Owned paths / discovery boundary`
 - completion criteria, which may describe behavior, a test artifact, a
   verification result, a recommendation, or another explicitly agreed outcome
 - an `Execution envelope` that bounds one run and the whole task, including the
@@ -242,11 +240,12 @@ without user input.
 An execution-ready task must not have a missing approved contract, missing or
 malformed contract markers, a stale or missing contract digest, an
 unclassified material unknown, an unresolved user decision, empty completion
-criteria, an undefined verification boundary, a missing or unbounded execution
-envelope, a missing observable completion predicate or terminal disposition, a
-missing no-progress/escalation condition, a missing risk and authority
-assessment, an `unresolved` risk/authority category, or an approved high-risk
-or external action without a concrete non-wildcard allowlist entry.
+criteria, missing or divergent `Files`/`Criteria` projections, an undefined
+verification boundary, a missing or unbounded execution envelope, a missing
+observable completion predicate or terminal disposition, a missing
+no-progress/escalation condition, a missing risk and authority assessment, an
+`unresolved` risk/authority category, or an approved high-risk or external
+action without a concrete non-wildcard allowlist entry.
 Incomplete queue tasks remain valid only when the user explicitly asks to record
 an unfinished idea,
 investigation, or other incomplete work item; they must be clearly identified
@@ -256,15 +255,16 @@ Later card updates may add only semantic information the user has explicitly
 provided or approved; lifecycle metadata may be updated by the task workflow.
 
 Before beginning task work, a new session must read `Confirmed intent`, the
-approved task contract, the `Conversation record`, the decision-boundary
-table, `Execution envelope`, and `Open decisions`. It must verify that the
-approved contract revision, marker boundaries, canonical payload bytes, digest,
-current phase/checkpoint, consumed versus remaining bound, and each applicable
-allowlist entry still match the card and its evidence, and that every
-risk/authority category has an explicit non-`unresolved` status. Before a
-high-risk or external action, revalidate its exact target, current-state
-preconditions, ownership, limits, and consuming-skill contract. If the card
-follows a multi-turn
+approved task contract, `Files`, `Criteria`, the `Conversation record`, the
+decision-boundary table, `Execution envelope`, and `Open decisions`. It must
+verify that `Files` and `Criteria` are populated projections of the current
+approved contract, and that the approved contract revision, marker boundaries,
+canonical payload bytes, digest, current phase/checkpoint, consumed versus
+remaining bound, and each applicable allowlist entry still match the card and
+its evidence. Every risk/authority category must have an explicit
+non-`unresolved` status. Before a high-risk or external action, revalidate its
+exact target, current-state preconditions, ownership, limits, and consuming-skill
+contract. If the card follows a multi-turn
 discussion but lacks that context, if the contract was not explicitly
 approved, if its digest is stale or missing, or if a material user decision
 remains open, if the execution envelope is exhausted or contradictory, or if a
@@ -295,15 +295,20 @@ For every mutation:
    Do not rewrite historical lines during normal mutation; only the automatic
    self-healing preflight may compact the derived index.
 
-Keep Context, Files, Criteria, and Log headings. Record failure or abandonment
-in Log while status remains active. A card's Files list defines task-owned
-source and evidence paths. When exact source paths are not known yet, it must
-state the approved repository-relative discovery boundary and whether source
-changes are allowed. Record each completed progress unit, consumed bound,
-current checkpoint, terminal disposition, and remaining continuation bound in
-Log or a linked handoff. These are lifecycle evidence, not permission to
-expand the approved contract. `.mdf` state is local metadata and is not staged
-as project code.
+Keep Context, Files, Criteria, and Log headings. The approved task contract is
+the sole source of truth for scope, paths, and completion. `Files` and
+`Criteria` are required readable projections of the current contract revision,
+not independent authority. `Files` must list exact source/evidence paths or an
+approved repository-relative discovery boundary and source-change policy.
+`Criteria` must list the contract's behavior, artifact, verification,
+recommendation, or other agreed completion outcomes. A missing or divergent
+projection stops execution; do not repair it by choosing a different source.
+Any material projection change requires a new contract revision, digest, and
+approval. Record failure or abandonment in Log while status remains active.
+Record each completed progress unit, consumed bound, current checkpoint,
+terminal disposition, and remaining continuation bound in Log or a linked
+handoff. These are lifecycle evidence, not permission to expand the approved
+contract. `.mdf` state is local metadata and is not staged as project code.
 
 ## Locks and lifecycle
 
