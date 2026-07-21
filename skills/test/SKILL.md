@@ -37,6 +37,11 @@ current handoff, authority, lifecycle, and recovery rules. This skill owns
 test-specific verification and evidence; it does not redefine shared auto-mode
 behavior.
 
+When bounded reproduction, coverage, or regression analysis is delegated, load
+the plugin-installed `../../references/subagent-dispatch-policy.md` and
+`../../references/model-routing-5.6.md` before dispatch. Follow the policy's
+root-owned model, persona, write, and synthesis boundaries.
+
 This remains a standalone workflow even though `build` may invoke test logic
 internally. Use it for independent verification, manual changes, debugging,
 PR preparation, and pre-ship checks.

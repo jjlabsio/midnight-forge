@@ -13,6 +13,11 @@ current handoff, authority, lifecycle, and recovery rules. This skill owns only
 the behavior-preserving simplification stage and does not grant extra authority
 or redefine shared auto-mode rules.
 
+If this stage delegates candidate discovery or verification, load the
+plugin-installed `../../references/subagent-dispatch-policy.md` and
+`../../references/model-routing-5.6.md` before dispatch. Follow the policy's
+root-owned model, persona, write, and synthesis boundaries.
+
 ## Upstream command contract
 
 Invoke the `code-simplification` skill.
