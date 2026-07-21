@@ -20,16 +20,16 @@ task-specific continuation request, stop instead of inferring ownership.
 ### `mode: auto-workflow`
 
 This is the local implementation mode. It authorizes the applicable MDF
-spec/plan/build/test/review/simplification skills for one bounded run and the
+spec/plan/build/test/simplification/review skills for one bounded run and the
 task-owned local commits required by the implementation loop. It does not
 authorize ship, task completion, push, PR creation/update, merge, deploy,
 deletion, stale-lock takeover, force operations, or unrelated cleanup.
 
 Both auto modes may keep the current task ownership while a plan slice is
-provisional, awaiting review, or awaiting commit, and after a clean
-plan-slice commit so the same task can be resumed. A provisional slice is not a
-completed plan slice and does not authorize the next task. A plan-slice commit
-is not whole MDF task completion.
+provisional, awaiting simplification, awaiting review, or awaiting commit, and
+after a clean plan-slice commit so the same task can be resumed. A provisional
+slice is not a completed plan slice and does not authorize the next task. A
+plan-slice commit is not whole MDF task completion.
 
 ### `mode: auto-workflow-pr`
 
@@ -41,24 +41,162 @@ takeover, force operations, or unrelated cleanup.
 ### `mode: quick-workflow-pr`
 
 This is the explicit lightweight delivery mode for small documentation or
-implementation changes. It authorizes the canonical `build`, `review`, and
-`github-pr` skills without requiring or creating spec and plan artifacts. It
-does not authorize `ship`, `code-simplify`, merge, deploy, deletion,
-stale-lock takeover, force operations, or unrelated cleanup.
+implementation changes. It authorizes the canonical `build`, `review`,
+`github-commit`, and `github-pr` skills without requiring or creating spec and
+plan artifacts. It does not authorize `ship`, `code-simplify`, merge, deploy,
+deletion, stale-lock takeover, force operations, or unrelated cleanup.
 
 The current user request, active task Context, current branch and HEAD,
 intended paths, and verification evidence replace the spec/plan acceptance
 baseline for this mode. The root must keep a readable quick handoff with the
 task/work IDs, worktree, branch, lock ownership, scope, assumptions, allowed
-skills, completed build/review loop, and allowed PR actions. A bare mode string
-or a quick handoff without current task-specific context grants no authority.
+skills, completed build/review/commit loop, and allowed PR actions. A bare mode
+string or a quick handoff without current task-specific context grants no
+authority.
 
-The mode may repeat `build -> review` when review finds actionable issues.
-Canonical build, review, and GitHub PR quality and safety rules remain in
-force; this mode changes only the planning-artifact prerequisite and lifecycle
-composition. If ambiguity, scope expansion, a public or security boundary,
-destructive work, failed verification, repeated no-progress, or uncertain PR
-state appears, stop rather than generating a spec or plan automatically.
+The mode runs `build` Two-Key `PASS` -> root exact-path review-candidate staging
+-> `review` Two-Key `PASS` -> `github-commit`. When review finds actionable
+issues, repeat build, staging, and review for the same bounded request without
+committing until review passes. Quick mode omits simplification; it must not
+create an empty simplification gate. Canonical build, review, commit, and GitHub
+PR quality and safety rules remain in force; this mode changes only the
+planning-artifact prerequisite and lifecycle composition. If ambiguity, scope
+expansion, a public or security boundary, destructive work, failed
+verification, repeated no-progress, or uncertain PR state appears, stop rather
+than generating a spec or plan automatically.
+
+## Automatic-mode operation matrix
+
+`Two-Key` means the mandatory stage lease below. `root-only` is an ownership
+boundary, not a degraded substitute for a missing key. `omitted` means the
+mode does not run that operation and must not create an empty gate for it.
+
+| Operation | `auto-workflow` | `auto-workflow-pr` | `quick-workflow-pr` |
+| --- | --- | --- | --- |
+| Intent and authority preflight | root-only; unresolved intent blocks | root-only; unresolved intent blocks | root-only; unresolved scope blocks |
+| Specification | Two-Key | Two-Key when created or revised | omitted |
+| Planning | Two-Key | Two-Key when created or revised | omitted |
+| Each plan slice or bounded build | Two-Key | Two-Key | Two-Key |
+| Simplification | Two-Key when applicable; otherwise explicitly not applicable | Two-Key when applicable; otherwise explicitly not applicable | omitted |
+| Each slice review | Two-Key | Two-Key | one bounded-change review: Two-Key |
+| Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |
+| Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |
+| Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |
+| Ship or release assessment | omitted by local authority | Two-Key with complete upstream fan-out | omitted |
+| Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |
+| Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |
+
+## Evidence-carrying Two-Key stage lease
+
+Every `Two-Key` cell uses one bounded producer or primary assessor, one
+distinct fresh-context read-only verifier, and root reconciliation. This is a
+readable model-led contract, not a controller, state machine, quality score,
+or machine-only protocol.
+
+### Root dispatch bundle
+
+Before each key, the root supplies the current mode and exact canonical MDF
+stage adapter. It also supplies the exact upstream `using-agent-skills`
+primitive and requires the key to run that discovery workflow, resolve the
+canonical adapter, and load every other applicable upstream primitive it
+selects. Applicability remains source- and model-led; do not replace discovery
+with a copied stage-to-primitive list.
+
+The producer bundle also includes:
+
+- task/work identity; task-card path, bytes, and hash; lock path, bytes, and
+  hash; handoff path, bytes, and hash;
+- worktree, branch, base, and pre-dispatch `HEAD`; canonical artifact paths and
+  hashes; exact owned read and write paths;
+- acceptance criteria, required commands, permitted authority, forbidden
+  mutations, and stop conditions.
+
+### Producer key
+
+Run one bounded producer or primary assessor in a separate context. A mutating
+producer is the only active writer in the shared worktree and may write only
+the leased artifact or source paths. It cannot mutate canonical `.mdf` cards,
+locks, handoffs, indexes, or observations; accept an artifact; commit; advance
+lifecycle; mutate remote or external state; or perform final synthesis.
+
+The producer returns the resolved canonical skill and upstream primitives,
+changed paths, output artifacts, command evidence, and focused result. Its
+report, hashes, completion phrase, or persona name does not prove authority,
+state, or success.
+
+Do not start a verifier, replacement producer, repair writer, or root write
+until the executor positively confirms that the producer invocation has ended
+and its write capability no longer exists. A timeout, cancellation request,
+interrupt, terminal observation, missing response, or late output alone is
+not positive writer terminality. If terminality or sole-writer ownership is
+uncertain, reconcile actual state and finish `BLOCKED`.
+
+### Root-observed evidence
+
+After positive producer terminality, the root independently re-reads and
+binds a verifier bundle containing:
+
+- task-card path, bytes, hash, and lifecycle fields;
+- lock path, bytes, hash, and ownership fields;
+- handoff path, bytes, and hash;
+- canonical output bytes and hashes, actual owned changed paths, and unrelated
+  dirt;
+- worktree, branch, base, tree, index, pre/post `HEAD`, and complete diff;
+- for every verification command, exact argv or command, cwd, exit status,
+  relevant output reference, pre/post `HEAD`, and artifact/hash binding.
+
+Producer-authored evidence is a claim until this observation binds it to the
+actual canonical and Git state. Changed base or `HEAD`, unrelated dirt,
+canonical-state mutation, scope violation, non-success return, or missing,
+stale, or mismatched evidence cannot advance.
+
+### Verifier key
+
+Dispatch a distinct fresh-context verifier after root observation. It receives
+the original stage contract, acceptance criteria, exact discovery and adapter
+requirements, and the complete root-observed bundle. Exclude producer
+reasoning, recommendations, hidden conversation, and self-selected evidence.
+The verifier is read-only, cannot delegate, and assesses the same canonical
+artifact, diff, verification target, or release target. A root self-review,
+producer review, persona label, completion flag, or review of the producer's
+report is not a second key.
+
+For a read-only stage, use two distinct independent assessors of the same
+underlying target; neither recursively reviews the other's report. For ship,
+the complete upstream specialist fan-out is the primary assessment key and
+must join every required report before the fresh verifier assesses the same
+release target.
+
+### Quality floor, gate, and recovery
+
+The root dynamically selects a reviewed GPT-5.6 capability for each key from
+difficulty, risk, ambiguity, novelty, consequence, required quality, current
+runtime capability, and transport compatibility. Both keys must independently
+meet the stage's required quality floor. Record both model selections,
+qualitative rationale, capability confidence, read/write authority, and any
+fallback or block status. Never use a fast or speed-only profile, a fixed
+stage-to-model table, benchmark equivalence, silent downgrade, or the Spark
+exploration exception for a Two-Key stage. If either compliant key is
+unavailable, finish `BLOCKED`.
+
+The root alone reconciles actual state and the two keys into exactly:
+
+- `PASS`: accept the canonical result and continue within current authority;
+- `REWORK`: dispatch a fresh bounded producer and then a fresh verifier; or
+- `BLOCKED`: stop safely with current state and evidence.
+
+The initial cycle counts as one. Every dispatched producer or primary-assessor
+cycle, including failed, inconclusive, interrupted, no-op, and substantive
+attempts, consumes one of at most three total cycles; verifier failure consumes
+its cycle. Do not reset the count by changing workers or finding labels. After
+three cycles, or when another safe cycle cannot run, finish `BLOCKED`.
+`REWORK` is never a terminal unattended result. Every automatic run ends in
+verified success within its authority or a safe final `BLOCKED` result.
+
+The root remains sole owner of intent, authority, stage selection, canonical
+task/card/lock/handoff/observation state, artifact acceptance, commits,
+lifecycle transitions, external mutations, and final synthesis. Never nest
+delegation or run concurrent writers in a shared worktree.
 
 ## Shared auto-mode startup task/worktree resolution
 
@@ -112,7 +250,8 @@ consumer failure
   -> record failure evidence, current head/base, and current tree
   -> validate evidence, spec, plan, and current-tree reconciliation together
   -> choose the earliest invalidated canonical stage
-  -> re-enter the required canonical stage(s), including build -> review -> commit when source changes
+  -> for plan-backed source changes, re-enter build -> applicable simplification (or explicit not applicable) -> root exact-path staging -> review -> commit
+  -> for quick source changes, re-enter build -> root exact-path staging -> review -> commit
   -> rerun invalidated whole-build/final review/ship/final preflight checks
   -> update the PR and recheck the latest head's checks, mergeability, and conflict state
 ```
@@ -144,9 +283,11 @@ Use these decisions:
   current evidence. If the provider or external infrastructure remains the
   blocker, report it and stop for the user.
 - An implementation defect that the valid spec and plan already explain:
-  reuse both artifacts and re-enter canonical `build`, verification, `review`,
-  and focused `commit`. Choose repair scope from root cause and actual impact;
-  a repair may span more than one original slice.
+  reuse both artifacts and re-enter canonical `build`, verification,
+  applicable `code-simplify` (or record it as not applicable), root exact-path
+  staging, canonical `review`, and focused `commit`. Choose repair scope from
+  root cause and actual impact; a repair may span more than one original
+  slice.
 - A valid spec with an incompatible plan: first confirm spec validity and
   reconcile the current tree, then create an exceptional delta/recovery plan
   for the remaining work. The new plan starts from completed commits and the
@@ -188,10 +329,11 @@ technical revision under their existing run-scoped authorization. Preserve the
 normal artifact protocol: write a new canonical spec revision when the
 constraint must be recorded, re-evaluate and revise the affected plan when
 needed, invalidate affected downstream evidence, and re-enter the existing
-`build -> verification -> review -> commit` flow from the earliest invalidated
-stage. The revision must not silently reuse an invalidated approval or evidence
-record. Standalone `spec` and `plan` keep their existing explicit human
-approval gates.
+`build -> verification -> applicable simplification (or explicit not
+applicable) -> root exact-path staging -> review -> commit` flow from the
+earliest invalidated stage. The revision must not silently reuse an invalidated
+approval or evidence record. Standalone `spec` and `plan` keep their existing
+explicit human approval gates.
 
 This rule changes only MDF orchestration and recovery judgment. It does not
 change the upstream spec, planning, incremental-implementation, test, or
@@ -223,13 +365,23 @@ The entrypoint skills define only their authority boundary and delivery
 continuation; they must not maintain separate copies of the implementation
 loop, review gates, intent preflight, or common stop conditions.
 
-The shared contract orchestrates canonical MDF skills, not personas. Resolve the
-installed plugin root and invoke the canonical skill whose name matches the
-stage below. The invoked skill owns its upstream primitive and any persona
-delegation required by its own contract.
+The shared contract orchestrates canonical MDF skills, not personas. Resolve
+the installed plugin root, run the exact upstream `using-agent-skills`
+discovery workflow, load every other applicable upstream primitive it selects,
+and invoke the canonical skill whose name matches the stage below. A canonical
+automatic stage uses a `skill-backed` instruction source by default: the exact
+MDF adapter and discovered upstream primitives are the worker instructions,
+and no persona is selected or resolved. The automatic `ship` row is the
+root-owned fan-out exception: root invokes the existing canonical ship
+specialist fan-out directly as the primary assessment key, not a generic
+`skill-backed` ship worker. Other canonical skills may use a `persona-backed`
+delegation only when their contract explicitly names an existing specialist
+persona. Every model-led stage marked `Two-Key` in the operation matrix must
+apply the stage lease above.
 
 Every canonical stage invocation must pass the current workflow mode
-(`mode: auto-workflow` or `mode: auto-workflow-pr`) together with the current
+(`mode: auto-workflow`, `mode: auto-workflow-pr`, or
+`mode: quick-workflow-pr`) together with the current
 readable handoff. A bare invocation such as `review` is not a valid auto-mode
 dispatch: it uses standalone semantics and lacks the auto-mode context. The
 mode selects the applicable workflow composition; it does not grant authority
@@ -241,71 +393,97 @@ without the current handoff and state checks above.
 | Specification | `spec` | Approved spec revision and hash |
 | Planning | `plan` | Approved plan revision and hash |
 | Plan-slice implementation | `build` in default single-task mode | One slice's implementation, verification, and provisional evidence; no commit |
-| Plan-slice review | `review` against the staged current plan-slice diff | Review result before selecting another slice |
-| Plan-slice commit | `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
+| Plan-slice simplification | `code-simplify` when applicable | Two-Key `PASS`, or an explicit not-applicable result, before review-candidate staging |
+| Plan-slice review | `review` against the staged current plan-slice diff | Two-Key `PASS` before selecting another slice or committing |
+| Plan-slice commit | root invokes `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
 | Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
-| PR delivery | `ship` -> `task` -> `github-pr` in PR mode only | GO, final preflight, task completion, and PR handoff |
+| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
+| Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
+| PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
 
 The stage table is a skill-routing contract, not a persona dispatch contract.
 Never encode `persona: <name>` as a stage invocation or treat a persona name
-as evidence that its prompt was loaded. When a canonical skill delegates, that
-skill must apply the installed subagent-dispatch policy: resolve the exact
-installed `agents/<persona>.md` prompt, pass the unchanged prompt and the
-root-selected dispatch record through the generic runtime spawn path, and use
-the declared degraded fallback or stop when prompt or transport resolution
-fails. The shared contract must not duplicate persona lists or bypass the
-delegating skill's dispatch boundary.
+as evidence that its prompt was loaded. When a canonical skill dispatches a
+worker, that skill must apply the installed subagent-dispatch policy's
+conditional instruction-source boundary: use `skill-backed` for the automatic
+stage worker unless the canonical contract explicitly names a specialist, and
+use `persona-backed` with the exact installed `agents/<persona>.md` prompt for
+that named specialist. Pass the resolved source and root-selected dispatch
+record through the generic runtime path. The automatic ship exception is
+root-owned: its existing specialist fan-out is dispatched directly by the root
+and is not nested inside a stage worker. The shared contract must not duplicate
+persona lists, invent persona prompts, or bypass the delegating skill's
+dispatch boundary.
 
 For both auto modes, the common lifecycle is:
 
 ```text
 intent preflight -> interview-me when required -> spec -> plan ->
-approved plan-slice loop -> whole-build verification/review ->
+approved build/simplify/stage/review/commit plan-slice loop ->
+whole-build verification -> whole-tree review ->
 current local handoff
 ```
 
 For every ready approved plan slice, invoke the canonical `build` skill in the
 current auto mode with exactly one selected task. Do not invoke `build auto` or
 `build all`. The build skill owns its complete single-slice TDD, regression,
-build, internal review/gates, and simplification contract. In auto modes it
-returns implementation-complete provisional evidence without committing; the
-shared contract owns the post-review commit boundary.
+build, and internal review/gates. It does not own the automatic workflow's
+canonical simplification stage. In auto modes build returns
+implementation-complete provisional evidence without staging or committing;
+the shared contract owns the following simplification, review-candidate
+staging, canonical review, and commit boundary.
 
 ```text
-canonical build(single slice) -> provisional evidence ->
-stage exact slice paths -> canonical review(staged slice diff) -> canonical github-commit ->
+canonical build(single slice) Two-Key PASS -> provisional evidence ->
+canonical code-simplify Two-Key PASS when applicable (otherwise explicit not applicable) ->
+root stages exact slice paths (review candidate only, not a commit) ->
+canonical review(staged slice diff) Two-Key PASS -> root invokes github-commit ->
 final slice evidence -> next approved slice
 ```
 
-After build returns, stage only the exact task-owned paths for the current
-slice. This is review-candidate staging, not a commit. The plan-slice review
-receives the task card, staged current slice diff, owned paths, focused
-verification, and downstream-impact context. It is a separate review of the
-implementation returned by build; it is not the build skill's internal
-`review/gates` step. A slice review passes only when required verification is
-green, scope and ownership remain current, and no Critical or Important
-actionable finding remains. Suggestions may be recorded without blocking the
-next slice. An actionable finding returns to the same selected slice; resume
-the canonical `build` fix loop with the known provisional diff, fix only that
-slice, restage the exact slice paths, and do not commit or select the next
-slice until the canonical review passes. The known task-owned provisional diff
-is an allowed repair baseline; unrelated dirt remains a stop condition.
+After canonical build returns Two-Key `PASS`, invoke canonical `code-simplify`
+as a separate Two-Key stage when its trigger applies. Otherwise record an
+explicit not-applicable result; absence of a simplification result is not a
+pass. A simplification change invalidates affected build command,
+verification, internal-gate, and review evidence. Re-enter the earliest
+affected canonical build checks and then rerun the simplification gate before
+staging. Build's internal review/gates remain part of build and do not replace
+either the simplification verifier or the downstream canonical review.
+
+Only after build and applicable simplification return Two-Key `PASS`, or
+simplification is explicitly not applicable, may the root stage the exact
+task-owned paths for the current slice. This is review-candidate staging, not a
+commit. The plan-slice review receives the task card, staged current slice
+diff, owned paths, focused verification, simplification result, and
+downstream-impact context. It is a separate review of the post-simplification
+implementation; it is not the build skill's internal `review/gates` step. A
+slice review passes only when required verification is green, scope and
+ownership remain current, and no Critical or Important actionable finding
+remains. Suggestions may be recorded without blocking the next slice. An
+actionable finding returns to the same selected slice; resume the canonical
+`build` fix loop with the known provisional diff, fix only that slice, rerun
+applicable simplification or record it not applicable, and only then restage
+the exact slice paths. Do not commit or select the next slice until canonical
+review passes. The known task-owned provisional diff is an allowed repair
+baseline; unrelated dirt remains a stop condition.
 
 After the canonical review passes, invoke `github-commit` for the exact
 task-owned paths. Record the commit and final slice evidence only after that
 commit succeeds. This is the single focused commit for the slice; no amend
 step is part of the auto-mode loop.
 
-After each slice review, re-read the canonical spec, plan, task card, lock,
-Git state, and latest evidence before selecting the next slice. After all
+After each slice commit, re-read the canonical spec, plan, task card, lock, Git
+state, and latest evidence before selecting the next slice. After all
 approved slices are complete, run the plan's whole-build verification matrix
 and invoke the canonical `review` skill against the complete approved tree and
 full spec. Continue until every approved plan slice is complete; neither auto
-mode stops after the first ready slice merely because its local build and
-review passed. Any accepted simplification or repair change invalidates
-affected verification and review evidence and must return through the
-applicable canonical skill checks before the handoff is considered current.
+mode stops after the first ready slice merely because its local build,
+simplification, and review gates passed. Any accepted simplification or repair
+change invalidates affected verification and review evidence and must return
+through the applicable canonical skill checks before the handoff is considered
+current. Whole-build verification and whole-tree final review remain separate
+Two-Key gates after every approved slice commits.
 
 Both modes use the same intent preflight, artifact freshness rules, review
 quality bar, first-meaningful-vertical-slice consumer checkpoint, and stop
@@ -315,10 +493,12 @@ failed verification, stale or ambiguous state, repeated no-progress, or a
 scope change requiring user judgment. Clear mechanical requests may skip
 `interview-me` under its existing conditions.
 
-Use serial writers unless disjoint paths, isolated worktrees, independent
-locks, and absence of shared contracts, generated files, global state, MDF
-state, or external resources are proven. The root owns shared writes,
-synthesis, task state, commit scope, and lifecycle decisions.
+Use one writer in a shared worktree. The bounded automatic-mode producer lease
+is the only exception to root-only artifact or source writing; isolated
+worktrees may run independently only when their paths, locks, contracts,
+generated files, global state, MDF state, and external resources are disjoint.
+The root owns acceptance, synthesis, task state, commit scope, and lifecycle
+decisions.
 
 For UI changes, validate the real browser consumer and retain screenshot or
 runtime evidence. For other changes, validate the real CLI/API/integration
@@ -327,11 +507,19 @@ behavior has a critical user flow.
 
 Every continuation handoff records the current phase, canonical skill used,
 settled intent, exact spec/plan paths and hashes, current slice and slice
-state, completed slices, commit IDs, verification and review outcomes,
-remaining work, assumptions, and the mode-specific actions that remain
-authorized. Use these slice states when applicable:
+state, completed slices, commit IDs, verification, simplification, and review
+outcomes, remaining work, assumptions, and the mode-specific actions that
+remain authorized. Use these slice states when applicable:
 
 ```text
+plan-backed modes:
+provisional-simplification-pending
+  -> simplification-failed-repair -> provisional-simplification-pending
+  -> provisional-review-pending
+  -> review-failed-repair -> provisional-simplification-pending
+  -> review-passed-commit-pending -> committed
+
+quick mode (simplification omitted):
 provisional-review-pending
   -> review-failed-repair -> provisional-review-pending
   -> review-passed-commit-pending -> committed
@@ -339,12 +527,13 @@ provisional-review-pending
 
 For a provisional or repair state, also record the selected task, provisional
 base HEAD, exact owned paths, staged/unstaged state, verification result,
-review result if any, and the next canonical skill. Provisional evidence is
-not final slice evidence and must not be used to select another task or create
-a commit. If a skill delegated a persona, record the resolved prompt path and
-dispatch status; do not record a name-only persona label as proof of
-delegation. A mode-specific entrypoint may add delivery steps, but it must use
-this shared middle-stage result rather than paraphrasing it.
+simplification result or explicit not-applicable decision, review result if
+any, and the next canonical skill. Provisional evidence is not final slice
+evidence and must not be used to select another task or create a commit. If a
+skill delegated a persona, record the resolved prompt path and dispatch status;
+do not record a name-only persona label as proof of delegation. A mode-specific
+entrypoint may add delivery steps, but it must use this shared middle-stage
+result rather than paraphrasing it.
 
 ## Intent preflight
 
@@ -396,10 +585,11 @@ these checks:
    constraint, spec/plan contradiction, failed verification or review,
    unexpected repository/API/dependency change, unmatched evidence, or an
    explicit concern about the artifact appears.
-4. **Evidence validity:** confirm that each test, build, review, and consumer
-   result belongs to the current spec/plan hashes, code tree, base/HEAD, and
-   owned paths. Expected committed slice changes do not invalidate their own
-   recorded evidence; unexpected or provisional changes do.
+4. **Evidence validity:** confirm that each test, build, simplification, review,
+   and consumer result belongs to the current spec/plan hashes, code tree,
+   base/HEAD, and owned paths. Expected committed slice changes do not
+   invalidate their own recorded evidence; unexpected or provisional changes
+   do.
 
 If all checks remain current, reuse the exact artifacts and resume from the
 recorded phase instead of regenerating spec/plan or repeating completed work.
@@ -416,16 +606,28 @@ If a check fails, classify the impact before continuing:
 
 When a spec or plan revision changes while a provisional slice exists, do not
 commit that provisional diff automatically. Preserve it as unresolved work and
-reassess it against the new revision: if it remains compatible, rerun the
-affected review before committing; if it is incompatible or ambiguous, stop for
-replanning or explicit handling.
+reassess it against the new revision. If it remains compatible, identify the
+earliest invalidated canonical build or simplification gate and re-enter from
+that gate through current build and simplification evidence before the root
+restages the exact paths and reruns review. If it is incompatible or ambiguous,
+stop for replanning or explicit handling.
 
 Resume a current slice from its recorded state:
 
-- `provisional-review-pending`: stage the recorded paths and run `review`;
-- `review-failed-repair`: invoke `build` for the same selected task;
+- `provisional-simplification-pending`: run canonical `code-simplify`; after
+  Two-Key `PASS`, or when it is explicitly not applicable, move to
+  `provisional-review-pending` without staging during the producer;
+- `simplification-failed-repair`: invoke `build` for the same selected task,
+  then return to `provisional-simplification-pending` after build `PASS`;
+- `provisional-review-pending`: confirm current plan-backed simplification
+  `PASS` or explicit not-applicable evidence, then root-stage only the recorded
+  exact paths and run `review`; quick mode enters this state directly after
+  build `PASS` because simplification is omitted;
+- `review-failed-repair`: invoke `build` for the same selected task; after build
+  `PASS`, plan-backed modes return through simplification before staging, while
+  quick mode returns directly to `provisional-review-pending`;
 - `review-passed-commit-pending`: invoke `github-commit` without repeating
-  build/review unless the diff or evidence changed;
+  build/simplification/review unless the diff or evidence changed;
 - `committed`: select the next ready pending slice.
 
 Never infer that a slice is complete from provisional evidence, an artifact's
@@ -450,8 +652,9 @@ task. Only after the latest PR head passes its required consumer gates may the
 task skill complete the whole MDF task and release its lock.
 
 `mode: quick-workflow-pr` has no plan slices. Its single bounded request is
-complete only after the quick `build -> review` loop passes. Then run the
-GitHub PR handoff while the task remains active; create or update the PR,
+complete only after `build` Two-Key `PASS`, root exact-path review-candidate
+staging, canonical `review` Two-Key `PASS`, and root `github-commit`. Then run
+the GitHub PR handoff while the task remains active; create or update the PR,
 confirm the latest head's checks are terminal and passing, and confirm
 mergeability with no unresolved conflict. A failed consumer returns to the
 shared recovery protocol. Only after those gates pass may the task be marked
@@ -463,15 +666,21 @@ invalidates affected downstream evidence. Expected code changes already
 covered by a recorded slice commit retain that slice's evidence, but still
 require the whole-build verification before final completion. For quick mode, a
 changed request, scope, or unexpected code invalidates the affected
-build/review evidence. Do not infer completion from an artifact's existence, a
-green command, a review phrase, or the absence of pending plan text alone.
+build/review evidence. In plan-backed modes, a changed implementation or
+simplification result also invalidates downstream staging and review evidence;
+restage only after the required build and simplification gates are current. Do
+not infer completion from an artifact's existence, a green command, a review
+phrase, or the absence of pending plan text alone.
 
 ## Subagents
 
 Read-only exploration and review reports may be delegated through the central
-dispatch policy. Subagents never write canonical `.mdf` state, advance task
-lifecycle, push, or create PRs. The root synthesizes reports, owns shared
-writes, and chooses serial execution whenever dependency, path, shared-state,
+dispatch policy. In the three automatic modes, a Two-Key mutating stage may
+also dispatch exactly one producer under the bounded lease above. Outside that
+lease, standalone MDF and upstream delegation remains unchanged. Subagents
+never write canonical `.mdf` state, accept artifacts, commit, advance task
+lifecycle, push, create PRs, mutate external state, or perform final synthesis.
+The root chooses serial execution whenever dependency, path, shared-state,
 worktree, lock, or base-revision independence is uncertain.
 
 Every canonical stage that delegates through the generic runtime applies the
@@ -481,8 +690,17 @@ installed `subagent-dispatch-policy` as its worker-level completion contract:
   available.
 - Route policy-defined incomplete results through the consuming skill's
   explicit degraded/stop path.
-- Keep this bridge common to both auto modes; do not duplicate the policy's
+- Keep this bridge common to all three automatic modes; do not duplicate the policy's
   completion states in the stage lifecycle contract.
+
+The automatic `ship` primary key is not a worker-to-worker delegation. The root
+owns the existing flat specialist fan-out, joins every required report, and
+only then dispatches the independent read-only verifier.
+
+The authored contract, inventory graph, renderer equality, and packaging
+validators can prove only readable coverage and provenance. They do not prove
+runtime dispatch, tool denial, process termination, model quality, context
+reduction, or end-to-end behavior.
 
 ## PR idempotency
 

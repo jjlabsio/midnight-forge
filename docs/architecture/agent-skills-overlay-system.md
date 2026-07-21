@@ -54,8 +54,12 @@ projection from authoritative cards and locks.
 The model-led workflow keeps only the existing task-state primitives needed by
 the repository. Auto-workflow does not add a policy module, JSON protocol, or
 runtime verifier. The root model reads the applicable Markdown contracts and
-ordinary Git/MDF state, makes semantic decisions, and records readable
-handoff, dispatch, and fallback notes.
+ordinary Git/MDF state, makes semantic gate decisions, and records readable
+handoff, dispatch, and fallback notes. Automatic model-led stages may use the
+scoped evidence-carrying producer/verifier lease defined by
+[`evidence-carrying-auto-stages.md`](../decisions/agent-skills-overlay/evidence-carrying-auto-stages.md);
+the root still owns canonical state, artifact acceptance, commits, external
+authority, and synthesis.
 
 When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
 contract grants the root authority to complete in-scope local MDF skills and

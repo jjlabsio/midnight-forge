@@ -8,6 +8,7 @@
 - [Keep artifact and task state readable](agent-skills-overlay/overlay-v2-artifact-storage.md)
 - [Use a Codex-only plugin surface](agent-skills-overlay/codex-only-plugin-surface.md)
 - [Orchestrate auto-workflow autonomously within a scoped contract](agent-skills-overlay/auto-workflow-autonomous-orchestration.md)
+- [Require evidence-carrying Two-Key automatic stages](agent-skills-overlay/evidence-carrying-auto-stages.md)
 
 ## MDF Task System
 
