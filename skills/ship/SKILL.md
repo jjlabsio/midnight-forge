@@ -206,11 +206,14 @@ In `mode: auto-workflow-pr`, load
 `../../references/auto-workflow-contract.md` and apply its complete mandatory
 Two-Key lease, dispatch, evidence, quality-floor, positive-terminality,
 three-cycle recovery, and root-authority rules without duplicating or weakening
-them. Apply this ship-specific realization:
+them. This automatic ship stage is a root-owned fan-out exception: do not wrap
+it in a generic `skill-backed` ship worker or let a ship worker dispatch the
+specialist personas. Apply this ship-specific realization:
 
-1. The complete upstream three-specialist fan-out is the primary assessment
-   key. Its result is the three full joined reports plus the root-observed
-   release evidence above—not another generic assessor or summarizer. The exact
+1. The root-owned complete upstream three-specialist fan-out is the primary
+   assessment key. Its result is the three full joined reports plus the
+   root-observed release evidence above—not another generic assessor or
+   summarizer. The exact
    upstream small-change exemption remains the sole fan-out exception. When it
    applies, bind the documented exemption and dispatch one distinct
    fresh-context, read-only, nondelegating primary assessor to apply this
@@ -244,12 +247,14 @@ decision finishes `BLOCKED`.
 
 ### Authority and external-action stops
 
-Ship assessment itself is read-only. No ship worker may write source, project
-or canonical `.mdf` state, stage, commit, accept an artifact, push, create or
-update a PR, merge, deploy, delete, mutate an external system, or delegate
-beyond the root's canonical flat specialist fan-out. The root alone owns the
-assessment target, actual-state observation, acceptance, synthesis, and any
-later separately authorized handoff.
+Ship assessment itself is read-only. The root alone dispatches the existing
+flat specialist fan-out, joins its reports, observes the release target, and
+dispatches the independent verifier. No nested ship worker may write source,
+project or canonical `.mdf` state, stage, commit, accept an artifact, push,
+create or update a PR, merge, deploy, delete, mutate an external system,
+delegate, or perform final synthesis. The root alone owns the assessment
+target, actual-state observation, acceptance, synthesis, and any later
+separately authorized handoff.
 
 A GO verdict is readiness evidence, not delivery authority. In standalone
 mode, pushing, creating or updating a PR, merging, deploying, deleting a branch

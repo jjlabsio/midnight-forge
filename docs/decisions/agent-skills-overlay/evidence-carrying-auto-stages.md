@@ -61,6 +61,14 @@ transport cannot be resolved. This changes actor binding, not stage semantics,
 quality gates, authority, or completion meaning, and it does not add any new
 persona files.
 
+The automatic `ship` stage is a root-owned fan-out exception, not a generic
+skill-backed worker. The root invokes the existing flat `ship` specialist
+fan-out directly as the primary assessment key, joins its required reports,
+then dispatches the independent read-only verifier. This preserves the
+upstream ship orchestrator without creating a root-to-worker-to-persona tree or
+worker-to-worker delegation. Standalone `ship` remains the upstream flat
+fan-out command.
+
 This decision ports two upstream/MDF realization details only inside the three
 automatic modes:
 

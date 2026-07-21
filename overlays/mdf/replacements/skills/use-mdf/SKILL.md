@@ -64,6 +64,9 @@ Whenever a canonical skill delegates, load the plugin-installed
   resolving a persona. Use `persona-backed` only when the delegating skill
   explicitly names an existing specialist and requires its exact installed
   `agents/<persona>.md` prompt.
+- Automatic `ship` is a root-owned existing specialist fan-out exception, not a
+  nested skill-backed worker; the root dispatches its named personas directly
+  and then applies the independent verifier.
 - Let the delegating canonical skill, shared contract, and installed references
   own all worker-level execution and gate details.
 - Keep one writer per shared worktree. Keep intent, authority, canonical state,

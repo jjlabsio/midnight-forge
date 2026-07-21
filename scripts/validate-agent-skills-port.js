@@ -147,7 +147,7 @@ const operationMatrixRows = [
   "| Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |",
   "| Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |",
   "| Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |",
-  "| Ship or release assessment | omitted by local authority | Two-Key with complete upstream fan-out | omitted |",
+  "| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |",
   "| Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |",
   "| Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |",
 ];
@@ -239,8 +239,10 @@ assertAuthoredSurface("agents/README.md", [
 assertAuthoredSurface("references/auto-workflow-contract.md", [
   "A canonical automatic stage uses a `skill-backed` instruction source by default",
   "no persona is selected or resolved",
-  "only when its canonical contract explicitly names an existing specialist persona",
-  "use `persona-backed` with the exact installed `agents/<persona>.md` prompt",
+  "root-owned fan-out exception",
+  "not a generic `skill-backed` ship worker",
+  "Other canonical skills may use a `persona-backed` delegation only when their contract explicitly names an existing specialist persona",
+  "root-owned: its existing specialist fan-out is dispatched directly by the root",
   "The stage table is a skill-routing contract, not a persona dispatch contract",
 ]);
 
@@ -270,7 +272,8 @@ assertAuthoredSurface("skills/auto-workflow/SKILL.md", [
 
 assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
   "`mode: auto-workflow-pr` plus the current readable handoff",
-  "invoke canonical `ship` in this mode",
+  "root invokes the canonical `ship` fan-out directly in this mode",
+  "do not dispatch a generic skill-backed `ship` worker",
   "root invokes canonical `github-pr` under the contract's PR idempotency rules",
   "Only after every consumer gate passes may the root invoke canonical `task`",
   "Commits, task completion, push, PR mutation, and PR consumer checks are root-only",
@@ -297,6 +300,7 @@ assertAuthoredSurface("skills/use-mdf/SKILL.md", [
   "Keep one writer per shared worktree",
   "Automatic canonical stage workers use the `skill-backed` instruction source",
   "Use `persona-backed` only when the delegating skill explicitly names an existing specialist",
+  "Automatic `ship` is a root-owned existing specialist fan-out exception",
 ]);
 
 const stageRealizations = new Map([
@@ -338,6 +342,8 @@ const stageRealizations = new Map([
     "distinct fresh-context, read-only, non-delegating verifier then assesses that actual result",
   ]],
   ["skills/ship/SKILL.md", [
+    "This automatic ship stage is a root-owned fan-out exception",
+    "The root-owned complete upstream three-specialist fan-out is the primary assessment key",
     "Only after the primary key is positively terminal",
     "root independently observe the actual reports or result, release target, canonical and Git state, and command evidence",
     "dispatch one distinct fresh-context verifier",

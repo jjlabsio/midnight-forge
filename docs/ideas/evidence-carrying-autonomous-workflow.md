@@ -43,6 +43,11 @@ names an existing specialist, and then its exact installed
 `agents/<persona>.md` prompt is required. No synthetic persona is introduced;
 missing persona files affect only explicitly persona-backed calls.
 
+The automatic `ship` stage is the explicit root-owned specialist-fan-out
+exception: root dispatches the existing named personas as the primary key and
+then the independent verifier. It is not a nested `skill-backed` worker that
+delegates to more workers.
+
 ## Lease and Recovery
 
 The producer receives the exact canonical skill, approved input artifact and

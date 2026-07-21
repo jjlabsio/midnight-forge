@@ -371,10 +371,13 @@ discovery workflow, load every other applicable upstream primitive it selects,
 and invoke the canonical skill whose name matches the stage below. A canonical
 automatic stage uses a `skill-backed` instruction source by default: the exact
 MDF adapter and discovered upstream primitives are the worker instructions,
-and no persona is selected or resolved. The invoked skill may use a
-`persona-backed` delegation only when its canonical contract explicitly names
-an existing specialist persona. Every model-led stage marked `Two-Key` in the
-operation matrix must apply the stage lease above.
+and no persona is selected or resolved. The automatic `ship` row is the
+root-owned fan-out exception: root invokes the existing canonical ship
+specialist fan-out directly as the primary assessment key, not a generic
+`skill-backed` ship worker. Other canonical skills may use a `persona-backed`
+delegation only when their contract explicitly names an existing specialist
+persona. Every model-led stage marked `Two-Key` in the operation matrix must
+apply the stage lease above.
 
 Every canonical stage invocation must pass the current workflow mode
 (`mode: auto-workflow`, `mode: auto-workflow-pr`, or
@@ -395,7 +398,7 @@ without the current handoff and state checks above.
 | Plan-slice commit | root invokes `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
 | Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
-| Ship assessment | `ship` in PR mode only | Complete fan-out, independent verification, and root GO/NO-GO synthesis |
+| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
 | Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
 | PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
 
@@ -407,7 +410,9 @@ conditional instruction-source boundary: use `skill-backed` for the automatic
 stage worker unless the canonical contract explicitly names a specialist, and
 use `persona-backed` with the exact installed `agents/<persona>.md` prompt for
 that named specialist. Pass the resolved source and root-selected dispatch
-record through the generic runtime path. The shared contract must not duplicate
+record through the generic runtime path. The automatic ship exception is
+root-owned: its existing specialist fan-out is dispatched directly by the root
+and is not nested inside a stage worker. The shared contract must not duplicate
 persona lists, invent persona prompts, or bypass the delegating skill's
 dispatch boundary.
 
@@ -687,6 +692,10 @@ installed `subagent-dispatch-policy` as its worker-level completion contract:
   explicit degraded/stop path.
 - Keep this bridge common to all three automatic modes; do not duplicate the policy's
   completion states in the stage lifecycle contract.
+
+The automatic `ship` primary key is not a worker-to-worker delegation. The root
+owns the existing flat specialist fan-out, joins every required report, and
+only then dispatches the independent read-only verifier.
 
 The authored contract, inventory graph, renderer equality, and packaging
 validators can prove only readable coverage and provenance. They do not prove

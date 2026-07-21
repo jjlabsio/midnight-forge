@@ -25,8 +25,10 @@ remains, do not invent implementation work.
 
 ## Delivery continuation
 
-From current accepted local evidence, invoke canonical `ship` in this mode.
-After its required result, keep the task active and lock held while the root
+From current accepted local evidence, the root invokes the canonical `ship`
+fan-out directly in this mode; do not dispatch a generic skill-backed `ship`
+worker that delegates to the specialist personas. After its required result,
+keep the task active and lock held while the root
 invokes canonical `github-pr` under the contract's PR idempotency rules and
 verifies the expected remote head, latest-head checks, mergeability, and
 conflict state. Only after every consumer gate passes may the root invoke
