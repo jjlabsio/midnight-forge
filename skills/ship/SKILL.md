@@ -84,9 +84,9 @@ Apply the completion and fan-out join rules from the installed
 - Enter Phase B only after all three required specialists have returned actual
   reports and each report satisfies the policy's completion gate.
 - On any policy-defined incomplete result, do not enter Phase B or issue GO.
-  Record available evidence as an explicit incomplete/degraded NO-GO outcome,
-  or stop through the existing fallback when the caller cannot represent that
-  result.
+  Record each available report and its policy status in an explicit
+  incomplete/degraded NO-GO outcome, or stop through the existing fallback
+  when the caller cannot represent that result.
 - Treat a safety timeout only as protection from an unhealthy executor; it
   cannot satisfy the completion gate.
 

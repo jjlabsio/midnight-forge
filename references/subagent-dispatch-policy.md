@@ -125,6 +125,8 @@ incomplete/censored observation, not a successful result.
 - Use event- or return-based waiting when the executor exposes it.
 - Use an elapsed time limit only as a safety guard for an unavailable or
   unhealthy executor; never use it as evidence that the worker completed.
+- Do not use a caller-specific fixed timeout as a substitute for waiting on the
+  worker response.
 - Treat `timed_out`, `interrupted`, `failed`, a missing terminal event, and a
   missing or partial report as non-success. Do not hide the same
   completion-contract failure by increasing a guessed timeout.
