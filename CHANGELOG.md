@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.4 - 2026-07-21
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.3...v2.4.4)
+
+### Changes
+
+- fix(orchestration): require returned subagent reports ([#84](https://github.com/jjlabsio/midnight-forge/pull/84))
 ## v2.4.3 - 2026-07-20
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.2...v2.4.3)
