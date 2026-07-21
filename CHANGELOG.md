@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.4.5 - 2026-07-21
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.4...v2.4.5)
+
+### Changes
+
+- docs: align MDF convention and skill contracts ([#85](https://github.com/jjlabsio/midnight-forge/pull/85))
 ## v2.4.4 - 2026-07-21
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.3...v2.4.4)
