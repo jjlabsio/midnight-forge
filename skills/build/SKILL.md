@@ -7,67 +7,66 @@ description: "Implement tasks incrementally — build, test, verify, commit. Add
 
 Build is the upstream incremental implementation command adapted to the MDF
 task state model. Resolve the installed plugin root before loading any skill or
-reference; an unresolved plugin root is a stop. Load and follow the exact
-upstream `../incremental-implementation/SKILL.md` alongside
-`../test-driven-development/SKILL.md`. Also load
-`../code-review-and-quality/SKILL.md` and any other applicable skill when its
-trigger applies.
-For `mode: auto-workflow` or `mode: auto-workflow-pr`, also load
-`../../references/auto-workflow-contract.md`. In those modes, the shared
-contract composes this one-slice implementation stage with a post-build review
-and `github-commit`; this skill returns provisional evidence without creating
-the slice commit. Standalone `/build` and quick mode retain their normal
-commit behavior.
-For `mode: quick-workflow-pr`, also load the same contract. In that mode, use
-the active task Context, the user's request, current scope, and verification
-evidence as the acceptance baseline; do not require or generate a spec or
-plan. Preserve the upstream implementation, test, regression, build, and
-commit criteria. Treat one bounded request as the single implementation slice.
+reference; an unresolved plugin root is a stop. Load and run the exact upstream
+`../using-agent-skills/SKILL.md` discovery workflow, resolve this canonical
+adapter, then load the exact upstream
+`../incremental-implementation/SKILL.md` alongside
+`../test-driven-development/SKILL.md`. Load
+`../code-review-and-quality/SKILL.md`,
+`../debugging-and-error-recovery/SKILL.md` on failure, and every other
+applicable primitive selected by discovery.
 
-Any implementation or testing delegation must first load the
-plugin-installed `../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md`. The root classifies difficulty and
-risk, verifies a GPT-5.6 candidate at the `high` floor, and passes the selected
-dispatch record plus one resolved instruction source through the generic runtime
-spawn path. Automatic build producers and verifiers are `skill-backed`: they
-use this exact canonical build adapter and applicable upstream primitives
-without a persona. An explicitly named specialist remains `persona-backed` and
-requires its exact installed prompt. Persona model or effort frontmatter is
-only a direct-invocation default; the root-selected dispatch record overrides it
-for MDF-managed work. Missing capability or instruction source is an explicit
-root fallback with degraded status or a stop; fast, older, and future profiles
-are never selected silently.
+For `mode: auto-workflow`, `mode: auto-workflow-pr`, or
+`mode: quick-workflow-pr`, also load
+`../../references/auto-workflow-contract.md` and apply its mandatory `Each plan
+slice or bounded build` Two-Key lease. Each of these modes invokes this skill
+for one bounded task in default single-task mode and receives provisional
+implementation and verification evidence without a commit. The root may
+stage only the exact task-owned review-candidate paths after the build and any
+applicable simplification Two-Key gates return `PASS`; staging is not a commit,
+and canonical review receives the staged slice or bounded-change diff. Only
+after canonical review returns `PASS` may the root invoke `github-commit`. A
+bare mode string is not authority.
+Standalone `/build` and standalone `/build auto` retain the upstream commit
+behavior.
+
+In quick mode, use the active task Context, the user's request, current scope,
+and verification evidence as the acceptance baseline; do not require or
+generate a spec or plan. Treat one bounded request as the single implementation
+slice. Preserve the upstream implementation, test, regression, build, and
+commit criteria except for the shared automatic-mode port of the commit actor
+and gate.
 
 ## Upstream command contract
 
 The following command behavior is preserved from the upstream build command.
 MDF state and artifact rules below adapt how this behavior is recorded. In
-standalone `/build` and quick mode, they do not remove or reorder the upstream
-execution steps. In the two auto modes, the shared contract intentionally
-places the existing commit criterion after the post-build slice review; the
-implementation, verification, and risk checks remain unchanged.
+standalone `/build` and standalone `/build auto`, they do not remove or reorder
+the upstream execution steps. In the three automatic modes, the shared
+contract intentionally moves the existing commit criterion to the root after
+the mandatory build, any applicable simplification, and downstream review
+gates. Review-candidate staging occurs between the producer gates and canonical
+review; the implementation, verification, and risk checks remain unchanged.
 
 ### Modes and arguments
 
 - `/build` implements the next pending task, then stops: one careful slice at a
   time.
 - `/build auto` generates the plan if needed, gets one standalone approval,
-  and then implements every task without stopping between tasks. Inside
-  `mode: auto-workflow` or `mode: auto-workflow-pr`, the run-scoped intent and
-  exact spec/plan handoff replaces that ceremonial checkpoint.
+  and then implements every task without stopping between tasks.
 - Treat `auto` (canonical) or `all` as autonomous mode. Anything else (or
   empty) selects the default single-task mode.
 - Autonomous mode is not a shorter verification path. It runs the same
   test-driven loop for every task; it only removes the human stepping between
   tasks.
 
-When called from `mode: auto-workflow` or `mode: auto-workflow-pr`, the root's
-run-scoped authorization replaces the standalone plan checkpoint. Neither mode
-removes RED/GREEN, full regression, build, review, task-owned staging, lock, or
-high-risk checks. Both auto modes commit each plan slice only after the shared
-contract's canonical slice review passes and keep the MDF task active;
-`auto-workflow-pr` performs whole-task completion only after ship GO and final
-PR preflight.
+The internal automatic modes do not invoke `/build auto` or `/build all`.
+Their current handoff selects exactly one bounded task for the default loop.
+None removes RED/GREEN, full regression, build, review, task-owned paths, lock,
+or high-risk checks. After the producer gates pass, the root stages the exact
+task-owned review-candidate paths for canonical review; only review `PASS`
+permits the root-owned commit. This build stage never completes the whole MDF
+task.
 
 ### Default: one task
 
@@ -96,17 +95,17 @@ selecting another pending task. Then execute this exact sequence:
    record build/typecheck/lint as not applicable when the changed paths cannot
    affect them; behavioral changes still run the applicable build, typecheck,
    and lint checks.
-7. In standalone `/build` and `mode: quick-workflow-pr`, commit with a
-   descriptive message. In `mode: auto-workflow` or `mode: auto-workflow-pr`,
-   stop after implementation, verification, and simplification with
-   implementation-complete provisional evidence; do not commit here. The
-   shared contract invokes canonical `review` and then `github-commit` after
-   that review passes.
+7. In standalone `/build`, commit with a descriptive message. In every
+   automatic mode, stop after implementation and verification with
+   implementation-complete provisional evidence; do not stage any path or
+   commit here. After the build and any applicable simplification Two-Key gates
+   pass, the root stages only the exact task-owned review-candidate paths for
+   canonical review; this is not a commit. Canonical review receives the staged
+   slice diff, and only its `PASS` permits the root to invoke `github-commit`.
 8. In standalone `/build`, preserve the existing selected-task completion
-   behavior. In the auto modes, keep the MDF task active and return the
-   provisional slice result to the shared orchestrator. The orchestrator
-   records the final slice commit/evidence after review; the PR orchestrator
-   performs whole-card completion only after ship GO.
+   behavior. In every automatic mode, keep the MDF task active and return the
+   provisional bounded result to the root. A provisional result is neither a
+   committed plan slice nor whole-task completion.
 
 ### Autonomous: the whole plan (`/build auto`)
 
@@ -126,28 +125,22 @@ commit, and readable plan-slice completion evidence.
    per-task commits must not absorb unrelated local work.
 3. Plan if needed. If there is no `tasks/plan.md`, invoke the
    `planning-and-task-breakdown` skill to generate one.
-4. In standalone `/build auto`, use one human checkpoint: present the full
-   plan and wait for an unambiguous affirmative such as `approve`, `go`, or
-   `yes`. In `mode: auto-workflow` or `mode: auto-workflow-pr`, verify the exact
-   spec/plan hashes and run-scoped authorization instead of asking for this
-   ceremonial checkpoint.
+4. Present the full plan and wait for one unambiguous affirmative such as
+   `approve`, `go`, or `yes`.
    If `tasks/plan.md` was generated, commit it as one preparatory commit before
    the first task so it cannot bleed into that task's commit.
 5. Execute every task in dependency order. Use each task's declared
    dependencies; when dependencies are not explicit, use the plan's listed
    order. For each task, run the complete default loop:
    `RED → GREEN → full regression suite → build → review → commit`. Record the
-   plan-slice evidence; both auto modes leave the MDF task active for the PR
-   orchestrator's final ship-and-handoff completion.
-   Stage only files touched by that plan slice; never use `git add -A` blindly
-   and never stage a whole-card MDF status update in either auto mode. Make
-   exactly one commit per slice so every point remains a clean rollback point.
+   plan-slice evidence.
+   Stage only files touched by that plan slice plus its task-status update;
+   never use `git add -A` blindly. Make exactly one commit per slice so every
+   point remains a clean rollback point.
 6. Stop and ask the user instead of pushing through when, even in auto mode:
    - a test cannot be made to pass or the build breaks without an obvious fix;
      follow `../debugging-and-error-recovery/SKILL.md`;
-   - the spec is materially ambiguous or a task needs a critical decision not
-     covered by it; routine implementation details are decided by the root and
-     recorded as assumptions;
+   - the spec is ambiguous or a task needs a decision not covered by it;
    - a task is high-risk or irreversible, including auth/permission changes,
      destructive data migrations, payments, deletions, deploys, secrets, or
      anything that cannot be undone with `git revert`; follow
@@ -188,82 +181,146 @@ loop or reduce its verification.
    that conflicts with canonical state, a live lock, or the approved scope.
 3. Confirm that the current worktree is the locked worktree and the expected
    branch is checked out. The initial slice requires a clean baseline. During
-   an auto-mode repair continuation after a failed canonical slice review, the
-   known provisional diff for the same selected task may remain staged or
-   unstaged; verify that it is limited to the task-owned paths instead. Stop
+   an automatic-mode repair continuation after a failed build,
+   simplification, or canonical review gate, the known provisional diff for
+   the same selected task may remain staged or unstaged; verify that it is
+   limited to the task-owned paths instead. Stop
    for unrelated dirt, lock conflict, ambiguous ownership, or missing worktree
    setup. This is the MDF equivalent of the upstream autonomous clean-baseline
    guarantee.
+
+### Automatic-mode producer and verification
+
+For all three automatic modes, apply the shared Two-Key lease without
+duplicating it:
+
+1. The root supplies the current canonical task, lock, handoff, Git baseline,
+   acceptance context, exact leased implementation and test paths, required
+   commands, and stop conditions. One bounded producer is the sole writer and
+   may write only those leased paths while running exact discovery, this
+   adapter, and every applicable primitive above except `code-simplification`.
+   The build producer neither loads nor runs simplification. In plan-backed
+   automatic modes, the root invokes canonical `code-simplify` as the separate
+   simplification stage; quick mode omits it.
+2. The producer cannot mutate canonical `.mdf` cards, locks, handoffs, indexes,
+   or observations; stage any path for review or commit; commit; complete a
+   task or slice; mutate remote or external state; accept its work; delegate;
+   or perform final synthesis. It returns its resolved skills, actual changed
+   paths, focused result, and command evidence as claims for root observation.
+3. After positive producer terminality, the root independently observes the
+   actual diff, owned and unrelated paths, canonical and Git state, and each
+   command's exact invocation, cwd, exit status, output reference, pre/post
+   `HEAD`, and binding to the observed diff. A producer report, self-authored
+   hash, or completion phrase is not evidence.
+4. A distinct fresh-context, read-only, non-delegating verifier receives the
+   original build contract and complete root-observed bundle without producer
+   reasoning. It assesses the actual diff and bound verification evidence
+   against the selected task or quick acceptance baseline. The root alone
+   reconciles `PASS`, `REWORK`, or `BLOCKED` and decides whether the result may
+   proceed to downstream gates.
+
+Missing keys, stale or changed state, unrelated dirt, scope violation,
+non-success command evidence, exhausted cycles, or uncertain writer
+terminality stops under the shared contract. Never start a verifier or another
+writer while producer write capability may remain.
 
 ### Execution, verification, and review
 
 4. Perform the complete upstream per-task sequence. MDF's focused checks,
    review, and downstream-impact gate are additional checks; they do not stand
-   in for the required full test suite or build in auto modes. For auto modes,
-   the required order is:
+   in for the required full test suite or build in `auto-workflow` and
+   `auto-workflow-pr`. For those modes, the bounded producer order is:
 
-   `acceptance/context → RED → GREEN → full test suite → build → review/gates →
-   code-simplify → provisional plan-slice evidence`.
+   `acceptance/context → RED → GREEN → full test suite → build →
+   internal review/gates → provisional plan-slice evidence`.
 
    For quick mode, use the bounded-request sequence:
 
    `acceptance/context → RED → GREEN (behavioral changes) → applicable
-   validation/full regression → build/typecheck/lint when applicable → review →
-   commit`.
+   validation/full regression → build/typecheck/lint when applicable →
+   internal review/gates → provisional bounded evidence`.
 
-   Quick mode omits plan-slice evidence and code-simplify. Whole MDF task
-   completion is not part of the build slice; the quick PR handoff completes it
-   only after review and final preflight.
+   After the build gate passes in `auto-workflow` or `auto-workflow-pr`, the
+   root invokes canonical `code-simplify` as its own Two-Key stage when
+   applicable; quick mode omits simplification. A simplification change
+   invalidates affected command and review evidence and re-enters the required
+   gates. After the build and any applicable simplification gates return
+   `PASS`, the root stages only the exact task-owned review-candidate paths;
+   canonical review receives that staged slice or bounded-change diff. This
+   staging is not a commit, and only canonical review `PASS` permits
+   `github-commit`. Whole MDF task completion is never part of this build
+   stage.
 
 5. Review the diff and all verification results against the full
    specification, plan, task acceptance, and relevant project documentation in
    auto modes. In quick mode, use the quick handoff, task Context, bounded
    request, and relevant project documentation instead.
-   Record readable Markdown notes in the work item when reasoning or
-   downstream impact needs to be preserved. Aim for a fresh-context upstream
-   code review when an independent reviewer is available; if unavailable,
-   perform and disclose a root review rather than claiming independent
-   freshness.
+   The producer applies the exact upstream internal review to its actual diff;
+   this does not replace the shared independent verifier or the canonical
+   downstream `review` stage. Return reasoning and downstream-impact findings
+   in provisional evidence; only the root may record canonical MDF notes.
 6. Apply the downstream-impact gate in ordinary language. Actionable findings,
    verification regressions, ambiguity, or a scope change must be fixed,
-   replanned, or stopped before commit. A clean command result is not a
-   substitute for semantic correctness.
+   replanned, or stopped before `PASS` and commit. A clean command result is
+   not a substitute for semantic correctness.
 
 ### Commit, completion, and artifacts
 
-7. In standalone `/build` and quick mode, stage only the exact task-owned
-   project paths and create one focused commit with a descriptive message. In
-   auto modes, invoke canonical `github-commit` only after the shared
-   post-build slice review passes; stage only that slice's paths and record the
-   commit, verification result, review result, and final slice evidence. In
-   `mode: auto-workflow`, do not mark the MDF task done or release its active
-   lock; the lock remains owned for continuation. In
-   `mode: auto-workflow-pr`, the orchestrator performs task completion after
-   ship GO and final preflight. In quick mode, task completion occurs after the
-   review loop and final PR preflight. `.mdf` state is local workflow metadata
-   and is not blindly staged into the project commit.
-8. Re-read the card and index projection. Auto modes report plan-slice and
-   whole-task completion separately; quick mode reports the bounded request's
-   build/review completion and whole-task completion separately. The PR
-   workflows may complete an active task immediately before push/PR handoff.
-9. If an auto-mode plan was generated as a project-visible `tasks/plan.md`,
+7. In standalone `/build`, stage only the exact task-owned project paths and
+   create one focused commit with a descriptive message. In every automatic
+   mode, return provisional evidence without staging any path or committing.
+   After the build and any applicable simplification Two-Key gates pass, the
+   root may stage only the exact task-owned review-candidate paths. Canonical
+   review receives the staged slice or bounded-change diff; review-candidate
+   staging is not a commit. Only after canonical review returns `PASS` may the
+   root invoke `github-commit` for one focused commit. `.mdf` state is local
+   workflow metadata and is not blindly staged as implementation code.
+8. In every automatic mode, re-read the card, lock, handoff, index projection,
+   and Git state before advancing. This skill does not mark a plan slice
+   committed, mark the MDF task `done`, release its lock, push, or mutate a PR.
+   Report bounded build status separately from root-owned commit and whole-task
+   status.
+9. If an automatic-mode plan was generated as a project-visible `tasks/plan.md`,
    preserve the upstream preparatory-commit rule. If the MDF plan adapter
    created only the canonical `.mdf/work/<work-id>/plan-NNN.md` artifact, record
    it in MDF state and do not create an unsynchronized duplicate or stage local
    `.mdf` state as implementation code. This rule does not apply to quick mode.
+
+### Failure and recovery
+
+On a test, verification, or build failure, preserve the evidence and follow the
+exact upstream debugging workflow before changing more code. Standalone modes
+keep the upstream user stop and resume behavior. Automatic modes use the
+shared bounded `REWORK` path for an in-scope, authorized repair and otherwise
+finish `BLOCKED`; they do not ask an intermediate question, select a new task,
+or assume rollback. Reconcile the actual provisional diff, task-owned paths,
+lock, handoff, base, and `HEAD` before a fresh producer cycle.
+
+In plan-backed automatic modes, any spec ambiguity or task decision not
+covered by the spec finishes `BLOCKED` rather than prompting during the
+unattended run. In quick mode, any acceptance or scope ambiguity finishes
+`BLOCKED`. Scope expansion, high-risk or irreversible work, missing authority,
+canonical-state mutation, repeated no-progress, or an exhausted three-cycle
+bound also finishes `BLOCKED`. A failed or repaired command invalidates the
+evidence bound to the prior diff.
 
 ### Automatic continuation and final verification
 
 Standalone `/build auto` and `/build all` repeat the same upstream loop over
 all approved plan tasks. They are not the auto-workflow loop. In
 `mode: auto-workflow` and `mode: auto-workflow-pr`, never enter this whole-plan
-mode: the shared contract invokes default single-task `build`, then canonical
-`review`, then `github-commit` before selecting the next slice. Quick mode is
-one bounded task and does not enter this plan loop.
+mode: the shared contract invokes default single-task `build`, any applicable
+simplification, root-owned review-candidate staging, canonical `review` of the
+staged slice diff, then root-owned `github-commit` after review `PASS` before
+selecting the next slice. Quick mode is one bounded task and does not enter
+this plan loop; after its bounded build passes, the root analogously stages the
+exact review-candidate paths, passes the staged bounded-change diff to
+canonical review, and invokes `github-commit` only after review `PASS`.
 
-After every approved plan task completes, run the whole-build verification
-matrix from the plan and perform a final review against the full
-specification. This final matrix is additive: it does not replace the full
-test suite and build required inside each task loop. Report completion only
-after that final review with a readable handoff identifying commits, checks,
-completed tasks, and remaining work.
+After every approved plan task commits in standalone `/build auto` or either
+plan-backed automatic mode, run the whole-build verification matrix from the
+plan and perform a final review against the full specification. In automatic
+modes, those model-led operations use their own shared Two-Key gates. This
+final matrix is additive: it does not replace the full test suite and build
+required inside each task loop. Report only provisional whole-build evidence;
+whole MDF task completion remains root-owned and outside this skill.
