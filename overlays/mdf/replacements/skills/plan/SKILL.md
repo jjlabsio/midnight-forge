@@ -5,14 +5,6 @@ description: "Break work into small verifiable tasks with acceptance criteria an
 
 # plan
 
-## Auto-workflow contract boundary
-
-When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
-plugin-installed `../../references/auto-workflow-contract.md` and use its
-current handoff and authority rules. This skill owns plan-specific artifact
-creation, revision, and acceptance; it does not redefine shared auto-mode
-authority or lifecycle behavior.
-
 ## Upstream command contract
 
 Invoke the planning-and-task-breakdown skill.
@@ -40,7 +32,9 @@ selected by discovery.
 
 When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`,
 also load `../../references/auto-workflow-contract.md` and apply its mandatory
-`Planning` Two-Key stage lease. A bare mode string is not authority. In
+`Planning` Two-Key stage lease. This skill owns only the canonical planning
+artifact and its plan-specific handoff; it does not redefine the shared
+authority or lifecycle rules. A bare mode string is not authority. In
 standalone mode, require current explicit approval of the exact specification
 revision before planning.
 
