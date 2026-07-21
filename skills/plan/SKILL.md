@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Break work into small verifiable tasks with acceptance criteria and dependency ordering. Use when breaking an approved MDF specification into an ordered implementation plan."
+description: "Break an approved MDF specification into small, verifiable tasks with acceptance criteria and dependency ordering."
 ---
 
 # plan

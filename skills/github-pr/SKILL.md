@@ -1,6 +1,6 @@
 ---
 name: github-pr
-description: "Use when creating or updating a GitHub pull request for MDF work, including a read-only handoff for an already-completed task."
+description: "Manage GitHub pull request delivery or read-only handoff for MDF work."
 ---
 
 # GitHub PR

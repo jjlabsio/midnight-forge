@@ -1,6 +1,6 @@
 ---
 name: webperf
-description: "Run a web performance audit via the web-performance-auditor persona. Use when the user invokes webperf, mdf webperf, or asks for a web performance audit."
+description: "Run an MDF web performance audit for browser-facing applications."
 ---
 
 # webperf

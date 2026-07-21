@@ -1,6 +1,6 @@
 ---
 name: test
-description: "Run TDD workflow — write failing tests, implement, verify. For bugs, use the Prove-It pattern. Use when the user invokes test, mdf test, or asks to run the agent-skills TDD workflow."
+description: "Run MDF's TDD workflow for feature changes and bug fixes, including Prove-It reproduction and regression verification."
 ---
 
 # test

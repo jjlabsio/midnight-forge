@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Use before implementation work, MDF task work, build, commits, or PR preparation when work must happen outside main/default branch; creates or enters an isolated project-local .worktrees git worktree."
+description: "Prepare an isolated project-local Git worktree for MDF work outside the default branch."
 ---
 
 # Using Git Worktrees

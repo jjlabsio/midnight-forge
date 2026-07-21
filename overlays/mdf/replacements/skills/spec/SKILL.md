@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "Start spec-driven development — write a structured specification before writing code. Use when defining or revising a non-trivial MDF change before planning or implementation."
+description: "Create or revise a structured MDF specification for a non-trivial change before planning or implementation."
 ---
 
 # spec

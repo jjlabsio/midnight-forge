@@ -1,6 +1,6 @@
 ---
 name: github-commit
-description: "Use when creating a git commit for MDF work; reviews git status, diff, branch, and recent commits, then stages relevant files and creates one appropriate commit."
+description: "Create one focused Git commit for MDF work."
 ---
 
 # GitHub Commit
