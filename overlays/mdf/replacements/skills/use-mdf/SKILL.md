@@ -70,13 +70,15 @@ uncertain, the root fallback performs quality-critical work; record degraded
 status rather than claiming independent freshness. One writer operates in each
 shared worktree; auto-workflow and auto-workflow-pr may use multiple isolated
 worktrees only when the root can explain why the work is independent. Root-only
-synthesis owns artifacts and lifecycle advance. The selected caller must
-consume a delegated result only after the actual worker response is available;
-a terminal line, elapsed-time threshold, timeout, interruption, failure, or
-partial response is not completion evidence. For independent fan-out, the
-root joins every required returned report before synthesis or a normal GO
-decision and uses the caller's explicit degraded/stop path for any missing
-result.
+synthesis owns artifacts and lifecycle advance.
+
+Apply the installed `subagent-dispatch-policy` completion gate:
+
+- Consume only actual returned worker reports.
+- For independent fan-out, join every required report before synthesis or a
+  normal GO decision.
+- Route policy-defined incomplete results through the caller's explicit
+  degraded/stop path.
 
 ## DDD parity
 
