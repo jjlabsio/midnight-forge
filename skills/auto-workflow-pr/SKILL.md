@@ -20,7 +20,7 @@ stage invocation.
 Apply the contract's shared startup task/worktree resolution in the root. Reuse
 only evidence accepted as current by its resume and artifact-validity rules,
 then follow its entire shared middle lifecycle, recovery protocol, and
-success-or-`BLOCKED` terminal semantics by reference. If no approved slice
+success-or-`BLOCKED` terminal semantics by reference. If no current slice
 remains, do not invent implementation work.
 
 ## Delivery continuation

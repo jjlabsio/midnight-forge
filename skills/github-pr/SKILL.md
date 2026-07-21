@@ -11,7 +11,7 @@ description: "Manage GitHub pull request delivery or read-only handoff for MDF w
 
 1. Load `../../references/auto-workflow-contract.md`.
 2. Require the current run handoff, matching task/lock/worktree/branch facts,
-   approved artifact hashes, and fresh preflight.
+   exact artifact integrity hashes, and fresh preflight.
 3. Allow only final push and PR create/update after that preflight.
 
 ### `quick-workflow-pr`
@@ -65,7 +65,7 @@ mode is a stop.
 - Keep completed-task review read-only.
 - Use the strict active-lock resolver for writes; never recreate a lock for a
   completed-task review.
-- Use `lifecycle-review` for full approved-tree review and `task-review` for
+- Use `lifecycle-review` for full delegated-tree review and `task-review` for
   exact task/diff/verification context.
 - Treat `review_mode` as a label, not mutation authority.
 - Lifecycle and ship consumers accept only `lifecycle-review`.

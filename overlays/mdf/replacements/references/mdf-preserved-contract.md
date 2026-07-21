@@ -55,12 +55,14 @@ replay a non-idempotent mutation from a stale transcript.
 If a lock remains after interruption, preserve it until the current owner and
 worktree facts are confirmed. Never infer staleness from elapsed time alone.
 
-## Human and external authority
+## Autonomous and external authority
 
-The shared exact spec/plan artifact path/hash approval, affirmative approval,
-recording, and invalidation rules are defined in
+The shared exact spec/plan artifact path/hash integrity, authority binding, and
+invalidation rules are defined in
 [`approval-evidence.md`](approval-evidence.md); load it instead of restating
-those rules. Push, PR, merge, deploy, branch/worktree deletion, risk
-acceptance, and dirty cleanup each require current authority. Historical
-artifacts remain readable regardless of whether their old producer is still
-installed.
+those rules. Push and PR operations require current envelope authority plus
+fresh provider preflight. Merge, deploy, branch/worktree deletion, risk
+waivers, and dirty cleanup remain excluded unless a future exact envelope
+names them. Any missing or ambiguous authority is `BLOCKED`, not an approval
+prompt. Historical artifacts remain readable regardless of whether their old
+producer is still installed.

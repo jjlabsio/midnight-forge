@@ -7,7 +7,7 @@
   "notes": "MDF adapts the upstream planning command into a Codex-native model-led Markdown entrypoint.",
   "baseSha256": "0be6342ddff35204095b23c64a389323185624418c365390955c3c716eba4d85",
   "overlayKind": "renameAdapter",
-  "adapterRationale": "The upstream planning command is converted from a command prompt into a Markdown plan with exact human approval and ordered task ownership.",
+  "adapterRationale": "The upstream planning command is converted from a command prompt into a Markdown plan with exact artifact authority/integrity binding and ordered task ownership; MDF does not add a human permission checkpoint.",
   "reviewRisk": "Full adapter replacement can hide upstream planning command changes; validation pins the upstream command hash and requires explicit review when it changes.",
   "contractRefs": ["auto-workflow-contract", "approval-evidence"]
 }

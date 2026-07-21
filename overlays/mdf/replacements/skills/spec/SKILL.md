@@ -20,9 +20,9 @@ about:
 Then generate a structured spec covering all six core areas: objective,
 commands, project structure, code style, testing strategy, and boundaries.
 
-Save the spec as `SPEC.md` in the project root and confirm with the user before
-proceeding in a standalone invocation. In `mode: auto-workflow` or
-`mode: auto-workflow-pr`, report the
+Save the spec as `SPEC.md` in the project root and bind it to the current
+autonomous execution envelope before proceeding in any invocation. In
+`mode: auto-workflow` or `mode: auto-workflow-pr`, report the
 exact canonical path and SHA-256, verify the mandatory `interview-me` preflight
 and absence of a critical unresolved question, then continue under the
 run-scoped auto authorization without asking for a ceremonial approval.
@@ -37,6 +37,11 @@ if either is unresolved. Load and run the exact upstream
 adapter, then load the exact upstream `../spec-driven-development/SKILL.md`
 and every other applicable primitive selected by discovery.
 
+MDF port: the upstream human-review checklist is represented by the current
+autonomous authority binding, exact artifact hash, and applicable Two-Key
+`PASS`; it does not create a human permission checkpoint. Preserve all other
+upstream quality and Definition-of-Done requirements.
+
 When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`,
 also load `../../references/auto-workflow-contract.md` and apply its mandatory
 `Specification` Two-Key stage lease. A bare mode string is not authority.
@@ -48,8 +53,8 @@ decision-quality adaptation and does not replace the upstream six-area spec
 contract.
 
 Load the shared `../../references/approval-evidence.md` before applying this
-skill's approval gate. It owns the common exact-artifact path/hash, affirmative
-approval, recording, and invalidation rules.
+skill's authority gate. It owns the common exact-artifact path/hash, authority
+binding, and invalidation rules.
 
 ## Create or revise a specification
 
@@ -98,22 +103,21 @@ spec artifact; preserve the complete upstream
 delegation. Missing keys, stale or changed state, scope violations, exhausted
 cycles, or uncertain writer terminality stop under the shared contract.
 
-## Approval contract
+## Autonomous artifact authority
 
 Apply the shared `../../references/approval-evidence.md` contract. For this
-skill, standalone initial planning stops until the exact canonical
-specification revision has received the required approval. In
-`mode: auto-workflow` or `mode: auto-workflow-pr`, only a Two-Key `PASS` lets
-the root use run-scoped intent authorization in place of this repeated human
-checkpoint. It is not semantic approval and applies only while intent, scope,
-path, and bytes remain unchanged. If any changes, invalidate the auto handoff
-and create a new revision.
+skill, every invocation may proceed when the exact canonical specification
+revision is bound to the current autonomous execution envelope. In
+`mode: auto-workflow` or `mode: auto-workflow-pr`, the root also requires the
+Two-Key `PASS` before accepting the revision. This is authority and integrity
+evidence, not a repeated human checkpoint, and applies only while intent,
+scope, path, and bytes remain unchanged. If any changes, invalidate the
+handoff and create a new revision.
 
-In a standalone automatic-looking invocation, stop after presenting the
-specification until that approval is observed. In `mode: auto-workflow` or
-`mode: auto-workflow-pr`, do not write a fake `approval-NNN.md`; the root
-records the accepted path and exact hash in the auto handoff. Never plan or
-build on an unapproved standalone or unverified automatic revision.
+Do not create a ceremonial `approval-NNN.md`; record the exact path and hash
+in the current task/handoff authority evidence. Never plan or build on an
+unverified revision. If authority, scope, or artifact freshness is ambiguous,
+stop as `BLOCKED` and report the evidence without requesting approval.
 
 ## Technical revisions and handoff
 
@@ -121,10 +125,11 @@ When recovery reveals an intent-preserving technical constraint, produce a new
 specification revision and review it against the original intent, prior
 specification, current failure evidence, and the new constraints. A change to
 the user's goal, external behavior, scope, or material trade-off stops for
-human judgment. In automatic mode, the root must record the shared contract's
-intent-preserving classification before dispatch; the producer cannot write
-that handoff. Once the exact new revision is approved in standalone mode or
-accepted after automatic Two-Key `PASS`, hand off to `plan`.
+user-owned clarification, not an approval prompt. In automatic mode, the root
+must record the shared contract's intent-preserving classification before
+dispatch; the producer cannot write that handoff. Once the exact new revision
+is bound to the autonomous envelope and, when applicable, passes automatic
+Two-Key verification, hand off to `plan`.
 
 Stop after this phase in a standalone `spec` run. Do not plan or build as an
 unstated continuation.

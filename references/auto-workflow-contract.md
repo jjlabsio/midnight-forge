@@ -1,12 +1,13 @@
 # Auto-workflow contracts
 
-These readable contracts apply only when a caller establishes one of the
-explicit internal modes below. They do not change standalone MDF or upstream
-skill semantics.
+These readable contracts apply whenever a caller establishes one of the
+explicit modes below. They preserve upstream quality and verification
+semantics while applying MDF's autonomous authority policy across standalone
+and automatic MDF workflows.
 
 A mode string alone grants no authority. The root must also carry a current
 readable handoff. For `auto-workflow` and `auto-workflow-pr`, it contains the
-task/work IDs, worktree, branch, approved spec/plan paths and hashes, lock
+task/work IDs, worktree, branch, exact spec/plan paths and integrity hashes, lock
 ownership, completed slices, and allowed actions. For `quick-workflow-pr`, it
 contains the task/work IDs, worktree, branch, matching lock, bounded scope,
 quick handoff, verification state, and allowed actions; spec/plan paths and
@@ -61,9 +62,10 @@ committing until review passes. Quick mode omits simplification; it must not
 create an empty simplification gate. Canonical build, review, commit, and GitHub
 PR quality and safety rules remain in force; this mode changes only the
 planning-artifact prerequisite and lifecycle composition. If ambiguity, scope
-expansion, a public or security boundary, destructive work, failed
-verification, repeated no-progress, or uncertain PR state appears, stop rather
-than generating a spec or plan automatically.
+expansion outside the envelope, failed verification, repeated no-progress, an
+unverifiable security/data/permission boundary, or uncertain PR state appears,
+stop rather than generating a spec or plan automatically. Report `BLOCKED`; do
+not request routine approval.
 
 ## Automatic-mode operation matrix
 
@@ -322,18 +324,20 @@ of the five conditions above with references to the current task, artifacts,
 failure evidence, and tree, the affected spec/plan/evidence revisions and
 hashes, the earliest invalidated stage, and the absence of any unresolved
 uncertainty or user decision boundary. This improves resumability and
-auditability; it does not replace any artifact, approval, lock, or review gate.
+auditability; it does not replace any artifact, authority binding, lock, or
+review gate.
 
 When every condition holds, `auto-workflow` and `auto-workflow-pr` may make the
-technical revision under their existing run-scoped authorization. Preserve the
+technical revision under their existing delegated authorization. Preserve the
 normal artifact protocol: write a new canonical spec revision when the
 constraint must be recorded, re-evaluate and revise the affected plan when
 needed, invalidate affected downstream evidence, and re-enter the existing
 `build -> verification -> applicable simplification (or explicit not
 applicable) -> root exact-path staging -> review -> commit` flow from the
-earliest invalidated stage. The revision must not silently reuse an invalidated
-approval or evidence record. Standalone `spec` and `plan` keep their existing
-explicit human approval gates.
+earliest invalidated stage. The revision must not silently reuse invalidated
+authority or evidence. Standalone `spec` and `plan` use the same autonomous
+artifact authority and Two-Key verification rules; they do not add a human
+approval checkpoint.
 
 This rule changes only MDF orchestration and recovery judgment. It does not
 change the upstream spec, planning, incremental-implementation, test, or
@@ -351,11 +355,11 @@ script, task-state controller, or new lifecycle state; the orchestrator reads
 the evidence and re-enters the canonical skills.
 
 Technically clear, in-scope CI/test fixes and conflict resolution may proceed
-automatically. Stop for user confirmation when the repair involves
-security/privacy, authentication/permission, data loss/migration/backfill,
-production/deployment, a public contract or user-visible behavior, scope,
-cost, operational risk or rollback acceptance, an ambiguous root cause or
-repair scope, repeated failed repair, or an external provider/infrastructure
+automatically. Finish `BLOCKED` without a confirmation prompt when the repair
+involves security/privacy, authentication/permission, data loss/migration/
+backfill, production/deployment, a public contract or user-visible behavior,
+scope, cost, operational risk or rollback acceptance, an ambiguous root cause
+or repair scope, repeated failed repair, or an external provider/infrastructure
 problem.
 
 ## Shared auto-mode stage dispatch
@@ -390,14 +394,14 @@ without the current handoff and state checks above.
 | Stage | Canonical MDF skill | Required result |
 | --- | --- | --- |
 | Intent preflight | `interview-me` when its conditions apply | Settled intent and handoff context |
-| Specification | `spec` | Approved spec revision and hash |
-| Planning | `plan` | Approved plan revision and hash |
+| Specification | `spec` | Exact current spec revision, integrity hash, and Two-Key evidence |
+| Planning | `plan` | Exact current plan revision, integrity hash, and Two-Key evidence |
 | Plan-slice implementation | `build` in default single-task mode | One slice's implementation, verification, and provisional evidence; no commit |
 | Plan-slice simplification | `code-simplify` when applicable | Two-Key `PASS`, or an explicit not-applicable result, before review-candidate staging |
 | Plan-slice review | `review` against the staged current plan-slice diff | Two-Key `PASS` before selecting another slice or committing |
 | Plan-slice commit | root invokes `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
-| Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
+| Whole-tree review | `review` against the complete delegated tree | Final review against the full spec and plan |
 | Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
 | Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
 | PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
@@ -420,12 +424,12 @@ For both auto modes, the common lifecycle is:
 
 ```text
 intent preflight -> interview-me when required -> spec -> plan ->
-approved build/simplify/stage/review/commit plan-slice loop ->
+autonomous build/simplify/stage/review/commit plan-slice loop ->
 whole-build verification -> whole-tree review ->
 current local handoff
 ```
 
-For every ready approved plan slice, invoke the canonical `build` skill in the
+For every ready current plan slice, invoke the canonical `build` skill in the
 current auto mode with exactly one selected task. Do not invoke `build auto` or
 `build all`. The build skill owns its complete single-slice TDD, regression,
 build, and internal review/gates. It does not own the automatic workflow's
@@ -439,7 +443,7 @@ canonical build(single slice) Two-Key PASS -> provisional evidence ->
 canonical code-simplify Two-Key PASS when applicable (otherwise explicit not applicable) ->
 root stages exact slice paths (review candidate only, not a commit) ->
 canonical review(staged slice diff) Two-Key PASS -> root invokes github-commit ->
-final slice evidence -> next approved slice
+final slice evidence -> next current slice
 ```
 
 After canonical build returns Two-Key `PASS`, invoke canonical `code-simplify`
@@ -475,15 +479,15 @@ step is part of the auto-mode loop.
 
 After each slice commit, re-read the canonical spec, plan, task card, lock, Git
 state, and latest evidence before selecting the next slice. After all
-approved slices are complete, run the plan's whole-build verification matrix
-and invoke the canonical `review` skill against the complete approved tree and
-full spec. Continue until every approved plan slice is complete; neither auto
+current slices are complete, run the plan's whole-build verification matrix
+and invoke the canonical `review` skill against the complete delegated tree and
+full spec. Continue until every current plan slice is complete; neither auto
 mode stops after the first ready slice merely because its local build,
 simplification, and review gates passed. Any accepted simplification or repair
 change invalidates affected verification and review evidence and must return
 through the applicable canonical skill checks before the handoff is considered
 current. Whole-build verification and whole-tree final review remain separate
-Two-Key gates after every approved slice commits.
+Two-Key gates after every current slice commit.
 
 Both modes use the same intent preflight, artifact freshness rules, review
 quality bar, first-meaningful-vertical-slice consumer checkpoint, and stop
@@ -550,7 +554,7 @@ evaluate its `When to Use` conditions. Invoke it when:
 
 Do not invoke it for a clear, self-contained mechanical operation. Reuse a
 settled handoff for continuity only when the task identity and current state
-match; this does not by itself authorize reuse of the spec, plan, approval, or
+match; this does not by itself authorize reuse of the spec, plan, authority, or
 evidence. If intent requires an interview in a non-interactive run, stop rather
 than guessing.
 
@@ -576,10 +580,10 @@ these checks:
 
 1. **Continuity:** confirm the task/work IDs, worktree, branch, lock, and
    settled intent belong to the same current work.
-2. **Artifact freshness:** re-read the exact approved spec and plan revisions,
+2. **Artifact freshness:** re-read the exact current spec and plan revisions,
    paths, and SHA-256 values. A latest-revision, path, byte, scope, or task
    order change requires the applicable new revision and invalidates the old
-   handoff/approval.
+   handoff/authority evidence.
 3. **Semantic validity:** normally reuse unchanged revisions without repeating
    a full spec/plan review. Revalidate when a user or acceptance change, new
    constraint, spec/plan contradiction, failed verification or review,
@@ -642,7 +646,7 @@ and final evidence do not mark the MDF task card `done` in local mode.
 
 In `mode: auto-workflow-pr`, if pending plan slices exist, implement them using
 the local loop. After each local slice, re-read the plan and card and repeat
-until no approved plan slice remains. If none remain at the start, skip
+until no current plan slice remains. If none remain at the start, skip
 implementation rather than inventing work, map every spec acceptance criterion
 to current verification or review evidence, and continue to ship. After ship
 returns GO, run the final local/PR preflight while the lock is still held and

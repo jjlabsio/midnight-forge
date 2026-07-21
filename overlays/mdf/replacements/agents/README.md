@@ -43,5 +43,5 @@ Codex/MDF prompt-dispatch boundary.
   freshness status honestly.
 - MDF-owned persona files remain model-agnostic. The root's readable MDF choice
   governs managed delegation.
-- The root model owns canonical artifact storage, approval evidence, and
-  root-only synthesis. Persona content remains upstream-owned.
+- The root model owns canonical artifact storage, autonomous authority
+  evidence, and root-only synthesis. Persona content remains upstream-owned.

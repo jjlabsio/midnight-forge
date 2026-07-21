@@ -19,7 +19,7 @@ protocol added maintenance cost while duplicating upstream review judgment.
 
 The model and applicable upstream skill own model choice, reviewer choice,
 freshness judgment, semantic adequacy, downstream impact, recovery, and ship
-meaning. Skills state the required checks and confirmation stops in readable
+meaning. Skills state the required checks and fail-safe stops in readable
 guidance. When a separate reviewer is unavailable, the root reports that
 limitation instead of claiming independent freshness.
 
@@ -31,7 +31,8 @@ correctness, or user authority.
 
 - Workflow surfaces are shorter and more flexible.
 - Human-readable reports explain what ran and what judgment was made.
-- Exact artifact approvals, task locks, owned paths, and external confirmation
-  remain explicit safety boundaries.
+- Exact artifact authority, task locks, owned paths, and external action
+  envelopes remain explicit safety boundaries. Missing or uncertain authority
+  is `BLOCKED`, not a human approval request.
 - Review quality depends on following the upstream skill and truthfully stating
   limitations; no script can manufacture semantic certainty.
