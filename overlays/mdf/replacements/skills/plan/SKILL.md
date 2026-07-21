@@ -41,6 +41,10 @@ For non-trivial planning decisions also apply the exact
 `../doubt-driven-development/SKILL.md` process. These are MDF planning-quality
 adaptations; they do not replace the upstream planning sequence.
 
+Load the shared `../../references/approval-evidence.md` before applying this
+skill's approval gates. It owns the common exact-artifact path/hash,
+affirmative approval, recording, and invalidation rules.
+
 ## Create or revise a plan
 
 1. Read the approved specification by its exact path and SHA-256, relevant
@@ -64,16 +68,15 @@ chooses the next ready task and explains ambiguity.
 
 ## Approval contract
 
-Standalone initial implementation requires explicit affirmative user approval
-of the exact canonical artifact revision/hash for the plan. A review pass or a
-saved plan is not approval. In automatic modes, use the current handoff from
-the loaded auto-workflow contract; it replaces only the repeated checkpoint
-and is not semantic plan approval. Any material change must follow that
-contract's revision and invalidation rules.
-Record approval in a concise human-readable work-item note or the task
-conversation; keep approval and planning state readable and tied to the exact
-artifact. If a file is needed, use one human-readable `approval-NNN.md` note
-for that exact revision and do not duplicate it.
+Apply the shared `../../references/approval-evidence.md` contract. Standalone
+initial implementation requires explicit affirmative user approval of the
+exact canonical plan revision/hash; planning also requires the exact approved
+specification revision before it begins. A review pass or a saved plan is not
+approval. In automatic modes, use the current handoff from the loaded
+auto-workflow contract; it replaces only the repeated checkpoint and is not
+semantic plan approval. Any byte, path, scope, or task-order change requires a
+new revision and invalidates the auto handoff. Record approval according to the
+shared reference and keep it tied to the exact artifact.
 
 Standalone automatic-looking workflow stops before build until both exact
 approvals are current. In automatic modes, continue only under the current
