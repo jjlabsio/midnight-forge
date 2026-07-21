@@ -225,8 +225,12 @@ loop, review gates, intent preflight, or common stop conditions.
 
 The shared contract orchestrates canonical MDF skills, not personas. Resolve the
 installed plugin root and invoke the canonical skill whose name matches the
-stage below. The invoked skill owns its upstream primitive and any persona
-delegation required by its own contract.
+stage below. A canonical automatic stage uses a `skill-backed` instruction
+source by default: the exact MDF adapter, upstream `using-agent-skills`
+primitive, and every applicable primitive selected by discovery are the worker
+instructions, and no persona is selected or resolved. The invoked skill may
+use a `persona-backed` delegation only when its canonical contract explicitly
+names an existing specialist persona.
 
 Every canonical stage invocation must pass the current workflow mode
 (`mode: auto-workflow` or `mode: auto-workflow-pr`) together with the current
@@ -249,13 +253,15 @@ without the current handoff and state checks above.
 
 The stage table is a skill-routing contract, not a persona dispatch contract.
 Never encode `persona: <name>` as a stage invocation or treat a persona name
-as evidence that its prompt was loaded. When a canonical skill delegates, that
-skill must apply the installed subagent-dispatch policy: resolve the exact
-installed `agents/<persona>.md` prompt, pass the unchanged prompt and the
-root-selected dispatch record through the generic runtime spawn path, and use
-the declared degraded fallback or stop when prompt or transport resolution
-fails. The shared contract must not duplicate persona lists or bypass the
-delegating skill's dispatch boundary.
+as evidence that its prompt was loaded. When a canonical skill dispatches a
+worker, that skill must apply the installed subagent-dispatch policy's
+conditional instruction-source boundary: use `skill-backed` for the automatic
+stage worker unless the canonical contract explicitly names a specialist, and
+use `persona-backed` with the exact installed `agents/<persona>.md` prompt for
+that named specialist. Pass the resolved source and root-selected dispatch
+record through the generic runtime path. The shared contract must not duplicate
+persona lists, invent persona prompts, or bypass the delegating skill's
+dispatch boundary.
 
 For both auto modes, the common lifecycle is:
 

@@ -27,12 +27,18 @@ The root orchestrator owns the complete dispatch decision:
    novelty, consequence, and required quality. Consult the performance
    reference as qualitative cost/intelligence context, never as a fixed
    task-to-model table or benchmark-equivalence gate.
-5. Resolve the selected persona name to the exact installed plugin-root prompt
-   at `agents/<persona>.md`, then pass that unchanged prompt and the complete
-   dispatch record through the generic runtime spawn path. A persona name
-   written into task text is only a resolver key, not proof that the persona was
-   loaded. The persona supplies perspective but cannot select another persona
-   or expand its authority.
+5. Resolve exactly one instruction source before spawning:
+   - `persona-backed`: when the caller explicitly names a specialist persona,
+     resolve the exact installed plugin-root prompt at `agents/<persona>.md`.
+     A persona name in task text is only a resolver key, not proof that the
+     persona was loaded. The persona supplies perspective but cannot select
+     another persona or expand its authority.
+   - `skill-backed`: when an automatic stage invokes a canonical MDF skill,
+     resolve the exact canonical adapter, the upstream `using-agent-skills`
+     primitive, and every other applicable primitive selected by discovery. Do
+     not select, invent, or resolve a persona for this branch.
+   Pass the resolved instruction source and complete dispatch record through
+   the generic runtime spawn path. An unresolved instruction source blocks.
 6. Synthesize the returned report in the root context. Only the root writes
    artifacts or advances lifecycle state.
 
@@ -41,15 +47,18 @@ vocabulary. The selected model's native runtime capability and defaults remain
 authoritative. The `fast` option and speed-only profiles are prohibited for
 every model and every MDF-managed dispatch, including fallback paths.
 
-The root's readable dispatch note should name the selected model, worker
-persona, task kind, risk, performance-reference rationale, capability
-confidence, fallback, write scope, authority, and degraded status. Capability
-and transport uncertainty must never be hidden.
+The root's readable dispatch note should name the selected model, instruction
+source (`skill-backed` or `persona-backed`), persona prompt path when the
+source is persona-backed, canonical skill when it is skill-backed, task kind,
+risk, performance-reference rationale, capability confidence, fallback, write
+scope, authority, and degraded status. Capability and transport uncertainty
+must never be hidden.
 
-## Precedence for persona settings
+## Instruction-source precedence
 
 For an MDF-managed delegation, the root must make a complete readable dispatch
-note. Persona frontmatter is never a substitute for the root's model choice.
+note. Persona frontmatter is never a substitute for the root's model choice, and
+persona resolution is not required for a skill-backed automatic stage.
 If the root cannot identify a suitable quality-critical GPT-5.6 capability,
 stop or use a clearly disclosed degraded root fallback. Exploration additionally
 requires read-only, report-only, no-write authority and compatible transport.
@@ -58,10 +67,12 @@ For ordinary direct invocation outside MDF-managed delegation, use the persona's
 model settings first and the platform default second. That ordinary-invocation
 precedence does not override the root's choice for MDF-managed work.
 
-Persona prompt content and perspective remain intact. The generic runtime path
-is MDF-compatible only when it receives the exact installed persona prompt and
-the root-selected dispatch record. If the prompt or dispatch transport cannot
-be resolved, use a visible degraded root fallback or stop.
+Persona prompt content and perspective remain intact for persona-backed calls.
+For skill-backed calls, the generic runtime path receives the exact canonical
+skill instruction source and root-selected dispatch record without a persona.
+If the selected instruction source or dispatch transport cannot be resolved,
+use a visible degraded root fallback or stop; a missing persona is not a failure
+for a skill-backed call.
 
 ## Minimal execution observation
 
@@ -142,13 +153,19 @@ incomplete/censored observation, not a successful result.
 
 ## Spawn boundary
 
-Delegating skills pass these fields through the generic runtime path:
+Delegating skills pass one of these readable instruction-source forms through
+the generic runtime path:
 
 ```text
 model choice: <root-selected candidate>
-persona: <exact installed persona prompt, unchanged>
+instruction source: persona-backed | skill-backed
+persona: <exact installed persona prompt, unchanged>  # persona-backed only
+canonical skill: <resolved MDF adapter and upstream primitives>  # skill-backed only
 task input: <bounded artifact and contract>
 ```
+
+`skill-backed` is a first-class stage worker contract, not a missing-persona
+fallback. A named persona is mandatory only for `persona-backed` dispatch.
 
 Capability failure, fallback, and degraded freshness belong in the root's
 readable report. When the choice is uncertain, the root may disclose its

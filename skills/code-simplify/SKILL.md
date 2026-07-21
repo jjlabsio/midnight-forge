@@ -16,7 +16,10 @@ or redefine shared auto-mode rules.
 If this stage delegates candidate discovery or verification, load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md` before dispatch. Follow the policy's
-root-owned model, persona, write, and synthesis boundaries.
+root-owned model, instruction-source, write, and synthesis boundaries. An
+automatic simplification worker is `skill-backed` and does not require a
+persona; an explicitly named specialist remains `persona-backed` with exact
+prompt resolution.
 
 ## Upstream command contract
 

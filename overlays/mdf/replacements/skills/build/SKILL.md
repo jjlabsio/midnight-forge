@@ -28,11 +28,15 @@ Any implementation or testing delegation must first load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. The root classifies difficulty and
 risk, verifies a GPT-5.6 candidate at the `high` floor, and passes the selected
-dispatch record plus the exact persona prompt through the generic runtime spawn
-path. Persona model or effort frontmatter is only a direct-invocation default;
-the root-selected dispatch record overrides it for MDF-managed work. Missing capability is an
-explicit root fallback with degraded status or a stop; fast, older, and future
-profiles are never selected silently.
+dispatch record plus one resolved instruction source through the generic runtime
+spawn path. Automatic build producers and verifiers are `skill-backed`: they
+use this exact canonical build adapter and applicable upstream primitives
+without a persona. An explicitly named specialist remains `persona-backed` and
+requires its exact installed prompt. Persona model or effort frontmatter is
+only a direct-invocation default; the root-selected dispatch record overrides it
+for MDF-managed work. Missing capability or instruction source is an explicit
+root fallback with degraded status or a stop; fast, older, and future profiles
+are never selected silently.
 
 ## Upstream command contract
 

@@ -39,8 +39,11 @@ behavior.
 
 When bounded reproduction, coverage, or regression analysis is delegated, load
 the plugin-installed `../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md` before dispatch. Follow the policy's
-root-owned model, persona, write, and synthesis boundaries.
+`../../references/model-routing-5.6.md` before dispatch. Automatic test
+producers and assessors use the `skill-backed` instruction source formed by
+this canonical test adapter and applicable upstream primitives; explicitly
+named specialist calls remain `persona-backed`. Follow the policy's root-owned
+model, instruction-source, write, and synthesis boundaries.
 
 This remains a standalone workflow even though `build` may invoke test logic
 internally. Use it for independent verification, manual changes, debugging,

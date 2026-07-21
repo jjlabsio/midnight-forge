@@ -44,11 +44,14 @@ When an independent reviewer is delegated, the root must first load the
 plugin-installed `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. Classify review difficulty and risk,
 verify GPT-5.6 capability at the `high` floor, and pass the root-selected
-dispatch record with the exact persona prompt through the generic runtime spawn
-path. Persona model or effort frontmatter is only a direct-invocation default;
-the root-selected dispatch record overrides it for MDF-managed work. If capability is unavailable,
-use a visible degraded root fallback or stop; never silently use a fast, older,
-or future profile.
+dispatch record with one resolved instruction source through the generic runtime
+spawn path. Automatic review assessors are `skill-backed` and assess the exact
+canonical review target without a persona. An explicitly named specialist
+reviewer remains `persona-backed` and requires its exact installed prompt.
+Persona model or effort frontmatter is only a direct-invocation default; the
+root-selected dispatch record overrides it for MDF-managed work. If capability
+or instruction source is unavailable, use a visible degraded root fallback or
+stop; never silently use a fast, older, or future profile.
 
 ## Review modes
 

@@ -62,25 +62,28 @@ When a selected skill delegates to a subagent:
    quality/cost calculation.
 6. Use GPT-5.6 for quality-critical work. A narrow read-only exploration may
    prefer `gpt-5.3-codex-spark`.
-7. Pass the root-selected model, exact persona prompt, and bounded task input
-   through the generic runtime spawn path.
+7. Resolve one instruction source through the generic runtime spawn path:
+   `skill-backed` for canonical automatic stages, or `persona-backed` with the
+   exact installed persona prompt for explicitly named specialists.
 8. Treat persona model settings as ordinary direct-invocation defaults; the
-   root's readable choice governs MDF dispatch while preserving the persona's
-   perspective.
+   root's readable choice governs MDF dispatch while preserving persona
+   perspective when a persona-backed source is selected.
 9. If quality-critical GPT-5.6 capability is unavailable or uncertain, stop or
    use a root fallback with explicit degraded status. Never hide the fallback.
 10. Allow a read-only explorer to use the routing reference's preference only
     when the root judges the transport compatible.
 11. Keep report, artifact, and lifecycle synthesis in the root context.
 
-## Executor and persona adapter
+## Executor and instruction-source adapter
 
 1. Assess executor capability instead of hard-coding a model choice.
-2. Give the generic subagent the selected persona prompt from the installed
-   plugin root, bounded task inputs, and root dispatch record.
-3. If capability, prompt resolver, or transport is unavailable or uncertain,
-   use the root fallback for quality-critical work and record degraded status;
-   do not claim independent freshness.
+2. Give the generic subagent exactly one resolved instruction source, bounded
+   task inputs, and the root dispatch record. Skill-backed automatic stages use
+   the canonical skill and applicable upstream primitives without a persona;
+   persona-backed calls use the exact installed persona prompt.
+3. If capability, instruction-source resolver, or transport is unavailable or
+   uncertain, use the root fallback for quality-critical work and record
+   degraded status; do not claim independent freshness.
 4. Keep one writer in each shared worktree.
 5. Allow `auto-workflow` and `auto-workflow-pr` to use multiple isolated
    worktrees only when the root explains why the work is independent.
