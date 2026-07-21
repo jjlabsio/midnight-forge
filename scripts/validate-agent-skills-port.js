@@ -231,56 +231,42 @@ assertAuthoredSurface("references/model-routing-5.6.md", [
   "it is not a fixed task table, benchmark calculator, or lifecycle controller",
 ]);
 
-const terminalEntrypoints = [
-  "skills/auto-workflow/SKILL.md",
-  "skills/auto-workflow-pr/SKILL.md",
-  "skills/quick-workflow-pr/SKILL.md",
-];
-for (const consumer of terminalEntrypoints) {
-  assertAuthoredSurface(consumer, [
-    "three exhausted cycles",
-    "finish `BLOCKED`",
-    "terminal `REWORK`",
-  ]);
-}
-
 assertAuthoredSurface("skills/auto-workflow/SKILL.md", [
+  "`mode: auto-workflow` plus the current readable handoff",
+  "does not authorize ship, whole-task completion, or PR delivery",
   "omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
   "must not create empty gates for them",
   "root alone creates each focused slice commit after review `PASS`",
+  "Keep the task active and its lock held for continuation",
 ]);
 
 assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
+  "`mode: auto-workflow-pr` plus the current readable handoff",
+  "invoke canonical `ship` in this mode",
+  "root invokes canonical `github-pr` under the contract's PR idempotency rules",
+  "Only after every consumer gate passes may the root invoke canonical `task`",
   "Commits, task completion, push, PR mutation, and PR consumer checks are root-only",
   "Ship assessment is model-led Two-Key",
-], [
-  "Invoke canonical `ship`",
-  "let the root invoke canonical `github-pr`",
-  "latest-head consumer checks",
-  "may the root invoke canonical `task`",
 ]);
 
 assertAuthoredSurface("skills/quick-workflow-pr/SKILL.md", [
+  "only when the user has explicitly selected the small-change workflow",
+  "`mode: quick-workflow-pr` plus the current readable quick handoff",
   "Specification, planning, simplification, ship, separate whole-build verification, and separate whole-tree review are omitted",
   "do not create empty gates for omitted operations",
+  "root invokes canonical `github-pr` for the latest-head consumer and mergeability gates",
+  "Only after they pass may the root complete the whole task and release its lock",
   "Commit, whole-task completion, push, PR mutation, and PR consumer checks are root-only",
-], [
-  "canonical build Two-Key PASS",
-  "root exact-path review-candidate staging",
-  "canonical review Two-Key PASS",
-  "root github-commit",
-  "root github-pr and latest-head consumer checks",
-  "root task completion and lock release",
 ]);
 
 assertAuthoredSurface("skills/use-mdf/SKILL.md", [
   "shared contract and canonical consumers are authoritative for the complete automatic-mode behavior",
+  "`auto-workflow` is local-only and omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
+  "`auto-workflow-pr` is the plan-backed delivery entrypoint with only its explicit push and PR handoff externally authorized",
+  "`quick-workflow-pr` is the explicitly selected bounded delivery entrypoint",
+  "it omits specification, planning, simplification, and ship and grants only its explicit push and PR handoff externally",
   "Root-only ownership never substitutes for a missing model-led gate",
   "Keep one writer per shared worktree",
-], [
-  "`github-commit`",
-  "`github-pr` push/PR mutation/latest-head consumer and mergeability gates",
-  "`task` completion and lock release",
 ]);
 
 const stageRealizations = new Map([
