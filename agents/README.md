@@ -28,6 +28,7 @@ Codex/MDF prompt-dispatch boundary.
   stop or use a visible degraded root fallback. A `skill-backed` automatic
   stage does not resolve a persona and must not invent one; it stops only when
   its canonical skill instruction source cannot be resolved.
+  Missing persona resolution affects only explicitly persona-backed calls.
 - The four upstream personas remain byte-identical under this directory.
 - A generic subagent receives exactly one resolved instruction source and
   bounded task inputs. It reports to the root; it does not write shared

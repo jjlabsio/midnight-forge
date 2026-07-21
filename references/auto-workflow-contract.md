@@ -368,13 +368,17 @@ loop, review gates, intent preflight, or common stop conditions.
 The shared contract orchestrates canonical MDF skills, not personas. Resolve
 the installed plugin root, run the exact upstream `using-agent-skills`
 discovery workflow, load every other applicable upstream primitive it selects,
-and invoke the canonical skill whose name matches the stage below. The invoked
-skill owns its upstream primitive and any persona delegation required by its
-own contract. Every model-led stage marked `Two-Key` in the operation matrix
-must apply the stage lease above.
+and invoke the canonical skill whose name matches the stage below. A canonical
+automatic stage uses a `skill-backed` instruction source by default: the exact
+MDF adapter and discovered upstream primitives are the worker instructions,
+and no persona is selected or resolved. The invoked skill may use a
+`persona-backed` delegation only when its canonical contract explicitly names
+an existing specialist persona. Every model-led stage marked `Two-Key` in the
+operation matrix must apply the stage lease above.
 
 Every canonical stage invocation must pass the current workflow mode
-(`mode: auto-workflow` or `mode: auto-workflow-pr`) together with the current
+(`mode: auto-workflow`, `mode: auto-workflow-pr`, or
+`mode: quick-workflow-pr`) together with the current
 readable handoff. A bare invocation such as `review` is not a valid auto-mode
 dispatch: it uses standalone semantics and lacks the auto-mode context. The
 mode selects the applicable workflow composition; it does not grant authority
@@ -681,7 +685,7 @@ installed `subagent-dispatch-policy` as its worker-level completion contract:
   available.
 - Route policy-defined incomplete results through the consuming skill's
   explicit degraded/stop path.
-- Keep this bridge common to both auto modes; do not duplicate the policy's
+- Keep this bridge common to all three automatic modes; do not duplicate the policy's
   completion states in the stage lifecycle contract.
 
 The authored contract, inventory graph, renderer equality, and packaging

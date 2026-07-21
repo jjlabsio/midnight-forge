@@ -44,6 +44,23 @@ authority, stage selection, canonical task/card/lock/handoff state, artifact
 acceptance, commits, lifecycle transitions, external mutations, and final
 synthesis. There is never more than one active writer in a shared worktree.
 
+### Conditional instruction sources
+
+Automatic stage delegation uses a `skill-backed` instruction source by
+default. The worker receives the exact canonical MDF adapter, the upstream
+`using-agent-skills` discovery primitive, and every other applicable primitive
+selected by discovery. The automatic stage does not select, resolve, or invent
+a persona merely because one is unavailable.
+
+Use a `persona-backed` instruction source only when the canonical skill
+explicitly names an existing specialist persona (for example, the `ship`
+fan-out). In that branch, resolve the exact installed `agents/<persona>.md`
+prompt unchanged. A missing persona blocks only that persona-backed call; a
+skill-backed stage stops only when its canonical instruction source or dispatch
+transport cannot be resolved. This changes actor binding, not stage semantics,
+quality gates, authority, or completion meaning, and it does not add any new
+persona files.
+
 This decision ports two upstream/MDF realization details only inside the three
 automatic modes:
 

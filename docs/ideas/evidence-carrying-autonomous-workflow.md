@@ -35,6 +35,14 @@ commits, external actions, and final synthesis. It does not normally repeat the
 producer's implementation or import complete worker transcripts into its
 context.
 
+For automatic canonical stages, the worker instruction source is
+`skill-backed`: the exact MDF adapter plus the upstream discovery result are
+passed through the generic dispatch path without persona resolution. A
+`persona-backed` source is reserved for a canonical skill that explicitly
+names an existing specialist, and then its exact installed
+`agents/<persona>.md` prompt is required. No synthetic persona is introduced;
+missing persona files affect only explicitly persona-backed calls.
+
 ## Lease and Recovery
 
 The producer receives the exact canonical skill, approved input artifact and

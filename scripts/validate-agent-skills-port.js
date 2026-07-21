@@ -218,10 +218,38 @@ assertAuthoredSurface("references/subagent-dispatch-policy.md", [
   "fast profiles, fixed stage tables, benchmark equivalence, and silent downgrade cannot satisfy either key",
   "at most three total cycles",
   "`REWORK` starts fresh keys or ends `BLOCKED`; it is not a terminal unattended result",
+  "`persona-backed`: when the caller explicitly names a specialist persona",
+  "`skill-backed`: when an automatic stage invokes a canonical MDF skill",
+  "Do not select, invent, or resolve a persona for this branch",
+  "persona resolution is not required for a skill-backed automatic stage",
+  "a missing persona is not a failure for a skill-backed call",
+  "`skill-backed` is a first-class stage worker contract, not a missing-persona fallback",
 ], [
   "positive producer terminality plus root re-observation",
   "one distinct fresh-context read-only verifier",
 ]);
+
+assertAuthoredSurface("agents/README.md", [
+  "`persona-backed` uses the exact `agents/<persona>.md` prompt",
+  "`skill-backed` uses the exact canonical skill adapter and applicable upstream primitives without a persona",
+  "A `skill-backed` automatic stage does not resolve a persona and must not invent one",
+  "Missing persona resolution affects only explicitly persona-backed calls",
+]);
+
+assertAuthoredSurface("references/auto-workflow-contract.md", [
+  "A canonical automatic stage uses a `skill-backed` instruction source by default",
+  "no persona is selected or resolved",
+  "only when its canonical contract explicitly names an existing specialist persona",
+  "use `persona-backed` with the exact installed `agents/<persona>.md` prompt",
+  "The stage table is a skill-routing contract, not a persona dispatch contract",
+]);
+
+const personaOverlayFiles = filesUnder(path.join(overlayRoot, "replacements"), "agents")
+  .filter((relativePath) => relativePath !== "agents/README.md");
+assert(
+  personaOverlayFiles.length === 0,
+  `MDF must not add synthetic persona files: ${personaOverlayFiles.join(", ")}`
+);
 
 assertAuthoredSurface("references/model-routing-5.6.md", [
   "based on task difficulty, risk, ambiguity, novelty, consequence, required quality, runtime capability, and transport compatibility",
@@ -267,6 +295,8 @@ assertAuthoredSurface("skills/use-mdf/SKILL.md", [
   "it omits specification, planning, simplification, and ship and grants only its explicit push and PR handoff externally",
   "Root-only ownership never substitutes for a missing model-led gate",
   "Keep one writer per shared worktree",
+  "Automatic canonical stage workers use the `skill-backed` instruction source",
+  "Use `persona-backed` only when the delegating skill explicitly names an existing specialist",
 ]);
 
 const stageRealizations = new Map([

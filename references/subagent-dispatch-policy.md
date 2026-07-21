@@ -27,12 +27,18 @@ The root orchestrator owns the complete dispatch decision:
    novelty, consequence, and required quality. Consult the performance
    reference as qualitative cost/intelligence context, never as a fixed
    task-to-model table or benchmark-equivalence gate.
-5. Resolve the selected persona name to the exact installed plugin-root prompt
-   at `agents/<persona>.md`, then pass that unchanged prompt and the complete
-   dispatch record through the generic runtime spawn path. A persona name
-   written into task text is only a resolver key, not proof that the persona was
-   loaded. The persona supplies perspective but cannot select another persona
-   or expand its authority.
+5. Resolve exactly one instruction source before spawning:
+   - `persona-backed`: when the caller explicitly names a specialist persona,
+     resolve the exact installed plugin-root prompt at `agents/<persona>.md`.
+     A persona name in task text is only a resolver key, not proof that the
+     persona was loaded. The persona supplies perspective but cannot select
+     another persona or expand its authority.
+   - `skill-backed`: when an automatic stage invokes a canonical MDF skill,
+     resolve the exact canonical adapter, the upstream `using-agent-skills`
+     primitive, and every other applicable primitive selected by discovery. Do
+     not select, invent, or resolve a persona for this branch.
+   Pass the resolved instruction source and complete dispatch record through
+   the generic runtime spawn path. An unresolved instruction source blocks.
 6. Synthesize the returned report in the root context. Only the root accepts
    artifacts or advances lifecycle state. The sole write exception is one
    bounded producer lease for a Two-Key stage in `auto-workflow`,

@@ -59,6 +59,11 @@ Whenever a canonical skill delegates, load the plugin-installed
   transport compatibility, and the qualitative performance reference. Do not
   use a fixed task-to-model table, measured quality/cost formula, fast profile,
   benchmark equivalence, or silent downgrade.
+- Automatic canonical stage workers use the `skill-backed` instruction source:
+  pass the exact canonical adapter and applicable upstream primitives without
+  resolving a persona. Use `persona-backed` only when the delegating skill
+  explicitly names an existing specialist and requires its exact installed
+  `agents/<persona>.md` prompt.
 - Let the delegating canonical skill, shared contract, and installed references
   own all worker-level execution and gate details.
 - Keep one writer per shared worktree. Keep intent, authority, canonical state,
