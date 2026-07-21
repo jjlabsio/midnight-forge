@@ -75,10 +75,25 @@ Persona resolution: resolve `code-reviewer`, `security-auditor`, and
 The root-selected dispatch record takes precedence for every MDF-managed
 `/ship` call.
 
+### Fan-out completion gate
+
+Apply the completion and fan-out join rules from the installed
+`../../references/subagent-dispatch-policy.md`:
+
+- Wait on the executor's response/return condition when available.
+- Enter Phase B only after all three required specialists have returned actual
+  reports and each report satisfies the policy's completion gate.
+- On any policy-defined incomplete result, do not enter Phase B or issue GO.
+  Record each available report and its policy status in an explicit
+  incomplete/degraded NO-GO outcome, or stop through the existing fallback
+  when the caller cannot represent that result.
+- Treat a safety timeout only as protection from an unhealthy executor; it
+  cannot satisfy the completion gate.
+
 ### Phase B — Merge in main context
 
-Once all three reports are back, the main agent, not a sub-persona, synthesizes
-them:
+Once the fan-out completion gate passes, the main agent, not a sub-persona,
+synthesizes all three reports:
 
 1. **Code Quality** — Aggregate Critical/Important findings from
    `code-reviewer` and any failing tests, lint, or build output. Resolve

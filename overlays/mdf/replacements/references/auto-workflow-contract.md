@@ -474,6 +474,16 @@ lifecycle, push, or create PRs. The root synthesizes reports, owns shared
 writes, and chooses serial execution whenever dependency, path, shared-state,
 worktree, lock, or base-revision independence is uncertain.
 
+Every canonical stage that delegates through the generic runtime applies the
+installed `subagent-dispatch-policy` as its worker-level completion contract:
+
+- Advance a stage or consume a report only after the actual worker response is
+  available.
+- Route policy-defined incomplete results through the consuming skill's
+  explicit degraded/stop path.
+- Keep this bridge common to both auto modes; do not duplicate the policy's
+  completion states in the stage lifecycle contract.
+
 ## PR idempotency
 
 In `mode: auto-workflow-pr` or `mode: quick-workflow-pr`, before push or PR

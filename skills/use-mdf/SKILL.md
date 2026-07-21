@@ -72,6 +72,14 @@ shared worktree; auto-workflow and auto-workflow-pr may use multiple isolated
 worktrees only when the root can explain why the work is independent. Root-only
 synthesis owns artifacts and lifecycle advance.
 
+Apply the installed `subagent-dispatch-policy` completion gate:
+
+- Consume only actual returned worker reports.
+- For independent fan-out, join every required report before synthesis or a
+  normal GO decision.
+- Route policy-defined incomplete results through the caller's explicit
+  degraded/stop path.
+
 ## DDD parity
 
 For every non-trivial decision, delegate to the exact upstream
