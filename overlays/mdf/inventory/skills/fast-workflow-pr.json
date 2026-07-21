@@ -1,0 +1,9 @@
+{
+  "output": "skills/fast-workflow-pr/SKILL.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/fast-workflow-pr/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Explicit minimal direct implementation, PR delivery, automatic squash merge, and after-merge synchronization while delegating task setup and completion to the existing task and GitHub PR contracts.",
+  "overlayKind": "mdfOnly"
+}
