@@ -60,6 +60,139 @@ composition. If ambiguity, scope expansion, a public or security boundary,
 destructive work, failed verification, repeated no-progress, or uncertain PR
 state appears, stop rather than generating a spec or plan automatically.
 
+## Automatic-mode operation matrix
+
+`Two-Key` means the mandatory stage lease below. `root-only` is an ownership
+boundary, not a degraded substitute for a missing key. `omitted` means the
+mode does not run that operation and must not create an empty gate for it.
+
+| Operation | `auto-workflow` | `auto-workflow-pr` | `quick-workflow-pr` |
+| --- | --- | --- | --- |
+| Intent and authority preflight | root-only; unresolved intent blocks | root-only; unresolved intent blocks | root-only; unresolved scope blocks |
+| Specification | Two-Key | Two-Key when created or revised | omitted |
+| Planning | Two-Key | Two-Key when created or revised | omitted |
+| Each plan slice or bounded build | Two-Key | Two-Key | Two-Key |
+| Each slice review | Two-Key | Two-Key | one bounded-change review: Two-Key |
+| Slice commit | root-only after `PASS` | root-only after `PASS` | root-only after `PASS` |
+| Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |
+| Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |
+| Simplification | Two-Key when applicable | Two-Key when applicable | omitted |
+| Ship or release assessment | omitted by local authority | Two-Key with complete upstream fan-out | omitted |
+| Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |
+| Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |
+
+## Evidence-carrying Two-Key stage lease
+
+Every `Two-Key` cell uses one bounded producer or primary assessor, one
+distinct fresh-context read-only verifier, and root reconciliation. This is a
+readable model-led contract, not a controller, state machine, quality score,
+or machine-only protocol.
+
+### Root dispatch bundle
+
+Before each key, the root supplies the current mode and exact canonical MDF
+stage adapter. It also supplies the exact upstream `using-agent-skills`
+primitive and requires the key to run that discovery workflow, resolve the
+canonical adapter, and load every other applicable upstream primitive it
+selects. Applicability remains source- and model-led; do not replace discovery
+with a copied stage-to-primitive list.
+
+The producer bundle also includes:
+
+- task/work identity; task-card path, bytes, and hash; lock path, bytes, and
+  hash; handoff path, bytes, and hash;
+- worktree, branch, base, and pre-dispatch `HEAD`; canonical artifact paths and
+  hashes; exact owned read and write paths;
+- acceptance criteria, required commands, permitted authority, forbidden
+  mutations, and stop conditions.
+
+### Producer key
+
+Run one bounded producer or primary assessor in a separate context. A mutating
+producer is the only active writer in the shared worktree and may write only
+the leased artifact or source paths. It cannot mutate canonical `.mdf` cards,
+locks, handoffs, indexes, or observations; accept an artifact; commit; advance
+lifecycle; mutate remote or external state; or perform final synthesis.
+
+The producer returns the resolved canonical skill and upstream primitives,
+changed paths, output artifacts, command evidence, and focused result. Its
+report, hashes, completion phrase, or persona name does not prove authority,
+state, or success.
+
+Do not start a verifier, replacement producer, repair writer, or root write
+until the executor positively confirms that the producer invocation has ended
+and its write capability no longer exists. A timeout, cancellation request,
+interrupt, terminal observation, missing response, or late output alone is
+not positive writer terminality. If terminality or sole-writer ownership is
+uncertain, reconcile actual state and finish `BLOCKED`.
+
+### Root-observed evidence
+
+After positive producer terminality, the root independently re-reads and
+binds a verifier bundle containing:
+
+- task-card path, bytes, hash, and lifecycle fields;
+- lock path, bytes, hash, and ownership fields;
+- handoff path, bytes, and hash;
+- canonical output bytes and hashes, actual owned changed paths, and unrelated
+  dirt;
+- worktree, branch, base, tree, index, pre/post `HEAD`, and complete diff;
+- for every verification command, exact argv or command, cwd, exit status,
+  relevant output reference, pre/post `HEAD`, and artifact/hash binding.
+
+Producer-authored evidence is a claim until this observation binds it to the
+actual canonical and Git state. Changed base or `HEAD`, unrelated dirt,
+canonical-state mutation, scope violation, non-success return, or missing,
+stale, or mismatched evidence cannot advance.
+
+### Verifier key
+
+Dispatch a distinct fresh-context verifier after root observation. It receives
+the original stage contract, acceptance criteria, exact discovery and adapter
+requirements, and the complete root-observed bundle. Exclude producer
+reasoning, recommendations, hidden conversation, and self-selected evidence.
+The verifier is read-only, cannot delegate, and assesses the same canonical
+artifact, diff, verification target, or release target. A root self-review,
+producer review, persona label, completion flag, or review of the producer's
+report is not a second key.
+
+For a read-only stage, use two distinct independent assessors of the same
+underlying target; neither recursively reviews the other's report. For ship,
+the complete upstream specialist fan-out is the primary assessment key and
+must join every required report before the fresh verifier assesses the same
+release target.
+
+### Quality floor, gate, and recovery
+
+The root dynamically selects a reviewed GPT-5.6 capability for each key from
+difficulty, risk, ambiguity, novelty, consequence, required quality, current
+runtime capability, and transport compatibility. Both keys must independently
+meet the stage's required quality floor. Record both model selections,
+qualitative rationale, capability confidence, read/write authority, and any
+fallback or block status. Never use a fast or speed-only profile, a fixed
+stage-to-model table, benchmark equivalence, silent downgrade, or the Spark
+exploration exception for a Two-Key stage. If either compliant key is
+unavailable, finish `BLOCKED`.
+
+The root alone reconciles actual state and the two keys into exactly:
+
+- `PASS`: accept the canonical result and continue within current authority;
+- `REWORK`: dispatch a fresh bounded producer and then a fresh verifier; or
+- `BLOCKED`: stop safely with current state and evidence.
+
+The initial cycle counts as one. Every dispatched producer or primary-assessor
+cycle, including failed, inconclusive, interrupted, no-op, and substantive
+attempts, consumes one of at most three total cycles; verifier failure consumes
+its cycle. Do not reset the count by changing workers or finding labels. After
+three cycles, or when another safe cycle cannot run, finish `BLOCKED`.
+`REWORK` is never a terminal unattended result. Every automatic run ends in
+verified success within its authority or a safe final `BLOCKED` result.
+
+The root remains sole owner of intent, authority, stage selection, canonical
+task/card/lock/handoff/observation state, artifact acceptance, commits,
+lifecycle transitions, external mutations, and final synthesis. Never nest
+delegation or run concurrent writers in a shared worktree.
+
 ## Shared auto-mode startup task/worktree resolution
 
 This section applies to `mode: auto-workflow` and
@@ -223,14 +356,13 @@ The entrypoint skills define only their authority boundary and delivery
 continuation; they must not maintain separate copies of the implementation
 loop, review gates, intent preflight, or common stop conditions.
 
-The shared contract orchestrates canonical MDF skills, not personas. Resolve the
-installed plugin root and invoke the canonical skill whose name matches the
-stage below. A canonical automatic stage uses a `skill-backed` instruction
-source by default: the exact MDF adapter, upstream `using-agent-skills`
-primitive, and every applicable primitive selected by discovery are the worker
-instructions, and no persona is selected or resolved. The invoked skill may
-use a `persona-backed` delegation only when its canonical contract explicitly
-names an existing specialist persona.
+The shared contract orchestrates canonical MDF skills, not personas. Resolve
+the installed plugin root, run the exact upstream `using-agent-skills`
+discovery workflow, load every other applicable upstream primitive it selects,
+and invoke the canonical skill whose name matches the stage below. The invoked
+skill owns its upstream primitive and any persona delegation required by its
+own contract. Every model-led stage marked `Two-Key` in the operation matrix
+must apply the stage lease above.
 
 Every canonical stage invocation must pass the current workflow mode
 (`mode: auto-workflow` or `mode: auto-workflow-pr`) together with the current
@@ -249,7 +381,10 @@ without the current handoff and state checks above.
 | Plan-slice commit | `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
 | Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
-| PR delivery | `ship` -> `task` -> `github-pr` in PR mode only | GO, final preflight, task completion, and PR handoff |
+| Simplification | `code-simplify` when applicable | Behavior-preserving simplification and refreshed affected evidence |
+| Ship assessment | `ship` in PR mode only | Complete fan-out, independent verification, and root GO/NO-GO synthesis |
+| Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
+| PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
 
 The stage table is a skill-routing contract, not a persona dispatch contract.
 Never encode `persona: <name>` as a stage invocation or treat a persona name
@@ -321,10 +456,12 @@ failed verification, stale or ambiguous state, repeated no-progress, or a
 scope change requiring user judgment. Clear mechanical requests may skip
 `interview-me` under its existing conditions.
 
-Use serial writers unless disjoint paths, isolated worktrees, independent
-locks, and absence of shared contracts, generated files, global state, MDF
-state, or external resources are proven. The root owns shared writes,
-synthesis, task state, commit scope, and lifecycle decisions.
+Use one writer in a shared worktree. The bounded automatic-mode producer lease
+is the only exception to root-only artifact or source writing; isolated
+worktrees may run independently only when their paths, locks, contracts,
+generated files, global state, MDF state, and external resources are disjoint.
+The root owns acceptance, synthesis, task state, commit scope, and lifecycle
+decisions.
 
 For UI changes, validate the real browser consumer and retain screenshot or
 runtime evidence. For other changes, validate the real CLI/API/integration
@@ -475,9 +612,12 @@ green command, a review phrase, or the absence of pending plan text alone.
 ## Subagents
 
 Read-only exploration and review reports may be delegated through the central
-dispatch policy. Subagents never write canonical `.mdf` state, advance task
-lifecycle, push, or create PRs. The root synthesizes reports, owns shared
-writes, and chooses serial execution whenever dependency, path, shared-state,
+dispatch policy. In the three automatic modes, a Two-Key mutating stage may
+also dispatch exactly one producer under the bounded lease above. Outside that
+lease, standalone MDF and upstream delegation remains unchanged. Subagents
+never write canonical `.mdf` state, accept artifacts, commit, advance task
+lifecycle, push, create PRs, mutate external state, or perform final synthesis.
+The root chooses serial execution whenever dependency, path, shared-state,
 worktree, lock, or base-revision independence is uncertain.
 
 Every canonical stage that delegates through the generic runtime applies the
@@ -489,6 +629,11 @@ installed `subagent-dispatch-policy` as its worker-level completion contract:
   explicit degraded/stop path.
 - Keep this bridge common to both auto modes; do not duplicate the policy's
   completion states in the stage lifecycle contract.
+
+The authored contract, inventory graph, renderer equality, and packaging
+validators can prove only readable coverage and provenance. They do not prove
+runtime dispatch, tool denial, process termination, model quality, context
+reduction, or end-to-end behavior.
 
 ## PR idempotency
 

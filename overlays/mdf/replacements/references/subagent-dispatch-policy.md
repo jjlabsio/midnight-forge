@@ -27,20 +27,17 @@ The root orchestrator owns the complete dispatch decision:
    novelty, consequence, and required quality. Consult the performance
    reference as qualitative cost/intelligence context, never as a fixed
    task-to-model table or benchmark-equivalence gate.
-5. Resolve exactly one instruction source before spawning:
-   - `persona-backed`: when the caller explicitly names a specialist persona,
-     resolve the exact installed plugin-root prompt at `agents/<persona>.md`.
-     A persona name in task text is only a resolver key, not proof that the
-     persona was loaded. The persona supplies perspective but cannot select
-     another persona or expand its authority.
-   - `skill-backed`: when an automatic stage invokes a canonical MDF skill,
-     resolve the exact canonical adapter, the upstream `using-agent-skills`
-     primitive, and every other applicable primitive selected by discovery. Do
-     not select, invent, or resolve a persona for this branch.
-   Pass the resolved instruction source and complete dispatch record through
-   the generic runtime spawn path. An unresolved instruction source blocks.
-6. Synthesize the returned report in the root context. Only the root writes
-   artifacts or advances lifecycle state.
+5. Resolve the selected persona name to the exact installed plugin-root prompt
+   at `agents/<persona>.md`, then pass that unchanged prompt and the complete
+   dispatch record through the generic runtime spawn path. A persona name
+   written into task text is only a resolver key, not proof that the persona was
+   loaded. The persona supplies perspective but cannot select another persona
+   or expand its authority.
+6. Synthesize the returned report in the root context. Only the root accepts
+   artifacts or advances lifecycle state. The sole write exception is one
+   bounded producer lease for a Two-Key stage in `auto-workflow`,
+   `auto-workflow-pr`, or `quick-workflow-pr`, as defined by the installed
+   `auto-workflow-contract.md`; standalone delegation remains unchanged.
 
 MDF does not define, enumerate, or normalize the runtime's reasoning-setting
 vocabulary. The selected model's native runtime capability and defaults remain
@@ -74,6 +71,41 @@ If the selected instruction source or dispatch transport cannot be resolved,
 use a visible degraded root fallback or stop; a missing persona is not a failure
 for a skill-backed call.
 
+## Automatic-mode Two-Key dispatch
+
+For every model-led stage marked `Two-Key` by the installed
+`auto-workflow-contract.md`:
+
+1. Dispatch one bounded producer or primary assessor and, only after positive
+   producer terminality plus root re-observation, one distinct fresh-context
+   read-only verifier. Neither key may delegate.
+2. Give each key the exact upstream `using-agent-skills` discovery primitive,
+   canonical stage adapter, and requirement to load every other applicable
+   primitive selected by discovery.
+3. Require the root-selected dynamic GPT-5.6 quality floor for both keys. The
+   Spark exploration exception, fast profiles, fixed stage tables, benchmark
+   equivalence, and silent downgrade cannot satisfy either key.
+4. Keep only one active writer in a shared worktree. The producer receives
+   exact leased paths and cannot write canonical `.mdf` state, commit, mutate
+   external state, accept artifacts, or synthesize the result.
+5. Start no verifier, replacement producer, or other writer until the executor
+   positively confirms the prior producer ended and its write capability is
+   gone. Timeout, cancellation request, interruption, an observation line,
+   missing response, or late output alone is not proof.
+6. Give the verifier the original contract and complete root-observed
+   canonical/Git/command-evidence bundle, excluding producer reasoning. It
+   assesses the same target read-only and cannot review the producer report as
+   a substitute target.
+7. Let only the root reconcile `PASS`, `REWORK`, or `BLOCKED`. The initial and
+   every failed, inconclusive, interrupted, no-op, or substantive cycle counts
+   toward at most three total cycles. `REWORK` starts fresh keys or ends
+   `BLOCKED`; it is not a terminal unattended result.
+
+For a read-only stage, use two independent assessors of the same target. For
+ship, preserve the upstream specialist fan-out as the primary key and join all
+required reports before dispatching the independent verifier. Missing,
+non-fresh, non-terminal, under-capability, or incomplete keys fail closed.
+
 ## Minimal execution observation
 
 Every MDF-managed generic subagent dispatch records a small append-only
@@ -90,12 +122,22 @@ On first use, create only the local `observations/` directory and this
 gitignored file as needed. Do not initialize or rewrite `.mdf/project`, task
 cards, indexes, locks, or other existing MDF state for instrumentation.
 
-The root writes one JSON object immediately before the generic spawn and one
-terminal JSON object after the worker returns. Capture the return timestamp
-immediately when the worker returns, then materialize the direct result
-artifact and write the terminal object with that captured timestamp. This
-keeps artifact linkage reliable without calculating elapsed time or delaying
-the observed completion timestamp. The two objects share `invocation_id`:
+The root writes one JSON object immediately before the generic spawn and
+captures the return timestamp immediately when every worker returns. What it
+writes next depends on the worker's authority:
+
+- For a mutating producer, defer direct result-artifact materialization and
+  the terminal observation until the executor positively confirms that the
+  invocation ended and its write capability is gone. Then materialize the
+  artifact and write the terminal object using the captured return timestamp.
+  If positive writer terminality remains uncertain, make neither root write;
+  retain the incomplete observation and finish `BLOCKED` as required above.
+- For a read-only worker, materialize the direct result artifact and write the
+  terminal object normally after return, using the captured return timestamp.
+
+This branch keeps artifact linkage reliable and prevents concurrent-writer
+ambiguity without calculating elapsed time or delaying the observed return
+timestamp. The two objects share `invocation_id`:
 
 ```json
 {"event":"dispatch","invocation_id":"<unique-id>","requested_model":"<selected-model>","requested_effort":"<native-setting>","work_id":null,"status":"dispatched","dispatched_at":"<observed-UTC-timestamp>"}
@@ -141,6 +183,10 @@ incomplete/censored observation, not a successful result.
 - Treat `timed_out`, `interrupted`, `failed`, a missing terminal event, and a
   missing or partial report as non-success. Do not hide the same
   completion-contract failure by increasing a guessed timeout.
+- For a mutating producer, a returned response or terminal observation is also
+  insufficient to prove that its invocation ended and write capability is
+  gone. Apply the positive writer-terminality rule above before any subsequent
+  verifier or writer.
 - For a fan-out, join every required worker's actual report instead of
   counting dispatches or terminal lines.
 - Retain partial reports as diagnostic evidence when useful, but do not
