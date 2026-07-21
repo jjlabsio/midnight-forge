@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.0 - 2026-07-21
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.5...v2.5.0)
+
+### Changes
+
+- feat(dispatch): delegate automatic workflow stages to subagents ([#86](https://github.com/jjlabsio/midnight-forge/pull/86))
 ## v2.4.5 - 2026-07-21
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.4...v2.4.5)
