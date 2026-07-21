@@ -33,15 +33,15 @@ string or missing handoff is a stop. The shared contract and canonical
 consumers are authoritative for the complete automatic-mode behavior; do not
 restate or replace it here.
 
-Keep only these authority boundaries at the router:
+Classify authority at the router only:
 
 - `auto-workflow` is local-only and omits ship, whole-task completion, push,
   PR mutation, and PR consumer checks.
-- `auto-workflow-pr` is the plan-backed delivery entrypoint.
+- `auto-workflow-pr` is the plan-backed delivery entrypoint with only its
+  explicit push and PR handoff externally authorized.
 - `quick-workflow-pr` is the explicitly selected bounded delivery entrypoint;
-  after its canonical build and review gates, the root order is
-  `github-commit` -> `github-pr` push/PR mutation/latest-head consumer and
-  mergeability gates -> `task` completion and lock release.
+  it omits specification, planning, simplification, and ship and grants only
+  its explicit push and PR handoff externally.
 
 Root-only ownership never substitutes for a missing model-led gate. Merge,
 deploy, deletion, stale-lock takeover, force operations, and unrelated cleanup
@@ -64,10 +64,3 @@ Whenever a canonical skill delegates, load the plugin-installed
 - Keep one writer per shared worktree. Keep intent, authority, canonical state,
   artifact acceptance, commits, lifecycle, external actions, returned-report
   acceptance, and final synthesis in the root.
-
-## DDD parity
-
-For every non-trivial decision, load the exact upstream
-`../doubt-driven-development/SKILL.md` and preserve its complete workflow,
-interaction, fallback, and three-cycle semantics. Do not turn it into a nested
-automatic-stage delegation.
