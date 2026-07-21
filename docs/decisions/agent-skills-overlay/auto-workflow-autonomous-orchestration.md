@@ -44,17 +44,22 @@ repeated no-progress, lock conflicts, changed artifact hashes, uncertain PR
 state, or scope expansion. Merge, deploy, deletion, stale-lock takeover, and
 unrelated cleanup are never implied.
 
-Subagents are bounded and report-only by default. Spark is preferred only for
-read-only exploration when the runtime can use it; incompatible Spark
-transport falls back to a suitable GPT-5.6 read-only candidate or the root.
-Writer parallelism requires the root to reason through dependency, path,
-shared-state, worktree, lock, base-revision, and independence evidence. Any
-unknown fact selects serial execution. The root owns synthesis, merges, final
-verification, and state.
+Subagents are bounded and report-only by default outside automatic stage
+execution. The later
+[evidence-carrying automatic-stages decision](evidence-carrying-auto-stages.md)
+supersedes that writer restriction only for `auto-workflow`,
+`auto-workflow-pr`, and `quick-workflow-pr`: one stage producer may receive a
+bounded artifact/source write lease and must be followed by a distinct
+fresh-context read-only verifier. Canonical task state, commits, external
+actions, artifact acceptance, and synthesis remain root-owned. Spark remains
+limited to narrow read-only exploration. Shared-worktree writers remain serial;
+unknown ownership or terminality ends blocked.
 
 ## Consequences
 
 - Standalone upstream and MDF skill behavior remains unchanged.
+- Automatic stage actor and checkpoint semantics are governed by the later
+  evidence-carrying automatic-stages decision.
 - Auto-workflow can complete routine work without repeated approval prompts.
 - The automatic grant is explicit and bounded, so it does not turn ambiguity
   into consent or silently authorize high-impact actions.
