@@ -5,6 +5,14 @@ description: "Break work into small verifiable tasks with acceptance criteria an
 
 # plan
 
+## Auto-workflow contract boundary
+
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
+plugin-installed `../../references/auto-workflow-contract.md` and use its
+current handoff and authority rules. This skill owns plan-specific artifact
+creation, revision, and acceptance; it does not redefine shared auto-mode
+authority or lifecycle behavior.
+
 ## Upstream command contract
 
 Invoke the planning-and-task-breakdown skill.
@@ -25,10 +33,9 @@ Save the plan to `tasks/plan.md` and task list to `tasks/todo.md`.
 
 Plans are model-led Markdown artifacts. Resolve the installed plugin root and
 require the current explicit approval of the exact specification revision
-before planning in standalone mode. In `mode: auto-workflow` or
-`mode: auto-workflow-pr`, require the
-exact spec hash and run-scoped intent authorization instead. Load and follow
-the exact upstream `../planning-and-task-breakdown/SKILL.md`, including its risk
+before planning in standalone mode. In automatic modes, use the exact
+specification and handoff supplied by the loaded auto-workflow contract. Load
+and follow the exact upstream `../planning-and-task-breakdown/SKILL.md`, including its risk
 matrix, early-risk handling, Definition of Done, and sign-off requirements.
 For non-trivial planning decisions also apply the exact
 `../doubt-driven-development/SKILL.md` process. These are MDF planning-quality
@@ -59,22 +66,19 @@ chooses the next ready task and explains ambiguity.
 
 Standalone initial implementation requires explicit affirmative user approval
 of the exact canonical artifact revision/hash for the plan. A review pass or a
-saved plan is not approval. In `mode: auto-workflow` or `mode: auto-workflow-pr`,
-the run-scoped intent and scope authorization replaces only this repeated
-checkpoint; it is not a
-semantic plan approval. Any byte, path, scope, or task-order change requires a
-new revision and invalidates the auto handoff.
+saved plan is not approval. In automatic modes, use the current handoff from
+the loaded auto-workflow contract; it replaces only the repeated checkpoint
+and is not semantic plan approval. Any material change must follow that
+contract's revision and invalidation rules.
 Record approval in a concise human-readable work-item note or the task
 conversation; keep approval and planning state readable and tied to the exact
 artifact. If a file is needed, use one human-readable `approval-NNN.md` note
 for that exact revision and do not duplicate it.
 
-Standalone automatic workflow stops before build until both exact approvals are
-current. In `mode: auto-workflow` or `mode: auto-workflow-pr`, continue after
-exact spec/plan hashes,
-dependency readiness, and critical-decision checks pass. A technical revision
-does not silently authorize an old plan; regenerate and review the affected
-plan revision before continuing.
+Standalone automatic-looking workflow stops before build until both exact
+approvals are current. In automatic modes, continue only under the current
+auto-workflow handoff after its dependency and critical-decision checks pass.
+Do not silently continue from an invalidated plan revision.
 
 Stop after this phase in a standalone `plan` run. Do not begin implementation
 as an unstated continuation.

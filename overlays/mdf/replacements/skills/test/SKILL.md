@@ -31,16 +31,21 @@ Resolve the installed plugin root before loading paths. Use this Codex-native
 entrypoint when the user invokes `test`, `mdf test`, `$test`, or asks to run the
 TDD workflow.
 
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
+plugin-installed `../../references/auto-workflow-contract.md` and apply its
+current handoff, authority, lifecycle, and recovery rules. This skill owns
+test-specific verification and evidence; it does not redefine shared auto-mode
+behavior.
+
 This remains a standalone workflow even though `build` may invoke test logic
 internally. Use it for independent verification, manual changes, debugging,
 PR preparation, and pre-ship checks.
 
-When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, the root may delegate bounded
-reproduction, coverage, and regression analysis to the central subagent
-dispatch policy. The root or task writer still owns shared writes and final
-synthesis. Do not ask for a ceremonial approval in auto mode; stop only for a
-critical decision, failed verification without an obvious in-scope repair, or
-untrusted test provenance.
+When called with an automatic workflow mode, apply the loaded contract while
+the root handles any bounded delegation through the central subagent dispatch
+policy and owns final synthesis. Test-specific stops remain a critical
+decision, failed verification without an obvious in-scope repair, or untrusted
+test provenance.
 
 When saving a test plan or test result report, verify MDF user and project init
 state, resolve the current MDF work item, and write

@@ -5,6 +5,14 @@ description: "Simplify code for clarity and maintainability — reduce complexit
 
 # code-simplify
 
+## Auto-workflow contract boundary
+
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
+plugin-installed `../../references/auto-workflow-contract.md` and apply its
+current handoff, authority, lifecycle, and recovery rules. This skill owns only
+the behavior-preserving simplification stage and does not grant extra authority
+or redefine shared auto-mode rules.
+
 ## Upstream command contract
 
 Invoke the `code-simplification` skill.
@@ -42,12 +50,10 @@ reviewed diff and task-owned commits. Exclude tests, vendor, generated files,
 public workflow contracts, and unrelated changes unless the user explicitly
 approves a different scope.
 
-In `mode: auto-workflow` or `mode: auto-workflow-pr`, the run-scoped
-authorization removes the ceremonial
-step-by-step confirmation for behavior-preserving candidates. The root may
-delegate read-only candidate discovery and verification, but canonical state
-and accepted refactor commits remain root-owned. A candidate that changes a
-public contract, security boundary, or destructive behavior remains a stop.
+In automatic modes, apply the loaded contract. The root may use the bounded,
+read-only candidate discovery and verification delegation already allowed by
+the workflow, while a candidate that changes a public contract, security
+boundary, or destructive behavior remains a stop.
 
 For each behavior-preserving candidate:
 
