@@ -1,101 +1,86 @@
 ---
 name: auto-workflow-pr
-description: "Run MDF's complete implementation, ship, commit, push, and GitHub PR workflow."
+description: "Run MDF's complete implementation, assessment, commit, and GitHub PR workflow."
 ---
 
 # auto-workflow-pr
 
-## Contract and authority
+Use this skill for one unattended implementation and PR-delivery run. It may
+resume valid local `auto-workflow` evidence without repeating completed work.
 
-- Continue work already implemented through repeated `auto-workflow` runs; do
-  not repeat completed implementation slices.
-- Load `../../references/auto-workflow-contract.md` and pass
-  `mode: auto-workflow-pr` to downstream MDF skills.
-- Treat the loaded contract as the source of truth for the shared auto-mode
-  middle stages.
-- Grant push and PR create/update authority only after fresh preflight.
-- Never authorize merge, deploy, deletion, stale-lock takeover, force
-  operations, or unrelated cleanup.
+Resolve the installed plugin root. Load and run the exact upstream
+`../using-agent-skills/SKILL.md` discovery workflow, resolve this canonical
+entrypoint, and load every other applicable upstream primitive it selects.
+Then load `../../references/auto-workflow-contract.md` and use
+`mode: auto-workflow-pr` plus the current readable handoff for every canonical
+stage invocation. An unresolved plugin root, bare mode string, or missing
+handoff is a final `BLOCKED` result.
 
-## Startup and ownership
+## Root preflight
 
-1. Run the contract's **Shared auto-mode startup task/worktree resolution** for
-   the current linked worktree.
-2. Resolve the latest spec/plan revisions and current Git state for the same
-   task, worktree, branch, and lock.
-3. Stop when task, worktree, branch, lock, spec, plan, or ownership facts are
-   missing, conflicting, or mismatched. Do not create replacement state.
-4. Keep the task active and its lock held through implementation, ship, PR
-   create/update, latest-head checks, mergeability, and conflict validation.
+1. Apply the contract's shared startup resolution and intent preflight in the
+   root context. Re-read the exact task card, lock, handoff, spec/plan
+   revisions, completed slices, worktree, branch, base, `HEAD`, index, tree,
+   diff, remote facts, and authority.
+2. Reuse only current matching artifacts, commits, and evidence. Keep the task
+   active and lock held through latest-head consumer checks.
+3. Keep intent, authority, stage selection, artifact acceptance, canonical
+   `.mdf` state, commits, lifecycle, external mutations, and final synthesis
+   root-only.
 
-## Implementation continuation
+## Composition
 
-Follow the shared auto-mode middle-stage lifecycle.
+Follow the shared contract's stage order and recovery rules; do not reproduce
+their workflows here:
 
-### Pending plan slices
+1. Invoke canonical `spec` and `plan` with the current mode and handoff when
+   either artifact must be created or revised. Each must return Two-Key
+   `PASS` before downstream use.
+2. For every ready approved slice, invoke canonical `build` in default
+   single-task mode for Two-Key `PASS`, then canonical `code-simplify` for
+   Two-Key `PASS` when applicable or record its explicit not-applicable result.
+3. Only then may the root stage the exact slice-owned review-candidate paths.
+   Invoke canonical `review` on that staged slice for Two-Key `PASS`, then let
+   the root invoke `github-commit`. Do not select another slice or commit before
+   review passes.
+4. After all approved slices commit, ensure the plan's separate Two-Key
+   whole-build verification and whole-tree `review` gates are current. Reuse
+   evidence already bound to the unchanged target, hashes, and canonical/Git
+   state; rerun only a gate whose evidence is missing, stale, changed,
+   mismatched, or invalidated, invoking canonical `test` when applicable.
+5. Invoke canonical `ship` with the current mode and handoff. Require its exact
+   automatic-mode Two-Key `PASS`, including the complete upstream specialist
+   fan-out primary key or its exact upstream small-change exception, before
+   delivery preflight.
+6. With an unchanged accepted target, let the root invoke canonical
+   `github-pr` for push, PR create/update, expected remote-HEAD validation, and
+   latest-head consumer checks. Only after every check is terminal and passing,
+   the PR is mergeable, and no conflict or repair remains may the root invoke
+   canonical `task` to mark the whole task done and release the lock.
 
-1. Run the local implementation loop defined by the shared contract.
-2. Treat each plan-slice commit as provisional progress, not completion of the
-   whole MDF task.
-3. Re-read the canonical plan and task card after each slice.
-4. Repeat until every approved slice is complete, then continue to ship.
+If no approved slice remains, skip invented implementation work. Reuse current
+bound Two-Key whole-build and whole-tree review evidence when its target,
+spec/plan hashes, and canonical/Git state are unchanged; rerun only missing,
+stale, changed, mismatched, or invalidated gates, then continue to ship. A
+failure re-enters the earliest invalidated canonical adapter on the same task,
+worktree, branch, and lock. Any resulting source change must repeat only the
+build, simplification, staging, review, commit, whole-build, whole-tree, ship,
+and delivery gates that it invalidates.
 
-### No pending plan slices
+## Authority and stop
 
-1. Treat this as finalization, not a stop.
-2. Do not invent implementation work or ignore the specification.
-3. Use the latest approved spec as the acceptance and scope baseline.
-4. Use the plan and prior evidence to confirm that every implementation slice
-   is covered.
-5. Continue in this order:
+Commits, task completion, push, PR mutation, and PR consumer checks are
+root-only. Ship assessment is model-led Two-Key. This mode does not authorize
+merge, deploy, deletion, force, stale-lock takeover, branch/worktree cleanup,
+or unrelated changes.
 
-   ```text
-   latest verification/evidence check -> ship -> github-pr PR handoff and
-   consumer checks -> whole MDF task completion and lock release
-   ```
+Run without intermediate prompts inside settled authority. Missing, incomplete,
+non-fresh, non-terminal, or under-capability keys; changed or stale state;
+unrelated dirt; scope or lease violation; uncertain writer terminality;
+ship NO-GO; failed or ambiguous verification, push, PR, or consumer state;
+missing external authority; ambiguity requiring new authority; or three
+exhausted cycles must preserve actual state and finish `BLOCKED`. Never silently
+fall back, roll back, create a duplicate PR, or report terminal `REWORK`.
 
-6. If code or scope changed after the last review, rerun affected tests and
-   review before ship.
-
-## Delivery and completion
-
-- `plan task complete` requires its tests, build, review, simplification, and
-  local commit to pass.
-- `MDF task done` means the complete work item is ready for final delivery.
-- The implementation loop commits intended changes before ship.
-- After ship returns GO, run fresh checks for branch, remote, mergeability,
-  authentication, clean tree, and open-PR state while the lock is held.
-- If intended uncommitted changes remain, invoke `github-commit`, rerun the
-  affected review and ship checks, and repeat preflight.
-- Keep the lock while `github-pr` pushes or updates the PR, verifies the pushed
-  head, waits for all latest related/required checks to finish and pass, and
-  confirms mergeability with no unresolved conflict.
-- If a consumer fails, record its evidence and re-enter the shared recovery
-  protocol on the same task. Do not create a repair task or new state.
-- Perform the task skill's normal completion mutation and release the lock only
-  after every delivery gate passes.
-- Do not complete the task before latest-head, mergeability, and conflict gates
-  pass.
-
-## PR handoff
-
-1. Push the current branch.
-2. Update the matching open PR, or create one when none exists.
-3. Query GitHub before retrying an uncertain create result; never create a
-   duplicate PR.
-4. Record the PR URL or terminal failure.
-5. Stop after recording that result.
-
-## Stop conditions
-
-Stop for:
-
-- ship NO-GO;
-- lock, worktree, or branch conflicts;
-- dirty unrelated changes;
-- missing GitHub authority;
-- an unmergeable base;
-- failed or ambiguous push or PR mutation.
-
-After the PR URL or terminal failure is recorded, do not merge, deploy, delete,
-or clean up branches/worktrees.
+Record the shared handoff, actual PR URL or terminal failure, latest-head
+consumer evidence, and final task/lock state. Stop without merge or cleanup.

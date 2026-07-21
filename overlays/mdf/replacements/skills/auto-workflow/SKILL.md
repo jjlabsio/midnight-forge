@@ -1,55 +1,70 @@
 ---
 name: auto-workflow
-description: "Run MDF's local implementation workflow through review, simplification, and commit without ship or PR delivery."
+description: "Run MDF's local implementation workflow through review and commit without delivery."
 ---
 
 # auto-workflow
 
-Use this skill for the repeatable local implementation loop. It is intentionally
-separate from `auto-workflow-pr`: this skill does not authorize ship, task
-completion, push, or PR creation/update.
+Use this skill for one unattended local implementation run. It does not
+authorize ship, whole-task completion, or PR delivery.
 
-Load the plugin-installed `../../references/auto-workflow-contract.md` and use
-`mode: auto-workflow` for downstream MDF skills. The contract is the single
-source of truth for the shared auto-mode middle stages; this entrypoint only
-defines the local authority boundary below.
+Resolve the installed plugin root. Load and run the exact upstream
+`../using-agent-skills/SKILL.md` discovery workflow, resolve this canonical
+entrypoint, and load every other applicable upstream primitive it selects.
+Then load `../../references/auto-workflow-contract.md` and use
+`mode: auto-workflow` plus the current readable handoff for every canonical
+stage invocation. An unresolved plugin root, bare mode string, or missing
+handoff is a final `BLOCKED` result.
 
-At the start of every run, execute the contract's **Shared auto-mode startup
-task/worktree resolution** for the current linked worktree before preparing a
-worktree or invoking a downstream stage. Reuse only the matching active task,
-worktree, branch, and lock. If the task, worktree, branch, or lock is missing,
-conflicting, or mismatched, stop without creating a new task or worktree.
+## Root preflight
 
-## Local lifecycle boundary
+1. Apply the contract's shared startup resolution and intent preflight in the
+   root context. Re-read the exact task card, lock, handoff, spec/plan
+   revisions, worktree, branch, base, `HEAD`, index, tree, diff, and authority.
+2. Reuse only current matching state. Do not create replacement task, lock,
+   worktree, branch, artifact, or evidence state to guess a continuation.
+3. Keep intent, authority, stage selection, artifact acceptance, canonical
+   `.mdf` state, commits, lifecycle, and final synthesis root-only.
 
-Follow the shared auto-mode middle-stage lifecycle in the loaded contract.
-This local entrypoint continues through every approved plan slice, the
-whole-build verification/review, and the final local handoff. A plan task is an
-implementation slice, not the whole MDF task. Keep the active task ownership
-and lock for a later continuation; do not mark the whole MDF task `done` or
-release its lock here. If whole-build, final review, or another local consumer
-fails, record the evidence and use the shared earliest-invalidated-stage
-recovery protocol on the same task and lock.
+## Composition
 
-## Stop boundary
+Follow the shared contract's stage order and recovery rules; do not reproduce
+their workflows here:
 
-After all approved plan slices, whole-build verification/review, and the
-readable local handoff are complete, stop. Do not stop after the first slice's
-commit merely because its local build and review passed. This skill must not:
+1. Invoke canonical `spec` and `plan` with the current mode and handoff when
+   either artifact must be created or revised. Each must return Two-Key
+   `PASS` before downstream use.
+2. For every ready approved slice, invoke canonical `build` in default
+   single-task mode for Two-Key `PASS`, then canonical `code-simplify` for
+   Two-Key `PASS` when applicable or record its explicit not-applicable result.
+3. Only then may the root stage the exact slice-owned review-candidate paths.
+   Invoke canonical `review` on that staged slice for Two-Key `PASS`, then let
+   the root invoke `github-commit`. Do not select another slice or commit before
+   review passes.
+4. After all approved slices commit, apply the plan's whole-build verification
+   as a separate Two-Key stage, invoking canonical `test` when applicable, then
+   invoke canonical `review` against the complete approved tree for a separate
+   Two-Key `PASS`.
+5. Write the current local handoff and stop with the task active and lock held.
 
-- invoke `ship`;
-- mark the whole MDF task `done`;
-- push a branch;
-- create or update a GitHub PR;
-- merge, deploy, delete, force, or perform unrelated cleanup.
+A repair re-enters the earliest invalidated canonical adapter under the same
+handoff. A changed implementation or simplification result invalidates affected
+verification, staging, and review evidence; restage only after the required
+gates are current.
 
-When the user is ready for delivery, invoke `auto-workflow-pr`. That skill may
-resume from the latest valid local artifacts and commits rather than repeating
-completed implementation work.
+## Local authority and stop
 
-## Required handoff
+The root alone creates each focused slice commit after review `PASS`. This mode
+omits ship, whole-task completion, push, PR mutation, and PR consumer checks;
+it must not create empty gates for them. Merge, deploy, deletion, force,
+stale-lock takeover, and unrelated cleanup are prohibited.
 
-Use the shared contract's handoff fields and additionally record the explicit
-fact that ship, task completion, push, and PR creation/update were not
-performed. Re-read the actual task, Git, lock, and artifact state before any
-continuation.
+Run without intermediate prompts inside settled authority. Missing, incomplete,
+non-fresh, non-terminal, or under-capability keys; changed or stale state;
+unrelated dirt; scope or lease violation; uncertain writer terminality;
+verification failure without a safe in-scope cycle; ambiguity requiring new
+authority; or three exhausted cycles must preserve actual state and finish
+`BLOCKED`. Never silently fall back, roll back, or report terminal `REWORK`.
+
+Record the shared handoff fields and that ship, whole-task completion, push, PR
+mutation, and PR consumer checks were omitted.
