@@ -41,6 +41,29 @@ Use when designing or writing a skill.
 - Prefer helper scripts under the skill's `scripts/` directory when a workflow has repeatable commands.
 - Quote `description` in YAML front matter.
 
+## MDF convention references
+
+Skill-writing guidance and MDF-specific conventions are separate concerns. This
+section governs how MDF conventions are maintained; it does not restate their
+operational contracts.
+
+MDF-specific conventions are defined by authoritative documents under
+`references/`, `docs/architecture/`, and `docs/decisions/`.
+
+Before creating or modifying an MDF skill, workflow, shared contract, or
+orchestration rule:
+
+- Identify and read every applicable authoritative document.
+- Treat those documents as the source of truth for the convention.
+- Reference existing conventions instead of duplicating or redefining them in
+  a skill or workflow document.
+- If documents conflict, resolve or update the authoritative document before
+  changing consuming skills.
+- If no authoritative document exists, document the new MDF convention first,
+  then update its consumers.
+- When a convention is required at runtime, make the consuming skill load or
+  explicitly reference the authoritative document.
+
 ## Non-negotiable source boundaries
 
 1. Each checked-in `vendor/agent-skills` tree is an immutable snapshot of one
