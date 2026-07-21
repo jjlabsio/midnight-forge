@@ -88,32 +88,36 @@ Resolve the canonical project root and exact review target before assessing it:
 - `task-review` covers the task card, exact staged or selected Git diff, owned
   paths, focused verification, and downstream-impact note. It is read-only and
   cannot recreate a lock, mutate a card, or create lifecycle evidence.
-- `mode: quick-workflow-pr` uses the current request, active task Context,
-  quick handoff, exact bounded-change diff, and verification evidence as its
-  acceptance baseline. Do not require or create a specification or plan.
+- A bounded-change review uses the normalized context's current request, active
+  task Context, exact bounded-change diff, and verification evidence as its
+  acceptance baseline. When that baseline intentionally has no specification
+  or plan, do not require or create either artifact.
 
 The scope label grants no mutation authority. A completed task may be reviewed
 read-only after lock release.
 
-### Automatic-mode independent assessments
+### Automatic-stage independent assessments
 
-For `mode: auto-workflow`, `mode: auto-workflow-pr`, or
-`mode: quick-workflow-pr`, load
-`../../references/auto-workflow-contract.md` and apply its mandatory read-only
-Two-Key stage lease. Also load
+When the caller supplies normalized automatic stage context, load
+`../../references/auto-workflow-contract.md` and require `Stage` to select this
+canonical `review` adapter, one exact review target, and its review scope.
+Apply the context's acceptance baseline, verification profile, continuity,
+read-only output disposition, capabilities, and mandatory Two-Key stage lease.
+The context's mode is provenance only; a raw mode or handoff without normalized
+context is malformed and finishes `BLOCKED`. Also load
 `../../references/subagent-dispatch-policy.md`,
 `../../references/model-routing-5.6.md`, and
 `../../references/model-routing-performance.md`.
 Use their shared dispatch, evidence, quality-floor, terminality, recovery, and
-root-authority mechanics without restating or weakening them. A bare mode
-string is not authority.
+root-authority mechanics without restating or weakening them.
 
 1. The root observes and binds one canonical target bundle: the actual
    canonical diff or artifact, original acceptance context for the selected
    scope, complete verification evidence, and current canonical and Git state.
-2. Dispatch two distinct fresh-context independent primary assessors of that
-   same bundle. Each runs exact discovery and this complete review contract.
-   Both are read-only and non-delegating; neither receives, reviews, summarizes,
+2. Dispatch one distinct fresh-context primary assessor and one distinct
+   fresh-context verifier for that same bundle. Each runs exact discovery and
+   this complete review contract. Both keys are read-only and non-delegating;
+   the verifier receives no primary report and neither key reviews, summarizes,
    or validates the other's report. Do not form a producer plus review-of-report
    chain or let a specialist lens substitute for either complete five-axis
    assessment.
@@ -131,8 +135,8 @@ string is not authority.
 
 `PASS` requires current successful verification and no Critical or Important
 actionable finding. A disagreement requiring unresolved technical or user
-judgment cannot advance. An actionable finding returns through the shared
-recovery contract to the earliest owning implementation stage; review never
+judgment cannot advance. Return actionable findings and their ownership
+evidence to the root; only the root chooses recovery re-entry, and review never
 repairs itself. Missing, incomplete, stale, non-terminal, under-capability, or
 non-independent assessment; changed target; scope violation; unresolved
 disagreement; or exhausted three-cycle recovery finishes `BLOCKED`.

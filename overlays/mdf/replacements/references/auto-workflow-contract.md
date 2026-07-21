@@ -1,11 +1,12 @@
 # Auto-workflow contracts
 
-These readable contracts apply only when a caller establishes one of the
-explicit internal modes below. They do not change standalone MDF or upstream
-skill semantics.
+These readable contracts apply only when a named automatic entrypoint
+establishes one of the workflow modes below. They do not change standalone MDF
+or upstream skill semantics.
 
-A mode string alone grants no authority. The root must also carry a current
-readable handoff. For `auto-workflow` and `auto-workflow-pr`, it contains the
+A mode is entrypoint provenance, not downstream authority. A mode string alone
+grants no authority. The root must also carry a current readable handoff. For
+`auto-workflow` and `auto-workflow-pr`, it contains the
 task/work IDs, worktree, branch, approved spec/plan paths and hashes, lock
 ownership, completed slices, and allowed actions. For `quick-workflow-pr`, it
 contains the task/work IDs, worktree, branch, matching lock, bounded scope,
@@ -69,7 +70,9 @@ than generating a spec or plan automatically.
 
 `Two-Key` means the mandatory stage lease below. `root-only` is an ownership
 boundary, not a degraded substitute for a missing key. `omitted` means the
-mode does not run that operation and must not create an empty gate for it.
+entrypoint does not dispatch that operation and must not create an empty gate
+for it. This matrix is the only automatic lifecycle selection and omission
+table; stage skills do not reconstruct it from mode names.
 
 | Operation | `auto-workflow` | `auto-workflow-pr` | `quick-workflow-pr` |
 | --- | --- | --- | --- |
@@ -82,9 +85,59 @@ mode does not run that operation and must not create an empty gate for it.
 | Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |
 | Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |
 | Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |
-| Ship or release assessment | omitted by local authority | Two-Key with complete upstream fan-out | omitted |
+| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
 | Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |
 | Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |
+
+## Root-owned composition and normalized stage context
+
+The root entrypoint alone interprets workflow mode. It selects or omits stages,
+orders them through the matrix and lifecycle below, applies root-only actions,
+and chooses recovery re-entry. Before each canonical stage, it converts the
+current handoff and root-observed state into one concise Markdown stage
+context. Internal stage skills consume that context; they do not branch on
+`auto-workflow`, `auto-workflow-pr`, or `quick-workflow-pr`.
+
+Every automatic stage context records:
+
+- **Stage:** canonical skill, target, lifecycle position, and the one result
+  this invocation may produce.
+- **Acceptance baseline:** exact settled intent and task acceptance; approved
+  spec/plan bytes, paths, and hashes for plan-backed work, or the bounded user
+  request and active task Context for quick work.
+- **Verification profile:** required RED/GREEN, regression, build, typecheck,
+  lint, static-content, browser/runtime, whole-build, review, or release checks,
+  including exact commands or supported not-applicable decisions.
+- **Continuity:** task/work IDs, canonical card/lock/handoff paths and hashes,
+  worktree, branch, base, pre-dispatch `HEAD`, owned paths, completed evidence,
+  and recovery cycle.
+- **Lease and role:** `producer`, `primary-assessor`, or `verifier` for a
+  Two-Key worker, or `root-operator` for a root-only operation; exact read and
+  write paths; sole-writer status; freshness and terminality requirements; and
+  forbidden mutations. A `root-operator` context creates no worker lease.
+- **Output disposition:** one new artifact revision, provisional source diff,
+  read-only assessment, explicit not-applicable result, review result, ship
+  evidence, or external-consumer evidence. It also states who may accept,
+  stage, commit, mutate lifecycle, or synthesize that output.
+- **Capabilities and authority:** resolved `skill-backed` or explicitly named
+  `persona-backed` instruction source, required model quality floor, available
+  transport/tools, permitted external actions, and explicit prohibitions.
+- **Provenance:** originating entrypoint and mode for audit only. Provenance
+  cannot select work, bypass a gate, expand a lease, or authorize an action.
+
+Use ordinary headings and bullets, not a JSON-only protocol or runtime schema.
+The root validates the context against current canonical and Git state before
+dispatch. A missing field, stale hash, contradictory role or disposition,
+stage mismatch, or capability/authority gap finishes `BLOCKED`; a stage never
+falls back to interpreting provenance. A direct invocation without normalized
+stage context follows that skill's standalone interaction and authority rules.
+
+Stage adapters own their upstream artifact, implementation, verification, or
+assessment work and their stage-specific evidence. They do not select a next
+stage, decide an omission, accept their own result, stage or commit automatic
+work, mutate canonical lifecycle state, reinterpret automatic approval,
+choose recovery re-entry, or perform final synthesis. Those composition
+decisions remain root-owned here.
 
 ## Evidence-carrying Two-Key stage lease
 
@@ -95,8 +148,8 @@ or machine-only protocol.
 
 ### Root dispatch bundle
 
-Before each key, the root supplies the current mode and exact canonical MDF
-stage adapter. It also supplies the exact upstream `using-agent-skills`
+Before each key, the root supplies the normalized stage context and exact
+canonical MDF stage adapter. It also supplies the exact upstream `using-agent-skills`
 primitive and requires the key to run that discovery workflow, resolve the
 canonical adapter, and load every other applicable upstream primitive it
 selects. Applicability remains source- and model-led; do not replace discovery
@@ -358,12 +411,13 @@ cost, operational risk or rollback acceptance, an ambiguous root cause or
 repair scope, repeated failed repair, or an external provider/infrastructure
 problem.
 
-## Shared auto-mode stage dispatch
+## Shared automatic stage dispatch
 
-`auto-workflow` and `auto-workflow-pr` use one shared middle-stage contract.
-The entrypoint skills define only their authority boundary and delivery
-continuation; they must not maintain separate copies of the implementation
-loop, review gates, intent preflight, or common stop conditions.
+All three entrypoints use this composition contract. The entrypoint skills
+establish only provenance and their authority boundary, then normalize each
+stage dispatch here. They must not maintain separate copies of lifecycle
+ordering, implementation loops, review gates, intent preflight, omissions, or
+common stop and recovery conditions.
 
 The shared contract orchestrates canonical MDF skills, not personas. Resolve
 the installed plugin root, run the exact upstream `using-agent-skills`
@@ -379,13 +433,13 @@ delegation only when their contract explicitly names an existing specialist
 persona. Every model-led stage marked `Two-Key` in the operation matrix must
 apply the stage lease above.
 
-Every canonical stage invocation must pass the current workflow mode
-(`mode: auto-workflow`, `mode: auto-workflow-pr`, or
-`mode: quick-workflow-pr`) together with the current
-readable handoff. A bare invocation such as `review` is not a valid auto-mode
-dispatch: it uses standalone semantics and lacks the auto-mode context. The
-mode selects the applicable workflow composition; it does not grant authority
-without the current handoff and state checks above.
+Every canonical automatic stage adapter invocation must pass the normalized
+stage context above. A bare invocation such as `review` follows standalone semantics;
+a raw mode plus handoff is malformed automatic context and finishes `BLOCKED`.
+Only the root entrypoint uses mode to select the applicable row and lifecycle.
+Downstream skills use `Stage`, `Acceptance baseline`, `Verification profile`,
+`Continuity`, `Lease and role`, `Output disposition`, and `Capabilities and
+authority`; they retain mode only under `Provenance`.
 
 | Stage | Canonical MDF skill | Required result |
 | --- | --- | --- |
@@ -398,9 +452,17 @@ without the current handoff and state checks above.
 | Plan-slice commit | root invokes `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
 | Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
-| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
+| Ship or release assessment | `ship` when selected by the operation matrix | Root-owned existing fan-out, independent verification, and root GO/NO-GO synthesis |
 | Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
 | PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
+
+The root-only `github-commit` and `task` rows are downstream composition
+actions, not worker-stage adapters or contract consumers. The root invokes them
+under its current normalized composition context with `Lease and role:
+root-operator`; those skills do not interpret workflow mode, create a worker
+lease, or select lifecycle. Contract-consumer adapters such as `github-pr` and
+`using-git-worktrees` validate their own normalized context and are listed in
+the inventory registry.
 
 The stage table is a skill-routing contract, not a persona dispatch contract.
 Never encode `persona: <name>` as a stage invocation or treat a persona name
@@ -416,7 +478,7 @@ and is not nested inside a stage worker. The shared contract must not duplicate
 persona lists, invent persona prompts, or bypass the delegating skill's
 dispatch boundary.
 
-For both auto modes, the common lifecycle is:
+For plan-backed entrypoints, the common local lifecycle is:
 
 ```text
 intent preflight -> interview-me when required -> spec -> plan ->
@@ -425,11 +487,25 @@ whole-build verification -> whole-tree review ->
 current local handoff
 ```
 
-For every ready approved plan slice, invoke the canonical `build` skill in the
-current auto mode with exactly one selected task. Do not invoke `build auto` or
-`build all`. The build skill owns its complete single-slice TDD, regression,
+The delivery entrypoint continues from that handoff through selected `ship`,
+`github-pr`, consumer checks, and whole-task completion. The local entrypoint
+stops at the handoff. The quick entrypoint uses only:
+
+```text
+bounded build -> root exact-path review-candidate staging ->
+bounded-change review -> root github-commit -> github-pr consumer checks ->
+root whole-task completion
+```
+
+Quick composition omits specification, planning, simplification, separate
+whole-build verification, separate whole-tree review, and ship. These are
+central omissions; no omitted stage receives a context or emits an empty gate.
+
+For every ready approved plan slice, invoke the canonical `build` skill with a
+normalized plan-slice build context selecting exactly one task. Do not invoke
+`build auto` or `build all`. The build skill owns its complete single-slice TDD, regression,
 build, and internal review/gates. It does not own the automatic workflow's
-canonical simplification stage. In auto modes build returns
+canonical simplification stage. In automatic composition build returns
 implementation-complete provisional evidence without staging or committing;
 the shared contract owns the following simplification, review-candidate
 staging, canonical review, and commit boundary.

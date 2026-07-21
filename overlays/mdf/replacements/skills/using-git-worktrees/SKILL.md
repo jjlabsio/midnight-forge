@@ -17,12 +17,23 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
-When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
-plugin-installed `../../references/auto-workflow-contract.md` and apply its
-current handoff, ownership, and writer-parallelism rules. This skill performs
-only the mechanical worktree setup and does not grant implementation authority.
+Resolve the installed plugin root; an unresolved root is a stop. Load and run
+the exact upstream `../using-agent-skills/SKILL.md` discovery workflow, resolve
+this canonical adapter, and load every other applicable primitive selected by
+discovery.
 
-This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller workflow and continue only within that workflow's explicit scope.
+When the caller supplies normalized automatic stage context, load the
+plugin-installed `../../references/auto-workflow-contract.md` and require
+`Stage` to select this canonical `using-git-worktrees` adapter and one exact
+worktree reuse or setup target. Apply its continuity, owned-path,
+writer-parallelism, output disposition, capabilities, and authority boundaries.
+The context's mode is provenance only; a raw mode or handoff without normalized
+context is malformed and finishes `BLOCKED`. This skill performs only
+mechanical worktree setup and does not select lifecycle, downstream stages, or
+implementation authority. A direct invocation without automatic context keeps
+the standalone interaction and stop behavior below.
+
+This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller; only the caller selects any continuation within its explicit scope.
 
 MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
 

@@ -21,7 +21,9 @@
         "skills/test/SKILL.md",
         "skills/review/SKILL.md",
         "skills/code-simplify/SKILL.md",
-        "skills/ship/SKILL.md"
+        "skills/ship/SKILL.md",
+        "skills/github-pr/SKILL.md",
+        "skills/using-git-worktrees/SKILL.md"
       ]
     },
     "approval-evidence": {

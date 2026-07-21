@@ -61,17 +61,23 @@ from the reviewed diff and task-owned commits. Exclude tests, vendor, generated
 files, public workflow contracts, and unrelated changes unless the user
 explicitly grants that scope.
 
-### Automatic plan-backed modes
+### Automatic-stage simplification
 
-For `mode: auto-workflow` or `mode: auto-workflow-pr`, load and apply the
-plugin-installed `../../references/auto-workflow-contract.md`. Also load
+When the caller supplies normalized automatic stage context, load the
+plugin-installed `../../references/auto-workflow-contract.md` and require
+`Stage` to select this canonical `code-simplify` adapter and one exact
+plan-backed candidate scope or explicit not-applicable assessment. Apply the
+context's acceptance baseline, verification profile, continuity, lease, output
+disposition, capabilities, and mandatory Two-Key gate. The context's mode is
+provenance only; a raw mode or handoff without normalized context is malformed
+and finishes `BLOCKED`. Also load
 `../../references/subagent-dispatch-policy.md`,
 `../../references/model-routing-5.6.md`, and
 `../../references/model-routing-performance.md` before dispatch. Use their
 shared Two-Key dispatch, quality-floor, evidence, positive-terminality,
-recovery, and root-authority mechanics without duplicating them. A bare mode
-string is not authority. `mode: quick-workflow-pr` omits this stage and must not
-create an empty gate.
+recovery, and root-authority mechanics without duplicating them. Omission is a
+root composition decision; an omitted stage is never invoked to create an empty
+gate.
 
 When simplification is applicable:
 
@@ -106,10 +112,11 @@ same independent verifier assesses that actual no-change result. Absence of a
 candidate, producer report, or verifier is not a pass.
 
 Material ambiguity or a public, security, privacy, destructive, or
-out-of-authority candidate finishes through the shared automatic-mode stop and
-recovery rules; it does not become permission to broaden the producer lease.
-Routine candidate choice inside settled scope remains root judgment recorded as
-an assumption.
+out-of-authority candidate returns its evidence under the shared automatic
+stage stop rules; it does not become permission to broaden the producer lease.
+Only the root chooses recovery or a new stage context. Routine candidate choice
+inside the leased settled scope remains model judgment recorded as an
+assumption.
 
 ### Standalone result
 

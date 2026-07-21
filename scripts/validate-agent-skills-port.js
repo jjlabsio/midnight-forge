@@ -129,6 +129,8 @@ const autoContractConsumers = [
   "skills/review/SKILL.md",
   "skills/code-simplify/SKILL.md",
   "skills/ship/SKILL.md",
+  "skills/github-pr/SKILL.md",
+  "skills/using-git-worktrees/SKILL.md",
 ];
 const autoContract = inventory.contracts?.["auto-workflow-contract"];
 assert(autoContract?.output === "references/auto-workflow-contract.md", "Automatic modes must use the shared authored contract as their authority.");
@@ -154,6 +156,22 @@ const operationMatrixRows = [
 
 assertAuthoredSurface("references/auto-workflow-contract.md", [
   ...operationMatrixRows,
+  "This matrix is the only automatic lifecycle selection and omission table; stage skills do not reconstruct it from mode names",
+  "The root entrypoint alone interprets workflow mode",
+  "Before each canonical stage, it converts the current handoff and root-observed state into one concise Markdown stage context",
+  "**Stage:** canonical skill, target, lifecycle position, and the one result this invocation may produce",
+  "**Acceptance baseline:** exact settled intent and task acceptance",
+  "**Verification profile:** required RED/GREEN, regression, build, typecheck, lint, static-content, browser/runtime, whole-build, review, or release checks",
+  "**Continuity:** task/work IDs, canonical card/lock/handoff paths and hashes",
+  "**Lease and role:** `producer`, `primary-assessor`, or `verifier` for a Two-Key worker, or `root-operator` for a root-only operation",
+  "The root-only `github-commit` and `task` rows are downstream composition actions, not worker-stage adapters or contract consumers",
+  "Contract-consumer adapters such as `github-pr` and `using-git-worktrees` validate their own normalized context and are listed in the inventory registry",
+  "**Output disposition:** one new artifact revision, provisional source diff, read-only assessment, explicit not-applicable result, review result, ship evidence, or external-consumer evidence",
+  "**Capabilities and authority:** resolved `skill-backed` or explicitly named `persona-backed` instruction source",
+  "**Provenance:** originating entrypoint and mode for audit only",
+  "A direct invocation without normalized stage context follows that skill's standalone interaction and authority rules",
+  "Stage adapters own their upstream artifact, implementation, verification, or assessment work and their stage-specific evidence",
+  "They do not select a next stage, decide an omission, accept their own result, stage or commit automatic work, mutate canonical lifecycle state, reinterpret automatic approval, choose recovery re-entry, or perform final synthesis",
   "exact upstream `using-agent-skills` primitive",
   "load every other applicable upstream primitive it selects",
   "only active writer in the shared worktree",
@@ -262,7 +280,9 @@ assertAuthoredSurface("references/model-routing-5.6.md", [
 ]);
 
 assertAuthoredSurface("skills/auto-workflow/SKILL.md", [
-  "`mode: auto-workflow` plus the current readable handoff",
+  "`mode: auto-workflow` only as this entrypoint's provenance and composition selector",
+  "Do not forward it as downstream authority",
+  "contract's normalized stage context",
   "does not authorize ship, whole-task completion, or PR delivery",
   "omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
   "must not create empty gates for them",
@@ -271,7 +291,9 @@ assertAuthoredSurface("skills/auto-workflow/SKILL.md", [
 ]);
 
 assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
-  "`mode: auto-workflow-pr` plus the current readable handoff",
+  "`mode: auto-workflow-pr` only as this entrypoint's provenance and composition selector",
+  "Do not forward it as downstream authority",
+  "creates the contract's normalized stage context",
   "root invokes the canonical `ship` fan-out directly in this mode",
   "do not dispatch a generic skill-backed `ship` worker",
   "root invokes canonical `github-pr` under the contract's PR idempotency rules",
@@ -282,7 +304,9 @@ assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
 
 assertAuthoredSurface("skills/quick-workflow-pr/SKILL.md", [
   "only when the user has explicitly selected the small-change workflow",
-  "`mode: quick-workflow-pr` plus the current readable quick handoff",
+  "`mode: quick-workflow-pr` only as this entrypoint's provenance and composition selector",
+  "Do not forward it as downstream authority",
+  "creates the contract's normalized stage context",
   "Specification, planning, simplification, ship, separate whole-build verification, and separate whole-tree review are omitted",
   "do not create empty gates for omitted operations",
   "root invokes canonical `github-pr` for the latest-head consumer and mergeability gates",
@@ -292,6 +316,10 @@ assertAuthoredSurface("skills/quick-workflow-pr/SKILL.md", [
 
 assertAuthoredSurface("skills/use-mdf/SKILL.md", [
   "shared contract and canonical consumers are authoritative for the complete automatic-mode behavior",
+  "The root entrypoint is the only layer that interprets the mode",
+  "create the contract's normalized Markdown stage context",
+  "Pass that context—not a raw mode branch—to the canonical stage skill",
+  "Mode remains provenance only",
   "`auto-workflow` is local-only and omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
   "`auto-workflow-pr` is the plan-backed delivery entrypoint with only its explicit push and PR handoff externally authorized",
   "`quick-workflow-pr` is the explicitly selected bounded delivery entrypoint",
@@ -301,6 +329,41 @@ assertAuthoredSurface("skills/use-mdf/SKILL.md", [
   "Automatic canonical stage workers use the `skill-backed` instruction source",
   "Use `persona-backed` only when the delegating skill explicitly names an existing specialist",
   "Automatic `ship` is a root-owned existing specialist fan-out exception",
+]);
+
+for (const consumer of [
+  "skills/spec/SKILL.md",
+  "skills/plan/SKILL.md",
+  "skills/build/SKILL.md",
+  "skills/test/SKILL.md",
+  "skills/review/SKILL.md",
+  "skills/code-simplify/SKILL.md",
+  "skills/ship/SKILL.md",
+  "skills/github-pr/SKILL.md",
+  "skills/using-git-worktrees/SKILL.md",
+]) {
+  assertAuthoredSurface(consumer, [
+    "normalized automatic stage context",
+    "`Stage` to select this canonical",
+    "mode is provenance only",
+    "raw mode or handoff without normalized context",
+  ]);
+}
+
+assertAuthoredSurface("skills/github-pr/SKILL.md", [
+  "This adapter owns external PR consumer work and evidence; it does not select task completion, source repair, or recovery re-entry",
+  "Its normalized root-owned context must use `Lease and role: root-operator`; it creates no worker lease",
+  "only the caller may select task completion and lock release",
+  "let the root select any required source-repair stages",
+  "`../using-agent-skills/SKILL.md`",
+  "every other applicable primitive selected by discovery",
+]);
+
+assertAuthoredSurface("skills/using-git-worktrees/SKILL.md", [
+  "This skill performs only mechanical worktree setup and does not select lifecycle, downstream stages, or implementation authority",
+  "only the caller selects any continuation within its explicit scope",
+  "`../using-agent-skills/SKILL.md`",
+  "every other applicable primitive selected by discovery",
 ]);
 
 const stageRealizations = new Map([
@@ -331,9 +394,9 @@ const stageRealizations = new Map([
     "original acceptance context for the selected scope",
     "complete verification evidence",
     "current canonical and Git state",
-    "two distinct fresh-context independent primary assessors of that same bundle",
-    "Both are read-only and non-delegating",
-    "neither receives, reviews, summarizes, or validates the other's report",
+    "one distinct fresh-context primary assessor and one distinct fresh-context verifier for that same bundle",
+    "Both keys are read-only and non-delegating",
+    "the verifier receives no primary report and neither key reviews, summarizes, or validates the other's report",
     "root confirms both actual assessments returned terminally and the target remained unchanged",
   ]],
   ["skills/code-simplify/SKILL.md", [
@@ -342,6 +405,9 @@ const stageRealizations = new Map([
     "distinct fresh-context, read-only, non-delegating verifier then assesses that actual result",
   ]],
   ["skills/ship/SKILL.md", [
+    "outer normalized composition context uses `Lease and role: root-operator`",
+    "root-owned fan-out key uses `Lease and role: primary-assessor`",
+    "distinct independent key uses `Lease and role: verifier`",
     "This automatic ship stage is a root-owned fan-out exception",
     "The root-owned complete upstream three-specialist fan-out is the primary assessment key",
     "Only after the primary key is positively terminal",

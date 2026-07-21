@@ -12,8 +12,8 @@ Resolve the installed plugin root. Load and run the exact upstream
 `../using-agent-skills/SKILL.md` discovery workflow, resolve this canonical
 entrypoint, and load every other applicable upstream primitive it selects.
 Then load `../../references/auto-workflow-contract.md` and use
-`mode: auto-workflow-pr` plus the current readable handoff for every canonical
-stage invocation.
+`mode: auto-workflow-pr` only as this entrypoint's provenance and composition
+selector. Do not forward it as downstream authority.
 
 ## Contract execution
 
@@ -21,7 +21,9 @@ Apply the contract's shared startup task/worktree resolution in the root. Reuse
 only evidence accepted as current by its resume and artifact-validity rules,
 then follow its entire shared middle lifecycle, recovery protocol, and
 success-or-`BLOCKED` terminal semantics by reference. If no approved slice
-remains, do not invent implementation work.
+remains, do not invent implementation work. Before every selected stage, the
+root observes current state and creates the contract's normalized stage
+context; canonical consumers receive that context instead of raw mode logic.
 
 ## Delivery continuation
 

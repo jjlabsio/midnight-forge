@@ -12,8 +12,8 @@ Resolve the installed plugin root. Load and run the exact upstream
 `../using-agent-skills/SKILL.md` discovery workflow, resolve this canonical
 entrypoint, and load every other applicable upstream primitive it selects.
 Then load `../../references/auto-workflow-contract.md` and use
-`mode: quick-workflow-pr` plus the current readable quick handoff for every
-canonical stage invocation.
+`mode: quick-workflow-pr` only as this entrypoint's provenance and composition
+selector. Do not forward it as downstream authority.
 
 ## Contract execution
 
@@ -22,6 +22,10 @@ its complete quick lifecycle, artifact-validity, recovery, PR idempotency, and
 success-or-`BLOCKED` terminal semantics by reference. The shared quick
 lifecycle requires Two-Key build and bounded-change review; the root retains
 the contract's staging, commit, delivery, lifecycle, and synthesis boundaries.
+Before every selected stage, the root observes current state and creates the
+contract's normalized stage context. Canonical consumers receive the bounded
+acceptance baseline and verification profile through that context instead of
+interpreting quick mode themselves.
 
 Specification, planning, simplification, ship, separate whole-build
 verification, and separate whole-tree review are omitted. The bounded build

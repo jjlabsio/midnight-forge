@@ -194,20 +194,25 @@ acceptance.
 
 ## MDF/Codex adaptation
 
-### Automatic-mode topology
+### Automatic-stage topology
 
-`mode: auto-workflow` and `mode: quick-workflow-pr` omit ship by authority and
-must not create an empty ship gate. Only `mode: auto-workflow-pr` invokes this
-automatic stage. A mode string alone is not authority: require the current run
-handoff and matching task, lock, worktree, branch, approved artifact hashes,
-and actual Git state.
+When the caller supplies normalized automatic stage context, load
+`../../references/auto-workflow-contract.md` and require `Stage` to select this
+canonical `ship` adapter and one exact release target. Apply the context's
+acceptance baseline, verification profile, continuity, read-only output
+disposition, capabilities, and complete mandatory Two-Key lease, dispatch,
+evidence, quality-floor, positive-terminality, three-cycle recovery, and
+root-authority rules without duplicating or weakening them. The context's mode
+is provenance only; a raw mode or handoff without normalized context is
+malformed and finishes `BLOCKED`. Stage selection and omission remain root
+composition decisions; an omitted ship stage is never invoked to create an
+empty gate. Its outer normalized composition context uses `Lease and role:
+root-operator` and creates no generic worker lease. The root-owned fan-out key
+uses `Lease and role: primary-assessor`; its distinct independent key uses
+`Lease and role: verifier`.
 
-In `mode: auto-workflow-pr`, load
-`../../references/auto-workflow-contract.md` and apply its complete mandatory
-Two-Key lease, dispatch, evidence, quality-floor, positive-terminality,
-three-cycle recovery, and root-authority rules without duplicating or weakening
-them. This automatic ship stage is a root-owned fan-out exception: do not wrap
-it in a generic `skill-backed` ship worker or let a ship worker dispatch the
+This automatic ship stage is a root-owned fan-out exception: do not wrap it in
+a generic `skill-backed` ship worker or let a ship worker dispatch the
 specialist personas. Apply this ship-specific realization:
 
 1. The root-owned complete upstream three-specialist fan-out is the primary
@@ -238,11 +243,11 @@ specialist personas. Apply this ship-specific realization:
 
 Missing, degraded, partial, stale, changed-target, non-terminal,
 under-capability, non-independent, or write-capable evidence or a substantive
-unresolved disagreement cannot advance. Re-enter the earliest invalidated
-canonical build, test, review, or ship gate under the shared recovery contract,
-or finish `BLOCKED` within its three-cycle limit. Automatic mode does not ask
-an intermediate risk-acceptance question; missing current authority or a new
-material security, data, permission, production, scope, cost, or rollback
+unresolved disagreement cannot advance. Return that evidence to the root;
+only the root selects the earliest invalidated canonical stage or finishes
+`BLOCKED` within the shared three-cycle limit. An automatic ship stage does not
+ask an intermediate risk-acceptance question; missing current authority or a
+new material security, data, permission, production, scope, cost, or rollback
 decision finishes `BLOCKED`.
 
 ### Authority and external-action stops
@@ -259,10 +264,10 @@ separately authorized handoff.
 A GO verdict is readiness evidence, not delivery authority. In standalone
 mode, pushing, creating or updating a PR, merging, deploying, deleting a branch
 or worktree, changing data, or any other external mutation is a separate
-confirmation stop. In `mode: auto-workflow-pr`, the initial invocation may
-authorize only a later root-owned push and PR create/update through the
-canonical `github-pr` skill after a fresh preflight of remote, branch, diff,
-authentication, mergeability, open-PR state, and expected local/remote OIDs.
-Merge, deploy, branch/worktree deletion, data deletion, force operations, and
-unrelated cleanup remain prohibited. Report the ship verdict separately from
-any later mutation result.
+confirmation stop. Under normalized automatic context, this stage remains
+read-only and cannot select or authorize delivery. A later root-owned
+`github-pr` invocation requires its own normalized stage context and fresh
+preflight of remote, branch, diff, authentication, mergeability, open-PR state,
+and expected local/remote OIDs. Merge, deploy, branch/worktree deletion, data
+deletion, force operations, and unrelated cleanup remain prohibited. Report
+the ship verdict separately from any later mutation result.

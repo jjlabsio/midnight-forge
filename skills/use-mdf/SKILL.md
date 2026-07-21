@@ -33,7 +33,16 @@ string or missing handoff is a stop. The shared contract and canonical
 consumers are authoritative for the complete automatic-mode behavior; do not
 restate or replace it here.
 
-Classify authority at the router only:
+The root entrypoint is the only layer that interprets the mode. For every
+selected stage, re-read canonical and Git state and create the contract's
+normalized Markdown stage context: stage, acceptance baseline, verification
+profile, continuity, lease and role, output disposition, capabilities and
+authority, and provenance. Pass that context—not a raw mode branch—to the
+canonical stage skill. Mode remains provenance only. Missing or contradictory
+context finishes `BLOCKED`; never ask a stage skill to infer composition,
+omission, ordering, authority, or recovery from a mode name.
+
+Classify lifecycle and authority at the router only:
 
 - `auto-workflow` is local-only and omits ship, whole-task completion, push,
   PR mutation, and PR consumer checks.

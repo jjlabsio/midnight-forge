@@ -47,20 +47,22 @@ Use this Codex-native entrypoint when the user invokes `test`, `mdf test`,
 even though `build` may invoke test logic internally. Use it for independent
 verification, manual changes, debugging, PR preparation, and pre-ship checks.
 
-For `mode: auto-workflow`, `mode: auto-workflow-pr`, or
-`mode: quick-workflow-pr`, load
-`../../references/auto-workflow-contract.md` and apply its mandatory Two-Key
-lease whenever this skill performs model-led whole-build or focused
-verification. A bare mode string is not authority. This skill defines only the
-test-specific roles, evidence, and stops below; do not duplicate the shared
-lease, terminality, quality-floor, or recovery protocol.
+When the caller supplies normalized automatic stage context, load
+`../../references/auto-workflow-contract.md` and require `Stage` to select this
+canonical `test` adapter and one focused or whole-build verification target.
+Apply the context's acceptance baseline, verification profile, continuity,
+lease, output disposition, capabilities, and mandatory Two-Key gate. The
+context's mode is provenance only; a raw mode or handoff without normalized
+context is malformed and finishes `BLOCKED`. This skill owns only test work and
+test evidence; it does not select or advance lifecycle. A direct invocation
+without automatic context remains standalone.
 
 When dispatching either key, also load
 `../../references/subagent-dispatch-policy.md` and
 `../../references/model-routing-5.6.md`. Follow their root-owned dynamic model
 selection and generic dispatch boundaries.
 
-## Automatic-mode test keys
+## Automatic-stage test keys
 
 1. Use one appropriately scoped test producer or primary assessor for the
    actual test target. A read-only verification stage uses a read-only primary
@@ -82,13 +84,13 @@ selection and generic dispatch boundaries.
    actual state into `PASS`, `REWORK`, or `BLOCKED`, accepts the result, and
    advances or synthesizes the workflow.
 
-In automatic modes, a critical decision, untrusted test or browser provenance,
-failed verification without an obvious in-scope repair, missing exact evidence,
-or a required out-of-scope test change returns `REWORK` when another safe cycle
-remains and otherwise `BLOCKED`. Do not ask an intermediate unattended
-question. Standalone invocation preserves the upstream interaction, failure,
-and stop semantics; the automatic `REWORK`/`BLOCKED` translation applies only
-under a current authorized automatic-mode handoff.
+Under normalized automatic context, a critical decision, untrusted test or
+browser provenance, failed verification without an obvious in-scope repair,
+missing exact evidence, or a required out-of-scope test change returns the
+failure evidence to the root. Only the root may select a fresh `REWORK` context
+when another safe cycle remains or finish `BLOCKED`; this adapter does not ask
+an intermediate unattended question or choose a recovery stage. Standalone
+invocation preserves the upstream interaction, failure, and stop semantics.
 
 ## Standalone test artifacts
 

@@ -30,13 +30,15 @@ workflow, resolve this canonical adapter, then load the exact upstream
 `../planning-and-task-breakdown/SKILL.md` and every other applicable primitive
 selected by discovery.
 
-When the caller carries `mode: auto-workflow` or `mode: auto-workflow-pr`,
-also load `../../references/auto-workflow-contract.md` and apply its mandatory
-`Planning` Two-Key stage lease. This skill owns only the canonical planning
-artifact and its plan-specific handoff; it does not redefine the shared
-authority or lifecycle rules. A bare mode string is not authority. In
-standalone mode, require current explicit approval of the exact specification
-revision before planning.
+When the caller supplies normalized automatic stage context, also load
+`../../references/auto-workflow-contract.md` and require `Stage` to select this
+canonical `plan` adapter and one plan revision. Apply the context's acceptance
+baseline, continuity, lease, output disposition, capabilities, and mandatory
+`Planning` Two-Key gate. The context's mode is provenance only; a raw mode or
+handoff without normalized context is malformed and finishes `BLOCKED`. This
+skill owns only the canonical planning artifact and plan-specific evidence; it
+does not select or advance lifecycle. In a standalone invocation, require
+current explicit approval of the exact specification revision before planning.
 
 For non-trivial planning decisions, also load the exact upstream
 `../doubt-driven-development/SKILL.md` and preserve its
@@ -70,15 +72,15 @@ affirmative approval, recording, and invalidation rules.
    before presenting it for the applicable sign-off.
 6. Compute the SHA-256 of the exact saved bytes and report the path and hash.
 
-In standalone mode, the root owns the plan artifact write. In automatic mode,
-use the bounded writer below. The plan is a checklist and decision aid, not a
-replacement task state machine: ordinary model judgment chooses the next ready
-task and explains ambiguity.
+In a standalone invocation, the root owns the plan artifact write. Under
+normalized stage context, use the bounded writer below. The plan is a checklist
+and decision aid, not a replacement task state machine: the root entrypoint,
+not this adapter, chooses the next ready task and explains ambiguity.
 
-## Automatic-mode producer and verification
+## Automatic-stage producer and verification
 
-For `mode: auto-workflow` and `mode: auto-workflow-pr`, apply the shared
-Two-Key lease without duplicating it:
+When normalized `Planning` stage context is present, apply the shared Two-Key
+lease without duplicating it:
 
 1. The root supplies the exact approved specification bytes, path, and hash,
    and assigns one unused canonical `plan-NNN.md` path. One bounded producer is
@@ -110,17 +112,19 @@ Apply the shared `../../references/approval-evidence.md` contract. Standalone
 initial implementation requires explicit affirmative user approval of the
 exact canonical plan revision/hash; planning also requires the exact approved
 specification revision before it begins. A review pass or a saved plan is not
-approval. In automatic modes, use the current handoff from the loaded
-auto-workflow contract only after a Two-Key `PASS`; it replaces the repeated
-human checkpoint and is not semantic plan approval. Any byte, path, scope, or
-task-order change requires a new revision and invalidates the auto handoff and
-affected downstream evidence. Record standalone approval according to the
-shared reference and keep it tied to the exact artifact.
+approval. Under normalized automatic stage context, use the current handoff
+from the loaded auto-workflow contract only after a Two-Key `PASS`; it replaces
+the repeated human checkpoint and is not semantic plan approval. Any byte,
+path, scope, or task-order change requires a new revision and causes the root
+to invalidate the handoff and affected downstream evidence. Record standalone
+approval according to the shared reference and keep it tied to the exact
+artifact.
 
 Standalone automatic-looking workflow stops before build until both exact
-approvals are current. In automatic modes, continue only under the current
-auto-workflow handoff after its dependency and critical-decision checks pass.
-Do not silently continue from an invalidated plan revision.
+approvals are current. Under normalized automatic stage context, return only a
+verified plan result to the root after its dependency and critical-decision
+checks pass. Do not silently continue from an invalidated plan revision or
+begin build from this adapter.
 
 ## Revisions and handoff
 
@@ -131,13 +135,14 @@ public behavior, security/privacy/data/permission constraints, material
 architecture or operations, compatibility, or a required user decision needs
 a new specification revision first.
 
-In automatic recovery, the root records any intent-preserving classification
-before dispatch; the producer cannot write that handoff. A new accepted plan
-revision invalidates affected slice, verification, and review evidence.
-Reconcile completed commits and any provisional diff against it rather than
-redoing work or committing automatically. Hand off to `build` only after exact
-standalone approval or automatic Two-Key `PASS` and all dependency, checkpoint,
-and critical-decision stops are clear.
+For automatic recovery, normalized stage context must contain the root's
+intent-preserving classification before dispatch; the producer cannot write
+that handoff. A new accepted plan revision invalidates affected slice,
+verification, and review evidence. Reconcile completed commits and any
+provisional diff against it rather than redoing work or committing
+automatically. Return the verified plan to the root only after Two-Key `PASS`
+and all dependency, checkpoint, and critical-decision stops are clear; the root
+alone selects any build continuation.
 
 Stop after this phase in a standalone `plan` run. Do not begin implementation
 as an unstated continuation.
