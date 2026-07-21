@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Use before implementation work, MDF task work, build, commits, or PR preparation when work must happen outside main/default branch; creates or enters an isolated project-local .worktrees git worktree."
+description: "Prepare an isolated project-local Git worktree for MDF work outside the default branch."
 ---
 
 # Using Git Worktrees
@@ -17,13 +17,10 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
-In `mode: auto-workflow` or `mode: auto-workflow-pr`, multiple worktrees may be prepared for a parallel
-writer group only after the root AI explains the disjoint owned paths, lack of
-dependency edges, common base revision, distinct branches and locks, and lack
-of shared contracts, generated output, lockfiles, migrations, global
-configuration, external resources, or `.mdf` state. This skill still creates
-one isolated worktree per writer and never creates `.mdf` inside it. Missing or
-uncertain independence falls back to one worktree and serial execution.
+When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
+plugin-installed `../../references/auto-workflow-contract.md` and apply its
+current handoff, ownership, and writer-parallelism rules. This skill performs
+only the mechanical worktree setup and does not grant implementation authority.
 
 This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller workflow and continue only within that workflow's explicit scope.
 

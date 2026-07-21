@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "Start spec-driven development — write a structured specification before writing code. Use when defining or revising a non-trivial MDF change before planning or implementation."
+description: "Create or revise a structured MDF specification for a non-trivial change before planning or implementation."
 ---
 
 # spec
@@ -43,6 +43,10 @@ For non-trivial decisions, also load the exact upstream
 decision-quality adaptation and does not replace the upstream six-area spec
 contract.
 
+Load the shared `../../references/approval-evidence.md` before applying this
+skill's approval gate. It owns the common exact-artifact path/hash, affirmative
+approval, recording, and invalidation rules.
+
 ## Create or revise a specification
 
 1. Inspect the relevant project documentation, current task card, existing
@@ -64,14 +68,14 @@ do not silently replace it. Historical specifications remain readable.
 
 ## Approval contract
 
-Standalone initial planning requires an explicit affirmative user approval of
-the exact canonical artifact revision/hash just reported. A saved artifact or
-a review pass is not approval. In `mode: auto-workflow` or
-`mode: auto-workflow-pr`, the run-scoped intent
+Apply the shared `../../references/approval-evidence.md` contract. For this
+skill, standalone initial planning stops until the exact canonical
+specification revision has received the required approval. In
+`mode: auto-workflow` or `mode: auto-workflow-pr`, the run-scoped intent
 authorization replaces only this repeated checkpoint; it is not semantic
 approval and may be used only while the intent, scope, path, and bytes remain
-unchanged. If the bytes, path, scope, or latest revision changes, invalidate
-the auto handoff and create a new revision.
+unchanged. If those inputs change, invalidate the auto handoff and create a
+new revision.
 
 In a standalone automatic-looking invocation, stop after presenting the
 specification until that approval is observed. In `mode: auto-workflow` or

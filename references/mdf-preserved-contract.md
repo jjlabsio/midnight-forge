@@ -57,8 +57,10 @@ worktree facts are confirmed. Never infer staleness from elapsed time alone.
 
 ## Human and external authority
 
-Exact spec/plan path and hash approvals are human decisions. A review report or
-green command is not approval. Push, PR, merge, deploy, branch/worktree
-deletion, risk acceptance, and dirty cleanup each require current authority.
-Historical artifacts remain readable regardless of whether their old producer
-is still installed.
+The shared exact spec/plan artifact path/hash approval, affirmative approval,
+recording, and invalidation rules are defined in
+[`approval-evidence.md`](approval-evidence.md); load it instead of restating
+those rules. Push, PR, merge, deploy, branch/worktree deletion, risk
+acceptance, and dirty cleanup each require current authority. Historical
+artifacts remain readable regardless of whether their old producer is still
+installed.
