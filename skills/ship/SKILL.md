@@ -55,9 +55,10 @@ The root-selected GPT-5.6 record is authoritative for MDF-managed dispatch;
 persona model or effort frontmatter cannot replace it. Never use a fast or
 speed-only profile or silently downgrade. If the exact prompt, compatible
 generic spawn path, or required capability is unavailable, use only the
-dispatch policy's visible degraded root fallback where the current mode permits
-it, or stop. Sequential main-context persona simulations are not independent
-parallel specialist reports.
+explicitly permitted degraded root fallback in the normalized
+`Capabilities and authority` context, or stop. Do not derive fallback
+permission from the provenance mode. Sequential main-context persona
+simulations are not independent parallel specialist reports.
 
 Apply the dispatch policy's completion and join contract. Enter Phase B only
 after all three calls are positively terminal and all three actual, complete
@@ -200,66 +201,49 @@ When the caller supplies normalized automatic stage context, load
 `../../references/auto-workflow-contract.md` and require `Stage` to select this
 canonical `ship` adapter and one exact release target. Apply the context's
 acceptance baseline, verification profile, continuity, read-only output
-disposition, capabilities, and complete mandatory Two-Key lease, dispatch,
-evidence, quality-floor, positive-terminality, three-cycle recovery, and
+disposition, capabilities, root-observation, fan-out, synthesis, and
 root-authority rules without duplicating or weakening them. The context's mode
 is provenance only; a raw mode or handoff without normalized context is
 malformed and finishes `BLOCKED`. Stage selection and omission remain root
 composition decisions; an omitted ship stage is never invoked to create an
-empty gate. Its outer normalized composition context uses `Lease and role:
-root-operator` and creates no generic worker lease. The root-owned fan-out key
-uses `Lease and role: primary-assessor`; its distinct independent key uses
-`Lease and role: verifier`.
+empty gate. The root invokes this upstream fan-out directly with `Lease and
+role: root-operator`; ship does not create a generic worker lease or an
+additional verifier.
 
 This automatic ship stage is a root-owned fan-out exception: do not wrap it in
 a generic `skill-backed` ship worker or let a ship worker dispatch the
 specialist personas. Apply this ship-specific realization:
 
-1. The root-owned complete upstream three-specialist fan-out is the primary
-   assessment key. Its result is the three full joined reports plus the
-   root-observed release evidence above—not another generic assessor or
-   summarizer. The exact
-   upstream small-change exemption remains the sole fan-out exception. When it
-   applies, bind the documented exemption and dispatch one distinct
-   fresh-context, read-only, nondelegating primary assessor to apply this
-   complete contract to the same release target; this exception cannot be used
-   when any exemption condition is absent or uncertain.
-2. Only after the primary key is positively terminal—every required specialist
-   and report for normal fan-out, or the exempt primary assessor and its actual
-   result—may the root independently observe the actual reports or result,
-   release target, canonical and Git state, and command evidence, then dispatch
-   one distinct fresh-context verifier. Give it the original ship contract and
-   the same actual assembled release target; exclude primary-key reasoning and
-   any draft or final synthesis report.
-3. The verifier independently applies this complete ship contract read-only
-   and nondelegating. It cannot review a synthesis report, replace or repeat
-   the primary fan-out, call personas, fan out, write project or `.mdf` state,
-   stage, commit, accept work, advance lifecycle, mutate external state, write
-   the rollback plan, or issue the final GO/NO-GO synthesis.
-4. The root verifies both keys remain bound to an unchanged release target and
-   alone reconciles their evidence and disagreements into `PASS`, `REWORK`, or
-   `BLOCKED`; merges the six axes; writes the rollback plan; records risk
-   disposition; and issues GO or NO-GO. GO corresponds to a Two-Key `PASS`.
+1. The root invokes the complete upstream three-specialist fan-out directly in
+   one assistant turn and joins all three actual reports. The exact upstream
+   small-change exemption remains the sole fan-out exception. When it applies,
+   bind the documented exemption and let the root perform the applicable
+   release assessment directly; do not represent the exemption as specialist
+   reports.
+2. After the required reports and root-observed release evidence are complete,
+   the root alone merges the six axes, writes the rollback plan, records risk
+   disposition, and issues GO or NO-GO. This is the upstream ship synthesis,
+   not a generic Two-Key reconciliation or a worker-produced result.
 
 Missing, degraded, partial, stale, changed-target, non-terminal,
-under-capability, non-independent, or write-capable evidence or a substantive
-unresolved disagreement cannot advance. Return that evidence to the root;
-only the root selects the earliest invalidated canonical stage or finishes
-`BLOCKED` within the shared three-cycle limit. An automatic ship stage does not
-ask an intermediate risk-acceptance question; missing current authority or a
-new material security, data, permission, production, scope, cost, or rollback
-decision finishes `BLOCKED`.
+under-capability, or write-capable evidence or a substantive unresolved
+disagreement cannot issue a normal GO. Return that evidence to the root; only
+the root selects the earliest invalidated canonical stage or finishes
+`BLOCKED`. An automatic ship stage does not ask an intermediate
+risk-acceptance question; missing current authority or a new material
+security, data, permission, production, scope, cost, or rollback decision
+finishes `BLOCKED`.
 
 ### Authority and external-action stops
 
 Ship assessment itself is read-only. The root alone dispatches the existing
 flat specialist fan-out, joins its reports, observes the release target, and
-dispatches the independent verifier. No nested ship worker may write source,
-project or canonical `.mdf` state, stage, commit, accept an artifact, push,
-create or update a PR, merge, deploy, delete, mutate an external system,
-delegate, or perform final synthesis. The root alone owns the assessment
-target, actual-state observation, acceptance, synthesis, and any later
-separately authorized handoff.
+performs final synthesis. No nested ship worker may write source, project or
+canonical `.mdf` state, stage, commit, accept an artifact, push, create or
+update a PR, merge, deploy, delete, mutate an external system, delegate, or
+perform final synthesis. The root alone owns the assessment target,
+actual-state observation, acceptance, synthesis, and any later separately
+authorized handoff.
 
 A GO verdict is readiness evidence, not delivery authority. In standalone
 mode, pushing, creating or updating a PR, merging, deploying, deleting a branch

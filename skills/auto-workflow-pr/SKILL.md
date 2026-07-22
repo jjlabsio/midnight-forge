@@ -40,9 +40,9 @@ uses the shared recovery protocol on the same task, worktree, branch, and lock.
 ## Authority and stop
 
 Commits, task completion, push, PR mutation, and PR consumer checks are
-root-only. Ship assessment is model-led Two-Key. This mode does not authorize
-merge, deploy, deletion, force, stale-lock takeover, branch/worktree cleanup,
-or unrelated changes.
+root-only. Ship assessment is the root-owned upstream specialist fan-out and
+root GO/NO-GO synthesis. This mode does not authorize merge, deploy, deletion,
+force, stale-lock takeover, branch/worktree cleanup, or unrelated changes.
 
 Record the shared handoff, actual PR URL or terminal failure, latest-head
 consumer evidence, and final task/lock state. Finish with the contract's

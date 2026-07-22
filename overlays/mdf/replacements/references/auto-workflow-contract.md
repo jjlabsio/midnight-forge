@@ -85,7 +85,7 @@ table; stage skills do not reconstruct it from mode names.
 | Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |
 | Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |
 | Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |
-| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |
+| Ship or release assessment | omitted by local authority | Root-owned upstream `ship` fan-out and root GO/NO-GO synthesis | omitted |
 | Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |
 | Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |
 
@@ -215,10 +215,10 @@ producer review, persona label, completion flag, or review of the producer's
 report is not a second key.
 
 For a read-only stage, use two distinct independent assessors of the same
-underlying target; neither recursively reviews the other's report. For ship,
-the complete upstream specialist fan-out is the primary assessment key and
-must join every required report before the fresh verifier assesses the same
-release target.
+underlying target; neither recursively reviews the other's report. Ship is a
+root-owned exception: its complete upstream specialist fan-out and root
+synthesis are the canonical assessment contract, so it does not receive a
+generic Two-Key worker or an additional verifier by default.
 
 ### Quality floor, gate, and recovery
 
@@ -452,7 +452,7 @@ authority`; they retain mode only under `Provenance`.
 | Plan-slice commit | root invokes `github-commit` after the slice review passes | One focused slice commit and final slice evidence |
 | Whole-build verification | Plan-defined checks, using `test` when applicable | Full verification matrix |
 | Whole-tree review | `review` against the complete approved tree | Final review against the full spec and plan |
-| Ship or release assessment | `ship` when selected by the operation matrix | Root-owned existing fan-out, independent verification, and root GO/NO-GO synthesis |
+| Ship or release assessment | `ship` when selected by the operation matrix | Root-owned upstream fan-out and root GO/NO-GO synthesis |
 | Task completion | root invokes `task` in PR and quick modes only | Whole-task completion after every consumer gate |
 | PR delivery | root invokes `github-pr` in PR and quick modes only | Push/PR mutation and latest-head consumer evidence |
 
@@ -769,9 +769,10 @@ installed `subagent-dispatch-policy` as its worker-level completion contract:
 - Keep this bridge common to all three automatic modes; do not duplicate the policy's
   completion states in the stage lifecycle contract.
 
-The automatic `ship` primary key is not a worker-to-worker delegation. The root
-owns the existing flat specialist fan-out, joins every required report, and
-only then dispatches the independent read-only verifier.
+The automatic `ship` path is not a worker-to-worker delegation. The root owns
+the existing flat specialist fan-out, joins every required report, and performs
+the upstream root synthesis directly. It does not dispatch a generic ship
+worker or an additional verifier by default.
 
 The authored contract, inventory graph, renderer equality, and packaging
 validators can prove only readable coverage and provenance. They do not prove

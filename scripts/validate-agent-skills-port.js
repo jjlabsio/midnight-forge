@@ -149,7 +149,7 @@ const operationMatrixRows = [
   "| Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |",
   "| Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |",
   "| Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |",
-  "| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |",
+  "| Ship or release assessment | omitted by local authority | Root-owned upstream `ship` fan-out and root GO/NO-GO synthesis | omitted |",
   "| Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |",
   "| Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |",
 ];
@@ -299,7 +299,7 @@ assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
   "root invokes canonical `github-pr` under the contract's PR idempotency rules",
   "Only after every consumer gate passes may the root invoke canonical `task`",
   "Commits, task completion, push, PR mutation, and PR consumer checks are root-only",
-  "Ship assessment is model-led Two-Key",
+  "Ship assessment is the root-owned upstream specialist fan-out and root GO/NO-GO synthesis",
 ]);
 
 assertAuthoredSurface("skills/quick-workflow-pr/SKILL.md", [
@@ -405,16 +405,12 @@ const stageRealizations = new Map([
     "distinct fresh-context, read-only, non-delegating verifier then assesses that actual result",
   ]],
   ["skills/ship/SKILL.md", [
-    "outer normalized composition context uses `Lease and role: root-operator`",
-    "root-owned fan-out key uses `Lease and role: primary-assessor`",
-    "distinct independent key uses `Lease and role: verifier`",
+    "The root invokes this upstream fan-out directly with `Lease and role: root-operator`",
+    "ship does not create a generic worker lease or an additional verifier",
     "This automatic ship stage is a root-owned fan-out exception",
-    "The root-owned complete upstream three-specialist fan-out is the primary assessment key",
-    "Only after the primary key is positively terminal",
-    "root independently observe the actual reports or result, release target, canonical and Git state, and command evidence",
-    "dispatch one distinct fresh-context verifier",
-    "same actual assembled release target",
-    "read-only and nondelegating",
+    "The root invokes the complete upstream three-specialist fan-out directly in one assistant turn",
+    "After the required reports and root-observed release evidence are complete",
+    "root alone merges the six axes, writes the rollback plan, records risk disposition, and issues GO or NO-GO",
   ]],
 ]);
 for (const [consumer, ordered] of stageRealizations) {
