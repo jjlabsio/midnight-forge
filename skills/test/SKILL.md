@@ -31,5 +31,5 @@ For browser-related issues, also invoke browser-testing-with-devtools to verify 
 3. Record exact commands, working directory, exit status, and relevant output.
 4. Save a requested test report under the current canonical work item. A report
    does not replace observed RED/GREEN or regression evidence.
-5. Return changed test paths, results, coverage gaps, and blockers. Do not
-   select the next workflow operation or advance lifecycle.
+5. Return results, coverage gaps, and blockers. Do not select the next workflow
+   operation or advance lifecycle.

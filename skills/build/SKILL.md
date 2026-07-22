@@ -61,14 +61,10 @@ If any step fails, follow the debugging-and-error-recovery skill.
 4. Resolve the exact task, matching worktree and lock, task-owned paths, and
    clean baseline. Standalone invocation preserves every upstream mode and
    step after the canonical artifact binding above.
-5. A root workflow operation may bind one selected plan slice or one explicitly
-   bounded planless target to an executor and reserve its commit and status
-   update for the root. Such a binding must be explicit; this adapter does not
-   infer workflow profiles.
-6. Plan-task completion is not MDF whole-task `done`. Stop for ownership
+5. Plan-task completion is not MDF whole-task `done`. Stop for ownership
    mismatch, unrelated dirt, stale artifacts, failed verification, ambiguous
    scope, or authority outside the task.
 
-When delegated, report operation, status, inputs, changed paths, commands and
-results, findings, assumptions, and blockers. Do not select the next operation
-or claim acceptance, lifecycle, commit, or external authority.
+When delegated, report operation, status, inputs, commands and results,
+findings, assumptions, and blockers. Do not select the next operation or claim
+acceptance, lifecycle, commit, or external authority.

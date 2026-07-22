@@ -388,10 +388,24 @@ for (const stage of stageAdapters) {
 assertAuthoredSurface("skills/build/SKILL.md", [
   "bind `tasks/plan.md` plus `tasks/todo.md` to the approved checklist-style",
   "Standalone invocation preserves every upstream mode and step after the canonical artifact binding above",
-  "one selected plan slice or one explicitly bounded planless target",
-  "reserve its commit and status update for the root",
-  "binding must be explicit; this adapter does not infer workflow profiles",
 ]);
+
+for (const stage of ["build", "test", "code-simplify"]) {
+  const output = `skills/${stage}/SKILL.md`;
+  const content = text(path.join(root, output));
+  for (const rootOwnedPhrase of [
+    "root workflow operation",
+    "bounded planless target",
+    "reserve its commit",
+    "changed paths",
+    "changed test paths",
+  ]) {
+    assert(
+      !content.includes(rootOwnedPhrase),
+      `${output} must leave root operation binding and Git path evidence to the workflow driver: ${rootOwnedPhrase}`
+    );
+  }
+}
 
 assertAuthoredSurface("skills/spec/SKILL.md", [
   ".mdf/work/<work-id>/spec-NNN.md",

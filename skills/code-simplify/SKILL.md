@@ -34,4 +34,4 @@ If tests fail after a simplification, revert that change and reconsider. Use `co
    primitive it selects.
 3. Change only the explicit scope. Do not stage, commit, mutate task state, or
    choose a later workflow operation unless the caller separately owns it.
-4. Return changed paths, checks and results, review findings, and blockers.
+4. Return checks and results, review findings, and blockers.
