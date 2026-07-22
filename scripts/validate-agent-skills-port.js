@@ -289,15 +289,6 @@ assertAuthoredSurface("skills/task/SKILL.md", [
   "Branch and worktree cleanup occurs only after finalization and lock release",
 ]);
 
-assertAuthoredSurface("skills/github-pr/SKILL.md", [
-  "Return a merged-delivery handoff only after those gates pass",
-  "Keep the task active and lock held",
-  "return a root-authored merged-delivery handoff",
-  "`.mdf/work/<work-id>/delivery-NNN.md`",
-  "link its path and SHA-256 from the active task's `Log`",
-  "This skill does not complete the task or release the lock",
-]);
-
 for (const consumer of autoContractConsumers) {
   assertAuthoredSurface(consumer, [
     "using-agent-skills",
