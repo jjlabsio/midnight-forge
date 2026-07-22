@@ -7,13 +7,25 @@ skills are mode-blind and do not load it.
 
 Before every operation:
 
-1. Resolve the exact task, card, lock, worktree, branch, and latest handoff.
+1. Treat task creation/activation and this workflow as independent operations.
+   Read the exact task, card, lock, worktree, branch, and latest handoff without
+   requiring a workflow-readiness field or task-level action grant.
 2. Re-read Git, artifacts, and applicable remote state.
 3. Run exact upstream `using-agent-skills` discovery; load every applicable
    primitive.
-4. Select one profile below.
-5. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
-   material decisions, or authority outside the profile.
+4. Check whether the task intent is sufficient for this profile:
+   - continue when outcome, constraints, and delegated judgment make the next
+     stage unambiguous;
+   - use `interview-me` for materially different user outcomes, unresolved
+     user-owned trade-offs, or missing intent that cannot be settled by spec;
+   - use `idea-refine` only for requested ideation, stress-testing, or product
+     direction, never for delegated technical alternatives;
+   - stop when required interaction is unavailable.
+5. Select one profile. Its explicit invocation grants the ordinary operations
+   listed by that profile; do not request per-stage ceremonial approval.
+6. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
+   user-owned decisions, material scope expansion, or action outside the
+   profile.
 
 Root-only actions:
 

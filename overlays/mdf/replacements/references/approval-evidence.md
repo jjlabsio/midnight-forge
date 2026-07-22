@@ -1,8 +1,8 @@
 # MDF Approval Notes
 
-This is the shared approval-evidence contract for MDF planning skills. Consumer
-skills define only their stage-specific approval timing and transition gates;
-they must load and apply this reference for the common evidence rules below.
+This is the shared artifact-confirmation contract for standalone MDF planning
+skills. It does not approve task creation, task revision, workflow invocation,
+implementation, or external actions.
 
 ## Common approval contract
 
@@ -27,3 +27,6 @@ exact artifact bytes and then records root acceptance of the same path and
 SHA-256. The invocation or critic report alone is insufficient. Any byte, path,
 scope, or latest-revision change invalidates that acceptance. This substitution
 belongs to the root workflow profile; consumer stage skills remain mode-blind.
+
+Do not copy this checkpoint into task cards or use it to request approval for an
+operation already covered by the current workflow invocation.

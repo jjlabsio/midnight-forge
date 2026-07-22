@@ -55,12 +55,24 @@ replay a non-idempotent mutation from a stale transcript.
 If a lock remains after interruption, preserve it until the current owner and
 worktree facts are confirmed. Never infer staleness from elapsed time alone.
 
-## Human and external authority
+## Intent and action authority
 
-The shared exact spec/plan artifact path/hash approval, affirmative approval,
-recording, and invalidation rules are defined in
-[`approval-evidence.md`](approval-evidence.md); load it instead of restating
-those rules. Push, PR, merge, deploy, branch/worktree deletion, risk
-acceptance, and dirty cleanup each require current authority. Historical
-artifacts remain readable regardless of whether their old producer is still
-installed.
+- A task records user intent, uncertainty, and evidence. It does not collect
+  advance authority for a consuming workflow or action.
+- A task create or revise request authorizes that exact card mutation. Do not
+  ask the user to approve the resulting card again.
+- An explicit skill or workflow invocation authorizes its documented ordinary
+  in-scope operations. Do not add ceremonial approval between those operations.
+- The skill performing an action owns current target, state, permission,
+  safety, verification, rollback, and stop checks.
+- Ask only for a new user-owned decision, material scope expansion, an
+  unrequested external action, destructive or irreversible work, or an
+  unsafe/ambiguous target.
+- Task cards, handoffs, reports, and historical approvals are evidence, not
+  reusable authority for a different action.
+
+Standalone spec/plan artifact confirmation remains defined by
+[`approval-evidence.md`](approval-evidence.md). Push, PR, merge, deploy,
+branch/worktree deletion, risk acceptance, and dirty cleanup follow the current
+consuming invocation and skill contract. Historical artifacts remain readable
+when their producer is no longer installed.
