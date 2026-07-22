@@ -6,13 +6,13 @@ The checkpoint is a small, stable JSON document at:
 .mdf/analysis/model-routing/checkpoint.json
 ```
 
-Use `schema_version: 3` and `method_version: 4`. `status` is exactly
+Use `schema_version: 4` and `method_version: 5`. `status` is exactly
 `included` or `excluded`. The top-level shape is:
 
 ```json
 {
-  "schema_version": 3,
-  "method_version": 4,
+  "schema_version": 4,
+  "method_version": 5,
   "projects": [
     {
       "registry_id": "<stable ~/.mdf/projects.json id>",
@@ -55,9 +55,19 @@ version or identity value mismatches, do not migrate the checkpoint in place:
 perform a full rescan, disclose the reset in the run record, and replace that
 project's checkpoint entry only after the new run record is written.
 
+During any full rescan or replay, search prior immutable runs by globally unique
+`invocation_id`. Emit an existing identity as `record_role: reanalysis` with
+`supersedes_run_id` pointing to its latest prior run. Never emit it again as
+`initial` or count both rows as separate samples.
+
 Set `latest_run_id` to the run that produced the current entry. Advance every
 entry only after the immutable run record has been written successfully. A
 no-new-observations run keeps the same watermark and records the new run ID.
+Before publication, require the checkpoint bytes to match the SHA-256 captured
+in the exclusively created analysis lock. If no checkpoint existed at lock
+acquisition, store and compare the literal `absent`. Create the run file
+exclusively; never overwrite an existing run ID. Conditionally remove only the
+exact owned lock on every handled stop path.
 
 ## Late terminal resolution
 
@@ -72,6 +82,7 @@ run:
 - when combining run records, count only the latest resolution for that
   `invocation_id`, not the incomplete row and resolution as two invocations.
 
-If no prior incomplete row exists, use `record_role: initial` and disclose any
-unexpected source-log history as a conflict. A resolution never changes an
+If no prior incomplete row exists, use `record_role: initial` only when the
+identity has never appeared. Otherwise use `reanalysis` or disclose
+unexpected source-log history as a conflict. A later row never changes an
 earlier run record.

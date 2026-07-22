@@ -178,6 +178,9 @@ assertAuthoredSurface("references/auto-workflow-contract.md", [
   "they do not execute its writing, persistence, or confirmation instructions",
   "root review and commit replace a stage executor's commit or completion step",
   "Standalone stage behavior is unchanged",
+  "node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs",
+  "executor_invocation_id",
+  "critic_invocation_id",
   "Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode policy in a stage report",
   "root selects one slice",
   "build executor performs RED -> GREEN -> regression -> build",
@@ -286,8 +289,28 @@ assertAuthoredSurface("references/subagent-dispatch-policy.md", [
   "## Root-owned dispatch",
   "## Executor and critic",
   "## Completion and fan-out",
-  "## Minimal observation",
+  "## Mandatory minimal observation",
+  "requested_effort",
+  "does not report the model that actually executed",
+  "record-subagent-observation.mjs",
   "## Spawn boundary",
+]);
+
+assertAuthoredSurface("skills/auto-workflow/scripts/changed-paths.mjs", [
+  "git",
+  "--name-status",
+  "--find-renames",
+  "--others",
+  "--exclude-standard",
+  "Changed paths:",
+]);
+
+assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs", [
+  "O_APPEND",
+  "requested_model",
+  "requested_effort",
+  "raw terminal status",
+  "artifact_refs",
 ]);
 
 assertAuthoredSurface("agents/README.md", [

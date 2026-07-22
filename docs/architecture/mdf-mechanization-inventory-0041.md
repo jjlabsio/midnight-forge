@@ -16,8 +16,9 @@ The final maintained boundary is:
   for normal lifecycle writes), locks, readable Markdown artifacts, and
   project-local worktrees.
 - Packaging-only sync, inventory, and validation scripts.
-- One narrow lock helper for inspect, exclusive acquire, and byte-conditional
-  release.
+- Narrow factual helpers only: lock inspect/acquire/release, single-write
+  observation append, and changed-path rendering. They record observable state
+  and never select workflow operations, judge acceptance, or advance lifecycle.
 
 ## Classifications
 
@@ -52,6 +53,7 @@ they do not make semantic workflow decisions.
 | Spec/plan/build/review/ship lifecycle gates | Removed from scripts; preserved as Markdown approvals and handoffs | Model + upstream skills |
 | Controller/runtime/evidence/adapter validators | Removed in T8 | None; historical artifacts remain readable |
 | Narrow lock operations | Retained in T7 | `scripts/mdf-lock.js` only |
+| Factual workflow evidence | Added after T7; no semantic decisions | Skill-local observation and changed-path helpers |
 | Sync/port/inventory checks | Retained and simplified in T6 | Packaging boundary |
 
 ## Explicit exclusions

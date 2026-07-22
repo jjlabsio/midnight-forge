@@ -17,8 +17,14 @@ it is not a runtime selector or controller.
 5. Keep one writer in a shared worktree. Only the root accepts results, writes
    canonical workflow state, commits, advances lifecycle, performs external
    actions, and synthesizes the workflow.
-6. Record the selected model, instruction source, task kind, risk, capability
-   confidence, write scope, fallback, and degraded status in a readable note.
+6. Record the selected model and effort, qualitative selection rationale,
+   instruction source, task kind, risk, capability confidence, write scope,
+   fallback, and degraded status in a readable note. Apply
+   `model-routing-5.6.md`; do not invent a second difficulty scale or fixed
+   task-to-model table.
+
+Keep the dispatch note to one compact entry in the existing root handoff. Do
+not create a separate routing artifact or repeat the task and skill bodies.
 
 Use a GPT-5.6 family capability by default for quality-critical work. Never use
 a fast profile, fixed stage-to-model table, benchmark equivalence, or silent
@@ -54,19 +60,41 @@ fan-out and root merge.
   execution; never claim independent freshness for it.
 - Do not add heartbeat, retry, cleanup, or orchestration services.
 
-## Minimal observation
+## Mandatory minimal observation
 
-For each generic dispatch, the root may append a dispatch and terminal record
-to `<canonical-root>/.mdf/observations/subagent-invocations.jsonl`:
+For each generic dispatch, generate a globally unique invocation ID. Use the
+installed single-write append helper to record one dispatch before spawn:
 
-```json
-{"event":"dispatch","invocation_id":"<id>","requested_model":"<model>","work_id":null,"status":"dispatched","dispatched_at":"<UTC>"}
-{"event":"terminal","invocation_id":"<id>","status":"completed|failed|timed_out|interrupted","completed_at":"<UTC>","artifact_refs":[]}
+```bash
+node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
+  <canonical-root> dispatch <invocation-id> <requested-model> \
+  <requested-effort> <work-id-or-dash>
 ```
 
-Keep paths project-relative. Do not store prompts, responses, secrets, quality
-scores, or inferred runtime facts. Observation failure never weakens workflow
-safety and an observation is never proof that a report returned.
+After an actual terminal response, record its raw runtime status verbatim and
+zero or more project-relative artifact references:
+
+```bash
+node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
+  <canonical-root> terminal <invocation-id> <raw-status> [artifact-ref...]
+```
+
+Use the canonical work ID for task-linked work; use `-` only for genuinely
+unlinked work. The helper generates UTC timestamps and appends each JSONL row
+with one `O_APPEND` write. Do not retry a successful append, reuse an invocation
+ID, or reconstruct a missing terminal fact. If no trustworthy terminal response
+exists, leave the dispatch incomplete for later analysis.
+
+Do not store prompts, responses, secrets, quality scores, synthetic difficulty
+labels, or inferred runtime facts. The current runtime interface does not
+report the model that actually executed, so `requested_model` and
+`requested_effort` remain requested values and must not be relabeled as
+effective values. Link existing stage reports and handoffs instead of copying
+their prose into the log.
+
+An append failure blocks stage closure until the root records the missing
+event. It never changes the worker's raw terminal status, weakens workflow
+safety, or proves that a report returned.
 
 ## Spawn boundary
 

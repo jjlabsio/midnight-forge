@@ -33,7 +33,9 @@ skill-backed executor followed by a fresh read-only critic:
    report and does not commit, choose the next operation, or perform external
    actions.
 3. After the executor has ended, the root re-reads the actual artifact or diff,
-   Git state, and command results.
+   Git state, and command results. For a Git-mutating operation, the root runs
+   the changed-path helper and attaches its exact output to the persisted stage
+   report before dispatching the critic.
 4. Give the critic that actual target, the canonical critic adapter, and the
    original acceptance baseline without executor reasoning. Spec and plan
    critics evaluate the completed artifact against their exact stage command
@@ -59,20 +61,63 @@ apply. Standalone stage behavior is unchanged.
 
 ## Stage reports and root handoff
 
-Each executor authors a stage report with only:
+Each executor authors a stage report with only the applicable fields:
 
+- invocation ID;
 - operation and status;
 - input and output artifact references;
-- changed paths;
+- changed paths for a Git-mutating operation;
 - commands and results;
 - findings, assumptions, and blockers.
+
+For a Git-mutating operation, the root records the full stage-start commit OID
+before dispatch and runs this command from the target worktree after each
+executor attempt:
+
+```bash
+node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
+  <exact-worktree-root> <stage-start-commit>
+```
+
+The root attaches the exact Markdown output as `Changed paths (operation
+scope)` when it persists the executor's returned report. Rework attempts use
+the same operation baseline, so the path list is cumulative and never claims
+per-attempt ownership. The helper reports tracked and untracked
+repository-relative paths; it does not
+attribute ownership, inspect content, or establish acceptance. The root must
+reject unrelated pre-existing dirt before dispatch. Spec and plan report their
+output path and hash instead. Read-only critics report their bound target.
+
+For a task-linked run, the root persists every executor and critic report as a
+separate immutable artifact under `.mdf/work/<work-id>/` before acceptance. Do
+not rely on conversation history, a worktree, or a branch ref as the only copy.
 
 Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode
 policy in a stage report.
 
-The root keeps one concise continuation handoff with task/profile identity,
-accepted operation, artifact or commit references, current Git state,
-verification and critic outcome, blockers, and the root-owned workflow cursor.
+After each accepted or terminally blocked operation, the root writes the next
+immutable `.mdf/work/<work-id>/handoff-NNN.md`. Keep it concise and include this
+explicit role-specific record:
+
+```text
+operation: <operation>
+executor_attempts: <ordered invocation ID and executor-report references>
+critic_attempts: <ordered invocation ID and critic-report references>
+accepted_executor_invocation_id: <id | none>
+accepted_executor_report: <project-relative path | none>
+accepted_critic_invocation_id: <id | none>
+accepted_critic_report: <project-relative path | none>
+critic_assessment: <pass | changes_requested | blocked>
+accepted_artifact: <path and SHA-256 | none>
+accepted_commit_oid: <full OID | none>
+```
+
+Also record task/profile identity, current Git state, verification and critic
+outcome, blockers, and the root-owned workflow cursor. Never rewrite an earlier
+handoff. Include every dispatched attempt in the ordered attempt fields. When
+an attempt has no returned report, record its raw terminal state and `report:
+none`; never fabricate a worker report. A blocked handoff uses `none` for every
+unaccepted result field.
 On resume, derive the next operation from this profile and actual state; never
 trust the cursor over the card, lock, artifacts, Git, or remote state.
 
