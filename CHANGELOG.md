@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.0 - 2026-07-22
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.2...v2.6.0)
+
+### Changes
+
+- feat: add read-only task briefing helper ([#91](https://github.com/jjlabsio/midnight-forge/pull/91))
 ## v2.5.2 - 2026-07-22
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.1...v2.5.2)
