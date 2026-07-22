@@ -29,10 +29,11 @@ Use two explicit planes.
   completion, and stop conditions.
 - Limit MDF adaptation to Codex discovery, canonical artifact storage, task
   safety, and a concise stage report.
-- A stage report records its invocation, inputs, outputs, applicable changed
-  paths, verification, findings, and blockers. A small Git helper renders
-  changed paths for mutating automatic stages from the root-supplied baseline.
-  It never selects the next operation or grants authority.
+- An executor returns its invocation, inputs, outputs, verification, findings,
+  and blockers. The root persists that report and adds changed paths rendered
+  by a small Git helper for mutating automatic stages from the root-supplied
+  baseline. The executor does not calculate or claim Git scope; the helper
+  never selects the next operation or grants authority.
 - Stage adapters do not load the automatic-workflow contract.
 
 ### Workflow plane
@@ -51,7 +52,9 @@ Use two explicit planes.
   evidence. After each accepted operation, write an immutable canonical root
   handoff that links every executor and critic attempt to its role-specific
   report and links the accepted executor result to its artifact or commit. This
-  evidence survives branch and worktree deletion. Keep each handoff concise and
+  evidence survives branch and worktree deletion. Record each attempt on one
+  deterministic role-specific line so later analysis can link an invocation to
+  exactly one report without parsing prose. Keep each handoff concise and
   revalidate actual state on resume.
 
 ### Build lifecycle

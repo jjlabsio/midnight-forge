@@ -19,6 +19,8 @@ The final maintained boundary is:
 - Narrow factual helpers only: lock inspect/acquire/release, single-write
   observation append, and changed-path rendering. They record observable state
   and never select workflow operations, judge acceptance, or advance lifecycle.
+- One aggregate helper validator runs the focused observation and changed-path
+  behavior tests from the repository's standard verification checklist.
 
 ## Classifications
 

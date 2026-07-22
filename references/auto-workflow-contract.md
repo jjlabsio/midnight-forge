@@ -61,14 +61,17 @@ apply. Standalone stage behavior is unchanged.
 
 ## Stage reports and root handoff
 
-Each executor authors a stage report with only the applicable fields:
+Each executor returns a concise report with only the applicable fields:
 
 - invocation ID;
 - operation and status;
 - input and output artifact references;
-- changed paths for a Git-mutating operation;
 - commands and results;
 - findings, assumptions, and blockers.
+
+The root persists that returned report as the immutable stage report. For a
+Git-mutating operation, the root adds the changed-path evidence described
+below; the executor does not calculate or claim that evidence.
 
 For a Git-mutating operation, the root records the full stage-start commit OID
 before dispatch and runs this command from the target worktree after each
@@ -101,8 +104,8 @@ explicit role-specific record:
 
 ```text
 operation: <operation>
-executor_attempts: <ordered invocation ID and executor-report references>
-critic_attempts: <ordered invocation ID and critic-report references>
+executor_attempt: <invocation-id> | report: <project-relative path | none> | status: <raw-status>
+critic_attempt: <invocation-id> | report: <project-relative path | none> | status: <raw-status> | assessment: <pass | changes_requested | blocked | none>
 accepted_executor_invocation_id: <id | none>
 accepted_executor_report: <project-relative path | none>
 accepted_critic_invocation_id: <id | none>
@@ -112,11 +115,12 @@ accepted_artifact: <path and SHA-256 | none>
 accepted_commit_oid: <full OID | none>
 ```
 
-Also record task/profile identity, current Git state, verification and critic
-outcome, blockers, and the root-owned workflow cursor. Never rewrite an earlier
-handoff. Include every dispatched attempt in the ordered attempt fields. When
-an attempt has no returned report, record its raw terminal state and `report:
-none`; never fabricate a worker report. A blocked handoff uses `none` for every
+Repeat one `executor_attempt` or `critic_attempt` line per dispatch, in dispatch
+order. Also record task/profile identity, current Git state, verification and
+critic outcome, blockers, and the root-owned workflow cursor. Never rewrite an
+earlier handoff. When an attempt has no returned report, record its raw terminal
+state and `report: none`; never fabricate a worker report. Use `assessment:
+none` when no critic assessment exists. A blocked handoff uses `none` for every
 unaccepted result field.
 On resume, derive the next operation from this profile and actual state; never
 trust the cursor over the card, lock, artifacts, Git, or remote state.
