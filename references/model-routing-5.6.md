@@ -23,6 +23,19 @@ Before selection:
 - Treat persona model settings as direct-invocation defaults; MDF-managed root
   selection overrides them without expanding persona authority.
 
+## Availability exclusions
+
+- Exclude every GPT-5.6 Luna profile from MDF-managed subagent selection.
+- Do not request Luna for an executor, critic, specialist, or exploration worker.
+- Treat Luna entries in `model-routing-performance.md` as observational context,
+  not selectable candidates.
+- Select among suitable non-Luna candidates using the normal routing criteria.
+- Do not interpret this runtime-availability exclusion as evidence that Luna is
+  unsuitable for the work.
+
+Remove the exclusion only after subagent runtime compatibility is verified and
+this reference is explicitly updated.
+
 ## Exploration exception
 
 Use exact model `gpt-5.3-codex-spark` at its highest supported reasoning setting
@@ -62,6 +75,7 @@ In the root dispatch note, record:
 - benchmark equivalence claims;
 - silent use of older or unreviewed future model families;
 - silent downgrade;
+- requesting a Luna profile while the availability exclusion is active;
 - treating the requested model as the model that actually executed.
 
 Model selection remains root AI judgment, not a lifecycle controller.

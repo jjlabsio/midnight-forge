@@ -325,13 +325,22 @@ assert(
 assertAuthoredSurface("references/model-routing-5.6.md", [
   "## Inputs",
   "## Default",
+  "## Availability exclusions",
   "## Exploration exception",
   "## Fallback",
   "## Record",
   "## Prohibited",
   "gpt-5.3-codex-spark",
   "runtime-native model and reasoning settings",
+  "Exclude every GPT-5.6 Luna profile from MDF-managed subagent selection",
+  "observational context, not selectable candidates",
+  "runtime-availability exclusion",
   "requested model as the model that actually executed",
+]);
+
+assertAuthoredSurface("references/model-routing-performance.md", [
+  "| Luna | medium |",
+  "| Luna | max |",
 ]);
 
 const commandAdapterSources = {
