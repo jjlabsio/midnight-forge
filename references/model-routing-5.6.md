@@ -1,47 +1,67 @@
 # GPT-5.6 Model Routing Reference
 
-This is a readable routing guide for MDF-managed subagents. It is not a
-runtime selector or script-enforced model contract.
+Readable guide for MDF-managed subagents. It is not a runtime selector or
+script-enforced model contract.
 
-Before selecting a GPT-5.6 candidate, consult
-`model-routing-performance.md`. That document records the reviewed
-intelligence-versus-cost comparison as a qualitative prior. It does not define
-an MDF capability contract or guarantee semantic quality.
+## Inputs
 
-Use the GPT-5.6 family by default for quality-critical lifecycle work. Select
-the currently available profile and its native reasoning configuration based
-on task difficulty, risk, ambiguity, novelty, consequence, required quality,
-runtime capability, and transport compatibility. Do not silently use an older
-or unreviewed future model family.
+Before selection:
 
-For every automatic executor/critic operation, select the executor and the
-distinct critic independently. Both must meet the root-selected quality floor
-for that operation. Topology never substitutes for capability. Record each
-selection, qualitative rationale, capability confidence, read/write authority,
-and fallback or block status. A root self-review or degraded fallback is not an
-independent critic.
+1. Consult `model-routing-performance.md` as a qualitative cost/intelligence
+   prior, not a capability guarantee.
+2. Assess task difficulty, risk, ambiguity, novelty, consequence, required
+   quality, runtime capability, and transport compatibility.
+3. Use runtime-native model and reasoning settings; MDF does not enumerate or
+   normalize the effort vocabulary.
 
-The only model exception is narrow, read-only codebase exploration with
-report-only output and no write, design, implementation, testing, review,
-security, lifecycle, or external-action authority. When compatible Spark
-transport is available, use the exact model `gpt-5.3-codex-spark` and its
-highest supported reasoning setting for that exception. This exploration
-exception cannot serve as an automatic executor or critic.
+## Default
 
-If Spark is unavailable or incompatible, use a suitable GPT-5.6 read-only
-fallback. If no suitable fallback is available, the root performs the
-exploration and records the degraded result.
+- Use a currently available GPT-5.6 family profile for quality-critical work.
+- Select executor and distinct critic independently.
+- Require both to meet the operation's root-selected quality floor.
+- Treat topology as no substitute for capability.
+- Treat persona model settings as direct-invocation defaults; MDF-managed root
+  selection overrides them without expanding persona authority.
 
-MDF does not define, enumerate, or normalize the runtime's reasoning-setting
-vocabulary. The `fast` option and speed-only profiles are prohibited for every
-model. Runtime-native model configuration remains authoritative.
+## Exploration exception
 
-Persona model settings are defaults for ordinary direct invocation. For
-MDF-managed delegation, the root AI chooses the model and preserves the
-persona's perspective without allowing the persona to expand its authority.
+Use exact model `gpt-5.3-codex-spark` at its highest supported reasoning setting
+only when all are true:
 
-The selected model, the reason for selection, the performance-reference
-context, capability uncertainty, any fallback, and the worker's read/write
-authority belong in the root's readable dispatch note. Model selection remains
-AI judgment; it is not a fixed task table, benchmark calculator, or lifecycle
-controller.
+- narrow codebase exploration;
+- read-only, report-only output;
+- no design, implementation, testing, review, security, lifecycle, or external
+  authority;
+- compatible Spark transport is available.
+
+Spark cannot serve as an automatic executor or critic.
+
+## Fallback
+
+1. If Spark is unavailable or incompatible, use a suitable read-only GPT-5.6
+   fallback.
+2. If none is available, let the root perform exploration and record degradation.
+3. For quality-critical work, stop when no suitable reviewed capability exists.
+
+A root self-review or degraded fallback is not an independent critic.
+
+## Record
+
+In the root dispatch note, record:
+
+- requested model and effort;
+- qualitative selection rationale and performance-reference context;
+- capability confidence and uncertainty;
+- read/write authority;
+- fallback, degraded, or blocked status.
+
+## Prohibited
+
+- `fast` or speed-only profiles;
+- fixed stage-to-model tables or benchmark calculators;
+- benchmark equivalence claims;
+- silent use of older or unreviewed future model families;
+- silent downgrade;
+- treating the requested model as the model that actually executed.
+
+Model selection remains root AI judgment, not a lifecycle controller.

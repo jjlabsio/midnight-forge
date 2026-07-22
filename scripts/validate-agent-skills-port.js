@@ -281,9 +281,9 @@ for (const consumer of autoContractConsumers) {
 }
 
 assertAuthoredSurface("references/subagent-dispatch-policy.md", [
-  "## Root-owned dispatch",
-  "## Executor and critic",
-  "## Completion and fan-out",
+  "## Select",
+  "## Instruction source",
+  "## Dispatch",
   "## Mandatory minimal observation",
   "requested_effort",
   "does not report the model that actually executed",
@@ -322,7 +322,17 @@ assert(
   `MDF must not add synthetic persona files: ${personaOverlayFiles.join(", ")}`
 );
 
-assertAuthoredSurface("references/model-routing-5.6.md");
+assertAuthoredSurface("references/model-routing-5.6.md", [
+  "## Inputs",
+  "## Default",
+  "## Exploration exception",
+  "## Fallback",
+  "## Record",
+  "## Prohibited",
+  "gpt-5.3-codex-spark",
+  "runtime-native model and reasoning settings",
+  "requested model as the model that actually executed",
+]);
 
 const commandAdapterSources = {
   spec: "commands/spec.toml",
