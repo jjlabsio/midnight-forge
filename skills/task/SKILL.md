@@ -20,6 +20,29 @@ store, or network service.
 4. Require readable user init/preferences, project init, `.mdf/index.jsonl`,
    `.mdf/work/`, and `.mdf/locks/`. Do not initialize missing state here.
 
+### Deterministic task briefing
+
+After resolving the exact task ID, use the skill-local read-only helper for
+repeatable card, dependency, lock, worktree, and branch facts:
+
+```bash
+node <plugin-root>/skills/task/scripts/task-brief.mjs <task-id>
+```
+
+- Pass only the explicit one-to-four-digit task ID; the helper resolves and
+  validates the canonical root and exact card.
+- Treat successful JSON as factual input, not as a workflow decision. Keep
+  semantic routing, scope, authority, lifecycle changes, and stop decisions in
+  this skill and the consuming workflow.
+- Treat any non-zero result as a stop for the affected task. Do not repair
+  state or continue from missing, duplicate, malformed, unsafe, or mismatched
+  facts.
+- The helper is read-only: it must not create or update cards, index rows,
+  locks, worktrees, branches, commits, or external actions.
+- For standalone `task <id> work`, report the worktree/lock and briefing
+  handoff, then stop. Continue to a downstream workflow only when that workflow
+  is named in the same invocation; never infer continuation from `work` alone.
+
 ### Index self-healing preflight
 
 Before every task operation:
