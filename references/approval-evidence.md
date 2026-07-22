@@ -18,5 +18,12 @@ approval to a different artifact. Any byte, path, scope, or latest-revision
 change invalidates prior approval.
 
 Artifact existence, a reviewer pass, a green command, or an automatic-workflow
-invocation is not approval. When approval is absent, ambiguous, or stale, stop
-before planning, implementation, external mutation, or release.
+invocation is not human approval. Standalone workflows stop when exact approval
+is absent, ambiguous, or stale.
+
+An accepted automatic workflow port may replace this intermediate human
+checkpoint only when its root dispatches the required fresh critic against the
+exact artifact bytes and then records root acceptance of the same path and
+SHA-256. The invocation or critic report alone is insufficient. Any byte, path,
+scope, or latest-revision change invalidates that acceptance. This substitution
+belongs to the root workflow profile; consumer stage skills remain mode-blind.

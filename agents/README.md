@@ -25,23 +25,23 @@ Codex/MDF prompt-dispatch boundary.
   Users may configure native custom agents separately in a project or global
   Codex scope, but MDF's portable path is the exact Markdown prompt above.
 - If a `persona-backed` call cannot resolve its exact installed persona prompt,
-  stop or use a visible degraded root fallback. A `skill-backed` automatic
-  stage does not resolve a persona and must not invent one; it stops only when
-  its canonical skill instruction source cannot be resolved.
+  stop or use a visible degraded root fallback. A `skill-backed` workflow
+  operation does not resolve a persona and must not invent one; it stops only
+  when its canonical skill instruction source cannot be resolved.
   Missing persona resolution affects only explicitly persona-backed calls.
 - The four upstream personas remain byte-identical under this directory.
 - A generic subagent receives exactly one resolved instruction source and
-  bounded task inputs. It reports to the root; it does not write shared
-  artifacts, invoke another persona, or advance lifecycle state.
+  bounded task inputs. Only a root-authorized executor may write its exact
+  leased paths. It never invokes another persona or advances lifecycle state.
 - Auto-workflow may also use a generic read-only `explorer` dispatch for
   bounded codebase inventory. The performance reference informs the root's
   cost/intelligence judgment, but Spark has `report-only` authority and no
   write scope, and is never treated as an independent design or security
   decision. No model may use a `fast` option or speed-only profile.
-- The root considers capability, uses a root fallback for quality-critical work
-  when a suitable worker cannot be selected, and records any degraded
-  freshness status honestly.
+- An automatic executor/critic operation stops when no suitable independent
+  critic is available. A visible root fallback is allowed only for delegation
+  that does not require independent criticism; it never claims fresh review.
 - MDF-owned persona files remain model-agnostic. The root's readable MDF choice
   governs managed delegation.
-- The root model owns canonical artifact storage, approval evidence, and
-  root-only synthesis. Persona content remains upstream-owned.
+- The root model owns artifact acceptance, canonical workflow state, approval
+  evidence, and root-only synthesis. Persona content remains upstream-owned.

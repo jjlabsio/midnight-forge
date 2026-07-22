@@ -84,8 +84,9 @@ review, simplification, and local commit without ceremonial approval prompts.
 It does not ship, complete the whole task, push, or create/update a PR.
 `auto-workflow-pr` is the former full auto workflow: it resumes local work,
 finishes pending plan slices when needed, uses the full spec as its acceptance
-baseline even when no plan work remains, then runs ship, completes the whole
-MDF task after ship GO, and performs push and PR create/update. Exact artifact
+baseline even when no plan work remains, then runs ship, performs push and PR
+create/update, validates the latest-head consumer gates, and completes the
+whole MDF task. Exact artifact
 hashes, TDD, review, lock, and high-risk checks remain required; changed
 artifacts invalidate downstream authorization. Merge, deploy, deletion,
 stale-lock takeover, and unresolved critical or no-progress conditions still

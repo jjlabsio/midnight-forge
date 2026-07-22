@@ -6,5 +6,5 @@
   "artifactStorageOverride": false,
   "notes": "Active model-led PR handoff with completed-task read-only validation and explicit external authority.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": []
 }

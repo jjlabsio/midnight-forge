@@ -37,29 +37,28 @@ Once intent is settled, local `auto-workflow` may run the in-scope
 spec/plan/build/test/review/simplify loop and commit each plan slice while
 leaving the whole MDF task active. `auto-workflow-pr` may resume those slices,
 use the latest spec as its acceptance baseline, run ship, and—only after final
-preflight—complete the whole task, push, and create/update the PR. Both modes
+preflight—push and create/update the PR. The root completes the task only after
+latest-head checks, mergeability, and conflict gates pass. Both modes
 must still stop for critical product/public-contract/security/privacy/data/
 permission/cost/destructive/irreversible decisions, failed verification,
 repeated no-progress, lock conflicts, changed artifact hashes, uncertain PR
 state, or scope expansion. Merge, deploy, deletion, stale-lock takeover, and
 unrelated cleanup are never implied.
 
-Subagents are bounded and report-only by default outside automatic stage
-execution. The later
-[evidence-carrying automatic-stages decision](evidence-carrying-auto-stages.md)
-supersedes that writer restriction only for `auto-workflow`,
-`auto-workflow-pr`, and `quick-workflow-pr`: one stage producer may receive a
-bounded artifact/source write lease and must be followed by a distinct
-fresh-context read-only verifier. Canonical task state, commits, external
-actions, artifact acceptance, and synthesis remain root-owned. Spark remains
-limited to narrow read-only exploration. Shared-worktree writers remain serial;
-unknown ownership or terminality ends blocked.
+Subagents are bounded and report-only by default. The later
+[root-owned workflow driver decision](root-owned-workflow-drivers.md) permits a
+root-dispatched executor to receive one bounded artifact or source write scope,
+followed by root observation and a fresh read-only critic. Stage adapters do
+not interpret automatic modes. Canonical task state, commits, external actions,
+artifact acceptance, sequencing, and synthesis remain root-owned. Spark
+remains limited to narrow read-only exploration. Shared-worktree writers remain
+serial; unknown ownership or completion ends blocked.
 
 ## Consequences
 
 - Standalone upstream and MDF skill behavior remains unchanged.
-- Automatic stage actor and checkpoint semantics are governed by the later
-  evidence-carrying automatic-stages decision.
+- Automatic actor and checkpoint semantics are governed by the later
+  root-owned workflow driver decision.
 - Auto-workflow can complete routine work without repeated approval prompts.
 - The automatic grant is explicit and bounded, so it does not turn ambiguity
   into consent or silently authorize high-impact actions.

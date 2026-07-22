@@ -17,11 +17,6 @@ Ensure implementation work happens in an isolated git worktree under the project
 
 This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
 
-When called with `mode: auto-workflow` or `mode: auto-workflow-pr`, load the
-plugin-installed `../../references/auto-workflow-contract.md` and apply its
-current handoff, ownership, and writer-parallelism rules. This skill performs
-only the mechanical worktree setup and does not grant implementation authority.
-
 This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller workflow and continue only within that workflow's explicit scope.
 
 MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.

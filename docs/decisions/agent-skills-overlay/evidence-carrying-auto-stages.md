@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by
+[`root-owned-workflow-drivers.md`](root-owned-workflow-drivers.md)
 
 ## Date
 

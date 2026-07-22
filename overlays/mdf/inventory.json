@@ -14,14 +14,7 @@
         "skills/auto-workflow/SKILL.md",
         "skills/auto-workflow-pr/SKILL.md",
         "skills/quick-workflow-pr/SKILL.md",
-        "skills/use-mdf/SKILL.md",
-        "skills/spec/SKILL.md",
-        "skills/plan/SKILL.md",
-        "skills/build/SKILL.md",
-        "skills/test/SKILL.md",
-        "skills/review/SKILL.md",
-        "skills/code-simplify/SKILL.md",
-        "skills/ship/SKILL.md"
+        "skills/use-mdf/SKILL.md"
       ]
     },
     "approval-evidence": {

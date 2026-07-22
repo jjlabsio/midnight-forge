@@ -9,5 +9,5 @@
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream review command is converted from a command prompt into a readable report workflow with task and full-tree review scopes.",
   "reviewRisk": "Full adapter replacement can hide upstream review command changes; validation pins the upstream command hash and requires explicit review when it changes.",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": []
 }

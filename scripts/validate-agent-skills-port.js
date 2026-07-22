@@ -44,6 +44,40 @@ function normalize(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function quotedField(content, pattern, label) {
+  const match = content.match(pattern);
+  if (!match) {
+    assert(false, `${label} is missing.`);
+    return null;
+  }
+  try {
+    return JSON.parse(match[1]);
+  } catch (error) {
+    assert(false, `${label} is not a valid quoted string: ${error.message}`);
+    return null;
+  }
+}
+
+function commandPrompt(content, label) {
+  const match = content.match(/^prompt\s*=\s*"""\n([\s\S]*?)\n"""/m);
+  if (!match) {
+    assert(false, `${label} prompt is missing.`);
+    return null;
+  }
+  return match[1];
+}
+
+function adapterSection(content, heading, nextHeading, label) {
+  const startToken = `${heading}\n\n`;
+  const start = content.indexOf(startToken);
+  const end = content.indexOf(`\n${nextHeading}`, start + startToken.length);
+  if (start < 0 || end < 0) {
+    assert(false, `${label} section boundaries are missing.`);
+    return null;
+  }
+  return content.slice(start + startToken.length, end).trim();
+}
+
 function assertFragments(label, content, required) {
   const normalized = normalize(content);
   for (const fragment of required) {
@@ -122,13 +156,6 @@ const autoContractConsumers = [
   "skills/auto-workflow-pr/SKILL.md",
   "skills/quick-workflow-pr/SKILL.md",
   "skills/use-mdf/SKILL.md",
-  "skills/spec/SKILL.md",
-  "skills/plan/SKILL.md",
-  "skills/build/SKILL.md",
-  "skills/test/SKILL.md",
-  "skills/review/SKILL.md",
-  "skills/code-simplify/SKILL.md",
-  "skills/ship/SKILL.md",
 ];
 const autoContract = inventory.contracts?.["auto-workflow-contract"];
 assert(autoContract?.output === "references/auto-workflow-contract.md", "Automatic modes must use the shared authored contract as their authority.");
@@ -137,113 +164,73 @@ assert(
   "Automatic-mode contract consumers must be complete and explicitly attributed."
 );
 
-const operationMatrixRows = [
-  "| Intent and authority preflight | root-only; unresolved intent blocks | root-only; unresolved intent blocks | root-only; unresolved scope blocks |",
-  "| Specification | Two-Key | Two-Key when created or revised | omitted |",
-  "| Planning | Two-Key | Two-Key when created or revised | omitted |",
-  "| Each plan slice or bounded build | Two-Key | Two-Key | Two-Key |",
-  "| Simplification | Two-Key when applicable; otherwise explicitly not applicable | Two-Key when applicable; otherwise explicitly not applicable | omitted |",
-  "| Each slice review | Two-Key | Two-Key | one bounded-change review: Two-Key |",
-  "| Slice commit | root-only after review `PASS` | root-only after review `PASS` | root-only after review `PASS` |",
-  "| Whole-build verification | Two-Key | Two-Key | covered by bounded-build verification |",
-  "| Whole-tree review | Two-Key | Two-Key | covered by bounded-change review |",
-  "| Ship or release assessment | omitted by local authority | Root-owned existing `ship` fan-out, independent verification, and root GO/NO-GO synthesis | omitted |",
-  "| Whole-task completion | omitted by local authority | root-only after every consumer gate | root-only after every consumer gate |",
-  "| Push, PR mutation, and PR consumer checks | omitted by local authority | root-only external authority and actual-state checks | root-only external authority and actual-state checks |",
-];
-
 assertAuthoredSurface("references/auto-workflow-contract.md", [
-  ...operationMatrixRows,
-  "exact upstream `using-agent-skills` primitive",
-  "load every other applicable upstream primitive it selects",
-  "only active writer in the shared worktree",
-  "positively confirms that the producer invocation has ended and its write capability no longer exists",
-  "task-card path, bytes, hash, and lifecycle fields",
-  "lock path, bytes, hash, and ownership fields",
-  "handoff path, bytes, and hash",
-  "canonical output bytes and hashes, actual owned changed paths, and unrelated dirt",
-  "worktree, branch, base, tree, index, pre/post `HEAD`, and complete diff",
-  "exact argv or command, cwd, exit status, relevant output reference, pre/post `HEAD`, and artifact/hash binding",
-  "Producer-authored evidence is a claim until this observation binds it to the actual canonical and Git state",
-  "original stage contract, acceptance criteria, exact discovery and adapter requirements, and the complete root-observed bundle",
-  "Exclude producer reasoning, recommendations, hidden conversation, and self-selected evidence",
-  "distinct fresh-context verifier",
-  "read-only, cannot delegate, and assesses the same canonical artifact, diff, verification target, or release target",
-  "two distinct independent assessors of the same underlying target",
-  "dynamically selects a reviewed GPT-5.6 capability for each key",
-  "Both keys must independently meet the stage's required quality floor",
-  "Never use a fast or speed-only profile, a fixed stage-to-model table, benchmark equivalence, silent downgrade",
-  "The root alone reconciles actual state and the two keys into exactly",
-  "`PASS`: accept the canonical result and continue within current authority",
-  "at most three total cycles",
-  "`REWORK` is never a terminal unattended result",
-  "Every automatic run ends in verified success within its authority or a safe final `BLOCKED` result",
-  "The root remains sole owner of intent, authority, stage selection",
-  "external mutations, and final synthesis",
-  "do not prove runtime dispatch, tool denial, process termination, model quality, context reduction, or end-to-end behavior",
+  "# Automatic Workflow Profiles",
+  "## Root boundary",
+  "## Operation binding",
+  "## Stage reports and root handoff",
+  "## Profiles",
+  "## Per-slice build loop",
+  "## Recovery",
+  "## Completion",
+  "only owner of automatic workflow composition",
+  "Stage skills are mode-blind and do not load it",
+  "they do not execute its writing, persistence, or confirmation instructions",
+  "root review and commit replace a stage executor's commit or completion step",
+  "Standalone stage behavior is unchanged",
+  "Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode policy in a stage report",
+  "root selects one slice",
+  "build executor performs RED -> GREEN -> regression -> build",
+  "Do not run code simplification in a slice",
+  "After every approved slice is committed",
+  "Run `code-simplify` once over the complete changed scope",
+  "Ship uses its exact upstream three-specialist fan-out",
+  "Do not add an outer ship executor, critic, verifier, or coordinator",
+  "Its bounded build is the explicit planless-target port of the upstream build contract",
+  "the root owns review, commit, and task completion",
 ], [
-  "positive producer terminality",
-  "root independently re-reads",
-  "Dispatch a distinct fresh-context verifier",
+  "-> per-slice build loop",
+  "-> whole-build verification",
+  "-> whole-build review",
+  "-> one whole-change simplification pass",
+  "-> simplification critic",
+  "-> root simplification commit when changed",
+  "root selects one slice",
+  "build executor performs RED -> GREEN -> regression -> build",
+  "root observes the actual diff and verification",
+  "slice critic reviews the slice against its plan and spec",
+  "root commits exact slice paths",
+  "root records the accepted slice and commit OID in its handoff",
+  "root re-reads plan, card, lock, and Git before selecting another slice",
+  "After every approved slice is committed",
+  "Run the plan's whole-build verification matrix",
+  "Dispatch one fresh read-only whole-tree critic",
+  "Run `code-simplify` once over the complete changed scope",
+  "Run the complete applicable test suite and build after simplification",
+  "Dispatch a fresh simplification critic",
+  "Commit simplification separately when it changed files",
 ]);
 
-const automaticEntrypoints = new Set(autoContractConsumers.slice(0, 3));
 for (const consumer of autoContractConsumers) {
-  const discoverySelection = consumer === "skills/use-mdf/SKILL.md"
-    ? "Load every other applicable upstream primitive it selects"
-    : automaticEntrypoints.has(consumer)
-      ? "load every other applicable upstream primitive it selects"
-      : "every other applicable primitive selected by discovery";
-  const canonicalResolution = automaticEntrypoints.has(consumer)
-    ? "resolve this canonical entrypoint"
-    : consumer === "skills/use-mdf/SKILL.md"
-      ? "resolve the canonical MDF adapter"
-      : "resolve this canonical adapter";
   assertAuthoredSurface(consumer, [
-    "`../using-agent-skills/SKILL.md`",
-    discoverySelection,
-    canonicalResolution,
-    "../../references/auto-workflow-contract.md",
+    "using-agent-skills",
+    "auto-workflow-contract.md",
   ]);
 }
 
 assertAuthoredSurface("references/subagent-dispatch-policy.md", [
-  "one bounded producer or primary assessor and, only after positive producer terminality plus root re-observation, one distinct fresh-context read-only verifier",
-  "Neither key may delegate",
-  "exact upstream `using-agent-skills` discovery primitive",
-  "complete root-observed canonical/Git/command-evidence bundle",
-  "excluding producer reasoning",
-  "same target read-only",
-  "root-selected dynamic GPT-5.6 quality floor for both keys",
-  "fast profiles, fixed stage tables, benchmark equivalence, and silent downgrade cannot satisfy either key",
-  "at most three total cycles",
-  "`REWORK` starts fresh keys or ends `BLOCKED`; it is not a terminal unattended result",
-  "`persona-backed`: when the caller explicitly names a specialist persona",
-  "`skill-backed`: when an automatic stage invokes a canonical MDF skill",
-  "Do not select, invent, or resolve a persona for this branch",
-  "persona resolution is not required for a skill-backed automatic stage",
-  "a missing persona is not a failure for a skill-backed call",
-  "`skill-backed` is a first-class stage worker contract, not a missing-persona fallback",
-], [
-  "positive producer terminality plus root re-observation",
-  "one distinct fresh-context read-only verifier",
+  "## Root-owned dispatch",
+  "## Executor and critic",
+  "## Completion and fan-out",
+  "## Minimal observation",
+  "## Spawn boundary",
 ]);
 
 assertAuthoredSurface("agents/README.md", [
   "`persona-backed` uses the exact `agents/<persona>.md` prompt",
   "`skill-backed` uses the exact canonical skill adapter and applicable upstream primitives without a persona",
-  "A `skill-backed` automatic stage does not resolve a persona and must not invent one",
+  "A `skill-backed` workflow operation does not resolve a persona and must not invent one",
   "Missing persona resolution affects only explicitly persona-backed calls",
-]);
-
-assertAuthoredSurface("references/auto-workflow-contract.md", [
-  "A canonical automatic stage uses a `skill-backed` instruction source by default",
-  "no persona is selected or resolved",
-  "root-owned fan-out exception",
-  "not a generic `skill-backed` ship worker",
-  "Other canonical skills may use a `persona-backed` delegation only when their contract explicitly names an existing specialist persona",
-  "root-owned: its existing specialist fan-out is dispatched directly by the root",
-  "The stage table is a skill-routing contract, not a persona dispatch contract",
 ]);
 
 const personaOverlayFiles = filesUnder(path.join(overlayRoot, "replacements"), "agents")
@@ -253,107 +240,77 @@ assert(
   `MDF must not add synthetic persona files: ${personaOverlayFiles.join(", ")}`
 );
 
-assertAuthoredSurface("references/model-routing-5.6.md", [
-  "based on task difficulty, risk, ambiguity, novelty, consequence, required quality, runtime capability, and transport compatibility",
-  "Both must meet the same root-selected GPT-5.6 quality floor",
-  "Topology never substitutes for capability",
-  "The `fast` option and speed-only profiles are prohibited",
-  "it is not a fixed task table, benchmark calculator, or lifecycle controller",
-]);
+assertAuthoredSurface("references/model-routing-5.6.md");
 
-assertAuthoredSurface("skills/auto-workflow/SKILL.md", [
-  "`mode: auto-workflow` plus the current readable handoff",
-  "does not authorize ship, whole-task completion, or PR delivery",
-  "omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
-  "must not create empty gates for them",
-  "root alone creates each focused slice commit after review `PASS`",
-  "Keep the task active and its lock held for continuation",
-]);
-
-assertAuthoredSurface("skills/auto-workflow-pr/SKILL.md", [
-  "`mode: auto-workflow-pr` plus the current readable handoff",
-  "root invokes the canonical `ship` fan-out directly in this mode",
-  "do not dispatch a generic skill-backed `ship` worker",
-  "root invokes canonical `github-pr` under the contract's PR idempotency rules",
-  "Only after every consumer gate passes may the root invoke canonical `task`",
-  "Commits, task completion, push, PR mutation, and PR consumer checks are root-only",
-  "Ship assessment is model-led Two-Key",
-]);
-
-assertAuthoredSurface("skills/quick-workflow-pr/SKILL.md", [
-  "only when the user has explicitly selected the small-change workflow",
-  "`mode: quick-workflow-pr` plus the current readable quick handoff",
-  "Specification, planning, simplification, ship, separate whole-build verification, and separate whole-tree review are omitted",
-  "do not create empty gates for omitted operations",
-  "root invokes canonical `github-pr` for the latest-head consumer and mergeability gates",
-  "Only after they pass may the root complete the whole task and release its lock",
-  "Commit, whole-task completion, push, PR mutation, and PR consumer checks are root-only",
-]);
-
-assertAuthoredSurface("skills/use-mdf/SKILL.md", [
-  "shared contract and canonical consumers are authoritative for the complete automatic-mode behavior",
-  "`auto-workflow` is local-only and omits ship, whole-task completion, push, PR mutation, and PR consumer checks",
-  "`auto-workflow-pr` is the plan-backed delivery entrypoint with only its explicit push and PR handoff externally authorized",
-  "`quick-workflow-pr` is the explicitly selected bounded delivery entrypoint",
-  "it omits specification, planning, simplification, and ship and grants only its explicit push and PR handoff externally",
-  "Root-only ownership never substitutes for a missing model-led gate",
-  "Keep one writer per shared worktree",
-  "Automatic canonical stage workers use the `skill-backed` instruction source",
-  "Use `persona-backed` only when the delegating skill explicitly names an existing specialist",
-  "Automatic `ship` is a root-owned existing specialist fan-out exception",
-]);
-
-const stageRealizations = new Map([
-  ["skills/spec/SKILL.md", [
-    "After positive producer terminality",
-    "root observes the actual saved bytes and hash plus the complete canonical and Git evidence",
-    "distinct fresh-context, read-only, non-delegating verifier assesses those actual bytes",
-  ]],
-  ["skills/plan/SKILL.md", [
-    "After positive producer terminality",
-    "root observes the actual plan bytes and hash plus the complete canonical and Git evidence",
-    "distinct fresh-context, read-only, non-delegating verifier assesses those actual bytes",
-  ]],
-  ["skills/build/SKILL.md", [
-    "After positive producer terminality",
-    "root independently observes the actual diff",
-    "each command's exact invocation, cwd, exit status, output reference, pre/post `HEAD`, and binding to the observed diff",
-    "distinct fresh-context, read-only, non-delegating verifier receives the original build contract and complete root-observed bundle without producer reasoning",
-  ]],
-  ["skills/test/SKILL.md", [
-    "After positive producer or primary-assessor terminality",
-    "root observes the actual tests, diff when any, results, and command evidence and binds them to current canonical and Git state",
-    "distinct fresh-context, read-only, non-delegating verifier assesses the same actual tests, results, and evidence",
-  ]],
-  ["skills/review/SKILL.md", [
-    "The root observes and binds one canonical target bundle",
-    "the actual canonical diff or artifact",
-    "original acceptance context for the selected scope",
-    "complete verification evidence",
-    "current canonical and Git state",
-    "two distinct fresh-context independent primary assessors of that same bundle",
-    "Both are read-only and non-delegating",
-    "neither receives, reviews, summarizes, or validates the other's report",
-    "root confirms both actual assessments returned terminally and the target remained unchanged",
-  ]],
-  ["skills/code-simplify/SKILL.md", [
-    "After positive producer terminality",
-    "root observes the actual before and after bytes, complete diff, changed and unrelated paths, canonical and Git state, and bound command evidence",
-    "distinct fresh-context, read-only, non-delegating verifier then assesses that actual result",
-  ]],
-  ["skills/ship/SKILL.md", [
-    "This automatic ship stage is a root-owned fan-out exception",
-    "The root-owned complete upstream three-specialist fan-out is the primary assessment key",
-    "Only after the primary key is positively terminal",
-    "root independently observe the actual reports or result, release target, canonical and Git state, and command evidence",
-    "dispatch one distinct fresh-context verifier",
-    "same actual assembled release target",
-    "read-only and nondelegating",
-  ]],
-]);
-for (const [consumer, ordered] of stageRealizations) {
-  assertAuthoredSurface(consumer, [], ordered);
+const commandAdapterSources = {
+  spec: "commands/spec.toml",
+  plan: "commands/planning.toml",
+  build: "commands/build.toml",
+  test: "commands/test.toml",
+  review: "commands/review.toml",
+  "code-simplify": "commands/code-simplify.toml",
+  ship: "commands/ship.toml",
+  webperf: "commands/webperf.toml",
+};
+const stageAdapters = Object.keys(commandAdapterSources);
+const persistencePorts = {
+  spec: "\n\nSave the spec as SPEC.md in the project root and confirm with the user before proceeding.",
+  plan: "\n\nSave the plan to tasks/plan.md and task list to tasks/todo.md.",
+};
+for (const stage of stageAdapters) {
+  const output = `skills/${stage}/SKILL.md`;
+  const content = text(path.join(root, output));
+  const entry = entryFor(output);
+  if (!entry?.source) {
+    assert(false, `${output} must retain its pinned upstream command source.`);
+    continue;
+  }
+  assert(entry.source === commandAdapterSources[stage], `${output} must retain its expected upstream command source.`);
+  assert(entry.classification === "mdf-rename-or-adapter", `${output} must remain an explicit command adapter.`);
+  assert(entry.overlayKind === "renameAdapter", `${output} must retain renameAdapter provenance.`);
+  const sourceContent = text(path.join(vendorRoot, entry.source));
+  const sourceDescription = quotedField(sourceContent, /^description\s*=\s*("(?:\\.|[^"\\])*")/m, `${entry.source} description`);
+  const adapterDescription = quotedField(content, /^description:\s*("(?:\\.|[^"\\])*")/m, `${output} description`);
+  assert(sourceDescription === adapterDescription, `${output} must preserve the exact upstream command description.`);
+  assert(content.includes("## Upstream command contract"), `${output} must separate its upstream command contract.`);
+  assert(content.includes("## MDF adaptation"), `${output} must separate its MDF adaptation.`);
+  const sourcePrompt = commandPrompt(sourceContent, entry.source);
+  const upstreamContract = adapterSection(content, "## Upstream command contract", "## MDF adaptation", output);
+  if (sourcePrompt !== null && upstreamContract !== null) {
+    const persistenceInstruction = persistencePorts[stage];
+    if (persistenceInstruction) {
+      assert(sourcePrompt.endsWith(persistenceInstruction), `${entry.source} has an unexpected persistence contract.`);
+      assert(
+        upstreamContract === sourcePrompt.slice(0, -persistenceInstruction.length).trim(),
+        `${output} must preserve the upstream prompt except for its explicit persistence port.`
+      );
+      assert(content.includes("### Persistence port"), `${output} must identify its MDF persistence port.`);
+    } else {
+      assert(upstreamContract === sourcePrompt.trim(), `${output} must preserve the exact upstream command prompt.`);
+    }
+  }
+  for (const forbidden of ["auto-workflow", "quick-workflow-pr", "Two-Key", "auto-workflow-contract.md"]) {
+    assert(!content.includes(forbidden), `${output} must not interpret automatic workflow policy: ${forbidden}`);
+  }
+  assert(!(entry?.contractRefs || []).includes("auto-workflow-contract"), `${output} must not consume the automatic workflow contract.`);
 }
+
+assertAuthoredSurface("skills/build/SKILL.md", [
+  "bind `tasks/plan.md` plus `tasks/todo.md` to the approved checklist-style",
+  "Standalone invocation preserves every upstream mode and step after the canonical artifact binding above",
+  "one selected plan slice or one explicitly bounded planless target",
+  "reserve its commit and status update for the root",
+  "binding must be explicit; this adapter does not infer workflow profiles",
+]);
+
+assertAuthoredSurface("skills/spec/SKILL.md", [
+  ".mdf/work/<work-id>/spec-NNN.md",
+  "Preserve the upstream document content and user-confirmation checkpoint",
+]);
+assertAuthoredSurface("skills/plan/SKILL.md", [
+  ".mdf/work/<work-id>/plan-NNN.md",
+  "Preserve both upstream plan and task-list roles",
+]);
 
 const seen = new Set();
 for (const entry of inventory.generated.entries) {

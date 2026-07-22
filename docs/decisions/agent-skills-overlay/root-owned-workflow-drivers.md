@@ -1,0 +1,98 @@
+# Use Root-Owned Workflow Drivers
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+Automatic-mode rules had spread into `spec`, `plan`, `build`, `test`,
+`review`, `code-simplify`, and `ship`. Each adapter interpreted MDF modes,
+repeated dispatch and evidence rules, and described its place in the lifecycle.
+The adapters grew into a second workflow implementation and drifted from both
+the pinned commands and each other. In particular, simplification moved into
+the per-slice loop even though the architecture places it after whole-build
+review.
+
+## Decision
+
+Use two explicit planes.
+
+### Stage plane
+
+- Keep command adapters mode-blind and close to their pinned upstream command.
+- Preserve standalone inputs, order, skills, outputs, checkpoints, fallback,
+  completion, and stop conditions.
+- Limit MDF adaptation to Codex discovery, canonical artifact storage, task
+  safety, and a concise stage report.
+- A stage report records inputs, outputs, changed paths, verification, findings,
+  and blockers. It never selects the next operation or grants authority.
+- Stage adapters do not load the automatic-workflow contract.
+
+### Workflow plane
+
+- The root entrypoint selects one readable workflow profile and owns stage
+  order, omissions, automatic checkpoint substitution, recovery, commits,
+  lifecycle state, and external actions.
+- Automatic `spec`, `plan`, and each `build` slice run in bounded skill-backed
+  executor subagents. The root observes the actual artifact or diff before a
+  fresh read-only critic assesses that target.
+- The root alone accepts a result and chooses the next operation. Executor and
+  critic reports are evidence, not authority.
+- Keep one writer in a shared worktree. A critic never receives executor
+  reasoning as its review target.
+- Use actual artifact bytes, Git state, command results, and commit OIDs as
+  evidence. Keep the root handoff concise and revalidate actual state on resume.
+
+### Build lifecycle
+
+For each approved plan slice:
+
+```text
+build executor -> root observation -> slice critic -> root commit
+```
+
+Actionable findings return to the same slice. Do not run simplification inside
+this loop.
+
+After every slice is committed:
+
+```text
+whole-build verification -> whole-build review -> one simplification pass
+-> root observation -> simplification critic -> root simplification commit
+```
+
+The simplification critic checks behavior preservation and the resulting diff.
+Any changed behavior or failed verification returns to the earliest affected
+build operation. An empty simplification pass creates no commit.
+
+### Ship
+
+Preserve the pinned `ship` command: the root invokes its three independent
+specialists in parallel and performs the main-context merge. Do not wrap ship
+in another executor, verifier, or coordinator.
+
+### Automatic call-site ports
+
+The root operation binding may substitute an automatic critic for an upstream
+human checkpoint and may defer an upstream stage's commit or task-completion
+step to the root. The binding must remain explicit in the workflow contract;
+the stage adapter itself remains unchanged. These substitutions do not weaken
+the upstream acceptance or verification criteria.
+
+## Consequences
+
+- Stage adapters remain independently usable and easier to compare with
+  upstream updates.
+- Automatic behavior is reviewable in one profile rather than reconstructed
+  from many skills.
+- Independent review remains mandatory at operations that advance authority,
+  without a universal stage-internal Two-Key protocol.
+- Root orchestration still costs extra subagent contexts, but avoids nested
+  delegation and repeated policy prose.
+- This decision supersedes
+  [`evidence-carrying-auto-stages.md`](evidence-carrying-auto-stages.md).

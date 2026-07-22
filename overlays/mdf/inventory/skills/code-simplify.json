@@ -9,5 +9,5 @@
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream command is converted from a command prompt into an MDF skill while preserving the code-simplify entrypoint intent.",
   "reviewRisk": "Full adapter replacement can hide upstream code-simplify command changes; validation pins the upstream command hash and requires explicit review when it changes.",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": []
 }

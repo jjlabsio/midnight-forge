@@ -14,20 +14,19 @@ on task difficulty, risk, ambiguity, novelty, consequence, required quality,
 runtime capability, and transport compatibility. Do not silently use an older
 or unreviewed future model family.
 
-For every automatic-mode Two-Key stage, select the producer or primary
-assessor and the distinct verifier independently. Both must meet the same
-root-selected GPT-5.6 quality floor for that stage. Topology never substitutes
-for capability. Record each selection, qualitative rationale, capability
-confidence, read/write authority, and fallback or block status. If either
-compliant key is unavailable or uncertain, finish the stage blocked; a root
-self-review or degraded fallback is not an independent key.
+For every automatic executor/critic operation, select the executor and the
+distinct critic independently. Both must meet the root-selected quality floor
+for that operation. Topology never substitutes for capability. Record each
+selection, qualitative rationale, capability confidence, read/write authority,
+and fallback or block status. A root self-review or degraded fallback is not an
+independent critic.
 
 The only model exception is narrow, read-only codebase exploration with
 report-only output and no write, design, implementation, testing, review,
 security, lifecycle, or external-action authority. When compatible Spark
 transport is available, use the exact model `gpt-5.3-codex-spark` and its
 highest supported reasoning setting for that exception. This exploration
-exception cannot serve as either key of an automatic model-led stage.
+exception cannot serve as an automatic executor or critic.
 
 If Spark is unavailable or incompatible, use a suitable GPT-5.6 read-only
 fallback. If no suitable fallback is available, the root performs the
