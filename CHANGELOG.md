@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.1 - 2026-07-22
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.0...v2.5.1)
+
+### Changes
+
+- docs: remove MDF human approval gates ([#88](https://github.com/jjlabsio/midnight-forge/pull/88))
 ## v2.5.0 - 2026-07-21
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.4.5...v2.5.0)
