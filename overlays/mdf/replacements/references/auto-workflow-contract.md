@@ -5,63 +5,70 @@ skills are mode-blind and do not load it.
 
 ## Root boundary
 
-Before work, the root:
+Before every operation:
 
-1. Resolves the exact task, card, lock, worktree, branch, and current handoff.
-2. Re-reads Git and artifact state; a mode name or handoff is never authority.
-3. Runs exact upstream `using-agent-skills` discovery and loads every applicable
+1. Resolve the exact task, card, lock, worktree, branch, and latest handoff.
+2. Re-read Git, artifacts, and applicable remote state.
+3. Run exact upstream `using-agent-skills` discovery; load every applicable
    primitive.
-4. Selects one profile below. Only the root selects, skips, accepts, retries,
-   commits, advances lifecycle, or performs an external action.
-5. Stops for ambiguous ownership, unrelated dirt, invalidated evidence,
-   unresolved material decisions, or authority outside the selected profile.
+4. Select one profile below.
+5. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
+   material decisions, or authority outside the profile.
 
-Keep one writer in a shared worktree. Do not add a runtime controller, nested
-delegation, or a machine-only workflow protocol.
+Root-only actions:
+
+- select, skip, accept, retry, commit, and advance lifecycle;
+- write canonical root handoffs and observations;
+- perform external actions and final synthesis.
+
+Always:
+
+- keep one writer per shared worktree;
+- treat reports as evidence, not authority;
+- use no nested delegation, runtime controller, or machine-only protocol.
 
 ## Operation binding
 
-Automatic artifact and implementation operations use a root-dispatched
-skill-backed executor followed by a fresh read-only critic:
+Use this sequence for automatic artifact and implementation operations:
 
-1. Give the executor the exact stage adapter, applicable upstream primitives,
-   acceptance baseline, target, owned paths, required checks, and stop rules.
-2. The executor performs the stage work and writes only its bounded target. A
-   spec or plan executor may write its exact assigned artifact under
-   `.mdf/work/<work-id>/`; it cannot change cards, locks, indexes, approvals,
-   root handoffs, observations, or lifecycle state. It returns a concise stage
-   report and does not commit, choose the next operation, or perform external
-   actions.
-3. After the executor has ended, the root re-reads the actual artifact or diff,
-   Git state, and command results. For a Git-mutating operation, the root runs
-   the changed-path helper and attaches its exact output to the persisted stage
-   report before dispatching the critic.
-4. Give the critic that actual target, the canonical critic adapter, and the
-   original acceptance baseline without executor reasoning. Spec and plan
-   critics evaluate the completed artifact against their exact stage command
-   contract and primitive acceptance criteria; they do not execute its writing,
-   persistence, or confirmation instructions. Build, whole-tree, and
-   simplification critics apply canonical `review` and
-   `code-review-and-quality`; simplification also checks behavior preservation.
-   A critic is read-only and does not delegate or receive another verifier.
-5. The root accepts, requests rework, or stops. It alone chooses what runs next.
+1. Dispatch one skill-backed executor with the exact adapter, applicable
+   primitives, acceptance baseline, target, owned paths, checks, and stop rules.
+2. Wait for its actual terminal response.
+3. Re-read the actual artifact or diff, Git state, and command results.
+4. Persist the executor report; add root-observed changed paths when applicable.
+5. Dispatch one distinct fresh read-only critic with the actual target,
+   canonical critic adapter, and original acceptance baseline. Exclude executor
+   reasoning.
+6. Accept, rework, or finish `BLOCKED` in the root.
 
-The executor and critic must be distinct suitable quality-critical subagents.
-Use the shared dispatch policy. Missing, partial, stale, changed-target, or
-non-independent results do not pass. Bound rework to three attempts per
-operation, then stop `BLOCKED`.
+| Role | May | Must not |
+| --- | --- | --- |
+| Executor | Write only its bounded target; return a concise report | Change cards, locks, indexes, approvals, handoffs, observations, or lifecycle; commit; select the next operation; act externally |
+| Critic | Assess the root-observed target | Write, delegate, commit, accept, advance lifecycle, or receive another verifier |
+| Root | Observe state, persist evidence, decide, commit, and continue | Accept missing, partial, stale, changed-target, or non-independent results |
 
-This binding explicitly ports two upstream checkpoints for automatic runs:
+Critic binding:
 
-- the critic and root acceptance replace an intermediate human confirmation;
-- root review and commit replace a stage executor's commit or completion step.
+- Spec and plan: assess the completed artifact against the exact stage contract
+  and primitive criteria; do not execute writing, persistence, or confirmation.
+- Build and whole-tree: apply canonical `review` and
+  `code-review-and-quality`.
+- Simplification: apply the same review and verify behavior preservation.
 
-All upstream acceptance, TDD, verification, fallback, and stop criteria still
-apply. Standalone stage behavior is unchanged.
+Use distinct suitable quality-critical subagents and the shared dispatch
+policy. Allow at most three executor/critic attempts per operation.
+
+Automatic call-site ports:
+
+- critic plus root acceptance replaces an intermediate human confirmation;
+- root review and commit replaces an executor commit or completion step.
+
+Preserve every upstream acceptance, TDD, verification, fallback, and stop
+criterion. Standalone stage behavior is unchanged.
 
 ## Stage reports and root handoff
 
-Each executor returns a concise report with only the applicable fields:
+Executor report; include only applicable fields:
 
 - invocation ID;
 - operation and status;
@@ -69,38 +76,31 @@ Each executor returns a concise report with only the applicable fields:
 - commands and results;
 - findings, assumptions, and blockers.
 
-The root persists that returned report as the immutable stage report. For a
-Git-mutating operation, the root adds the changed-path evidence described
-below; the executor does not calculate or claim that evidence.
+Root evidence rules:
 
-For a Git-mutating operation, the root records the full stage-start commit OID
-before dispatch and runs this command from the target worktree after each
-executor attempt:
+1. Persist every executor and critic report as a separate immutable artifact
+   under `.mdf/work/<work-id>/` before acceptance.
+2. For a Git-mutating operation, record the full stage-start commit OID before
+   dispatch.
+3. After every executor attempt, run from the target worktree:
 
-```bash
-node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
-  <exact-worktree-root> <stage-start-commit>
-```
+   ```bash
+   node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
+     <exact-worktree-root> <stage-start-commit>
+   ```
 
-The root attaches the exact Markdown output as `Changed paths (operation
-scope)` when it persists the executor's returned report. Rework attempts use
-the same operation baseline, so the path list is cumulative and never claims
-per-attempt ownership. The helper reports tracked and untracked
-repository-relative paths; it does not
-attribute ownership, inspect content, or establish acceptance. The root must
-reject unrelated pre-existing dirt before dispatch. Spec and plan report their
-output path and hash instead. Read-only critics report their bound target.
-
-For a task-linked run, the root persists every executor and critic report as a
-separate immutable artifact under `.mdf/work/<work-id>/` before acceptance. Do
-not rely on conversation history, a worktree, or a branch ref as the only copy.
+4. Attach the exact output as `Changed paths (operation scope)` to the persisted
+   executor report. Reuse the same baseline for rework attempts.
+5. Treat the output as cumulative path evidence, not ownership or acceptance.
+   The executor does not calculate or claim it.
+6. Reject unrelated dirt before dispatch. For spec and plan, record output path
+   and SHA-256 instead. For critics, record the bound target.
 
 Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode
 policy in a stage report.
 
-After each accepted or terminally blocked operation, the root writes the next
-immutable `.mdf/work/<work-id>/handoff-NNN.md`. Keep it concise and include this
-explicit role-specific record:
+After each accepted or terminally blocked operation, write the next immutable
+`.mdf/work/<work-id>/handoff-NNN.md`:
 
 ```text
 operation: <operation>
@@ -115,134 +115,124 @@ accepted_artifact: <path and SHA-256 | none>
 accepted_commit_oid: <full OID | none>
 ```
 
-Repeat one `executor_attempt` or `critic_attempt` line per dispatch, in dispatch
-order. Also record task/profile identity, current Git state, verification and
-critic outcome, blockers, and the root-owned workflow cursor. Never rewrite an
-earlier handoff. When an attempt has no returned report, record its raw terminal
-state and `report: none`; never fabricate a worker report. Use `assessment:
-none` when no critic assessment exists. A blocked handoff uses `none` for every
-unaccepted result field.
-On resume, derive the next operation from this profile and actual state; never
-trust the cursor over the card, lock, artifacts, Git, or remote state.
+Handoff rules:
+
+- Write one attempt line per dispatch, in dispatch order.
+- Record task/profile identity, Git state, verification, critic outcome,
+  blockers, and the root-owned cursor.
+- Use `report: none` for no returned report and `assessment: none` for no critic
+  assessment. Never fabricate a report.
+- Use `none` for every unaccepted result in a blocked handoff.
+- Never rewrite an earlier handoff.
+- On resume, derive the next operation from the profile and actual state; never
+  trust the cursor over card, lock, artifacts, Git, or remote state.
 
 ## Profiles
 
 ### `auto-workflow`
 
-```text
-intent preflight
--> spec executor -> spec critic -> root acceptance
--> plan executor -> plan critic -> root acceptance
--> per-slice build loop
--> whole-build verification
--> whole-build review
--> one whole-change simplification pass
--> simplification critic
--> root simplification commit when changed
--> local handoff
-```
+1. Intent preflight.
+2. Spec executor, critic, root acceptance.
+3. Plan executor, critic, root acceptance.
+4. Run the per-slice build loop.
+5. Run the whole-build sequence.
+6. Write the local handoff.
 
-The profile authorizes task-owned local writes and focused commits. It omits
-ship, whole-task completion, push, PR mutation, merge, deploy, deletion, force,
-stale-lock takeover, and unrelated cleanup. Keep the task active and lock held.
+Authority:
+
+- Allow task-owned local writes and focused commits.
+- Keep the task `active` and lock held.
+- Omit ship, whole-task completion, push, PR mutation, merge, deploy, deletion,
+  force, stale-lock takeover, and unrelated cleanup.
 
 ### `auto-workflow-pr`
 
-Run the same local profile, then:
+1. Run or resume `auto-workflow` through its accepted local result.
+2. Invoke canonical `ship` from the root.
+3. Invoke `github-pr` after GO and fresh preflight.
+4. Verify remote OID, latest-head checks, mergeability, and conflicts.
+5. Write the merged-delivery handoff; keep task `active` and lock held.
+6. Stop for the user to merge.
+7. After merge, `github-after-merge` verifies the accepted revision, completes
+   the task, releases the lock, and performs its cleanup contract.
 
-```text
-root invokes canonical ship fan-out and synthesizes GO/NO-GO
--> root invokes github-pr
--> latest-head checks, mergeability, and conflict validation
--> active task + held lock + merged-delivery handoff
--> user merges the PR
--> github-after-merge verifies the merge and finalizes task/lock
-```
+Ship uses the exact upstream three-specialist parallel fan-out and root merge.
+Do not add an outer ship executor, critic, verifier, or coordinator.
 
-Ship uses its exact upstream three-specialist fan-out. Do not add an outer ship
-executor, critic, verifier, or coordinator. This profile authorizes only the
-root-owned push and matching PR create/update after fresh preflight. The
-post-merge finalizer owns later task/lock completion and cleanup. This profile
-never authorizes merge, deploy, deletion, force, or stale-lock takeover.
+Authority:
+
+- Allow root-owned push and matching PR create/update after fresh preflight.
+- Omit merge, deploy, deletion, force, stale-lock takeover, and unrelated
+  cleanup before post-merge finalization.
 
 ### `quick-workflow-pr`
 
 Use only when the user explicitly selects the bounded small-change workflow.
 
-```text
-scope and authority preflight
--> bounded build executor
--> root observation
--> bounded-change critic
--> root commit
--> root invokes github-pr
--> latest-head checks, mergeability, and conflict validation
--> active task + held lock + merged-delivery handoff
--> user merges the PR
--> github-after-merge verifies the merge and finalizes task/lock
-```
+1. Validate scope and authority.
+2. Run one bounded build executor.
+3. Observe the actual diff and checks.
+4. Run one fresh bounded-change critic.
+5. Rework through the same pair or commit in the root after acceptance.
+6. Invoke `github-pr`; verify remote OID, latest-head checks, mergeability, and
+   conflicts.
+7. Write the merged-delivery handoff; keep task `active` and lock held.
+8. Stop for the user to merge.
+9. After merge, run `github-after-merge` finalization.
 
-The user request and current task context are the acceptance baseline. This
-profile omits spec, plan, simplification, ship, separate whole-build
-verification, and separate whole-tree review. It does not create empty gates.
-Its bounded build is the explicit planless-target port of the upstream build
-contract: the executor performs the applicable RED, GREEN, regression, and
-build steps, while the root owns review and commit. Task completion is a
-post-merge operation performed by `github-after-merge`.
+Use the user request and current task context as the acceptance baseline. The
+bounded build is the planless port of upstream build: retain applicable RED,
+GREEN, regression, and build steps; keep review and commit in the root.
+
+Omit spec, plan, simplification, ship, separate whole-build verification, and
+separate whole-tree review. Create no empty gates. Omit merge, deploy, deletion,
+force, stale-lock takeover, and unrelated cleanup before finalization.
 
 ## Per-slice build loop
 
 For every ready plan slice:
 
-```text
-root selects one slice
--> build executor performs RED -> GREEN -> regression -> build
--> root observes the actual diff and verification
--> slice critic reviews the slice against its plan and spec
--> root commits exact slice paths
--> root records the accepted slice and commit OID in its handoff
--> root re-reads plan, card, lock, and Git before selecting another slice
-```
+1. Root selects one slice.
+2. Build executor runs RED, GREEN, regression, and build.
+3. Root observes the actual diff and verification.
+4. Slice critic reviews against the plan and spec.
+5. Rework the same slice until accepted or `BLOCKED`.
+6. Root commits exact slice paths.
+7. Root records the accepted slice and commit OID in the handoff.
+8. Root re-reads plan, card, lock, and Git before selecting another slice.
 
-Do not invoke upstream `build auto`; the profile owns iteration. Do not run
-code simplification in a slice. Actionable findings return to the same slice
-and repeat its executor/critic loop before commit.
+Do not invoke upstream `build auto`. Do not run code simplification in a slice.
 
-After every approved slice is committed:
+After every approved slice is committed, run the whole-build sequence:
 
 1. Run the plan's whole-build verification matrix.
-2. Dispatch one fresh read-only whole-tree critic against the full
-   specification and root-observed tree.
-3. Repair actionable findings through the affected build slice and repeat the
-   invalidated verification and review.
+2. Run one fresh read-only whole-tree critic against the specification and
+   root-observed tree.
+3. Repair findings through the affected build slice; repeat invalidated checks.
 4. Run `code-simplify` once over the complete changed scope.
-5. Run the complete applicable test suite and build after simplification;
-   focused affected checks may be additional evidence, not substitutes.
-6. Dispatch a fresh simplification critic over the actual simplification diff
-   and behavior-preservation evidence.
-7. Commit simplification separately when it changed files. Skip an empty
-   simplification commit.
+5. Run the complete applicable test suite and build after simplification.
+6. Run a fresh simplification critic over the actual diff and behavior evidence.
+7. Commit simplification separately when changed; skip an empty commit.
 
 ## Recovery
 
-On failure, keep the same task, worktree, branch, and lock. Revalidate:
+On failure:
 
-- whether the evidence matches current HEAD and base;
-- whether the spec still represents user intent;
-- whether the plan still represents valid dependencies and scope;
-- whether completed commits and the current tree match the proposed re-entry.
+1. Keep the same task, worktree, branch, and lock.
+2. Revalidate HEAD/base evidence, spec intent, plan scope/dependencies, completed
+   commits, and the current tree.
+3. Re-enter the earliest invalidated operation.
+4. Make no source change for external or flaky evidence alone.
+5. Stop for changed user intent, public behavior, security/privacy/data
+   boundaries, material architecture, cost, rollback, or destructive action.
 
-Re-enter the earliest invalidated operation. External or flaky evidence causes
-no source change. A changed user goal, public behavior, security/privacy/data
-boundary, material architecture, cost, rollback, or destructive action stops
-for the user. Do not create repair tasks, lifecycle states, or a recovery
-controller.
+Do not create a repair task, lifecycle state, or recovery controller.
 
 ## Completion
 
-An automatic run ends with verified success inside its profile or `BLOCKED`.
-For PR profiles, GitHub is authoritative for the open PR, remote OID, checks,
-mergeability, and conflicts. A push or PR URL alone is not completion. The
-delivery task remains `active` with its lock held until
-`github-after-merge` verifies the accepted PR revision is merged and applies
-the task finalization contract.
+- Finish with verified success inside the selected profile or `BLOCKED`.
+- Treat GitHub as authority for PR, remote OID, checks, mergeability, conflicts,
+  and merge state.
+- Do not treat a push or PR URL as completion.
+- Keep a delivery task `active` with its lock held until `github-after-merge`
+  verifies the accepted revision and applies task finalization.

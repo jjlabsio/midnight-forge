@@ -9,18 +9,9 @@ description: "Run MDF's complete implementation, assessment, commit, and GitHub 
 2. Run exact upstream `using-agent-skills` discovery and load every applicable
    primitive.
 3. Load `auto-workflow-contract.md` and select its `auto-workflow-pr` profile.
-4. In the root, validate task, lock, worktree, branch, handoff, artifacts, Git,
-   and current remote state.
-5. Run or resume the local profile. Do not repeat accepted current work.
-6. Invoke canonical `ship` directly from the root. Preserve its upstream
-   parallel specialist fan-out and root merge; add no outer worker or critic.
-7. After GO and fresh preflight, invoke canonical `github-pr`; verify remote
-   OID, latest-head checks, mergeability, and conflicts.
-8. Keep the task `active` and lock held. Return the merged-delivery handoff and
-   stop for the user to merge the PR, then use `github-after-merge` once it is
-   merged.
-9. Finish with a verified PR handoff or `BLOCKED`; task completion is a
-   post-merge operation.
+4. Validate root-owned local and remote state; run or resume the selected
+   profile without repeating accepted work.
+5. Write its required delivery handoff; finish with verified PR handoff or
+   `BLOCKED`.
 
-Commits, lifecycle, push, PR mutation, and external-state checks are root-only.
-Merge, deploy, deletion, force, stale-lock takeover, and cleanup are prohibited.
+Apply only the profile's authority. Stage skills do not interpret the profile.
