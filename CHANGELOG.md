@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.2 - 2026-07-22
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.1...v2.5.2)
+
+### Changes
+
+- refactor(workflow): centralize automatic orchestration ([#90](https://github.com/jjlabsio/midnight-forge/pull/90))
 ## v2.5.1 - 2026-07-22
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.0...v2.5.1)
