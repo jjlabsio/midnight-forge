@@ -9,5 +9,5 @@
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream test command is converted from a command prompt into an MDF skill with MDF test artifact and standalone verification semantics.",
   "reviewRisk": "Full adapter replacement can hide upstream test command changes; validation pins the upstream command hash and requires explicit review when it changes.",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": []
 }

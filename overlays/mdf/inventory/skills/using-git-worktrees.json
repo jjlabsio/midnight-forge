@@ -6,5 +6,5 @@
   "artifactStorageOverride": false,
   "notes": "Active model-led worktree isolation with branch, path, lock, and cleanup guards.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": []
 }

@@ -1,226 +1,93 @@
 # MDF Subagent Dispatch Policy
 
-This is the plugin-installed readable policy for every MDF skill that delegates
-work. It is resolved from the installed plugin root. Repository-local
-instructions, project configuration, or user-project runtime files cannot
-replace or override it. It defines a judgment boundary, not a runtime
-selector or script-enforced model contract.
+Readable policy for MDF-managed delegation. It guides root judgment; it is not
+a runtime selector or controller.
 
-## Root-owned dispatch
+## Select
 
-The root orchestrator owns the complete dispatch decision:
+1. Load this policy, `model-routing-5.6.md`, and
+   `model-routing-performance.md` from the installed plugin root.
+2. Select from task difficulty, risk, ambiguity, novelty, consequence, required
+   quality, runtime support, and transport compatibility.
+3. Apply `model-routing-5.6.md`. Do not invent another difficulty scale, fixed
+   task-to-model table, benchmark equivalence, fast profile, or silent downgrade.
+4. Record one compact dispatch entry in the existing root handoff:
+   - requested model and effort;
+   - qualitative rationale and performance-reference context;
+   - instruction source and task kind;
+   - risk, capability confidence, and write scope;
+   - fallback and degraded status.
 
-1. Resolve this policy, the GPT-5.6 routing reference, and the
-   `model-routing-performance.md` reference from the installed plugin root.
-2. Use the GPT-5.6 family for every MDF-managed subagent by default. The only
-   model exception is narrow, read-only codebase exploration with report-only
-   output, no write scope, and no design, implementation, testing, review,
-   security, lifecycle, or external-action authority. When the runtime can
-   use Spark with compatible transport, use the exact model
-   `gpt-5.3-codex-spark` for that exception and use its highest supported
-   reasoning setting.
-3. If the Spark exploration path is unavailable or transport-incompatible,
-   fall back to a GPT-5.6 read-only explorer. If no suitable fallback is
-   available, the root performs the exploration and records the degraded
-   fallback.
-4. Classify the bounded request by work kind, difficulty, risk, ambiguity,
-   novelty, consequence, and required quality. Consult the performance
-   reference as qualitative cost/intelligence context, never as a fixed
-   task-to-model table or benchmark-equivalence gate.
-5. Resolve exactly one instruction source before spawning:
-   - `persona-backed`: when the caller explicitly names a specialist persona,
-     resolve the exact installed plugin-root prompt at `agents/<persona>.md`.
-     A persona name in task text is only a resolver key, not proof that the
-     persona was loaded. The persona supplies perspective but cannot select
-     another persona or expand its authority.
-   - `skill-backed`: when an automatic stage invokes a canonical MDF skill,
-     resolve the exact canonical adapter, the upstream `using-agent-skills`
-     primitive, and every other applicable primitive selected by discovery. Do
-     not select, invent, or resolve a persona for this branch.
-   Pass the resolved instruction source and complete dispatch record through
-   the generic runtime spawn path. An unresolved instruction source blocks.
-6. Synthesize the returned report in the root context. Only the root accepts
-   artifacts or advances lifecycle state. The sole write exception is one
-   bounded producer lease for a Two-Key stage in `auto-workflow`,
-   `auto-workflow-pr`, or `quick-workflow-pr`, as defined by the installed
-   `auto-workflow-contract.md`; standalone delegation remains unchanged.
+Use GPT-5.6 by default for quality-critical work. Use
+`gpt-5.3-codex-spark` only for the narrow read-only exploration exception in
+`model-routing-5.6.md`; it cannot serve as a workflow critic.
 
-MDF does not define, enumerate, or normalize the runtime's reasoning-setting
-vocabulary. The selected model's native runtime capability and defaults remain
-authoritative. The `fast` option and speed-only profiles are prohibited for
-every model and every MDF-managed dispatch, including fallback paths.
+## Instruction source
 
-The root's readable dispatch note should name the selected model, instruction
-source (`skill-backed` or `persona-backed`), persona prompt path when the
-source is persona-backed, canonical skill when it is skill-backed, task kind,
-risk, performance-reference rationale, capability confidence, fallback, write
-scope, authority, and degraded status. Capability and transport uncertainty
-must never be hidden.
+| Source | Use | Input |
+| --- | --- | --- |
+| `skill-backed` | Workflow executor or critic | Exact canonical adapter plus every primitive selected by upstream `using-agent-skills` discovery |
+| `persona-backed` | A canonical skill explicitly names a specialist | Exact installed persona prompt, unchanged |
 
-## Instruction-source precedence
+Do not create a separate routing artifact or repeat task and skill bodies.
 
-For an MDF-managed delegation, the root must make a complete readable dispatch
-note. Persona frontmatter is never a substitute for the root's model choice, and
-persona resolution is not required for a skill-backed automatic stage.
-If the root cannot identify a suitable quality-critical GPT-5.6 capability,
-stop or use a clearly disclosed degraded root fallback. Exploration additionally
-requires read-only, report-only, no-write authority and compatible transport.
+## Dispatch
 
-For ordinary direct invocation outside MDF-managed delegation, use the persona's
-model settings first and the platform default second. That ordinary-invocation
-precedence does not override the root's choice for MDF-managed work.
+- Follow `auto-workflow-contract.md` for executor/critic order, authority,
+  observation, acceptance, and rework.
+- Keep one writer per shared worktree.
+- Consume only actual terminal reports; timeout, cancellation, observation, or
+  missing output does not prove completion.
+- Join every required fan-out report before root synthesis.
+- Preserve partial reports only as diagnostics.
+- Treat failed, timed-out, interrupted, missing, or incomplete results as
+  non-success.
+- Use a visible root fallback only when the caller permits degraded execution;
+  never claim independent freshness.
+- Preserve ship's canonical parallel specialist fan-out and root merge; do not
+  use an executor/critic pair for ship.
+- Add no heartbeat, retry, cleanup, or orchestration service.
 
-Persona prompt content and perspective remain intact for persona-backed calls.
-For skill-backed calls, the generic runtime path receives the exact canonical
-skill instruction source and root-selected dispatch record without a persona.
-If the selected instruction source or dispatch transport cannot be resolved,
-use a visible degraded root fallback or stop; a missing persona is not a failure
-for a skill-backed call.
+## Mandatory minimal observation
 
-## Automatic-mode Two-Key dispatch
+Generate a globally unique invocation ID. Before spawn:
 
-For every model-led stage marked `Two-Key` by the installed
-`auto-workflow-contract.md`:
-
-1. Dispatch one bounded producer or primary assessor and, only after positive
-   producer terminality plus root re-observation, one distinct fresh-context
-   read-only verifier. Neither key may delegate.
-2. Give each key the exact upstream `using-agent-skills` discovery primitive,
-   canonical stage adapter, and requirement to load every other applicable
-   primitive selected by discovery.
-3. Require the root-selected dynamic GPT-5.6 quality floor for both keys. The
-   Spark exploration exception, fast profiles, fixed stage tables, benchmark
-   equivalence, and silent downgrade cannot satisfy either key.
-4. Keep only one active writer in a shared worktree. The producer receives
-   exact leased paths and cannot write canonical `.mdf` state, commit, mutate
-   external state, accept artifacts, or synthesize the result.
-5. Start no verifier, replacement producer, or other writer until the executor
-   positively confirms the prior producer ended and its write capability is
-   gone. Timeout, cancellation request, interruption, an observation line,
-   missing response, or late output alone is not proof.
-6. Give the verifier the original contract and complete root-observed
-   canonical/Git/command-evidence bundle, excluding producer reasoning. It
-   assesses the same target read-only and cannot review the producer report as
-   a substitute target.
-7. Let only the root reconcile `PASS`, `REWORK`, or `BLOCKED`. The initial and
-   every failed, inconclusive, interrupted, no-op, or substantive cycle counts
-   toward at most three total cycles. `REWORK` starts fresh keys or ends
-   `BLOCKED`; it is not a terminal unattended result.
-
-For a read-only stage, use two independent assessors of the same target. For
-ship, preserve the upstream specialist fan-out as the primary key and join all
-required reports before dispatching the independent verifier. Missing,
-non-fresh, non-terminal, under-capability, or incomplete keys fail closed.
-
-## Minimal execution observation
-
-Every MDF-managed generic subagent dispatch records a small append-only
-observation in the canonical project's gitignored `.mdf` state. This is
-workflow instrumentation, not a runtime contract or a quality score.
-
-Use the per-project file:
-
-```text
-<canonical-root>/.mdf/observations/subagent-invocations.jsonl
+```bash
+node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
+  <canonical-root> dispatch <invocation-id> <requested-model> \
+  <requested-effort> <work-id-or-dash>
 ```
 
-On first use, create only the local `observations/` directory and this
-gitignored file as needed. Do not initialize or rewrite `.mdf/project`, task
-cards, indexes, locks, or other existing MDF state for instrumentation.
+After an actual terminal response:
 
-The root writes one JSON object immediately before the generic spawn and
-captures the return timestamp immediately when every worker returns. What it
-writes next depends on the worker's authority:
-
-- For a mutating producer, defer direct result-artifact materialization and
-  the terminal observation until the executor positively confirms that the
-  invocation ended and its write capability is gone. Then materialize the
-  artifact and write the terminal object using the captured return timestamp.
-  If positive writer terminality remains uncertain, make neither root write;
-  retain the incomplete observation and finish `BLOCKED` as required above.
-- For a read-only worker, materialize the direct result artifact and write the
-  terminal object normally after return, using the captured return timestamp.
-
-This branch keeps artifact linkage reliable and prevents concurrent-writer
-ambiguity without calculating elapsed time or delaying the observed return
-timestamp. The two objects share `invocation_id`:
-
-```json
-{"event":"dispatch","invocation_id":"<unique-id>","requested_model":"<selected-model>","requested_effort":"<native-setting>","work_id":null,"status":"dispatched","dispatched_at":"<observed-UTC-timestamp>"}
-{"event":"terminal","invocation_id":"<same-id>","status":"completed|failed|timed_out|interrupted","completed_at":"<observed-UTC-timestamp>","artifact_refs":["<project-relative-result-artifact>"]}
+```bash
+node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
+  <canonical-root> terminal <invocation-id> <raw-status> [artifact-ref...]
 ```
 
-`artifact_refs` is optional only when no result artifact exists; use an empty
-array for a known artifact-free result. Paths are project-relative and must
-not contain absolute paths, traversal, prompts, responses, or secrets.
-`work_id` is the existing MDF work-item identity when one exists, not a new
-task classification.
+Observation rules:
 
-The observation contains only requested model/effort, invocation identity,
-existing work linkage, terminal status, timestamps, and result-artifact
-references. Never add orchestrator model/effort, host-reported actual
-model/effort, task-factor judgments, rationale, or manual review fields. Do
-not calculate elapsed time during workflow execution. The project-level
-analysis skill derives dispatch-to-return duration from the two observed
-timestamps.
+- Use the canonical work ID for task-linked work; use `-` only when unlinked.
+- Record the raw terminal status verbatim. If none exists, leave the dispatch
+  incomplete.
+- Do not retry a successful append, reuse an invocation ID, or reconstruct a
+  missing terminal fact.
+- Link existing reports and handoffs; do not copy their prose.
+- Do not store prompts, responses, secrets, quality scores, synthetic difficulty
+  labels, or inferred runtime facts.
+- Record `requested_model` and `requested_effort` as requested values. The
+  runtime does not report the model that actually executed.
+- Block stage closure on append failure until the missing event is recorded.
 
-The root is the sole writer for these lines, including when dispatches run in
-parallel. This is an automatic step at the shared MDF generic-dispatch
-boundary, not a user-entered review command and not a host-runtime hook. Every
-delegating skill that reaches that boundary follows this same record-before,
-record-after sequence. If a dispatch or terminal line cannot be recorded,
-continue only when the workflow itself remains safe and let the analysis
-report the missing observation as insufficient evidence; never reconstruct it
-from memory or host metadata. A dispatch without a terminal event is an
-incomplete/censored observation, not a successful result.
-
-## Condition-based completion and fan-out joins
-
-- Wait for the actual worker response before consuming a subagent report. The
-  generic runtime must return the response and the caller must be able to read
-  the report or its declared result artifact.
-- Treat a terminal observation as insufficient when the response or required
-  report is absent, even when it says `status: "completed"`.
-- Use event- or return-based waiting when the executor exposes it.
-- Use an elapsed time limit only as a safety guard for an unavailable or
-  unhealthy executor; never use it as evidence that the worker completed.
-- Do not use a caller-specific fixed timeout as a substitute for waiting on the
-  worker response.
-- Treat `timed_out`, `interrupted`, `failed`, a missing terminal event, and a
-  missing or partial report as non-success. Do not hide the same
-  completion-contract failure by increasing a guessed timeout.
-- For a mutating producer, a returned response or terminal observation is also
-  insufficient to prove that its invocation ended and write capability is
-  gone. Apply the positive writer-terminality rule above before any subsequent
-  verifier or writer.
-- For a fan-out, join every required worker's actual report instead of
-  counting dispatches or terminal lines.
-- Retain partial reports as diagnostic evidence when useful, but do not
-  synthesize them as a complete result, advance the consuming stage, or issue
-  a normal GO recommendation until every required report has returned.
-- Route a missing or non-success report through the caller's explicit
-  incomplete/degraded or stop path.
-- Keep this policy model-led. Do not add a runtime controller, heartbeat,
-  retry service, or host-side cleanup mechanism.
+The helper supplies UTC timestamps and one `O_APPEND` write. An observation
+never proves a returned report, changes terminal status, or grants authority.
 
 ## Spawn boundary
 
-Delegating skills pass one of these readable instruction-source forms through
-the generic runtime path:
-
 ```text
 model choice: <root-selected candidate>
-instruction source: persona-backed | skill-backed
-persona: <exact installed persona prompt, unchanged>  # persona-backed only
-canonical skill: <resolved MDF adapter and upstream primitives>  # skill-backed only
-task input: <bounded artifact and contract>
+instruction source: skill-backed | persona-backed
+canonical skill: <adapter and applicable primitives>  # skill-backed
+persona: <exact installed prompt>                      # persona-backed
+task input: <bounded target and contract>
 ```
-
-`skill-backed` is a first-class stage worker contract, not a missing-persona
-fallback. A named persona is mandatory only for `persona-backed` dispatch.
-
-Capability failure, fallback, and degraded freshness belong in the root's
-readable report. When the choice is uncertain, the root may disclose its
-reasoning and uncertainty; do not invent measured quality/cost evidence. Never
-infer a successful independent review from a fallback or from a persona name
-alone.

@@ -1,18 +1,20 @@
 # Model Routing Analysis Checkpoint Contract
 
-The checkpoint is a small, stable JSON document at:
+Path:
 
 ```text
 .mdf/analysis/model-routing/checkpoint.json
 ```
 
-Use `schema_version: 3` and `method_version: 4`. `status` is exactly
-`included` or `excluded`. The top-level shape is:
+Use `schema_version: 4`, `method_version: 5`, and status `included` or
+`excluded`.
+
+## Shape
 
 ```json
 {
-  "schema_version": 3,
-  "method_version": 4,
+  "schema_version": 4,
+  "method_version": 5,
   "projects": [
     {
       "registry_id": "<stable ~/.mdf/projects.json id>",
@@ -27,51 +29,65 @@ Use `schema_version: 3` and `method_version: 4`. `status` is exactly
 }
 ```
 
-Keep `projects` sorted by `registry_id`. Do not write an absolute canonical
-path. Compute `canonical_root_sha256` as SHA-256 of the normalized absolute
-`canonical_root` string from the current registry entry.
+## Project entry
 
-`consumed_line_count` counts physical JSONL lines, including malformed lines.
-`consumed_prefix_sha256` is SHA-256 of the exact UTF-8 bytes of those lines,
-including their line endings. An empty prefix uses SHA-256 of the empty byte
-string. A source log whose final line is not newline-terminated is invalid for
-incremental reuse; disclose the condition and rescan it from the beginning.
+- Sort `projects` by `registry_id`.
+- Hash the normalized absolute registry `canonical_root` string into
+  `canonical_root_sha256`; never store the path.
+- Count physical JSONL lines, including malformed lines.
+- Hash exact consumed UTF-8 bytes, including line endings.
+- Use the SHA-256 of empty bytes for an empty prefix.
+- Treat a non-newline-terminated final log line as invalid for incremental
+  reuse; disclose and full-scan.
 
-For an included project with no observation log, use zero and the empty-prefix
-hash, with `reason: "no_observation_log"`. For an invalid or inaccessible
-registered project, use `status: "excluded"`, zero and the empty-prefix hash,
-and record a concise reason. Never silently drop a registered project.
+| Project state | Status | Count/hash | Reason |
+| --- | --- | --- | --- |
+| Valid, no observation log | `included` | zero / empty-prefix hash | `no_observation_log` |
+| Invalid or inaccessible registration | `excluded` | zero / empty-prefix hash | concise cause |
 
-Reuse a saved checkpoint only when its top-level `schema_version` and
-`method_version` match the current contract. Then, for each project, require
-the current source-log line count to be greater than or equal to the saved
-`consumed_line_count`, and hash the exact prefix containing that many physical
-lines. Reuse the watermark only when that prefix hash, `registry_id`, and
-`canonical_root_sha256` all match the current registry and source log. The
-remaining lines after the consumed prefix are the new input for this run.
+Never silently drop a registered project.
 
-If the current log is shorter, the consumed prefix hash differs, or any
-version or identity value mismatches, do not migrate the checkpoint in place:
-perform a full rescan, disclose the reset in the run record, and replace that
-project's checkpoint entry only after the new run record is written.
+## Reuse decision
 
-Set `latest_run_id` to the run that produced the current entry. Advance every
-entry only after the immutable run record has been written successfully. A
-no-new-observations run keeps the same watermark and records the new run ID.
+Reuse a project watermark only when every check passes:
 
-## Late terminal resolution
+| Check | Pass | Fail |
+| --- | --- | --- |
+| Schema and method versions match | Continue | Full scan |
+| Registry ID and canonical-root hash match | Continue | Full scan |
+| Current line count is at least consumed count | Continue | Full scan |
+| Exact consumed-prefix hash matches | Process remaining lines | Full scan |
 
-Run records are immutable, so a dispatch with no terminal may first be written
-as an incomplete observation and later receive a terminal event. In that later
-run:
+On full scan:
 
-- search prior immutable run records for the exact `invocation_id`;
-- mark the new row `record_role: resolution` and set `supersedes_run_id` to
-  the prior run ID that recorded the incomplete state;
-- preserve the original incomplete row for audit history; and
-- when combining run records, count only the latest resolution for that
-  `invocation_id`, not the incomplete row and resolution as two invocations.
+1. Disclose the reset in the run record.
+2. Search prior immutable runs by globally unique `invocation_id`.
+3. Apply `resolution` when a new terminal completes a prior incomplete row;
+   otherwise emit a prior identity as `reanalysis` with its latest
+   `supersedes_run_id`.
+4. Never emit a prior identity again as `initial` or count superseded rows as
+   separate samples.
+5. Replace the checkpoint entry only after the new run is written.
 
-If no prior incomplete row exists, use `record_role: initial` and disclose any
-unexpected source-log history as a conflict. A resolution never changes an
-earlier run record.
+## Publication
+
+1. Set `latest_run_id` to the run producing the entry. A no-new-observations
+   run keeps its watermark and records the new run ID.
+2. Require checkpoint bytes to match the SHA-256 captured in the exclusively
+   created analysis lock; compare literal `absent` when none existed.
+3. Create the run file exclusively; never overwrite a run ID.
+4. Advance checkpoint entries only after the immutable run succeeds.
+5. Conditionally remove only the exact owned lock on handled stop paths.
+
+## Late terminal
+
+| Prior state | New event | Role | Count |
+| --- | --- | --- | --- |
+| Incomplete identity | Terminal | `resolution` | Resolution only |
+| No prior identity | Dispatch or complete pair | `initial` | New invocation only |
+| Prior non-incomplete identity during replay | Any replayed pair | `reanalysis` | Reanalysis only |
+| Unexpected conflicting history | Any | Conflict | No performance sample |
+
+For `resolution`, set `supersedes_run_id` to the run containing the incomplete
+row. Preserve every earlier run unchanged. When combining runs, count only the
+latest row for the invocation ID.

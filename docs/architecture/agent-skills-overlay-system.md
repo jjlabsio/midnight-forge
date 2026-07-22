@@ -53,22 +53,23 @@ projection from authoritative cards and locks.
 
 The model-led workflow keeps only the existing task-state primitives needed by
 the repository. Auto-workflow does not add a policy module, JSON protocol, or
-runtime verifier. The root model reads the applicable Markdown contracts and
-ordinary Git/MDF state, makes semantic gate decisions, and records readable
-handoff, dispatch, and fallback notes. Automatic model-led stages may use the
-scoped evidence-carrying producer/verifier lease defined by
-[`evidence-carrying-auto-stages.md`](../decisions/agent-skills-overlay/evidence-carrying-auto-stages.md);
-the root still owns canonical state, artifact acceptance, commits, external
-authority, and synthesis.
+runtime verifier. Stage adapters stay mode-blind and preserve their standalone
+upstream command contracts. The root reads one workflow profile, dispatches
+bounded executors and critics where required, checks ordinary Git/MDF state,
+and owns acceptance, sequencing, commits, lifecycle, external authority, and
+synthesis. See
+[`root-owned-workflow-drivers.md`](../decisions/agent-skills-overlay/root-owned-workflow-drivers.md).
 
 When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
 contract grants the root authority to complete in-scope local MDF skills and
 to commit plan slices, but not to ship, complete the whole task, push, or
 create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
-after its final preflight and ship GO, it may complete the whole task, push,
-and create/update the PR. A mode string alone is not authority; the current
-handoff, task/lock/worktree/branch facts, approved artifact hashes, and fresh
-preflight are required. Neither mode alters standalone skill semantics.
+after its final preflight and ship GO, it may push and create/update the PR,
+but the task remains active with its lock held until `github-after-merge`
+verifies the accepted revision is merged. A mode string alone is not
+authority; the current handoff, task/lock/worktree/branch facts, approved
+artifact hashes, and fresh preflight are required. Neither mode alters
+standalone skill semantics.
 Merge, deploy, deletion, stale-lock takeover, unrelated cleanup, and
 unresolved critical decisions remain outside the grant.
 

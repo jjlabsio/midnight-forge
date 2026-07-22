@@ -9,5 +9,5 @@
   "overlayKind": "renameAdapter",
   "adapterRationale": "The upstream planning command is converted from a command prompt into a Markdown plan with exact human approval and ordered task ownership.",
   "reviewRisk": "Full adapter replacement can hide upstream planning command changes; validation pins the upstream command hash and requires explicit review when it changes.",
-  "contractRefs": ["auto-workflow-contract", "approval-evidence"]
+  "contractRefs": ["approval-evidence"]
 }

@@ -1,0 +1,9 @@
+{
+  "output": "skills/use-mdf/scripts/record-subagent-observation.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/use-mdf/scripts/record-subagent-observation.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Single-write append helper for mandatory minimal subagent observations.",
+  "overlayKind": "mdfOnly"
+}

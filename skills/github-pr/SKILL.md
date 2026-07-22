@@ -5,24 +5,12 @@ description: "Manage GitHub pull request delivery or read-only handoff for MDF w
 
 # GitHub PR
 
-## Mode contract and authority
+## Caller contract and authority
 
-### `auto-workflow-pr`
-
-1. Load `../../references/auto-workflow-contract.md`.
-2. Require the current run handoff, matching task/lock/worktree/branch facts,
-   approved artifact hashes, and fresh preflight.
-3. Allow only final push and PR create/update after that preflight.
-
-### `quick-workflow-pr`
-
-1. Load `../../references/auto-workflow-contract.md`.
-2. Require the direct user-authorized quick handoff, active task, matching
-   lock/worktree/branch facts, and fresh preflight.
-3. Do not invent spec or plan hashes; those artifacts are intentionally absent.
-
-A bare mode string grants no authority. A direct standalone invocation follows
-the standalone rule below.
+Require a direct standalone request or a root-authored delivery handoff naming
+the exact task, branch, intended push and PR action, and current acceptance
+evidence. Re-read task, lock, worktree, branch, Git, and GitHub state before any
+external action. A workflow name or stage report grants no authority.
 
 ## Ownership and handoff paths
 
@@ -31,7 +19,8 @@ task or an already-isolated worktree.
 
 - Task-linked handoff: keep the task `active` and its matching lock held through
   PR creation/update, latest-head checks, mergeability, and conflict validation.
-  Complete the task only after those gates pass.
+  Return a merged-delivery handoff only after those gates pass; do not complete
+  the task or release the lock.
 - Completed-task handoff: validate read-only PR preparation without repeating
   completion or recreating a lock.
 - Worktree-only handoff: use the current isolated worktree and branch without
@@ -40,7 +29,8 @@ task or an already-isolated worktree.
 
 Use local Git state, GitHub CLI, and the connected GitHub surface when available.
 Do not use a background runner or machine-readable helper contract. GitHub is
-the PR-state source of truth. Keep PR reports out of `.mdf/`.
+the PR-state source of truth. Keep verbose PR reports out of `.mdf/`; the
+concise delivery handoff below is canonical MDF lifecycle state.
 
 ## Task linkage
 
@@ -56,9 +46,8 @@ evidence that a task exists.
 4. Stop for multiple matches or conflicting task/card/lock/worktree/branch
    facts.
 
-`auto-workflow-pr` and `quick-workflow-pr` require a current task, matching
-worktree and branch, lock, and applicable handoff. Missing task state in either
-mode is a stop.
+A root-driven delivery handoff requires a current task, matching worktree and
+branch, lock, and current acceptance evidence. Missing task state is a stop.
 
 ## Review provenance
 
@@ -70,8 +59,8 @@ mode is a stop.
 - Treat `review_mode` as a label, not mutation authority.
 - Lifecycle and ship consumers accept only `lifecycle-review`.
 - Standalone `task-review` cannot create lifecycle evidence or satisfy ship.
-- In quick mode, base `task-review` evidence on the quick handoff and task
-  Context without a spec or plan.
+- When the caller profile omits spec or plan, base `task-review` evidence on
+  the root-authored acceptance baseline and task Context.
 - A worktree-only handoff has no task review or lifecycle evidence; use the
   exact current diff and verification context as provenance.
 
@@ -99,12 +88,19 @@ mode is a stop.
 10. For an incomplete task, keep the card `active` and lock held through push,
     PR create/update, latest related/required checks, mergeability, and conflict
     validation.
-11. After all gates pass, use task's normal `done` behavior with the message
-    `Completed task before PR creation.` Do not edit the card directly.
-12. If a consumer gate fails, record evidence and return to shared recovery. Do
+11. After all gates pass, return a root-authored merged-delivery handoff with
+    repository, PR number/URL, accepted head OID, expected base, checks, and
+    current task/work/lock references. Persist it as the next immutable
+    `.mdf/work/<work-id>/delivery-NNN.md` and link its path and SHA-256 from the
+    active task's `Log` through the task contract. Keep the task active and
+    lock held.
+12. `github-after-merge` consumes that handoff after the PR is actually merged
+    and performs the post-merge task finalization. This skill does not complete
+    the task or release the lock.
+13. If a consumer gate fails, record evidence and return to shared recovery. Do
     not complete the task, release the lock, create a repair task, or add state.
-13. For completed tasks, report read-only handoff validation. For worktree-only
-    handoff, skip task completion and lock release.
+14. For completed tasks, report read-only handoff validation. For worktree-only
+    handoff, no task completion or lock release exists.
 
 Callers may pass only user-confirmed intent, explicit run authorization, and
 current session context. Never accept asserted Git/GitHub facts. Preserve raw
@@ -164,11 +160,9 @@ release signal, authentication, mergeability, and open-PR state.
 - Keep the PR ready for review unless the user explicitly requests a draft.
 - Standalone invocation authorizes push and PR create/update after fresh
   preflight; do not ask for a second confirmation.
-- `mode: auto-workflow-pr` authorizes only push and PR create/update after the
-  documented fresh preflight.
-- `mode: quick-workflow-pr` authorizes only push and PR create/update after its
-  documented fresh preflight.
-- A bare mode string grants no authority.
+- A current root-authored delivery handoff authorizes only its exact push and
+  PR create/update after fresh preflight.
+- A workflow or mode name alone grants no authority.
 - Do not merge, deploy, delete branches/worktrees, discard dirty worktrees, or
   perform default-branch sync as a side effect.
 
@@ -194,7 +188,7 @@ Stop for:
 
 - ambiguous task linkage;
 - malformed task state or lock/worktree mismatch;
-- missing task in `auto-workflow-pr` or `quick-workflow-pr`;
+- missing task for a root-driven delivery handoff;
 - non-isolated or default-branch worktree-only checkout;
 - unrelated dirty changes;
 - missing origin or GitHub authentication;
@@ -203,4 +197,4 @@ Stop for:
 - wrong PR language;
 - failed push or PR command;
 - duplicate or uncertain PR state;
-- any external action outside `auto-workflow-pr` authority.
+- any external action outside the current delivery grant.

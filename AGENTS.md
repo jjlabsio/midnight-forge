@@ -198,6 +198,7 @@ For changes to the source, inventory, overlays, or generated surface, run:
 node scripts/sync-agent-skills.js --dry-run
 node scripts/validate-agent-skills-sync.js
 node scripts/validate-agent-skills-port.js
+node scripts/validate-workflow-helpers.js
 ```
 
 For an adapter or upstream update, also run the applicable upstream validators

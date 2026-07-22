@@ -1,0 +1,10 @@
+{
+  "output": "skills/auto-workflow/scripts/changed-paths.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/auto-workflow/scripts/changed-paths.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Deterministic changed-path reporting for Git-mutating automatic workflow stages.",
+  "overlayKind": "mdfOnly",
+  "contractRefs": ["auto-workflow-contract"]
+}
