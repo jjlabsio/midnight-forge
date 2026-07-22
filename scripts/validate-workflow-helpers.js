@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const tests = [
   "test-changed-paths.js",
   "test-subagent-observation.js",
+  "test-task-brief.js",
 ];
 
 for (const test of tests) {
