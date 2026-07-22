@@ -18,7 +18,7 @@ persona composition, and stop conditions.
 
 MDF also needs local behavior that the upstream command does not know about,
 including canonical `.mdf` state, worktrees, task ownership, artifact paths,
-authority revisions, and external-action envelope checks. Mixing these concerns
+approval revisions, and external-action confirmation. Mixing these concerns
 silently risks weakening the upstream workflow or making an adapter appear to
 be the original command when it is not.
 
@@ -89,17 +89,16 @@ define how the upstream contract is realized locally, including:
 - installed plugin root and canonical project-root resolution;
 - `.mdf/work/<work-id>/` artifacts, task cards, append-only index projections,
   locks, and worktree/branch checks;
-- exact current spec/plan revisions and integrity hashes;
+- exact approved spec/plan revisions and hashes;
 - task-owned paths, clean baselines, review and downstream-impact gates;
 - local evidence, completion mutations, lock release, and external-action
-  envelope checks;
+  confirmation;
 - Codex tool limitations and truthful reporting of unavailable or degraded
   reviewers.
 
 These adaptations must not change upstream success criteria. A local artifact or
 MDF completion record is evidence of workflow state; it is not a substitute for
-the upstream command's tests, review, build, rollback, or quality requirements.
-MDF authority evidence does not add a human approval checkpoint.
+the upstream command's tests, review, build, rollback, or approval requirements.
 
 ### 6. Verify and commit each adapter
 

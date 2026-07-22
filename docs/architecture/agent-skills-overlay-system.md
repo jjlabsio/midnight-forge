@@ -38,14 +38,13 @@ generated root file. Dry-run mode compares the result byte-for-byte.
 The retained validators check inventory schema and path safety, pinned source
 hashes, generated coverage, source/overlay equality, release metadata, the
 declared contract-reference graph, and dry-run sync. They are packaging checks.
-They do not decide task readiness, autonomous authority, review meaning, lifecycle
+They do not decide task readiness, approval, review meaning, lifecycle
 progress, recovery, or ship success.
 
 ## Model-led workflow boundary
 
 Public MDF skills are readable workflow guidance over the upstream primitives.
-The model owns semantic routing, task interpretation, exact artifact integrity
-and authority binding,
+The model owns semantic routing, task interpretation, exact artifact approval,
 review meaning, downstream impact, recovery choice, and external authority.
 Canonical `.mdf` cards, rebuildable index projections (append-only for normal
 lifecycle writes), locks, and project-local worktrees remain preserved
@@ -68,16 +67,13 @@ to commit plan slices, but not to ship, complete the whole task, push, or
 create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
 after its final preflight and ship GO, it may complete the whole task, push,
 and create/update the PR. A mode string alone is not authority; the current
-handoff, task/lock/worktree/branch facts, exact artifact hashes, and fresh
-preflight are required. The same autonomous authority policy applies to
-standalone MDF skills; upstream quality and verification semantics remain
-preserved.
+handoff, task/lock/worktree/branch facts, approved artifact hashes, and fresh
+preflight are required. Neither mode alters standalone skill semantics.
 Merge, deploy, deletion, stale-lock takeover, unrelated cleanup, and
 unresolved critical decisions remain outside the grant.
 
-Everything else is performed by the model and ordinary project commands within
-the current execution envelope, with fail-safe `BLOCKED` stops for writes that
-are destructive, external, unsafe, or unverifiable. Historical
+Everything else is performed by the model and ordinary project commands with
+explicit confirmation where a write is destructive or external. Historical
 workflow artifacts remain readable even when their old producer has been
 removed.
 

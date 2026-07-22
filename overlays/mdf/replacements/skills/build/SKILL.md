@@ -1,6 +1,6 @@
 ---
 name: build
-description: "Implement tasks incrementally — build, test, verify, commit. Add \"auto\" to run the whole plan in one autonomous pass."
+description: "Implement tasks incrementally — build, test, verify, commit. Add \"auto\" to run the whole plan in one approved pass."
 ---
 
 # build
@@ -37,11 +37,6 @@ slice. Preserve the upstream implementation, test, regression, build, and
 commit criteria except for the shared automatic-mode port of the commit actor
 and gate.
 
-MDF port: upstream human approval/sign-off checkpoints are represented by the
-current autonomous execution envelope, Two-Key verification, and exact
-task/target checks. They do not create a human permission prompt; all other
-upstream implementation, verification, rollback, and stop requirements remain.
-
 ## Upstream command contract
 
 The following command behavior is preserved from the upstream build command.
@@ -57,9 +52,8 @@ review; the implementation, verification, and risk checks remain unchanged.
 
 - `/build` implements the next pending task, then stops: one careful slice at a
   time.
-- `/build auto` generates the plan if needed, binds it to the current
-  autonomous execution envelope, and then implements every task without
-  stopping between tasks.
+- `/build auto` generates the plan if needed, gets one standalone approval,
+  and then implements every task without stopping between tasks.
 - Treat `auto` (canonical) or `all` as autonomous mode. Anything else (or
   empty) selects the default single-task mode.
 - Autonomous mode is not a shorter verification path. It runs the same
@@ -78,7 +72,7 @@ task.
 
 For `mode: quick-workflow-pr`, use the current bounded request as the task and
 read its acceptance context from the quick handoff and active task card. For
-other modes, pick the selected or next pending task from the current plan. If
+other modes, pick the selected or next pending task from the approved plan. If
 the current auto-mode handoff identifies a provisional, repair, or
 commit-pending slice, resume that selected slice's recorded stage instead of
 selecting another pending task. Then execute this exact sequence:
@@ -115,8 +109,7 @@ selecting another pending task. Then execute this exact sequence:
 
 ### Autonomous: the whole plan (`/build auto`)
 
-Use this once a spec exists when plan and build should run in one autonomous
-pass.
+Use this once a spec exists when plan and build should run in one approved pass.
 It removes manual stepping between tasks, not verification. Every task still
 earns a passing test, the full regression suite, a successful build, its own
 commit, and readable plan-slice completion evidence.
@@ -128,12 +121,12 @@ commit, and readable plan-slice completion evidence.
 2. Establish a clean baseline with `git status --porcelain`. Uncommitted
    changes outside the expected planning artifacts (`SPEC.md`,
    `docs/SPEC.md`, `spec/*`, `tasks/plan.md`, and `tasks/todo.md`) are a stop:
-   report the unrelated changes and do not absorb them. Autonomous
+   ask the user to commit, stash, or confirm how to handle them. Autonomous
    per-task commits must not absorb unrelated local work.
 3. Plan if needed. If there is no `tasks/plan.md`, invoke the
    `planning-and-task-breakdown` skill to generate one.
-4. Bind the full plan to the current autonomous execution envelope after
-   review; do not request a ceremonial affirmative.
+4. Present the full plan and wait for one unambiguous affirmative such as
+   `approve`, `go`, or `yes`.
    If `tasks/plan.md` was generated, commit it as one preparatory commit before
    the first task so it cannot bleed into that task's commit.
 5. Execute every task in dependency order. Use each task's declared
@@ -144,17 +137,16 @@ commit, and readable plan-slice completion evidence.
    Stage only files touched by that plan slice plus its task-status update;
    never use `git add -A` blindly. Make exactly one commit per slice so every
    point remains a clean rollback point.
-6. Finish `BLOCKED` and report evidence instead of pushing through when, even
-   in auto mode:
+6. Stop and ask the user instead of pushing through when, even in auto mode:
    - a test cannot be made to pass or the build breaks without an obvious fix;
      follow `../debugging-and-error-recovery/SKILL.md`;
    - the spec is ambiguous or a task needs a decision not covered by it;
-   - a task is high-risk or irreversible outside the current autonomous
-     envelope, or its target, verification, recovery, or stop behavior cannot
-     be established; follow `../doubt-driven-development/SKILL.md` and report
-     the unresolved boundary without requesting permission.
-   A later invocation may resume from the next pending plan task after the
-   blocker is resolved.
+   - a task is high-risk or irreversible, including auth/permission changes,
+     destructive data migrations, payments, deletions, deploys, secrets, or
+     anything that cannot be undone with `git revert`; follow
+     `../doubt-driven-development/SKILL.md` and obtain explicit sign-off.
+   After the user resolves a blocker, they re-invoke the applicable workflow;
+   it resumes from the next pending plan task.
 7. Summarize tasks completed, tests added, commits made, and anything skipped,
    flagged, or left for the user.
 
@@ -172,21 +164,21 @@ loop or reduce its verification.
 1. Resolve the canonical project root and installed plugin root. In
    `mode: quick-workflow-pr`, read the current quick handoff and active task
    Context as the acceptance baseline; do not require or generate a spec or
-   plan. In all other modes, read the exact current specification and plan
+   plan. In all other modes, read the exact approved specification and plan
    revisions and confirm their paths and SHA-256 values are still current. In
-   MDF, the exact canonical `.mdf/work/<work-id>/spec-NNN.md` and
+   MDF, the approved canonical `.mdf/work/<work-id>/spec-NNN.md` and
    `plan-NNN.md` revisions are the project-equivalent artifacts for the
    upstream spec and plan. They must be traceable to the known spec/plan
    contract above; a README or arbitrary document still cannot satisfy it.
 2. Read the task card and current index projection. In quick mode, use the
    current bounded request and active task Context as the single task, confirm
-   its owned paths, and use the matching task lock through the autonomous task
+   its owned paths, and use the matching task lock through the approved task
    procedure. In all other modes, choose exactly one selected or next pending
    plan task that is ready, confirm its owned paths and dependencies, and use
-   the matching task lock through the autonomous task procedure. A local
+   the matching task lock through the approved task procedure. A local
    auto-workflow continuation may use its matching active lock; the PR workflow
    uses the normal task ownership path. Do not infer readiness from card text
-   that conflicts with canonical state, a live lock, or the delegated scope.
+   that conflicts with canonical state, a live lock, or the approved scope.
 3. Confirm that the current worktree is the locked worktree and the expected
    branch is checked out. The initial slice requires a clean baseline. During
    an automatic-mode repair continuation after a failed build,
@@ -315,7 +307,7 @@ evidence bound to the prior diff.
 ### Automatic continuation and final verification
 
 Standalone `/build auto` and `/build all` repeat the same upstream loop over
-all current plan tasks. They are not the auto-workflow loop. In
+all approved plan tasks. They are not the auto-workflow loop. In
 `mode: auto-workflow` and `mode: auto-workflow-pr`, never enter this whole-plan
 mode: the shared contract invokes default single-task `build`, any applicable
 simplification, root-owned review-candidate staging, canonical `review` of the
@@ -325,7 +317,7 @@ this plan loop; after its bounded build passes, the root analogously stages the
 exact review-candidate paths, passes the staged bounded-change diff to
 canonical review, and invokes `github-commit` only after review `PASS`.
 
-After every current plan task commits in standalone `/build auto` or either
+After every approved plan task commits in standalone `/build auto` or either
 plan-backed automatic mode, run the whole-build verification matrix from the
 plan and perform a final review against the full specification. In automatic
 modes, those model-led operations use their own shared Two-Key gates. This

@@ -20,8 +20,7 @@ to explain where cards and artifacts live.
 Keep canonical project state under `<canonical-root>/.mdf/` and readable
 workflow artifacts under `.mdf/work/{work_id}/`. `item.md` is the card source
 of truth and `index.jsonl` is an append-only projection. Exact spec and plan
-authority evidence names the Markdown path and SHA-256 for integrity and
-freshness, not human permission. Model-led skills write and
+approvals name the Markdown path and SHA-256. Model-led skills write and
 explain these artifacts; packaging scripts only render and validate generated
 files.
 
@@ -31,4 +30,4 @@ files.
 - Historical cards and artifacts remain readable.
 - Generated root files are produced from explicit overlay inputs.
 - A narrow lock helper may protect ownership bytes, but it does not own
-  artifacts, authority, lifecycle, review, or external actions.
+  artifacts, approvals, lifecycle, review, or external actions.

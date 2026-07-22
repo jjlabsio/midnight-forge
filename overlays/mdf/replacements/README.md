@@ -2,7 +2,7 @@
 
 Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It keeps
 the pinned `agent-skills` primitives byte-identical while adding readable MDF
-skills for canonical task state, autonomous authority, worktree isolation, review, and
+skills for canonical task state, approvals, worktree isolation, review, and
 GitHub handoff.
 
 ## Scope
@@ -56,13 +56,10 @@ $webperf
 ```
 
 Each workflow is model-led. Skills resolve the canonical root, read Markdown
-cards and artifacts, explain ambiguity, and execute within the current
-autonomous authority envelope. AI Two-Key verification, exact target and
-artifact checks, and fail-safe `BLOCKED` stops remain mandatory; unsafe or
-uncertain state is reported rather than converted into an approval prompt. No
-broad workflow runtime owns routing or semantic success. The narrow lock
-helper, when used, only inspects, exclusively acquires, and byte-conditionally
-releases a lock.
+cards and artifacts, explain ambiguity, and stop for current human or
+external confirmation. No broad workflow runtime owns routing or semantic
+success. The narrow lock helper, when used, only inspects, exclusively
+acquires, and byte-conditionally releases a lock.
 
 `$auto-workflow` runs the repeatable local implementation loop through review,
 code simplification, and commit. It keeps the whole MDF task active and does

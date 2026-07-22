@@ -57,7 +57,7 @@ Use the complete upstream process:
    isolation, and before/after test evidence. Prefer the standard library and
    existing utilities.
 7. Identify orphaned or unreachable code explicitly; do not delete uncertain
-   dead code without evidence. Verify the verification story: exact tests,
+   dead code without approval. Verify the verification story: exact tests,
    build, applicable manual/runtime evidence, and before/after evidence.
 
 Report findings in leverage order with exact `file:line` evidence, impact, and
@@ -68,13 +68,13 @@ without weakening the loaded skill's severities:
 - `Critical`: upstream Critical blockers, including vulnerabilities, data loss,
   or broken behavior.
 - `Important`: every upstream required/no-prefix actionable change. These must
-  be resolved before review `PASS`; never demote one to a suggestion.
+  be resolved before approval; never demote one to a suggestion.
 - `Suggestion`: upstream Optional, Consider, Nit, or FYI feedback; retain
   whether it is optional, minor, or informational.
 
 Be direct and evidence-led. Do not rubber-stamp, soften defects, accept
 "later" cleanup, infer quality from green tests alone, or turn personal style
-preferences into blockers. Return `PASS` when the change demonstrably improves
+preferences into blockers. Approve when the change demonstrably improves
 overall code health and all Critical and required findings are resolved; do
 not require personal perfection.
 
@@ -82,8 +82,8 @@ not require personal perfection.
 
 Resolve the canonical project root and exact review target before assessing it:
 
-- `lifecycle-review` covers the current specification and plan, complete task
-  sequence, whole-build verification, simplification result, complete delegated
+- `lifecycle-review` covers the approved specification and plan, complete task
+  sequence, whole-build verification, simplification result, complete approved
   tree, and final cleanliness.
 - `task-review` covers the task card, exact staged or selected Git diff, owned
   paths, focused verification, and downstream-impact note. It is read-only and
@@ -145,6 +145,6 @@ context, verification assessment, ordered categorized findings, exact evidence,
 fix recommendations, disposition, and remaining risk, then stop. Only the root
 writes that report. Do not repair code, stage, commit, mutate task or lock state,
 advance lifecycle, or perform an external action. The report is evidence, not
-authority or proof that its own conclusion is correct. When independent
+user approval or proof that its own conclusion is correct. When independent
 freshness is requested but unavailable, disclose the limitation rather than
 claiming another reviewer ran.

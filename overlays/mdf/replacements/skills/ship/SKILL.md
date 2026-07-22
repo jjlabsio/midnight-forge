@@ -108,7 +108,7 @@ not-applicable rationale. Do not turn absence into success.
 
 The release target also includes:
 
-- the canonical task, delegated scope, specification and plan when applicable,
+- the canonical task, approved scope, specification and plan when applicable,
   current branch/base/HEAD/tree/index, complete diff, owned paths, clean-status
   facts, current verification results, review evidence, migration notes, and
   Definition of Done mapping;
@@ -160,8 +160,7 @@ The main agent produces exactly one complete result:
 - [Source: Important or non-blocking finding + file:line or evidence reference]
 
 ### Acknowledged risks (shipping anyway)
-- [Risk disposition + mitigation + current evidence; unresolved blockers remain
-  NO-GO]
+- [Explicitly accepted risk + mitigation + acceptance evidence]
 
 ### Rollback plan
 - Trigger conditions: [observable thresholds]
@@ -177,7 +176,7 @@ The main agent produces exactly one complete result:
 When the exact small-change exemption applies, replace the three report entries
 with the recorded exemption evidence; never fabricate specialist reports.
 
-GO requires the reviewed tree to match the delegated scope; current successful
+GO requires the reviewed tree to match the approved scope; current successful
 applicable tests, build, lint, typecheck, runtime and checklist evidence; the
 Definition of Done; no unresolved blocking or required finding; complete
 feature-flag, staged-rollout, monitoring, rollback, and post-launch plans as
@@ -188,10 +187,10 @@ The default is NO-GO for any unresolved Critical or Important code-review
 finding, any Critical or High security finding, failed verification,
 unresolved required check, incomplete fan-out, stale or changed evidence,
 unsupported review claim, dirty or mismatched state, operational ambiguity,
-missing rollback information, or unresolved disagreement. A blocking risk
-cannot be waived by a user-approval prompt: keep the result NO-GO, record the
-named risk and missing mitigation, and finish `BLOCKED` when the workflow must
-continue no further. Never infer or reuse risk acceptance.
+missing rollback information, or unresolved disagreement. Shipping despite a
+blocking risk requires explicit, current user acceptance of the named risk and
+mitigation, tied to this exact release target. Never infer or reuse risk
+acceptance.
 
 ## MDF/Codex adaptation
 
@@ -200,8 +199,8 @@ continue no further. Never infer or reuse risk acceptance.
 `mode: auto-workflow` and `mode: quick-workflow-pr` omit ship by authority and
 must not create an empty ship gate. Only `mode: auto-workflow-pr` invokes this
 automatic stage. A mode string alone is not authority: require the current run
-handoff and matching task, lock, worktree, branch, exact artifact integrity
-hashes, and actual Git state.
+handoff and matching task, lock, worktree, branch, approved artifact hashes,
+and actual Git state.
 
 In `mode: auto-workflow-pr`, load
 `../../references/auto-workflow-contract.md` and apply its complete mandatory
@@ -257,14 +256,13 @@ delegate, or perform final synthesis. The root alone owns the assessment
 target, actual-state observation, acceptance, synthesis, and any later
 separately authorized handoff.
 
-A GO verdict is readiness evidence, not delivery authority. Any external
-mutation must be explicitly named by the current autonomous execution envelope
-and revalidated by its consuming skill; an action outside that envelope is a
-`BLOCKED` stop, not a confirmation prompt. In `mode: auto-workflow-pr`, the
-initial invocation may authorize only a later root-owned push and PR
-create/update through the canonical `github-pr` skill after a fresh preflight
-of remote, branch, diff, authentication, mergeability, open-PR state, and
-expected local/remote OIDs.
+A GO verdict is readiness evidence, not delivery authority. In standalone
+mode, pushing, creating or updating a PR, merging, deploying, deleting a branch
+or worktree, changing data, or any other external mutation is a separate
+confirmation stop. In `mode: auto-workflow-pr`, the initial invocation may
+authorize only a later root-owned push and PR create/update through the
+canonical `github-pr` skill after a fresh preflight of remote, branch, diff,
+authentication, mergeability, open-PR state, and expected local/remote OIDs.
 Merge, deploy, branch/worktree deletion, data deletion, force operations, and
 unrelated cleanup remain prohibited. Report the ship verdict separately from
 any later mutation result.

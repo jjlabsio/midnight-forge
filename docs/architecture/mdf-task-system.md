@@ -69,9 +69,8 @@ spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-
 ```
 
 `spec`, `plan`, and `review` save readable Markdown artifacts. Exact artifact
-path and SHA-256 values bind integrity and freshness to the autonomous execution
-envelope; they are not human permission. A revision invalidates earlier
-evidence. `build` follows TDD, focused verification, task-owned
+path and SHA-256 approvals are human decisions; a revision invalidates the
+earlier approval. `build` follows TDD, focused verification, task-owned
 staging, readable review, downstream-impact judgment, and one focused commit.
 The model chooses the next ready task and explains ambiguity.
 
@@ -110,13 +109,13 @@ The root remains responsible for merging, verification, and lifecycle state.
 Plan-slice completion and whole-task completion are separate: a local build
 commit records an implementation slice while the MDF card remains active until
 the PR-capable final handoff. Review has two readable scope labels:
-`lifecycle-review` for a full delegated tree and `task-review` for a direct
+`lifecycle-review` for a full approved tree and `task-review` for a direct
 task/diff check. A completed task can be
 reviewed read-only after its lock is released. `review_mode` is descriptive,
 not a permission to mutate state; a task review cannot create lifecycle
 evidence or promote itself to ship.
 
-## Autonomous authority and artifacts
+## Approval and artifacts
 
 Workflow artifacts are local by default:
 
@@ -124,13 +123,10 @@ Workflow artifacts are local by default:
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
 ```
 
-Authority is a human-readable task/handoff contract tied to the exact artifact
-revision and SHA-256. The digest proves identity and freshness, not permission.
-Do not infer artifact integrity from existence, a review pass, or a green
-command. Missing, stale, ambiguous, or out-of-envelope authority is a
-`BLOCKED` stop without an approval prompt. See
-[references/approval-evidence.md](../../references/approval-evidence.md) and
-[references/mdf-preserved-contract.md](../../references/mdf-preserved-contract.md).
+Approval is a human-readable note tied to the exact artifact revision and
+SHA-256. Do not infer approval from artifact existence, a review pass, or a
+green command. See [references/approval-evidence.md](../../references/approval-evidence.md)
+and [references/mdf-preserved-contract.md](../../references/mdf-preserved-contract.md).
 
 ## Recovery and historical state
 
@@ -145,9 +141,8 @@ history.
 If the authoritative state is ambiguous, the affected task operation stops with
 an actionable warning. Project and user board scans isolate the affected item or
 project and continue elsewhere. Scope changes, repeated no-progress,
-destructive actions outside the current envelope, or unverifiable external
-effects stop as `BLOCKED`. Technical revisions create fresh spec and plan
-revisions.
+destructive actions, or external effects still stop for the user. Technical
+revisions create fresh spec and plan revisions.
 
 Historical `.mdf/work/` artifacts are read-only evidence of prior work and are
 not rewritten or deleted by packaging cleanup. The current card, lock, branch,
