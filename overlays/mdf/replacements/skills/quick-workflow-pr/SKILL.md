@@ -19,8 +19,11 @@ Use only when the user explicitly selects the bounded small-change workflow.
    executor/critic loop.
 7. Invoke canonical `github-pr`; verify remote OID, latest-head checks,
    mergeability, and conflicts.
-8. Complete the task and release its lock only after every consumer gate passes.
-9. Finish with verified delivery success or `BLOCKED`.
+8. Keep the task `active` and lock held. Return the merged-delivery handoff and
+   stop for the user to merge the PR, then use `github-after-merge` once it is
+   merged.
+9. Finish with a verified PR handoff or `BLOCKED`; task completion is a
+   post-merge operation.
 
 This profile omits spec, plan, simplification, ship, separate whole-build
 verification, and separate whole-tree review. It creates no empty gates. Merge,

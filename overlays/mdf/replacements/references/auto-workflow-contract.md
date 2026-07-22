@@ -105,13 +105,16 @@ Run the same local profile, then:
 root invokes canonical ship fan-out and synthesizes GO/NO-GO
 -> root invokes github-pr
 -> latest-head checks, mergeability, and conflict validation
--> root completes the task and releases the lock
+-> active task + held lock + merged-delivery handoff
+-> user merges the PR
+-> github-after-merge verifies the merge and finalizes task/lock
 ```
 
 Ship uses its exact upstream three-specialist fan-out. Do not add an outer ship
 executor, critic, verifier, or coordinator. This profile authorizes only the
-root-owned push and matching PR create/update after fresh preflight. It never
-authorizes merge, deploy, deletion, force, stale-lock takeover, or cleanup.
+root-owned push and matching PR create/update after fresh preflight. The
+post-merge finalizer owns later task/lock completion and cleanup. This profile
+never authorizes merge, deploy, deletion, force, or stale-lock takeover.
 
 ### `quick-workflow-pr`
 
@@ -125,7 +128,9 @@ scope and authority preflight
 -> root commit
 -> root invokes github-pr
 -> latest-head checks, mergeability, and conflict validation
--> root completes the task and releases the lock
+-> active task + held lock + merged-delivery handoff
+-> user merges the PR
+-> github-after-merge verifies the merge and finalizes task/lock
 ```
 
 The user request and current task context are the acceptance baseline. This
@@ -133,7 +138,8 @@ profile omits spec, plan, simplification, ship, separate whole-build
 verification, and separate whole-tree review. It does not create empty gates.
 Its bounded build is the explicit planless-target port of the upstream build
 contract: the executor performs the applicable RED, GREEN, regression, and
-build steps, while the root owns review, commit, and task completion.
+build steps, while the root owns review and commit. Task completion is a
+post-merge operation performed by `github-after-merge`.
 
 ## Per-slice build loop
 
@@ -187,4 +193,7 @@ controller.
 
 An automatic run ends with verified success inside its profile or `BLOCKED`.
 For PR profiles, GitHub is authoritative for the open PR, remote OID, checks,
-mergeability, and conflicts. A push or PR URL alone is not completion.
+mergeability, and conflicts. A push or PR URL alone is not completion. The
+delivery task remains `active` with its lock held until
+`github-after-merge` verifies the accepted PR revision is merged and applies
+the task finalization contract.

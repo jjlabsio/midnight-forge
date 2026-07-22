@@ -19,7 +19,8 @@ task or an already-isolated worktree.
 
 - Task-linked handoff: keep the task `active` and its matching lock held through
   PR creation/update, latest-head checks, mergeability, and conflict validation.
-  Complete the task only after those gates pass.
+  Return a merged-delivery handoff only after those gates pass; do not complete
+  the task or release the lock.
 - Completed-task handoff: validate read-only PR preparation without repeating
   completion or recreating a lock.
 - Worktree-only handoff: use the current isolated worktree and branch without
@@ -28,7 +29,8 @@ task or an already-isolated worktree.
 
 Use local Git state, GitHub CLI, and the connected GitHub surface when available.
 Do not use a background runner or machine-readable helper contract. GitHub is
-the PR-state source of truth. Keep PR reports out of `.mdf/`.
+the PR-state source of truth. Keep verbose PR reports out of `.mdf/`; the
+concise delivery handoff below is canonical MDF lifecycle state.
 
 ## Task linkage
 
@@ -86,12 +88,18 @@ branch, lock, and current acceptance evidence. Missing task state is a stop.
 10. For an incomplete task, keep the card `active` and lock held through push,
     PR create/update, latest related/required checks, mergeability, and conflict
     validation.
-11. After all gates pass, return the actual PR and consumer evidence to the
-    caller. A root workflow caller owns any later task completion and lock
-    release; this skill does not perform them.
-12. If a consumer gate fails, record evidence and return to shared recovery. Do
+11. After all gates pass, return a root-authored merged-delivery handoff with
+    repository, PR number/URL, accepted head OID, expected base, checks, and
+    current task/work/lock references. Persist it as the next immutable
+    `.mdf/work/<work-id>/delivery-NNN.md` and link its path and SHA-256 from the
+    active task's `Log` through the task contract. Keep the task active and
+    lock held.
+12. `github-after-merge` consumes that handoff after the PR is actually merged
+    and performs the post-merge task finalization. This skill does not complete
+    the task or release the lock.
+13. If a consumer gate fails, record evidence and return to shared recovery. Do
     not complete the task, release the lock, create a repair task, or add state.
-13. For completed tasks, report read-only handoff validation. For worktree-only
+14. For completed tasks, report read-only handoff validation. For worktree-only
     handoff, no task completion or lock release exists.
 
 Callers may pass only user-confirmed intent, explicit run authorization, and

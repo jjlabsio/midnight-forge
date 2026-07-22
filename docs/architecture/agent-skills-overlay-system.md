@@ -64,10 +64,12 @@ When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
 contract grants the root authority to complete in-scope local MDF skills and
 to commit plan slices, but not to ship, complete the whole task, push, or
 create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
-after its final preflight and ship GO, it may complete the whole task, push,
-and create/update the PR. A mode string alone is not authority; the current
-handoff, task/lock/worktree/branch facts, approved artifact hashes, and fresh
-preflight are required. Neither mode alters standalone skill semantics.
+after its final preflight and ship GO, it may push and create/update the PR,
+but the task remains active with its lock held until `github-after-merge`
+verifies the accepted revision is merged. A mode string alone is not
+authority; the current handoff, task/lock/worktree/branch facts, approved
+artifact hashes, and fresh preflight are required. Neither mode alters
+standalone skill semantics.
 Merge, deploy, deletion, stale-lock takeover, unrelated cleanup, and
 unresolved critical decisions remain outside the grant.
 

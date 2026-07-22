@@ -275,12 +275,13 @@ authorized workflow:
 
 ```text
 implementation -> build/review/ship -> commit/push -> PR create/update ->
-latest PR checks -> mergeability/conflict validation -> re-verification
+latest PR checks -> mergeability/conflict validation -> PR merge verification ->
+post-merge finalization
 ```
 
 - A PR or completed local implementation does not make the task `done`.
-- For delivery tasks, perform normal `done` mutation only after every delivery
-  gate passes.
+- For delivery tasks, perform normal `done` mutation only after the exact
+  accepted PR revision is verified merged by `github-after-merge`.
 - Release the lock only after rereading a consistent card and projection.
 
 If CI fails, checks remain pending, mergeability fails, or conflict appears:
@@ -332,6 +333,24 @@ non-idempotent task mutation:
 - do not mutate the task card;
 - do not recreate a lock;
 - use persisted worktree and branch facts.
+
+## Post-merge delivery finalization
+
+`github-after-merge` is the user-facing composite entrypoint. It loads this
+contract and applies it after independently verifying the exact merged PR
+revision; the user does not invoke `task` separately for this path.
+
+The finalizer is idempotent across interruption boundaries:
+
+- `active` with the matching lock: card write -> index projection -> reread ->
+  conditional lock release;
+- `done` with the matching lock: verify the merged delivery evidence and
+  repair or append one unambiguous current projection -> reread -> release only
+  the exact lock without replaying `done`;
+- `done` without a lock: verified no-op;
+- every other card/lock combination: `BLOCKED`.
+
+Branch and worktree cleanup occurs only after finalization and lock release.
 
 ## Instruction and safety rules
 

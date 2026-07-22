@@ -16,8 +16,11 @@ description: "Run MDF's complete implementation, assessment, commit, and GitHub 
    parallel specialist fan-out and root merge; add no outer worker or critic.
 7. After GO and fresh preflight, invoke canonical `github-pr`; verify remote
    OID, latest-head checks, mergeability, and conflicts.
-8. Complete the task and release its lock only after every consumer gate passes.
-9. Finish with verified delivery success or `BLOCKED`.
+8. Keep the task `active` and lock held. Return the merged-delivery handoff and
+   stop for the user to merge the PR, then use `github-after-merge` once it is
+   merged.
+9. Finish with a verified PR handoff or `BLOCKED`; task completion is a
+   post-merge operation.
 
 Commits, lifecycle, push, PR mutation, and external-state checks are root-only.
 Merge, deploy, deletion, force, stale-lock takeover, and cleanup are prohibited.

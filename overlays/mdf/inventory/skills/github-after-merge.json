@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/github-after-merge/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "Active model-led merged-PR synchronization and cleanup handoff.",
+  "notes": "Single user-facing merged-PR finalizer that composes task completion and gone-branch cleanup.",
   "overlayKind": "mdfOnly"
 }

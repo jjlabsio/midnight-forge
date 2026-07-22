@@ -187,7 +187,12 @@ assertAuthoredSurface("references/auto-workflow-contract.md", [
   "Ship uses its exact upstream three-specialist fan-out",
   "Do not add an outer ship executor, critic, verifier, or coordinator",
   "Its bounded build is the explicit planless-target port of the upstream build contract",
-  "the root owns review, commit, and task completion",
+  "the root owns review and commit",
+  "Task completion is a post-merge operation performed by `github-after-merge`",
+  "active task + held lock + merged-delivery handoff",
+  "user merges the PR",
+  "github-after-merge verifies the merge and finalizes task/lock",
+  "delivery task remains `active` with its lock held",
 ], [
   "-> per-slice build loop",
   "-> whole-build verification",
@@ -209,6 +214,65 @@ assertAuthoredSurface("references/auto-workflow-contract.md", [
   "Run the complete applicable test suite and build after simplification",
   "Dispatch a fresh simplification critic",
   "Commit simplification separately when it changed files",
+]);
+
+assertAuthoredSurface("skills/github-after-merge/SKILL.md", [
+  "This is the user-facing post-merge finalizer",
+  "the user does not need to invoke either skill separately",
+  "For managed finalization, require `mergeCommitOid`",
+  "recompute its SHA-256",
+  "number/URL, accepted head OID, expected base",
+  "the current merged PR head must equal the accepted head OID",
+  "remote tip contains the reported merge commit OID",
+  "apply the canonical `task` post-merge delivery finalization",
+  "For `active + matching lock`",
+  "For `done + matching lock`",
+  "For `done + no lock`",
+  "Synchronization-only path",
+  "skip task finalization",
+  "The synchronization-only path enters it after common merge verification",
+  "Load `github-clear-gone` internally",
+  "not referenced by any active lock",
+  "Do not reopen the task or reacquire its lock",
+], [
+  "For `active + matching lock`",
+  "write the card as `done`",
+  "append one current index projection",
+  "re-read both",
+  "release the lock conditionally",
+  "after task finalization and lock release",
+  "Load `github-clear-gone` internally",
+]);
+
+assertAuthoredSurface("skills/github-clear-gone/SKILL.md", [
+  "Read all canonical MDF locks",
+  "Exclude every branch or worktree referenced by an active lock",
+  "without force",
+  "Never discard dirty changes implicitly",
+  "Do not mutate task cards, indexes, or locks",
+]);
+
+assertAuthoredSurface("skills/task/SKILL.md", [
+  "`github-after-merge` is the user-facing composite entrypoint",
+  "The finalizer is idempotent across interruption boundaries",
+  "`active` with the matching lock: card write -> index projection",
+  "`done` with the matching lock: verify the merged delivery evidence",
+  "repair or append one unambiguous current projection",
+  "Branch and worktree cleanup occurs only after finalization and lock release",
+], [
+  "`active` with the matching lock: card write -> index projection -> reread -> conditional lock release",
+  "`done` with the matching lock: verify the merged delivery evidence and repair or append one unambiguous current projection -> reread -> release only the exact lock",
+  "`done` without a lock: verified no-op",
+  "Branch and worktree cleanup occurs only after finalization and lock release",
+]);
+
+assertAuthoredSurface("skills/github-pr/SKILL.md", [
+  "Return a merged-delivery handoff only after those gates pass",
+  "Keep the task active and lock held",
+  "return a root-authored merged-delivery handoff",
+  "`.mdf/work/<work-id>/delivery-NNN.md`",
+  "link its path and SHA-256 from the active task's `Log`",
+  "This skill does not complete the task or release the lock",
 ]);
 
 for (const consumer of autoContractConsumers) {

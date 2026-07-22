@@ -9,6 +9,7 @@
 - [Use a Codex-only plugin surface](agent-skills-overlay/codex-only-plugin-surface.md)
 - [Orchestrate auto-workflow autonomously within a scoped contract](agent-skills-overlay/auto-workflow-autonomous-orchestration.md)
 - [Use root-owned workflow drivers](agent-skills-overlay/root-owned-workflow-drivers.md)
+- [Defer delivery completion until merge](agent-skills-overlay/post-merge-delivery-finalization.md)
 - [Require evidence-carrying Two-Key automatic stages (superseded)](agent-skills-overlay/evidence-carrying-auto-stages.md)
 
 ## MDF Task System

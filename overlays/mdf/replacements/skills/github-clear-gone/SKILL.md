@@ -1,52 +1,29 @@
 ---
-description: "Cleans up all git branches marked as [gone] (branches that have been deleted on the remote but still exist locally), including removing associated worktrees."
+name: github-clear-gone
+description: "Clean up gone Git branches and worktrees after their ownership is released."
 ---
 
-## Your Task
+# github-clear-gone
 
-You need to execute the following bash commands to clean up stale local branches that have been deleted from the remote repository.
+Use as a standalone cleanup request or as the cleanup phase of
+`github-after-merge`.
 
-## Commands to Execute
+1. Inspect `git branch -v` and `git worktree list`.
+2. Identify branches marked `[gone]` and their associated worktrees.
+3. Read all canonical MDF locks. Exclude every branch or worktree referenced
+   by an active lock; a gone marker never authorizes bypassing ownership.
+4. Show the exact clean candidates. Remove clean worktrees without force and
+   delete their branches with the safe delete operation. When the parent
+   `github-after-merge` supplies verified merged-PR proof for the exact gone
+   branch, deletion may proceed after the clean worktree removal even when
+   squash/rebase made the local tip non-ancestor. Never discard dirty changes
+   implicitly.
+5. For dirty candidates, stop and request confirmation naming the exact path,
+   branch, and changes that would be discarded.
+6. Report removed worktrees and branches, skipped locked candidates, and any
+   confirmation still required.
 
-1. **First, list branches to identify any with [gone] status**
-   Execute this command:
-   ```bash
-   git branch -v
-   ```
-
-   Note: Branches with a '+' prefix have associated worktrees and must have their worktrees removed before deletion.
-
-2. **Next, identify worktrees that need to be removed for [gone] branches**
-   Execute this command:
-   ```bash
-   git worktree list
-   ```
-
-3. **Finally, remove worktrees and delete [gone] branches (handles both regular and worktree branches)**
-   Execute this command:
-   ```bash
-   # Process all [gone] branches, removing '+' prefix if present
-   git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read branch; do
-   echo "Processing branch: $branch"
-   # Find and remove worktree if it exists
-   worktree=$(git worktree list | grep "\\[$branch\\]" | awk '{print $1}')
-   if [ ! -z "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
-   echo "  Removing worktree: $worktree"
-   git worktree remove --force "$worktree"
-   fi
-   # Delete the branch
-   echo "  Deleting branch: $branch"
-   git branch -D "$branch"
-   done
-   ```
-
-## Expected Behavior
-
-After executing these commands, you will:
-
-- See a list of all local branches with their status
-- Identify and remove any worktrees associated with [gone] branches
-- Delete all branches marked as [gone]
-- Provide feedback on which worktrees and branches were removed
-
-If no branches are marked as [gone], report that no cleanup was needed.
+Stop for ambiguous branch/worktree ownership, malformed lock state, unsafe
+paths, the canonical/current checkout as a target, or a failed cleanup
+operation. Do not mutate task cards, indexes, or locks; the parent post-merge
+finalizer releases ownership before this skill runs.
