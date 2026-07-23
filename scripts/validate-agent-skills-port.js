@@ -123,6 +123,7 @@ assert(inventory.task0041SurfaceClasses?.historical?.owningTask === "0041", "Tas
 assert(inventory.task0041SurfaceClasses?.packaging?.owningTask === "0041", "Task 0041 packaging inventory is missing.");
 
 const autoContractConsumers = [
+  "skills/auto-doubt-driven-development/SKILL.md",
   "skills/auto-workflow/SKILL.md",
   "skills/auto-workflow-pr/SKILL.md",
   "skills/quick-workflow-pr/SKILL.md",

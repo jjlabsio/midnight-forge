@@ -1,0 +1,9 @@
+{
+  "output": "skills/auto-doubt-driven-development/SKILL.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/auto-doubt-driven-development/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF-only progress-based recovery for DDD-class decisions selected by automatic workflow roots.",
+  "overlayKind": "mdfOnly",
+  "contractRefs": ["auto-workflow-contract"]
+}
