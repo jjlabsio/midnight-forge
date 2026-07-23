@@ -42,9 +42,27 @@ repair command, runtime migration, or per-repository migration is required.
 ## Task lifecycle and ownership
 
 Task cards use queue, active, and done states. A task is ready only when its
-dependencies and current card state permit it. The task skill resolves the
-exact task ID, confirms the canonical root, and records the complete card
-before appending one complete index projection.
+dependencies and current card state permit the requested lifecycle mutation.
+The task skill resolves the exact task ID, confirms the canonical root, and
+records the complete card before appending one complete index projection.
+
+Task cards preserve the user's request, confirmed outcome, success, scope,
+constraints, non-goals, decisions, delegated judgment, unresolved facts, and
+evidence. They do not store a consumer-specific readiness result or collect
+advance authority for auto-workflow, GitHub, deployment, or another action.
+Incomplete but faithfully representable intent may remain queued.
+
+Task creation, activation, and consuming workflows are independent operations.
+The root may compose them in sequence, but the task skill does not route or
+interpret downstream workflows. Each consumer decides whether the recorded
+intent is sufficient and owns its current action checks.
+
+A bare `task <id> work` invocation activates the task, reports its briefing,
+and stops. When the same current user message explicitly requests subsequent
+work, task performs the same activation checks but omits the standalone
+briefing and returns verified task/worktree/branch/lock facts to the caller.
+Persisted task context, active state, artifacts, and prior conversation never
+imply continuation.
 
 Locks associate a task with its canonical work item, worktree, and branch. A
 lock conflict is a stop; stale recovery is never automatic. The owner must
@@ -69,19 +87,21 @@ The standalone workflow is:
 spec -> plan -> build tasks -> whole-build review -> simplify -> ship -> github-pr
 ```
 
-`spec`, `plan`, and `review` save readable Markdown artifacts. Exact artifact
-path and SHA-256 approvals are human decisions; a revision invalidates the
-earlier approval. `build` follows TDD, focused verification, task-owned
+`spec`, `plan`, and `review` save readable Markdown artifacts. Standalone spec
+and plan confirmation is tied to the exact artifact revision; automatic
+profiles use their critic/root acceptance port instead of repeating that human
+checkpoint. `build` follows TDD, focused verification, task-owned
 staging, readable review, downstream-impact judgment, and one focused commit.
 The model chooses the next ready task and explains ambiguity.
 
-`auto-workflow` adds a local run-scoped orchestration policy. Before `spec`, it
-must invoke `interview-me` when required intent fields are missing, materially
-different interpretations exist, an unsurfaced assumption or conflicting goal
-remains, confidence is below 95%, or the user explicitly requests an
-interview. A clear mechanical request skips the interview. After intent is
-settled, the root may carry the same run through spec, plan, build/test,
-review, simplification, and local commit without ceremonial approval prompts.
+`auto-workflow` adds a local run-scoped orchestration policy. It reads a task as
+an independent intent record and owns its own preflight. Before `spec`, it uses
+`interview-me` only when materially different user outcomes, unresolved
+user-owned trade-offs, or missing intent cannot be settled by specification.
+It uses `idea-refine` only for requested product-direction exploration, not
+delegated technical alternatives. After intent is sufficient, the explicit
+profile invocation carries the run through spec, plan, build/test, review,
+simplification, and local commit without ceremonial approval prompts.
 It does not ship, complete the whole task, push, or create/update a PR.
 `auto-workflow-pr` is the former full auto workflow: it resumes local work,
 finishes pending plan slices when needed, uses the full spec as its acceptance
@@ -89,9 +109,9 @@ baseline even when no plan work remains, then runs ship, performs push and PR
 create/update, and validates the latest-head consumer gates. It leaves the
 task `active` with its lock held and returns a merged-delivery handoff;
 `github-after-merge` completes the task only after the accepted PR revision is
-actually merged. Exact artifact
-hashes, TDD, review, lock, and high-risk checks remain required; changed
-artifacts invalidate downstream authorization. Merge, deploy, deletion,
+actually merged. Exact artifact hashes, TDD, review, lock, and high-risk checks
+remain required; changed artifacts invalidate prior artifact acceptance. Merge,
+deploy, deletion,
 stale-lock takeover, and unresolved critical or no-progress conditions still
 stop.
 
@@ -121,7 +141,7 @@ reviewed read-only after its lock is released. `review_mode` is descriptive,
 not a permission to mutate state; a task review cannot create lifecycle
 evidence or promote itself to ship.
 
-## Approval and artifacts
+## Artifact confirmation and action authority
 
 Workflow artifacts are local by default:
 
@@ -129,10 +149,14 @@ Workflow artifacts are local by default:
 <canonical-root>/.mdf/work/{work_id}/{artifact-type}-NNN.md
 ```
 
-Approval is a human-readable note tied to the exact artifact revision and
-SHA-256. Do not infer approval from artifact existence, a review pass, or a
-green command. See [references/approval-evidence.md](../../references/approval-evidence.md)
-and [references/mdf-preserved-contract.md](../../references/mdf-preserved-contract.md).
+Standalone spec/plan confirmation is a human-readable note tied to the exact
+artifact revision and SHA-256. Automatic profiles use their defined critic and
+root acceptance port. Neither mechanism approves task creation or unrelated
+actions. An explicit invocation authorizes its documented ordinary scope; the
+skill performing an action owns current target, state, permission, safety,
+verification, rollback, and stop checks. See
+[references/approval-evidence.md](../../references/approval-evidence.md) and
+[references/mdf-preserved-contract.md](../../references/mdf-preserved-contract.md).
 
 ## Recovery and historical state
 

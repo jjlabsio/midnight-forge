@@ -24,14 +24,19 @@ and permit parallel writers only when independence can be defended.
 ## Decision
 
 Add an MDF-only readable contract with separate local `auto-workflow` and
-delivery `auto-workflow-pr` modes. The contract is active only when the caller
-supplies the exact mode and a current run context. A bare mode string grants no
-authority; the current handoff, task/lock/worktree/branch facts, and approved
-artifact hashes are required. It requires
-`interview-me` before spec when intent is materially unclear, including missing
-intent fields, materially different interpretations, unsurfaced assumptions,
-conflicting goals, confidence below 95%, or an explicit interview request.
-Clear mechanical requests do not need an interview.
+delivery `auto-workflow-pr` modes. Task creation/activation remains independent
+from either workflow; the profile reads the task as intent and lifecycle
+evidence rather than a workflow-readiness or action grant. A direct profile
+invocation grants its documented ordinary scope, while a bare internal mode
+string without current run context grants nothing. The current handoff,
+task/lock/worktree/branch facts, and accepted artifact hashes remain required.
+
+The profile owns intent sufficiency. It invokes `interview-me` before spec only
+for materially different user outcomes, unresolved user-owned trade-offs, or
+missing intent that cannot be settled by specification. It invokes
+`idea-refine` only for requested ideation, stress-testing, or product direction,
+not delegated technical alternatives. A clear or explicitly delegated request
+continues without an interview.
 
 Once intent is settled, local `auto-workflow` may run the in-scope
 spec/plan/build/test/review/simplify loop and commit each plan slice while
@@ -58,6 +63,7 @@ serial; unknown ownership or completion ends blocked.
 ## Consequences
 
 - Standalone upstream and MDF skill behavior remains unchanged.
+- Task capture and lifecycle remain independent of automatic workflow routing.
 - Automatic actor and checkpoint semantics are governed by the later
   root-owned workflow driver decision.
 - Auto-workflow can complete routine work without repeated approval prompts.
