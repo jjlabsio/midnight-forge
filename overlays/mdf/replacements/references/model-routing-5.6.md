@@ -9,19 +9,38 @@ Before selection:
 
 1. Consult `model-routing-performance.md` as a qualitative cost/intelligence
    prior, not a capability guarantee.
-2. Assess task difficulty, risk, ambiguity, novelty, consequence, required
-   quality, runtime capability, and transport compatibility.
-3. Use runtime-native model and reasoning settings; MDF does not enumerate or
+2. Assess boundedness, ambiguity, risk, consequence, verification demand,
+   required quality, runtime capability, and transport compatibility.
+3. Include one-person-builder costs: feedback latency, unnecessary complexity,
+   scope expansion, and review burden.
+4. Use runtime-native model and reasoning settings; MDF does not enumerate or
    normalize the effort vocabulary.
 
 ## Default
 
-- Use a currently available GPT-5.6 family profile for quality-critical work.
-- Select executor and distinct critic independently.
-- Require both to meet the operation's root-selected quality floor.
+- Use Terra as the ordinary prior for implementation and review.
+- For narrow, clear work needing precise code understanding, consider Terra
+  medium or high and Sol low among the candidates that independently clear the
+  operation's capability floor.
+- Select executor and distinct critic independently; critic role or whole-tree
+  scope alone does not escalate capability.
+- Select the lowest suitable runtime-native effort from boundedness, ambiguity,
+  risk, consequence, and verification demand. High is not an automatic default.
 - Treat topology as no substitute for capability.
 - Treat persona model settings as direct-invocation defaults; MDF-managed root
   selection overrides them without expanding persona authority.
+
+## Escalation and diversity
+
+- Treat Sol medium or above as an escalation from ordinary suitable candidates;
+  require a concrete task characteristic or observed failure.
+- Request Sol high or higher only for a concrete reason: complex optimization,
+  security, concurrency, core architecture, repeated verification failure, or
+  a comparable observed high-impact condition. Record that reason.
+- When several candidates clear the same capability floor, the root may prefer
+  a suitable candidate with less recent comparable evidence. This may improve
+  future observation cohorts, but never lowers a safety or quality floor and
+  is neither a quota nor random routing.
 
 ## Availability exclusions
 
@@ -63,7 +82,9 @@ A root self-review or degraded fallback is not an independent critic.
 In the root dispatch note, record:
 
 - requested model and effort;
-- qualitative selection rationale and performance-reference context;
+- qualitative selection and effort rationale, including performance-reference
+  context and one-person-builder costs;
+- concrete Sol high-or-higher escalation reason when applicable;
 - capability confidence and uncertainty;
 - read/write authority;
 - fallback, degraded, or blocked status.
