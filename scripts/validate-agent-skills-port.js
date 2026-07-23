@@ -40,10 +40,6 @@ function inside(parent, child) {
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== "..");
 }
 
-function normalize(value) {
-  return value.replace(/\s+/g, " ").trim();
-}
-
 function quotedField(content, pattern, label) {
   const match = content.match(pattern);
   if (!match) {
@@ -78,26 +74,7 @@ function adapterSection(content, heading, nextHeading, label) {
   return content.slice(start + startToken.length, end).trim();
 }
 
-function assertFragments(label, content, required) {
-  const normalized = normalize(content);
-  for (const fragment of required) {
-    assert(normalized.includes(normalize(fragment)), `${label} is missing required authored-contract coverage: ${normalize(fragment)}`);
-  }
-}
-
-function assertOrderedFragments(label, content, required) {
-  const normalized = normalize(content);
-  let offset = 0;
-  for (const fragment of required) {
-    const expected = normalize(fragment);
-    const index = normalized.indexOf(expected, offset);
-    assert(index >= 0, `${label} is missing or misorders authored-contract coverage: ${expected}`);
-    if (index < 0) return;
-    offset = index + expected.length;
-  }
-}
-
-function assertAuthoredSurface(relativePath, required = [], ordered = []) {
+function assertAuthoredSurface(relativePath) {
   const entry = entryFor(relativePath);
   assert(Boolean(entry?.overlay), `${relativePath} must have an attributed authored overlay.`);
   if (!entry?.overlay) return;
@@ -107,13 +84,7 @@ function assertAuthoredSurface(relativePath, required = [], ordered = []) {
   assert(exists(generatedPath), `Missing generated consumer ${relativePath}.`);
   if (!exists(sourcePath) || !exists(generatedPath)) return;
 
-  const source = text(sourcePath);
-  const generated = text(generatedPath);
   assert(Buffer.compare(bytes(sourcePath), bytes(generatedPath)) === 0, `${relativePath} generated consumer differs from its authored source.`);
-  assertFragments(`${relativePath} authored source`, source, required);
-  assertFragments(`${relativePath} generated consumer`, generated, required);
-  assertOrderedFragments(`${relativePath} authored source`, source, ordered);
-  assertOrderedFragments(`${relativePath} generated consumer`, generated, ordered);
 }
 
 const dispatchAdapted = new Set([
@@ -164,188 +135,19 @@ assert(
   "Automatic-mode contract consumers must be complete and explicitly attributed."
 );
 
-assertAuthoredSurface("references/auto-workflow-contract.md", [
-  "# Automatic Workflow Profiles",
-  "## Root boundary",
-  "## Operation binding",
-  "## Stage reports and root handoff",
-  "## Profiles",
-  "## Per-slice build loop",
-  "## Recovery",
-  "## Completion",
-  "only owner of automatic workflow composition",
-  "Stage skills are mode-blind and do not load it",
-  "Treat task creation/activation and this workflow as independent operations",
-  "without requiring a workflow-readiness field or task-level action grant",
-  "use `interview-me` for materially different user outcomes",
-  "use `idea-refine` only for requested ideation",
-  "do not request per-stage ceremonial approval",
-  "root review and commit replaces an executor commit or completion step",
-  "Standalone stage behavior is unchanged",
-  "node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs",
-  "executor_attempt: <invocation-id>",
-  "critic_attempt: <invocation-id>",
-  "The executor does not calculate or claim it",
-  "executor_invocation_id",
-  "critic_invocation_id",
-  "Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode policy in a stage report",
-  "Root selects one slice",
-  "Build executor runs RED, GREEN, regression, and build",
-  "Do not run code simplification in a slice",
-  "After every approved slice is committed, run the whole-build sequence",
-  "Run `code-simplify` once over the complete changed scope",
-  "Ship uses the exact upstream three-specialist parallel fan-out and root merge",
-  "Do not add an outer ship executor, critic, verifier, or coordinator",
-  "The bounded build is the planless port of upstream build",
-  "keep review and commit in the root",
-  "After merge, run `github-after-merge` finalization",
-  "Keep a delivery task `active` with its lock held until `github-after-merge`",
-], [
-  "Run the per-slice build loop",
-  "Run the whole-build sequence",
-  "Root selects one slice",
-  "Build executor runs RED, GREEN, regression, and build",
-  "Root observes the actual diff and verification",
-  "Slice critic reviews against the plan and spec",
-  "Root commits exact slice paths",
-  "Root records the accepted slice and commit OID in the handoff",
-  "Root re-reads plan, card, lock, and Git before selecting another slice",
-  "After every approved slice is committed, run the whole-build sequence",
-  "Run the plan's whole-build verification matrix",
-  "Run one fresh read-only whole-tree critic",
-  "Run `code-simplify` once over the complete changed scope",
-  "Run the complete applicable test suite and build after simplification",
-  "Run a fresh simplification critic",
-  "Commit simplification separately when changed",
-]);
-
-assertAuthoredSurface("skills/github-after-merge/SKILL.md", [
-  "This is the user-facing post-merge finalizer",
-  "the user does not need to invoke either skill separately",
-  "For managed finalization, require `mergeCommitOid`",
-  "recompute its SHA-256",
-  "number/URL, accepted head OID, expected base",
-  "the current merged PR head must equal the accepted head OID",
-  "remote tip contains the reported merge commit OID",
-  "apply the canonical `task` post-merge delivery finalization",
-  "For `active + matching lock`",
-  "For `done + matching lock`",
-  "For `done + no lock`",
-  "Synchronization-only path",
-  "skip task finalization",
-  "The synchronization-only path enters it after common merge verification",
-  "Load `github-clear-gone` internally",
-  "not referenced by any active lock",
-  "Do not reopen the task or reacquire its lock",
-], [
-  "For `active + matching lock`",
-  "write the card as `done`",
-  "append one current index projection",
-  "re-read both",
-  "release the lock conditionally",
-  "after task finalization and lock release",
-  "Load `github-clear-gone` internally",
-]);
-
-assertAuthoredSurface("skills/github-clear-gone/SKILL.md", [
-  "Read all canonical MDF locks",
-  "Exclude every branch or worktree referenced by an active lock",
-  "without force",
-  "Never discard dirty changes implicitly",
-  "Do not mutate task cards, indexes, or locks",
-]);
-
-assertAuthoredSurface("skills/task/SKILL.md", [
-  "mdf-preserved-contract.md",
-  "Keep semantic judgment in the model",
-  "node <plugin-root>/skills/task/scripts/task-brief.mjs <task-id>",
-  "Task does not select, route, authorize, or execute a later operation",
-  "| create or queue |",
-  "| bare `task <id> work` |",
-  "| `task <id> work` with explicit subsequent work |",
-  "| `task <id> done` |",
-  "| `task <id> drop` |",
-  "### Intent",
-  "### Decisions",
-  "Write `Not stated` or `Unresolved` instead of inventing intent",
-  "does not require a complete specification, workflow readiness",
-  "contract markers, digest, approval note, action allowlist, or execution envelope",
-  "authorizes that exact card mutation",
-  "Do not ask the user to approve the card",
-  "Duplicate historical index rows are expected",
-  "`task <id> work` changes local lifecycle only",
-  "A bare work invocation is terminal",
-  "Never infer implementation or another operation from the task card",
-  "Do not emit a standalone briefing",
-  "Continue only with the explicitly requested operation",
-  "Skipping the briefing never skips task, dependency, worktree, branch, lock, or projection verification",
-  "Load `using-git-worktrees` to prepare a clean isolated worktree and branch",
-  "Hard dependencies are exact `depends_on` IDs",
-  "Use only `queue`, `active`, and `done`",
-  "Treat the exact `task <id> drop` request as authority for that task only",
-  "Use persisted branch/worktree facts for read-only review or handoff",
-  "After `github-after-merge` independently verifies the exact merged revision",
-  "Cleanup occurs only after finalization and lock release",
-  "does not pre-authorize a consuming workflow or external action",
-  "An explicit invocation authorizes its named operation",
-  "The skill performing an action owns its current target",
-], [
-  "`active` with matching lock: card -> projection -> reread -> conditional release",
-  "`done` with matching lock: verify delivery evidence, repair one unambiguous projection if needed, reread, then release without replaying `done`",
-  "`done` without lock: verified no-op",
-  "Cleanup occurs only after finalization and lock release",
-]);
-
-assertAuthoredSurface("skills/github-pr/SKILL.md", [
-  "Return a merged-delivery handoff only after those gates pass",
-  "Keep the task active and lock held",
-  "return a root-authored merged-delivery handoff",
-  "`.mdf/work/<work-id>/delivery-NNN.md`",
-  "link its path and SHA-256 from the active task's `Log`",
-  "This skill does not complete the task or release the lock",
-]);
+assertAuthoredSurface("references/auto-workflow-contract.md");
+assertAuthoredSurface("skills/github-after-merge/SKILL.md");
+assertAuthoredSurface("skills/github-clear-gone/SKILL.md");
+assertAuthoredSurface("skills/task/SKILL.md");
 
 for (const consumer of autoContractConsumers) {
-  assertAuthoredSurface(consumer, [
-    "using-agent-skills",
-    "auto-workflow-contract.md",
-  ]);
+  assertAuthoredSurface(consumer);
 }
 
-assertAuthoredSurface("references/subagent-dispatch-policy.md", [
-  "## Select",
-  "## Instruction source",
-  "## Dispatch",
-  "## Mandatory minimal observation",
-  "requested_effort",
-  "does not report the model that actually executed",
-  "record-subagent-observation.mjs",
-  "## Spawn boundary",
-]);
-
-assertAuthoredSurface("skills/auto-workflow/scripts/changed-paths.mjs", [
-  "git",
-  "--name-status",
-  "--find-renames",
-  "--others",
-  "--exclude-standard",
-  "Changed paths:",
-]);
-
-assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs", [
-  "O_APPEND",
-  "requested_model",
-  "requested_effort",
-  "raw terminal status",
-  "artifact_refs",
-]);
-
-assertAuthoredSurface("agents/README.md", [
-  "`persona-backed` uses the exact `agents/<persona>.md` prompt",
-  "`skill-backed` uses the exact canonical skill adapter and applicable upstream primitives without a persona",
-  "A `skill-backed` workflow operation does not resolve a persona and must not invent one",
-  "Missing persona resolution affects only explicitly persona-backed calls",
-]);
+assertAuthoredSurface("references/subagent-dispatch-policy.md");
+assertAuthoredSurface("skills/auto-workflow/scripts/changed-paths.mjs");
+assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs");
+assertAuthoredSurface("agents/README.md");
 
 const personaOverlayFiles = filesUnder(path.join(overlayRoot, "replacements"), "agents")
   .filter((relativePath) => relativePath !== "agents/README.md");
@@ -354,26 +156,8 @@ assert(
   `MDF must not add synthetic persona files: ${personaOverlayFiles.join(", ")}`
 );
 
-assertAuthoredSurface("references/model-routing-5.6.md", [
-  "## Inputs",
-  "## Default",
-  "## Availability exclusions",
-  "## Exploration exception",
-  "## Fallback",
-  "## Record",
-  "## Prohibited",
-  "gpt-5.3-codex-spark",
-  "runtime-native model and reasoning settings",
-  "Exclude every GPT-5.6 Luna profile from MDF-managed subagent selection",
-  "observational context, not selectable candidates",
-  "runtime-availability exclusion",
-  "requested model as the model that actually executed",
-]);
-
-assertAuthoredSurface("references/model-routing-performance.md", [
-  "| Luna | medium |",
-  "| Luna | max |",
-]);
+assertAuthoredSurface("references/model-routing-5.6.md");
+assertAuthoredSurface("references/model-routing-performance.md");
 
 const commandAdapterSources = {
   spec: "commands/spec.toml",
@@ -405,8 +189,6 @@ for (const stage of stageAdapters) {
   const sourceDescription = quotedField(sourceContent, /^description\s*=\s*("(?:\\.|[^"\\])*")/m, `${entry.source} description`);
   const adapterDescription = quotedField(content, /^description:\s*("(?:\\.|[^"\\])*")/m, `${output} description`);
   assert(sourceDescription === adapterDescription, `${output} must preserve the exact upstream command description.`);
-  assert(content.includes("## Upstream command contract"), `${output} must separate its upstream command contract.`);
-  assert(content.includes("## MDF adaptation"), `${output} must separate its MDF adaptation.`);
   const sourcePrompt = commandPrompt(sourceContent, entry.source);
   const upstreamContract = adapterSection(content, "## Upstream command contract", "## MDF adaptation", output);
   if (sourcePrompt !== null && upstreamContract !== null) {
@@ -417,47 +199,16 @@ for (const stage of stageAdapters) {
         upstreamContract === sourcePrompt.slice(0, -persistenceInstruction.length).trim(),
         `${output} must preserve the upstream prompt except for its explicit persistence port.`
       );
-      assert(content.includes("### Persistence port"), `${output} must identify its MDF persistence port.`);
     } else {
       assert(upstreamContract === sourcePrompt.trim(), `${output} must preserve the exact upstream command prompt.`);
     }
   }
-  for (const forbidden of ["auto-workflow", "quick-workflow-pr", "Two-Key", "auto-workflow-contract.md"]) {
-    assert(!content.includes(forbidden), `${output} must not interpret automatic workflow policy: ${forbidden}`);
-  }
   assert(!(entry?.contractRefs || []).includes("auto-workflow-contract"), `${output} must not consume the automatic workflow contract.`);
 }
 
-assertAuthoredSurface("skills/build/SKILL.md", [
-  "bind `tasks/plan.md` plus `tasks/todo.md` to the approved checklist-style",
-  "Standalone invocation preserves every upstream mode and step after the canonical artifact binding above",
-]);
-
-for (const stage of ["build", "test", "code-simplify"]) {
-  const output = `skills/${stage}/SKILL.md`;
-  const content = text(path.join(root, output));
-  for (const rootOwnedPhrase of [
-    "root workflow operation",
-    "bounded planless target",
-    "reserve its commit",
-    "changed paths",
-    "changed test paths",
-  ]) {
-    assert(
-      !content.includes(rootOwnedPhrase),
-      `${output} must leave root operation binding and Git path evidence to the workflow driver: ${rootOwnedPhrase}`
-    );
-  }
-}
-
-assertAuthoredSurface("skills/spec/SKILL.md", [
-  ".mdf/work/<work-id>/spec-NNN.md",
-  "Preserve the upstream document content and user-confirmation checkpoint",
-]);
-assertAuthoredSurface("skills/plan/SKILL.md", [
-  ".mdf/work/<work-id>/plan-NNN.md",
-  "Preserve both upstream plan and task-list roles",
-]);
+assertAuthoredSurface("skills/build/SKILL.md");
+assertAuthoredSurface("skills/spec/SKILL.md");
+assertAuthoredSurface("skills/plan/SKILL.md");
 
 const seen = new Set();
 for (const entry of inventory.generated.entries) {

@@ -38,7 +38,11 @@ Use when designing or writing a skill.
 - Keep `description` short and generic. Optimize for routing, not documentation.
 - Keep skill bodies terse and operational.
 - Prefer action-first bullets, numbered workflows, and command examples over explanatory prose.
-- Prefer helper scripts under the skill's `scripts/` directory when a workflow has repeatable commands.
+- Use a helper script only for frequent, deterministic, mechanical work when
+  the script stays small, obvious, and cheaper to maintain than repeated model
+  instructions.
+- Do not move semantic judgment, routing, authority, lifecycle decisions, or
+  broad workflow orchestration into a helper.
 - Quote `description` in YAML front matter.
 
 ## MDF convention references
@@ -110,6 +114,13 @@ weaken or redefine upstream success criteria.
 The upstream primitives define what a sound engineering workflow means. MDF
 defines how Codex discovers, composes, stores, and safely executes that
 workflow.
+
+- Keep each skill independently usable with its own inputs, preflight, output,
+  authority boundary, and stop conditions.
+- Compose skills only through public contracts; do not add caller-specific
+  modes, private handshakes, or hidden assumptions.
+- Let callers pass intent and verified context, while the called skill validates
+  its own state and owns its behavior.
 
 MDF orchestration may own:
 
@@ -191,6 +202,12 @@ unreviewed. Follow the repository-local upstream update skill and
 for the full procedure.
 
 ## Verification and completion
+
+Test executable behavior and machine-enforced contracts, not instructional
+wording. Do not assert that a skill or reference contains or omits specific
+prose; review model-facing semantics directly. Exact-text checks are allowed
+only when the text is itself a machine-consumed format, generated-byte
+contract, or provenance boundary.
 
 For changes to the source, inventory, overlays, or generated surface, run:
 
