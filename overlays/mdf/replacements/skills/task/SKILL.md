@@ -63,15 +63,33 @@ Task does not select, route, authorize, or execute a later operation.
 
 ## Record intent
 
-Start `Context` with the triggering request verbatim. Preserve relevant user
-wording and distinguish it from agent proposals or evidence. Record only what
-the user stated, confirmed, or explicitly delegated:
+Start `Context` with the triggering request verbatim. Apply the
+self-contained task-intent invariant in
+[`mdf-preserved-contract.md`](../../references/mdf-preserved-contract.md).
+
+For a request that refers to earlier discussion, add `Resolved context` after
+the triggering request only when material context is needed. Include each
+labeled subsection only when it contains material context. Preserve only the
+minimum with provenance: prior user statements verbatim, an agent proposal only
+when the user explicitly accepted it, and any material task-language
+interpretation. Do not add irrelevant transcript to a self-contained request:
 
 ```markdown
 ## Context
 
 ### Triggering request (verbatim)
 > ...
+
+### Resolved context
+
+#### Prior user statements (verbatim)
+> ...
+
+#### Accepted agent proposal
+- ...
+
+#### Interpretation
+- User term `...` means task term `...` because ...
 
 ### Intent
 - Outcome: ...
@@ -92,6 +110,9 @@ the user stated, confirmed, or explicitly delegated:
 - Use the user's language where practical.
 - Write `Not stated` or `Unresolved` instead of inventing intent, priority,
   dates, dependencies, non-goals, or implementation choices.
+- Do not present an agent proposal or interpretation as user wording. Record an
+  uncertain reference or terminology mapping in `Unresolved`, not as a silent
+  normalization.
 - Record design or work method only when the user selected it or delegated the
   choice.
 - Keep analysis and agent proposals outside confirmed intent.
@@ -99,6 +120,11 @@ the user stated, confirmed, or explicitly delegated:
 - Preserve superseded intent when it explains the current request.
 - Keep `Files`, `Criteria`, and `Log` headings. Use a bounded discovery scope
   when exact files are unknown; use criteria that reflect known outcomes.
+
+Before saving, review the drafted card in isolation across standalone and
+referential requests, including a choice among proposals, partial acceptance,
+superseded intent, and terminology mapping; confirmed, delegated, and
+unresolved intent must remain distinct.
 
 Task creation does not require a complete specification, workflow readiness,
 risk-category inventory, contract markers, digest, approval note, action
