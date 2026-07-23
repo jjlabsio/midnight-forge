@@ -77,11 +77,10 @@ release a lock through a fallback path.
 2. Load `github-clear-gone` internally from the canonical checkout. Show gone
    branch/worktree candidates; remove only clean candidates that are not
    referenced by any active lock and never remove the canonical checkout or
-   current checkout. For the verified merged PR branch, allow deletion after
-   its worktree is cleanly removed even when squash/rebase means safe ancestor
-   deletion would fail. Other branches use safe deletion only. Dirty
-   candidates require explicit confirmation naming the exact path and
-   discarded changes.
+   current checkout. After an associated clean worktree is removed, delete
+   every eligible `[gone]` branch with `git branch -D`, regardless of ancestry
+   or whether it is the verified merged PR branch. Dirty candidates require
+   explicit confirmation naming the exact path and discarded changes.
 3. If synchronization or cleanup fails after finalization, report partial
    completion. Do not reopen the task or reacquire its lock.
 
