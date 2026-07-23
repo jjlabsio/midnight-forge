@@ -1,6 +1,6 @@
 {
   "name": "mdf",
-  "version": "2.6.4",
+  "version": "2.6.5",
   "description": "Midnight Forge ships MDF init/task skills plus auto-workflow, quick-workflow-pr, and PR-capable delivery workflows.",
   "author": {
     "name": "Jaejin Song"

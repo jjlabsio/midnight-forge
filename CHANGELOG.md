@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.5 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.4...v2.6.5)
+
+### Changes
+
+- refactor(routing): prefer smallest sufficient models ([#95](https://github.com/jjlabsio/midnight-forge/pull/95))
 ## v2.6.4 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.3...v2.6.4)
