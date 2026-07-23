@@ -9,7 +9,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/jjlabsio/midnight-forge.git",
-        "ref": "v2.6.5"
+        "ref": "v2.6.6"
       },
       "policy": {
         "installation": "AVAILABLE",

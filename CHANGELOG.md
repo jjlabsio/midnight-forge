@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.6 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.5...v2.6.6)
+
+### Changes
+
+- fix(worktrees): copy complete environment surface ([#97](https://github.com/jjlabsio/midnight-forge/pull/97))
 ## v2.6.5 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.4...v2.6.5)
