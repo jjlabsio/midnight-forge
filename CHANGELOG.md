@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.3 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.2...v2.6.3)
+
+### Changes
+
+- fix(workflow): wait for terminal subagents ([#94](https://github.com/jjlabsio/midnight-forge/pull/94))
 ## v2.6.2 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.1...v2.6.2)
