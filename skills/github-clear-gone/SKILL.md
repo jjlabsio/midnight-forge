@@ -12,12 +12,10 @@ Use as a standalone cleanup request or as the cleanup phase of
 2. Identify branches marked `[gone]` and their associated worktrees.
 3. Read all canonical MDF locks. Exclude every branch or worktree referenced
    by an active lock; a gone marker never authorizes bypassing ownership.
-4. Show the exact clean candidates. Remove clean worktrees without force and
-   delete their branches with the safe delete operation. When the parent
-   `github-after-merge` supplies verified merged-PR proof for the exact gone
-   branch, deletion may proceed after the clean worktree removal even when
-   squash/rebase made the local tip non-ancestor. Never discard dirty changes
-   implicitly.
+4. Show the exact clean candidates. Remove clean worktrees without force, then
+   delete every eligible `[gone]` branch with `git branch -D`. This rule is
+   independent of ancestry, squash/rebase history, or whether the branch is
+   the merged PR branch. Never discard dirty changes implicitly.
 5. For dirty candidates, stop and request confirmation naming the exact path,
    branch, and changes that would be discarded.
 6. Report removed worktrees and branches, skipped locked candidates, and any

@@ -37,7 +37,9 @@ entrypoint.
   every other combination blocks.
 - Keep synchronization and branch/worktree cleanup after finalization. Cleanup
   excludes every active lock and never discards dirty work without explicit
-  confirmation.
+  confirmation. Every remaining eligible `[gone]` branch is deleted with
+  `git branch -D` after any associated clean worktree is removed; ancestry and
+  the merged PR identity do not narrow that cleanup rule.
 - Keep local-only, taskless, and already-completed read-only handoffs outside
   this delivery finalization path.
 

@@ -74,14 +74,9 @@ release a lock through a fallback path.
    canonical checkout only when it is clean, has an `origin`, and the remote
    target can be fast-forwarded safely. Never reset, rebase, overwrite, or
    discard local work.
-2. Load `github-clear-gone` internally from the canonical checkout. Show gone
-   branch/worktree candidates; remove only clean candidates that are not
-   referenced by any active lock and never remove the canonical checkout or
-   current checkout. For the verified merged PR branch, allow deletion after
-   its worktree is cleanly removed even when squash/rebase means safe ancestor
-   deletion would fail. Other branches use safe deletion only. Dirty
-   candidates require explicit confirmation naming the exact path and
-   discarded changes.
+2. Load `github-clear-gone` internally from the canonical checkout. It owns
+   gone-candidate selection, cleanup, and dirty-worktree confirmation; report
+   its result without restating or bypassing its contract.
 3. If synchronization or cleanup fails after finalization, report partial
    completion. Do not reopen the task or reacquire its lock.
 
