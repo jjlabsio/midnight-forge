@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.1 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.0...v2.7.1)
+
+### Changes
+
+- fix(github): force-delete eligible gone branches ([#99](https://github.com/jjlabsio/midnight-forge/pull/99))
 ## v2.7.0 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.6...v2.7.0)
