@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.1 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.0...v2.6.1)
+
+### Changes
+
+- refactor(skills): clarify independent PR workflows ([#92](https://github.com/jjlabsio/midnight-forge/pull/92))
 ## v2.6.0 - 2026-07-22
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.5.2...v2.6.0)
