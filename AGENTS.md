@@ -203,6 +203,12 @@ for the full procedure.
 
 ## Verification and completion
 
+Test executable behavior and machine-enforced contracts, not instructional
+wording. Do not assert that a skill or reference contains or omits specific
+prose; review model-facing semantics directly. Exact-text checks are allowed
+only when the text is itself a machine-consumed format, generated-byte
+contract, or provenance boundary.
+
 For changes to the source, inventory, overlays, or generated surface, run:
 
 ```bash

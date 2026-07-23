@@ -12,7 +12,6 @@ const overlayRoot = path.join(root, "overlays", "mdf");
 const inventoryPath = path.join(overlayRoot, "inventory.json");
 const lockPath = path.join(root, "vendor", "agent-skills.lock.json");
 const releaseMetadataPath = path.join(overlayRoot, "release-metadata.json");
-const rendererPath = path.join(root, "scripts", "sync-agent-skills.js");
 const failures = [];
 
 function readJson(filePath) {
@@ -221,10 +220,6 @@ for (const entry of entries) {
   }
 }
 assert(exists(releaseMetadataPath), "Missing overlays/mdf/release-metadata.json.");
-const rendererSource = readText(rendererPath);
-for (const removedHelper of ["artifactStorageParagraph", "applyExactPatches", "applyPolicyInjection"]) {
-  assert(!rendererSource.includes(removedHelper), `Renderer still implements removed transform helper ${removedHelper}`);
-}
 assert(/^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(releaseMetadata.version), "Release metadata version must be semver.");
 assert(releaseMetadata.marketplaceRef === `v${releaseMetadata.version}`, "Release metadata marketplaceRef must match v{version}.");
 for (const kind of ["copy", "mdfOnly", "renameAdapter"]) {
