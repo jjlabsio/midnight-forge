@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.6.4 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.3...v2.6.4)
+
+### Changes
+
+- fix(task): preserve referential intent context ([#96](https://github.com/jjlabsio/midnight-forge/pull/96))
 ## v2.6.3 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.2...v2.6.3)
