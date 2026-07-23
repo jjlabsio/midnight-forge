@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.0 - 2026-07-23
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.6...v2.7.0)
+
+### Changes
+
+- feat(workflow): add progress-based automatic DDD recovery ([#98](https://github.com/jjlabsio/midnight-forge/pull/98))
 ## v2.6.6 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.6.5...v2.6.6)
