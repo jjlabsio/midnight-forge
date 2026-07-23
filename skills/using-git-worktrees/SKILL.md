@@ -119,11 +119,12 @@ If creation fails, stop and report the exact failure. Do not continue in the nor
 
 ## Step 4: Copy Environment Files
 
-After creating the worktree, inspect the repository and copy any local
-environment files required by the target app, package, or workflow, wherever
-they are located. This includes `.env` and `.env.*` files. Preserve relative
-paths, do not overwrite existing files, and use best judgment to skip
-unrelated, example, template, or unnecessary production-only files.
+Before dependency setup, copy every regular file in the canonical checkout
+whose basename is `.env` or begins with `.env.` to the same relative path in
+the new worktree. Exclude `.git`, `.worktrees`, `node_modules`, `.env.example`,
+and files ending in `.example`. Do not overwrite destinations. Report only
+copied or skipped relative paths; never disclose contents or commit environment
+files. Stop and report if copying fails.
 
 ## Step 5: Install Dependencies
 
