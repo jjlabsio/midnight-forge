@@ -11,6 +11,7 @@
     "auto-workflow-contract": {
       "output": "references/auto-workflow-contract.md",
       "requiredConsumers": [
+        "skills/auto-doubt-driven-development/SKILL.md",
         "skills/auto-workflow/SKILL.md",
         "skills/auto-workflow-pr/SKILL.md",
         "skills/quick-workflow-pr/SKILL.md",
@@ -63,6 +64,7 @@
       "inventory/references/model-routing-performance.json",
       "inventory/references/auto-workflow-contract.json",
       "inventory/skills/api-and-interface-design.json",
+      "inventory/skills/auto-doubt-driven-development.json",
       "inventory/skills/auto-workflow.json",
       "inventory/skills/auto-workflow-scripts-changed-paths.json",
       "inventory/skills/auto-workflow-pr.json",
