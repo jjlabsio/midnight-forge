@@ -97,6 +97,7 @@ Root evidence rules:
 
 1. Persist every executor and critic report as a separate immutable artifact
    under `.mdf/work/<work-id>/` before acceptance.
+   Pass that persisted role-report path to the terminal observation append.
 2. For a Git-mutating operation, record the full stage-start commit OID before
    dispatch.
 3. After every executor attempt, run from the target worktree:
@@ -135,6 +136,8 @@ accepted_commit_oid: <full OID | none>
 Handoff rules:
 
 - Write one attempt line per dispatch, in dispatch order.
+- The matching attempt line is the role-specific handoff link for the terminal
+  observation's persisted report; do not create a parallel routing artifact.
 - Record task/profile identity, Git state, verification, critic outcome,
   blockers, and the root-owned cursor.
 - Use `report: none` for no returned report and `assessment: none` for no critic

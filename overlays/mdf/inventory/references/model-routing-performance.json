@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/model-routing-performance.md",
   "artifactStorageOverride": false,
-  "notes": "Human-readable transcription of the reviewed intelligence-versus-cost chart used as a qualitative routing prior.",
+  "notes": "Human-readable chart transcription and qualitative solo-builder routing context.",
   "overlayKind": "mdfOnly"
 }

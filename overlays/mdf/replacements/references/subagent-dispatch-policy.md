@@ -7,20 +7,28 @@ a runtime selector or controller.
 
 1. Load this policy, `model-routing-5.6.md`, and
    `model-routing-performance.md` from the installed plugin root.
-2. Select from task difficulty, risk, ambiguity, novelty, consequence, required
-   quality, runtime support, and transport compatibility.
+2. Select the smallest suitable candidate from boundedness, ambiguity, risk,
+   consequence, verification demand, required quality, runtime support,
+   transport compatibility, and one-person-builder feedback costs.
 3. Apply `model-routing-5.6.md`. Do not invent another difficulty scale, fixed
    task-to-model table, benchmark equivalence, fast profile, or silent downgrade.
 4. Record one compact dispatch entry in the existing root handoff:
    - requested model and effort;
-   - qualitative rationale and performance-reference context;
+   - qualitative selection and effort rationale, including performance-reference
+     context and feedback costs;
+   - concrete Sol high-or-higher escalation reason when applicable;
    - instruction source and task kind;
    - risk, capability confidence, and write scope;
    - fallback and degraded status.
 
-Use GPT-5.6 by default for quality-critical work. Use
-`gpt-5.3-codex-spark` only for the narrow read-only exploration exception in
-`model-routing-5.6.md`; it cannot serve as a workflow critic.
+Use Terra as the ordinary prior for implementation and review. For narrow,
+clear work needing precise code understanding, Terra medium or high and Sol
+low are valid candidates when they independently clear the operation's floor.
+Use Sol medium or above only with the concrete task characteristic or observed
+failure required by `model-routing-5.6.md`; Sol high or higher also needs its
+recorded concrete escalation reason. Use `gpt-5.3-codex-spark` only for the
+narrow read-only exploration exception in `model-routing-5.6.md`; it cannot serve as a workflow
+critic.
 
 ## Instruction source
 
@@ -75,7 +83,11 @@ Observation rules:
   incomplete.
 - Do not retry a successful append, reuse an invocation ID, or reconstruct a
   missing terminal fact.
-- Link existing reports and handoffs; do not copy their prose.
+- Link the persisted role report in the terminal append, then use the existing
+  immutable role-specific handoff attempt line for the same invocation. Link a
+  handoff in the terminal append too when it already exists. These are the
+  method-authorized artifact links for later routing analysis; do not create a
+  synthetic routing artifact or copy report prose.
 - Do not store prompts, responses, secrets, quality scores, synthetic difficulty
   labels, or inferred runtime facts.
 - Record `requested_model` and `requested_effort` as requested values. The
