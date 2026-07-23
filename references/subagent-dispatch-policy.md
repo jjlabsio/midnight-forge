@@ -36,8 +36,11 @@ Do not create a separate routing artifact or repeat task and skill bodies.
 - Follow `auto-workflow-contract.md` for executor/critic order, authority,
   observation, acceptance, and rework.
 - Keep one writer per shared worktree.
-- Consume only actual terminal reports; timeout, cancellation, observation, or
-  missing output does not prove completion.
+- Wait for every dispatched subagent's actual terminal response. A caller-side
+  wait timeout, no update, or elapsed silence is not terminal or failure
+  evidence: while the subagent remains running, keep waiting, do not interrupt
+  it merely for slowness or silence, and do not dispatch a replacement writer
+  before the prior writer is terminal.
 - Join every required fan-out report before root synthesis.
 - Preserve partial reports only as diagnostics.
 - Treat failed, timed-out, interrupted, missing, or incomplete results as

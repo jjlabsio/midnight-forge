@@ -45,7 +45,9 @@ Use this sequence for automatic artifact and implementation operations:
 
 1. Dispatch one skill-backed executor with the exact adapter, applicable
    primitives, acceptance baseline, target, owned paths, checks, and stop rules.
-2. Wait for its actual terminal response.
+2. Wait for its actual terminal response; while it remains running, keep
+   waiting and never interrupt or replace it merely because a caller wait timed
+   out or it stayed silent.
 3. Re-read the actual artifact or diff, Git state, and command results.
 4. Persist the executor report; add root-observed changed paths when applicable.
 5. Dispatch one distinct fresh read-only critic with the actual target,
@@ -68,7 +70,10 @@ Critic binding:
 - Simplification: apply the same review and verify behavior preservation.
 
 Use distinct suitable quality-critical subagents and the shared dispatch
-policy. Allow at most three executor/critic attempts per operation.
+policy. When a critic returns `changes_requested`, rework the actual target and
+dispatch a fresh critic; repeat until accepted or an existing substantive stop
+condition blocks progress. Raw executor or critic dispatch count alone never
+causes `BLOCKED`.
 
 Automatic call-site ports:
 
@@ -185,7 +190,8 @@ Use only when the user explicitly selects the bounded small-change workflow.
 2. Run one bounded build executor.
 3. Observe the actual diff and checks.
 4. Run one fresh bounded-change critic.
-5. Rework through the same pair or commit in the root after acceptance.
+5. Rework through the operation binding until a fresh critic returns `pass`;
+   the root alone decides acceptance and commits only an accepted result.
 6. Invoke `github-pr`; verify remote OID, latest-head checks, mergeability, and
    conflicts.
 7. Write the merged-delivery handoff; keep task `active` and lock held.

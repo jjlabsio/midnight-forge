@@ -36,8 +36,17 @@ proportionate to the risk.
 Use when designing or writing a skill.
 
 - Keep `description` short and generic. Optimize for routing, not documentation.
-- Keep skill bodies terse and operational.
-- Prefer action-first bullets, numbered workflows, and command examples over explanatory prose.
+- Keep skill bodies concise and operational. Include only what changes agent
+  behavior or is required for correct execution.
+- Start with the minimum guidance that addresses an observed failure. Add
+  detail only when evaluation reveals ambiguity, omission, or a rationalization
+  path.
+- Remove duplicated guidance, obvious explanations, and repeated examples.
+  Prefer one strong rule or example over several weaker variations.
+- Do not shorten carefully chosen behavior-shaping language merely for style or
+  word count; preserve the wording needed to make the behavior reliable.
+- Prefer action-first bullets, numbered workflows, and command examples over
+  explanatory prose.
 - Use a helper script only for frequent, deterministic, mechanical work when
   the script stays small, obvious, and cheaper to maintain than repeated model
   instructions.
