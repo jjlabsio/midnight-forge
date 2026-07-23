@@ -100,6 +100,22 @@ Project init owns project-local MDF state under the canonical root:
 
 Do not create an independent `.mdf/` directory inside a linked worktree. A linked worktree under `<canonical-root>/.worktrees/<branch>` reads and writes the canonical root `.mdf/` store.
 
+### Setup PR
+
+When the user approves a setup PR, `init` owns it directly after the setup
+commit exists:
+
+1. Require the clean setup branch, origin, GitHub authentication, expected base,
+   and pre-push mergeability.
+2. Query open PRs by exact head repository owner/name and branch. Stop on
+   multiple matches, a different base, or uncertain state.
+3. Push and verify that the remote branch OID equals local HEAD.
+4. Update the exact matching PR or create one when none exists. Never create a
+   duplicate. Use the supplied setup title, `release-none`, and explain that MDF
+   setup resumes after merge.
+5. Report the branch, commit, and PR result. Do not merge, deploy, force-push,
+   delete, or modify MDF project state.
+
 ### Ignore Policy
 
 Before creating or writing project `.mdf/` inside a git repository, verify that both local workflow-state paths are ignored:
@@ -176,10 +192,10 @@ If either `.mdf/` or `.worktrees/` is not ignored:
    - The agent rules addition or update only when the user approved it, no equivalent unmarked or human-authored docs-before-work rule already exists, and the change preserves existing style and unrelated content.
    - MDF-created docs-before-work blocks must use `<!-- MDF:BEGIN context-check -->` and `<!-- MDF:END context-check -->`; marker-free human-authored equivalent rules must still be respected and not duplicated.
 11. Commit with `chore: set up MDF project workflow state`.
-12. If the user agreed to open a PR, invoke the `github-pr` skill's MDF init setup PR mode from the setup branch after the setup commit exists. Provide this setup PR intent to `github-pr`: title `chore: set up MDF project workflow state`, no-release behavior through `release-none`, and body context explaining that MDF setup cannot continue until the setup PR is merged.
-13. Stop after reporting the setup branch, commit, and the PR result returned by `github-pr` when available. The user should rerun `mdf init` after the setup PR is merged.
+12. If the user agreed to open a PR, run Setup PR with title `chore: set up MDF project workflow state`.
+13. Stop after reporting the setup branch, commit, and PR result. The user should rerun `mdf init` after the setup PR is merged.
 
-This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, or setup PR delegation flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, or setup PRs. Setup PR push/create/update mechanics belong to `github-pr`, not `init`.
+This is the only MDF setup branch, `.gitignore` edit, optional basic docs structure creation, optional agent-rules setup, setup commit, or setup PR flow for MDF project setup. Other MDF skills must not create tracked docs, agent rules, setup branches, setup commits, or setup PRs.
 
 ### Optional Docs And Agent Rules Setup
 
@@ -206,8 +222,8 @@ Only create a setup branch when the user approves at least one tracked docs or a
    - Add or update agent rules only when no equivalent unmarked or human-authored docs-before-work rule already exists.
    - Use MDF context-check markers for MDF-created docs-before-work blocks and update only the existing MDF-managed block when present.
 5. Commit with `chore: set up MDF project documentation`.
-6. If the user agreed to open a PR, invoke the `github-pr` skill's MDF init setup PR mode from the setup branch after the setup commit exists. Provide this setup PR intent to `github-pr`: title `chore: set up MDF project documentation`, no-release behavior through `release-none`, and body context explaining that MDF setup cannot continue until the setup PR is merged.
-7. Stop after reporting the setup branch, commit, and the PR result returned by `github-pr` when available. The user should rerun `mdf init` after the setup PR is merged.
+6. If the user agreed to open a PR, run Setup PR with title `chore: set up MDF project documentation`.
+7. Stop after reporting the setup branch, commit, and PR result. The user should rerun `mdf init` after the setup PR is merged.
 
 If the user declines tracked docs and agent-rule setup, or the project already has clear equivalent conventions, continue normal project init.
 
