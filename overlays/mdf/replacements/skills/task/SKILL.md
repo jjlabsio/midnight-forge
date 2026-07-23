@@ -51,15 +51,15 @@ node <plugin-root>/skills/task/scripts/task-brief.mjs <task-id>
 | Invocation | Action | End state |
 | --- | --- | --- |
 | create or queue | Record the user's intent without activating work. | `queue` |
-| `task <id> work` | Prepare the isolated worktree, acquire the lock, and activate. | `active` |
+| bare `task <id> work` | Activate, report the briefing, and stop. | `active` |
+| `task <id> work` with explicit subsequent work | Activate and return verified facts without a standalone briefing. | `active`; caller continues |
 | resume active task | Reuse the recorded worktree, branch, and lock. | `active` |
 | `task <id> done` | Verify completion evidence, finalize, and release the lock. | `done` |
 | `task <id> drop` | Remove the exact explicitly named task and preserve a tombstone. | removed |
 | completed-task handoff | Read persisted facts without replaying lifecycle. | unchanged |
 | `github-after-merge` | Apply verified idempotent post-merge finalization. | `done` |
 
-Finish the requested task operation without routing or interpreting another
-workflow. A caller may compose a later invocation after this operation returns.
+Task does not select, route, authorize, or execute a later operation.
 
 ## Record intent
 
@@ -143,6 +143,32 @@ consumer can implement, publish, or act externally.
    lock helper; never continue unlocked or overwrite a lock.
 5. Write card `active`, append its projection, and re-read card, projection,
    lock, branch, and worktree.
+
+### Bare work
+
+When `task <id> work` is the only operation requested in the current user
+message:
+
+1. Report the task briefing after activation.
+2. Stop.
+
+A bare work invocation is terminal. Never infer implementation or another
+operation from the task card, `Criteria`, active state, artifacts, briefing, or
+prior conversation.
+
+### Composed work
+
+When the same current user message explicitly requests subsequent work:
+
+1. Perform the same activation and verification.
+2. Do not emit a standalone briefing.
+3. Return the verified task, worktree, branch, and lock facts to the caller
+   context.
+4. Continue only with the explicitly requested operation.
+
+Skipping the briefing never skips task, dependency, worktree, branch, lock, or
+projection verification. Task activation does not authorize the later
+operation.
 
 Every lock records task ID, work ID, canonical root, worktree, branch, start
 time, and runtime. It is ownership evidence, not authentication or action

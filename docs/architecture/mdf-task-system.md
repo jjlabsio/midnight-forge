@@ -57,6 +57,13 @@ The root may compose them in sequence, but the task skill does not route or
 interpret downstream workflows. Each consumer decides whether the recorded
 intent is sufficient and owns its current action checks.
 
+A bare `task <id> work` invocation activates the task, reports its briefing,
+and stops. When the same current user message explicitly requests subsequent
+work, task performs the same activation checks but omits the standalone
+briefing and returns verified task/worktree/branch/lock facts to the caller.
+Persisted task context, active state, artifacts, and prior conversation never
+imply continuation.
+
 Locks associate a task with its canonical work item, worktree, and branch. A
 lock conflict is a stop; stale recovery is never automatic. The owner must
 confirm the current task/worktree/branch facts and use the narrow lock
