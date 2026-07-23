@@ -57,6 +57,22 @@ worktree facts are confirmed. Never infer staleness from elapsed time alone.
 
 ## Intent and action authority
 
+- A task card's intent must be self-contained: a reader with only `item.md`
+  can distinguish the confirmed user intent, accepted agent proposal,
+  interpretation, evidence, delegated judgment, and unresolved points that
+  materially define the work.
+- Keep the triggering request verbatim. When it refers to earlier discussion,
+  preserve only the minimum prior user statements and explicitly accepted agent
+  proposal needed to resolve that reference, with their provenance labeled.
+  Add a resolved-context section and its labeled subsections only when each
+  contains material context; do not add unrelated transcript to an otherwise
+  self-contained request.
+- Record a material user-term-to-task-language mapping as an interpretation;
+  do not silently normalize it. If the mapping or reference cannot be resolved
+  confidently, keep it unresolved rather than inventing intent.
+- Semantic reference resolution remains model judgment. Do not replace it with
+  a transcript copier, phrase list, intent parser, completeness score, schema,
+  or broad validator.
 - A task records user intent, uncertainty, and evidence. It does not collect
   advance authority for a consuming workflow or action.
 - A task create or revise request authorizes that exact card mutation. Do not
