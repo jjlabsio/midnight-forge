@@ -48,6 +48,15 @@ Use two explicit planes.
   critic reports are evidence, not authority.
 - Keep one writer in a shared worktree. A critic never receives executor
   reasoning as its review target.
+- Wait for every dispatched subagent's actual terminal response. A caller-side
+  wait timeout, no update, or elapsed silence is not terminal or failure
+  evidence: while the subagent remains running, keep waiting, never interrupt it
+  merely for slowness or silence, and never dispatch a replacement writer
+  before the prior writer is terminal.
+- When a critic requests changes, rework the actual target and dispatch a fresh
+  critic; repeat until accepted or an existing substantive stop condition
+  blocks progress. Raw executor or critic dispatch count alone never causes
+  `BLOCKED`.
 - Use actual artifact bytes, Git state, command results, and commit OIDs as
   evidence. After each accepted operation, write an immutable canonical root
   handoff that links every executor and critic attempt to its role-specific
