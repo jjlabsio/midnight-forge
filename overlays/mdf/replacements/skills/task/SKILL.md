@@ -215,8 +215,10 @@ Use only `queue`, `active`, and `done`.
 
 ### Complete
 
-- Apply `done` only on an explicit completion/finalization invocation after
-  current criteria and required evidence pass.
+- Never mark a task `done` unless applicable completion criteria and evidence pass,
+  and either the current user message explicitly invokes `task <id> done` or `github-after-merge` verifies the accepted revision merged.
+- Never infer completion from criteria, artifacts, commits, PRs, checks, handoffs,
+  workflow progress, or prior conversation; otherwise keep the task `active` and its lock held.
 - Require a source commit when source changes are in scope; require none when
   the task explicitly permits no source changes.
 - Write the card, append and re-read the projection, then release only the exact
