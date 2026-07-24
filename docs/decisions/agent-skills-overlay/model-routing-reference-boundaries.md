@@ -20,7 +20,7 @@ Keep the references with non-overlapping responsibilities:
 
 - `model-routing-5.6.md` is the sole shared model-and-effort selection policy.
   It owns eligibility, capability-floor selection, performance-informed
-  efficiency, unplotted-candidate handling, and architect/critic role floors.
+  efficiency, and unplotted-candidate handling.
 - `model-routing-performance.md` contains the chart readings and interpretation
   limits only. It may provide comparative context but no routing rule.
 - `subagent-dispatch-policy.md` owns dispatch preparation, instruction source,

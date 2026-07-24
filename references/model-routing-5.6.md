@@ -45,21 +45,6 @@ A runtime-supported eligible setting absent from the chart remains a candidate.
   reversibility make that uncertainty acceptable.
 - Missing chart data never causes automatic escalation.
 
-## Role floor
-
-For roles that design, implement, or judge the same artifact, change, or
-decision:
-
-- each requested architect and critic model-and-effort pair must have capability
-  equal to or greater than the requested executor pair;
-- compare charted pairs by intelligence reading and same-family pairs by
-  runtime-native effort order;
-- if an unplotted cross-family comparison cannot establish the floor, use the
-  executor pair or a known-higher setting in the same family.
-
-This applies even when the roles are dispatched as separate operations. The
-role floor is not itself evidence for capability above the executor.
-
 ## Rationale
 
 Use the existing dispatch rationale to state:
