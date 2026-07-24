@@ -1,9 +1,9 @@
 # Auto Workflow PR Profile
 
 This reference is the only owner of `auto-workflow-pr` composition. Load
-`automatic-operation-contract.md` for shared operation rules and
-`auto-workflow-contract.md` for the local workflow this profile runs or
-resumes.
+`<plugin-root>/references/automatic-operation-contract.md` for shared operation
+rules and `<plugin-root>/references/auto-workflow-contract.md` for the local
+workflow this profile runs or resumes.
 
 ## Sequence
 

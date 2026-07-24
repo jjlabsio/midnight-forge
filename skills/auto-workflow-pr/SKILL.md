@@ -8,9 +8,11 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 ## Load
 
 1. Resolve the installed plugin root.
-2. Load `automatic-operation-contract.md`, `auto-workflow-contract.md`,
-   `auto-workflow-pr-contract.md`, `subagent-dispatch-policy.md`, and the
-   routing references required by that policy.
+2. Load `<plugin-root>/references/automatic-operation-contract.md`,
+   `<plugin-root>/references/auto-workflow-contract.md`,
+   `<plugin-root>/references/auto-workflow-pr-contract.md`,
+   `<plugin-root>/references/subagent-dispatch-policy.md`, and the routing
+   references required by that policy.
 3. Select the `auto-workflow-pr` profile.
 
 ## Root controller

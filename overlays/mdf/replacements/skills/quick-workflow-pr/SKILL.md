@@ -8,9 +8,10 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
 ## Load
 
 1. Resolve the installed plugin root.
-2. Load `automatic-operation-contract.md`, `quick-workflow-pr-contract.md`,
-   `subagent-dispatch-policy.md`, and the routing references required by that
-   policy.
+2. Load `<plugin-root>/references/automatic-operation-contract.md`,
+   `<plugin-root>/references/quick-workflow-pr-contract.md`,
+   `<plugin-root>/references/subagent-dispatch-policy.md`, and the routing
+   references required by that policy.
 3. Select the `quick-workflow-pr` profile. Use it only when the user
    explicitly selected the bounded small-change workflow.
 

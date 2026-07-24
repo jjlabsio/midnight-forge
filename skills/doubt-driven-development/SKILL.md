@@ -42,15 +42,16 @@ If you doubt every keystroke, you ship nothing. The skill applies only to non-tr
 ## Loading Constraints
 
 This skill is designed for the **main-session orchestrator**, where Step 3 (DOUBT, detailed below) can spawn a fresh-context reviewer.
+Resolve the installed plugin root before applying these constraints.
 
-- **Do NOT add this skill to a persona's `skills:` frontmatter.** A persona that follows Step 3 would spawn another persona — the orchestration anti-pattern explicitly forbidden by `references/orchestration-patterns.md` ("personas do not invoke other personas").
+- **Do NOT add this skill to a persona's `skills:` frontmatter.** A persona that follows Step 3 would spawn another persona — the orchestration anti-pattern explicitly forbidden by `<plugin-root>/references/orchestration-patterns.md` ("personas do not invoke other personas").
 - **If you find yourself applying this skill from inside a subagent context** (where Claude Code prevents nested subagent spawn): the preferred path is to surface to the user that doubt-driven cannot run nested and let the main session handle it. As a last resort only, a degraded self-questioning fallback exists — rewrite ARTIFACT + CONTRACT as a fresh self-prompt with a hard mental separator from your prior reasoning, and walk Steps 1–5. This is **not fresh-context review** (you carry your own context with you), so flag the result as degraded and prefer escalation whenever the user is reachable.
 
 ## Central dispatch requirement
 
-Before Step 3 delegates a fresh-context reviewer, the root loads the plugin-installed
-`../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md`. The root classifies the decision's
+Before Step 3 delegates a fresh-context reviewer, the root loads
+`<plugin-root>/references/subagent-dispatch-policy.md` and
+`<plugin-root>/references/model-routing-5.6.md`. The root classifies the decision's
 difficulty and risk, verifies a GPT-5.6 capability at the `high` floor, and
 passes the selected dispatch record plus the exact adversarial prompt through
 the generic runtime spawn path. The reviewer receives the artifact and
@@ -190,7 +191,7 @@ If 3 cycles is "obviously insufficient" because the artifact is large: the artif
 - **`source-driven-development`**: SDD verifies *facts about frameworks* against official docs. Doubt-driven verifies *your reasoning about the artifact*. SDD checks the API exists; doubt-driven checks you used it correctly under the contract.
 - **`test-driven-development`**: TDD's RED step is doubt made concrete — a failing test is a disproof attempt. When TDD applies, that failing test *is* the doubt step for behavioral claims.
 - **`debugging-and-error-recovery`**: when the reviewer surfaces a real failure mode, drop into the debugging skill to localize and fix.
-- **Repo orchestration rules** (`references/orchestration-patterns.md`): this skill orchestrates from the main session. A persona calling another persona is anti-pattern B — see Loading Constraints above.
+- **Repo orchestration rules** (`<plugin-root>/references/orchestration-patterns.md`): this skill orchestrates from the main session. A persona calling another persona is anti-pattern B — see Loading Constraints above.
 
 ## Verification
 

@@ -42,7 +42,8 @@ the current diff and verification evidence.
 
 ## 2. Preflight
 
-1. Load `../../references/mdf-preserved-contract.md`. Stop on its malformed
+1. Resolve the installed plugin root and load
+   `<plugin-root>/references/mdf-preserved-contract.md`. Stop on its malformed
    state and unsafe-path conditions before reading or writing MDF state.
 2. Check the checkout, non-default branch, `git status --short`, origin,
    GitHub authentication, default branch, and matching open PRs.

@@ -35,7 +35,8 @@ roles; do not create divergent `tasks/` copies.
    guidance, decisions, task state, and relevant code.
 4. Include dependencies, owned paths, acceptance criteria, verification,
    checkpoints, and the whole-build verification matrix.
-5. Apply `approval-evidence.md` to the exact artifact path and SHA-256.
+5. Apply `<plugin-root>/references/approval-evidence.md` to the exact artifact
+   path and SHA-256.
 6. Stop after the plan. Build is a separate invocation.
 
 When delegated, report operation, status, inputs, output path and hash,

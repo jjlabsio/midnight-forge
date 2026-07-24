@@ -7,8 +7,9 @@ script-enforced model contract.
 
 Before selection:
 
-1. Consult `model-routing-performance.md` as a qualitative cost/intelligence
-   prior, not a capability guarantee.
+1. Resolve the installed plugin root and consult
+   `<plugin-root>/references/model-routing-performance.md` as a qualitative
+   cost/intelligence prior, not a capability guarantee.
 2. Assess boundedness, ambiguity, risk, consequence, verification demand,
    required quality, runtime capability, and transport compatibility.
 3. Include one-person-builder costs: feedback latency, unnecessary complexity,
@@ -46,8 +47,8 @@ Before selection:
 
 - Exclude every GPT-5.6 Luna profile from MDF-managed subagent selection.
 - Do not request Luna for an executor, critic, specialist, or exploration worker.
-- Treat Luna entries in `model-routing-performance.md` as observational context,
-  not selectable candidates.
+- Treat Luna entries in `<plugin-root>/references/model-routing-performance.md`
+  as observational context, not selectable candidates.
 - Select among suitable non-Luna candidates using the normal routing criteria.
 - Do not interpret this runtime-availability exclusion as evidence that Luna is
   unsuitable for the work.

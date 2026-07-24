@@ -329,8 +329,9 @@ For detailed DevTools setup instructions and workflows, see `browser-testing-wit
 ## Central dispatch requirement
 
 When TDD delegates a reproduction test or coverage investigation, the root
-loads the plugin-installed `../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md`. Classify implementation/testing
+resolves the installed plugin root and loads
+`<plugin-root>/references/subagent-dispatch-policy.md` and
+`<plugin-root>/references/model-routing-5.6.md`. Classify implementation/testing
 difficulty and risk, verify a GPT-5.6 capability at the `high` floor, and pass
 the root-selected dispatch record plus one resolved instruction source through
 the generic runtime spawn path. Automatic test workers use the `skill-backed`
@@ -365,7 +366,9 @@ This separation ensures the test is written without knowledge of the fix, making
 
 ## See Also
 
-For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
+For detailed testing patterns, examples, and anti-patterns across frameworks,
+resolve the installed plugin root and see
+`<plugin-root>/references/testing-patterns.md`.
 
 ## Common Rationalizations
 

@@ -88,7 +88,7 @@ worktree facts are confirmed. Never infer staleness from elapsed time alone.
   reusable authority for a different action.
 
 Standalone spec/plan artifact confirmation remains defined by
-[`approval-evidence.md`](approval-evidence.md). Push, PR, merge, deploy,
-branch/worktree deletion, risk acceptance, and dirty cleanup follow the current
-consuming invocation and skill contract. Historical artifacts remain readable
-when their producer is no longer installed.
+`<plugin-root>/references/approval-evidence.md`. Push, PR, merge, deploy,
+branch/worktree deletion, risk acceptance, and dirty cleanup follow the
+current consuming invocation and skill contract. Historical artifacts remain
+readable when their producer is no longer installed.

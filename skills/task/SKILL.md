@@ -5,10 +5,10 @@ description: "Manage one local MDF task lifecycle from canonical project state."
 
 # task
 
-Manage one task's intent and local lifecycle. Load
-[`mdf-preserved-contract.md`](../../references/mdf-preserved-contract.md) first.
-Keep semantic judgment in the model; do not add a task controller or make this
-skill depend on a consuming workflow.
+Manage one task's intent and local lifecycle. Resolve the installed plugin root
+and load `<plugin-root>/references/mdf-preserved-contract.md` first. Keep
+semantic judgment in the model; do not add a task controller or make this skill
+depend on a consuming workflow.
 
 ## Preflight
 
@@ -65,7 +65,7 @@ Task does not select, route, authorize, or execute a later operation.
 
 Start `Context` with the triggering request verbatim. Apply the
 self-contained task-intent invariant in
-[`mdf-preserved-contract.md`](../../references/mdf-preserved-contract.md).
+`<plugin-root>/references/mdf-preserved-contract.md`.
 
 For a request that refers to earlier discussion, add `Resolved context` after
 the triggering request only when material context is needed. Include each

@@ -1,7 +1,8 @@
 # Local Auto Workflow Profile
 
 This reference is the only owner of `auto-workflow` composition. Load
-`automatic-operation-contract.md` for every shared operation rule.
+`<plugin-root>/references/automatic-operation-contract.md` for every shared
+operation rule.
 
 ## Sequence
 

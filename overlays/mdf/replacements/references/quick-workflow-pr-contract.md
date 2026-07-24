@@ -1,7 +1,8 @@
 # Quick Workflow PR Profile
 
 This reference is the only owner of `quick-workflow-pr` composition. Load
-`automatic-operation-contract.md` for every shared operation rule.
+`<plugin-root>/references/automatic-operation-contract.md` for every shared
+operation rule.
 
 Use this profile only when the user explicitly selects the bounded
 small-change workflow. Use the user request and current task context as the
