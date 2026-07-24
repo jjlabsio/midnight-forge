@@ -9,10 +9,10 @@ Codex/MDF prompt-dispatch boundary.
 - The upstream Markdown files under `agents/` are the canonical persona
   prompts. A persona name is a resolver key, not proof that its instructions
   were loaded.
-- Before every delegation, the root loads the plugin-installed
-  `../references/subagent-dispatch-policy.md`,
-  `../references/model-routing-5.6.md`, and
-  `../references/model-routing-performance.md`. GPT-5.6 is the default; only
+- Before every delegation, the root loads
+  `<plugin-root>/references/subagent-dispatch-policy.md`,
+  `<plugin-root>/references/model-routing-5.6.md`, and
+  `<plugin-root>/references/model-routing-performance.md`. GPT-5.6 is the default; only
   narrow, read-only, report-only exploration uses the exact
   `gpt-5.3-codex-spark` model with its highest supported reasoning setting.
   The root selects the MDF model and reasoning record, then resolves exactly
