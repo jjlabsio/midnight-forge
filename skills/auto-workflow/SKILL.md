@@ -8,11 +8,9 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
 ## Load
 
 1. Resolve the installed plugin root.
-2. Run exact upstream `using-agent-skills` discovery and load every applicable
-   primitive.
-3. Load `auto-workflow-contract.md`, `subagent-dispatch-policy.md`, and the
+2. Load `auto-workflow-contract.md`, `subagent-dispatch-policy.md`, and the
    routing references required by that policy.
-4. Select only the `auto-workflow` profile.
+3. Select only the `auto-workflow` profile.
 
 ## Root controller
 
