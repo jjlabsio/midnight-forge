@@ -1,61 +1,70 @@
 # Automatic Operation Contract
 
-This reference is the only owner of behavior shared by every automatic
-workflow operation. Profile references own composition, profile-specific
-authority, and completion. Stage skills are mode-blind and do not load
-automatic contracts.
+This reference owns behavior shared by every automatic workflow operation.
+Profile references own composition, profile-specific authority, and completion.
+Stage skills remain mode-blind and do not load automatic contracts.
+
+## State decisions
+
+Use observable state, not elapsed caller time:
+
+| Observed state | Root action |
+| --- | --- |
+| Executor or critic is `running` | Wait for its actual terminal response. |
+| Caller `wait` timed out, the role is silent, or no update arrived | Keep waiting while the role remains `running`. These are not failure, stop, deadlock, completion, or replacement evidence. |
+| Executor returned a terminal report | Observe the target and evidence, persist the report, then dispatch the critic. |
+| Executor ended terminally without a report | Follow **Terminal no-report transport failure**. Do not dispatch a critic or accept the attempt. |
+| Critic returned `changes_requested` | Rework the same actual target and dispatch a fresh critic. |
+| A DDD-class finding has materially changed evidence | Re-enter the affected operation and obtain a fresh adversarial review. |
+| A DDD-class review repeats the core finding without changed evidence | Stop `BLOCKED` or request the user-owned decision. |
+
+Never interrupt or replace a running role merely because a caller wait timed
+out, the role stayed silent, a deadline approached, or an agent slot remained
+occupied. Raw dispatch count alone never causes `BLOCKED`.
 
 ## Root boundary
 
 Before every operation:
 
-1. Treat task creation/activation and the workflow as independent operations.
-   Read the exact task, card, lock, worktree, branch, and latest handoff without
-   requiring a workflow-readiness field or task-level action grant.
+1. Treat task creation or activation and the workflow as independent
+   operations. Read the exact task, card, lock, worktree, branch, and latest
+   handoff; require no workflow-readiness field or task-level action grant.
 2. Re-read Git, artifacts, and applicable remote state.
-3. Check whether task intent is sufficient for the selected profile:
+3. Resolve intent:
    - continue when outcome, constraints, and delegated judgment make the next
      stage unambiguous;
    - use `interview-me` for materially different user outcomes, unresolved
-     user-owned trade-offs, or missing intent that cannot be settled by spec;
+     user-owned trade-offs, or missing intent that specification cannot settle;
    - use `idea-refine` only for requested ideation, stress-testing, or product
      direction, never for delegated technical alternatives;
    - stop when required interaction is unavailable.
-4. Apply only the selected profile. Its explicit invocation grants the ordinary
-   operations listed by that profile; do not request per-stage ceremonial
-   approval.
+4. Apply only the explicitly selected profile. Its invocation grants its
+   ordinary operations; request no per-stage ceremonial approval.
 5. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
    user-owned decisions, material scope expansion, or action outside the
    profile.
 
-Root-only actions:
+Only the root may select, skip, accept, retry, commit, advance lifecycle, write
+canonical handoffs or observations, act externally, or synthesize the result.
 
-- select, skip, accept, retry, commit, and advance lifecycle;
-- write canonical root handoffs and observations;
-- perform external actions and final synthesis.
+Always keep one writer per shared worktree, treat reports as evidence rather
+than authority, and use no nested delegation, runtime controller, or
+machine-only protocol.
 
-Always:
+## Operation sequence
 
-- keep one writer per shared worktree;
-- treat reports as evidence, not authority;
-- use no nested delegation, runtime controller, or machine-only protocol.
-
-## Operation binding
-
-Use this sequence for automatic artifact and implementation operations:
+For every automatic artifact or implementation operation:
 
 1. Dispatch one skill-backed executor with the exact adapter, acceptance
-   baseline, target, owned paths, checks, and stop rules. The called adapter
-   loads the primitives required by its public contract.
-2. Wait for its actual terminal response; while it remains running, keep
-   waiting and never interrupt or replace it merely because a caller wait timed
-   out or it stayed silent.
+   baseline, target, owned paths, checks, and stop rules. The adapter loads the
+   primitives required by its public contract.
+2. Wait until that executor returns an actual terminal response.
 3. Re-read the actual artifact or diff, Git state, and command results.
-4. Persist the executor report; add root-observed changed paths when applicable.
+4. Persist the executor report and root-observed changed paths when applicable.
 5. Dispatch one distinct fresh read-only critic with the actual target,
    canonical critic adapter, and original acceptance baseline. Exclude executor
    reasoning.
-6. Accept, rework, or finish `BLOCKED` in the root.
+6. In the root, accept, rework, or finish `BLOCKED`.
 
 | Role | May | Must not |
 | --- | --- | --- |
@@ -63,67 +72,86 @@ Use this sequence for automatic artifact and implementation operations:
 | Critic | Assess the root-observed target | Write, delegate, commit, accept, advance lifecycle, or receive another verifier |
 | Root | Observe state, persist evidence, decide, commit, and continue | Accept missing, partial, stale, changed-target, or non-independent results |
 
-Critic binding:
+Bind critics as follows:
 
-- Spec and plan: assess the completed artifact against the exact stage contract
-  and primitive criteria; do not execute writing, persistence, or confirmation.
-- Build and whole-tree: apply canonical `review` and
-  `code-review-and-quality`.
-- Simplification: apply the same review and verify behavior preservation.
+| Target | Critic contract |
+| --- | --- |
+| Spec or plan | Assess the completed artifact against the exact stage contract and primitive criteria; do not write, persist, or confirm. |
+| Build or whole tree | Apply canonical `review` and `code-review-and-quality`. |
+| Simplification | Apply the same review and verify behavior preservation. |
 
 Use distinct suitable quality-critical subagents and the shared dispatch
-policy. When a critic returns `changes_requested`, rework the actual target and
-dispatch a fresh critic; repeat until accepted or an existing substantive stop
-condition blocks progress. Raw executor or critic dispatch count alone never
-causes `BLOCKED`.
+policy. After `changes_requested`, rework the actual target and dispatch a
+fresh critic until accepted or an existing substantive stop condition blocks
+progress.
 
-Automatic call-site ports:
+At an automatic call site:
 
-- critic plus root acceptance replaces an intermediate human confirmation;
+- critic plus root acceptance replaces intermediate human confirmation;
 - root review and commit replaces an executor commit or completion step.
 
-### DDD-class decision recovery
+## DDD-class decision recovery
 
-The root selects the MDF-only `auto-doubt-driven-development` skill only when
-a DDD-class non-trivial decision needs fresh adversarial decision recovery.
-Every automatic profile inherits this root rule.
-The root intercepts every DDD-class trigger encountered while an automatic
-profile runs a mode-blind stage or executor and routes it through this skill.
-An automatic executor must not enter standalone `doubt-driven-development`;
-the root keeps that automatic selection outside the mode-blind adapter. Direct
-standalone build and DDD use remain unchanged.
-Ordinary executor/critic `changes_requested` rework stays in the operation
-binding above; it is not a DDD cycle. Stage adapters do not select or load this
-skill.
+Only the root selects MDF-only `auto-doubt-driven-development`, and only for a
+DDD-class non-trivial decision requiring fresh adversarial recovery. Every
+automatic profile inherits this rule.
 
-The root re-enters the affected operation while a changed artifact or contract,
-or newly verified evidence, materially addresses a substantive finding and a
-fresh review evaluates that changed target. There is no numerical cycle cap.
-When a fresh adversarial review finds no substantive issue, or only explicitly
-harmless/trivial findings, record the DDD decision as `resolved` and continue
-the current operation under its normal acceptance criteria. A substantive
-finding is not resolved merely because it was already considered: without new
-relevant evidence, it remains no progress and is `BLOCKED` or a user-owned
-decision. `resolved` is distinct from no progress and does not itself accept a
-partial or stale operation.
-An unchanged-target review or repeated core finding without new relevant
-evidence is no progress: stop as `BLOCKED` or request the user-owned decision
-instead of repeating it. Existing scope, authority, safety, and destructive
-action stops still apply.
+- Intercept a DDD-class trigger from a mode-blind stage or executor and route it
+  through `auto-doubt-driven-development`.
+- Never let an automatic executor enter standalone
+  `doubt-driven-development`. Direct standalone build and DDD remain unchanged.
+- Keep ordinary executor/critic `changes_requested` in the operation sequence;
+  it is not a DDD cycle. Stage adapters neither select nor load automatic DDD.
+- Re-enter while a changed artifact, changed contract, or newly verified
+  evidence materially addresses a substantive finding and a fresh review
+  evaluates that changed target. Apply no numerical cycle cap.
+- Record `resolved` only when a fresh review finds no substantive issue or only
+  explicitly harmless or trivial findings. Then continue under the operation's
+  normal acceptance criteria; `resolved` never accepts a partial or stale
+  operation.
+- Treat an unchanged-target review or repeated core finding without new
+  relevant evidence as no progress. Stop `BLOCKED` or request the user-owned
+  decision.
 
-Record DDD recovery in the existing persisted role reports and handoff. A
-returned role report records provider failures and backoff separately with
-response, time, and retry context. A terminal no-report transport failure uses
-the immutable transport-retry handoff below before retrying. These facts are
-neither quality findings nor DDD cycles, and a later user resume does not reset
-them. Do not add a controller, retry schema, or lifecycle state.
-
+Existing scope, authority, safety, and destructive-action stops still apply.
 Preserve every upstream acceptance, TDD, verification, fallback, and stop
-criterion. Standalone stage behavior is unchanged.
+criterion. Standalone stage behavior remains unchanged.
 
-## Stage reports and root handoff
+Record DDD recovery in the existing role reports and handoff. In a returned
+role report, record provider failures and backoff separately with response,
+time, and retry context. A later user resume does not reset those facts.
+Transport failures are neither quality findings nor DDD cycles. Add no
+controller, retry schema, or lifecycle state.
 
-Executor report; include only applicable fields:
+## Evidence
+
+### Before each executor attempt
+
+1. Reject unrelated dirt.
+2. Record the full stage-start commit OID.
+
+### After each executor attempt
+
+Run from the target worktree:
+
+```bash
+node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
+  <exact-worktree-root> <stage-start-commit>
+```
+
+- Attach the exact output as `Changed paths (operation scope)` to a returned
+  executor report.
+- Reuse the same stage-start baseline for rework attempts.
+- Treat changed paths as cumulative evidence, not ownership or acceptance. The
+  executor neither calculates nor claims them.
+- For spec and plan, record the output path and SHA-256 instead.
+- For critics, record the bound target.
+
+Persist each returned executor and critic report as a separate immutable
+artifact under `.mdf/work/<work-id>/` before acceptance. Pass its path to the
+terminal observation append.
+
+An executor report contains only applicable fields:
 
 - invocation ID;
 - operation and status;
@@ -131,33 +159,32 @@ Executor report; include only applicable fields:
 - commands and results;
 - findings, assumptions, and blockers.
 
-Root evidence rules:
+Never put `Next`, allowed actions, acceptance, lifecycle transitions, or mode
+policy in a role report.
 
-1. Persist every executor and critic report as a separate immutable artifact
-   under `.mdf/work/<work-id>/` before acceptance.
-   Pass that persisted role-report path to the terminal observation append.
-2. Before every executor attempt, record the full stage-start commit OID.
-3. After every executor attempt, run from the target worktree:
+### Terminal no-report transport failure
 
-   ```bash
-   node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
-     <exact-worktree-root> <stage-start-commit>
-   ```
+After an executor ends terminally without a report:
 
-4. Attach the exact output as `Changed paths (operation scope)` to the persisted
-   executor report. Reuse the same baseline for rework attempts.
-5. Treat the output as cumulative path evidence, not ownership or acceptance.
-   The executor does not calculate or claim it.
-6. Reject unrelated dirt before dispatch. For spec and plan, record output path
-   and SHA-256 instead. For critics, record the bound target.
-7. For a terminal no-report executor transport failure, still run the helper
-   from the stage-start commit before retrying. With no role report to attach,
-   preserve its exact `Changed paths (operation scope)` output and the
-   root-observed Git/verification command results in the existing handoff
-   verification text.
+1. Run the changed-path helper from the original stage-start commit.
+2. Preserve its exact changed paths and root-observed Git and verification
+   results in the next handoff's verification text.
+3. Write the immutable handoff before any retry:
+   - include only the actual executor attempt line;
+   - use `report: none` and preserve the raw terminal status;
+   - set every accepted-result and critic field to `none`;
+   - preserve the verbatim provider response, root-observed time, and
+     retry/backoff context in the existing blocker or verification text.
+4. Append the terminal observation with this handoff as its artifact reference.
+   Create no parallel routing artifact.
+5. Re-read the handoff and observation.
+6. Apply **Recovery**. Retry only when it permits re-entry; otherwise finish at
+   the applicable substantive stop.
 
-Do not put `Next`, allowed actions, acceptance, lifecycle transitions, or mode
-policy in a stage report.
+This procedure records no accepted executor result, critic result, or lifecycle
+transition. Do not dispatch a critic for the failed attempt.
+
+## Root handoff
 
 After each accepted or terminally blocked operation, and before retrying a
 terminal no-report transport failure, write the next immutable
@@ -178,55 +205,39 @@ accepted_artifact: <path and SHA-256 | none>
 accepted_commit_oid: <full OID | none>
 ```
 
-Handoff rules:
+Handoff invariants:
 
-- Write one repeatable role-specific attempt line per actual dispatch, in
-  dispatch order. Omit an executor or critic line until that role is dispatched;
-  never create a placeholder invocation ID.
-- The matching attempt line is the role-specific handoff link for the terminal
-  observation's persisted report. When `report: none`, the already-written
-  handoff itself is the terminal observation's artifact reference; do not
-  create a parallel routing artifact.
-- Record task/profile identity, Git state, verification, critic outcome,
+- Write one role-specific attempt line per actual dispatch, in dispatch order.
+  Omit a role until dispatched; never invent a placeholder invocation ID.
+- Use the matching attempt line as the role-specific terminal-observation link.
+  With `report: none`, use the handoff itself as the artifact reference.
+- Record task and profile identity, Git state, verification, critic outcome,
   blockers, and the root-owned cursor.
-- Use `report: none` for no returned report and `assessment: none` for no critic
-  assessment. Never fabricate a report.
-- In a terminal no-report executor transport handoff before any critic runs,
-  include only its executor attempt line. Set
-  `accepted_executor_invocation_id`, `accepted_executor_report`,
-  `accepted_artifact`, `accepted_commit_oid`, both accepted critic fields, and
-  `critic_assessment` to `none`; this is no executor acceptance or critic
-  result, not a blocked critic assessment.
-- For a retryable terminal no-report transport failure, write that handoff
-  before dispatching a replacement. Preserve the raw terminal status in its
-  role-specific attempt line and the verbatim provider response, root-observed
-  time, retry/backoff context, exact changed paths, and root-observed
-  verification in its existing blockers/verification text. Append the terminal
-  observation with this handoff path, then re-read the handoff and observation
-  before retrying. It records no accepted result and does not add a lifecycle
-  transition.
-- Use `none` for every unaccepted result in a blocked handoff.
+- Use `report: none` only when no report returned and `assessment: none` only
+  when no critic assessment exists. Never fabricate a report.
+- Use `none` for every unaccepted result in a blocked or terminal no-report
+  handoff.
 - Never rewrite an earlier handoff.
-- On resume, derive the next operation from the profile and actual state; never
-  trust the cursor over card, lock, artifacts, Git, or remote state.
+- On resume, derive the next operation from the profile and actual state. Never
+  trust the cursor over the card, lock, artifacts, Git, or remote state.
 
 ## Recovery
 
 On failure:
 
 1. Keep the same task, worktree, branch, and lock.
-2. Revalidate HEAD/base evidence, the acceptance baseline, applicable spec or
-   plan scope and dependencies, completed commits, and the current tree.
+2. Revalidate HEAD and base evidence, the acceptance baseline, applicable spec
+   or plan scope and dependencies, completed commits, and the current tree.
 3. Re-enter the earliest invalidated operation.
 4. Make no source change for external or flaky evidence alone.
-5. Stop for changed user intent, public behavior, security/privacy/data
+5. Stop for changed user intent, public behavior, security, privacy or data
    boundaries, material architecture, cost, rollback, or destructive action.
 
 Do not create a repair task, lifecycle state, or recovery controller.
 
-## Completion
+## Shared completion boundary
 
 - Finish with verified success inside the selected profile or `BLOCKED`.
 - Treat GitHub as authority for PR, remote OID, checks, mergeability, conflicts,
   and merge state.
-- Do not treat a push or PR URL as completion.
+- A push or PR URL alone is never completion.

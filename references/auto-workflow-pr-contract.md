@@ -1,32 +1,32 @@
 # Auto Workflow PR Profile
 
-This reference is the only owner of `auto-workflow-pr` composition. Load
+This reference owns `auto-workflow-pr` composition. Load
 `automatic-operation-contract.md` for shared operation rules and
-`auto-workflow-contract.md` for the accepted local workflow it runs or resumes.
+`auto-workflow-contract.md` for the local workflow this profile runs or
+resumes.
 
-## Profile
+## Sequence
 
-1. Run or resume `auto-workflow` through its accepted local result.
-2. Invoke canonical `ship` from the root.
-3. Invoke `github-pr` after GO and fresh preflight.
-4. Verify remote OID, latest-head checks, mergeability, and conflicts.
-5. Write the delivery handoff; keep task `active` and lock held.
-6. Finish with verified PR delivery. Do not wait for or monitor the merge.
-
-Post-merge work is outside this profile. A later explicit, separate
-`github-after-merge` invocation verifies the accepted revision, completes the
-task, releases the lock, and performs its cleanup contract.
+| Current accepted state | Next operation |
+| --- | --- |
+| Local workflow is incomplete | Run or resume `auto-workflow`. |
+| Local result is accepted | Invoke canonical `ship` directly from the root. |
+| `ship` returned GO | Run a fresh preflight, then invoke `github-pr`. |
+| PR exists at the accepted head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
+| Delivery is verified | Write the delivery handoff and finish this profile. |
 
 Canonical `ship` uses the exact upstream three-specialist parallel fan-out and
-root merge. Do not add an outer ship executor, critic, verifier, or coordinator.
+root merge. Add no outer ship executor, critic, verifier, or coordinator.
 
-## Authority
+## Authority and completion
 
-- Allow root-owned push and matching PR create/update after fresh preflight.
-- Omit merge, deploy, deletion, force, stale-lock takeover, and unrelated
-  cleanup inside this profile.
+- After fresh preflight, allow root-owned push and matching PR create or update.
+- Finish with the verified delivery handoff or `BLOCKED`.
+- Keep the task `active` and its lock held.
+- Do not wait for, monitor, or perform the merge.
+- Do not deploy, delete, force, take over a stale lock, or clean unrelated
+  state.
 
-## Completion
-
-Finish with the verified delivery handoff or `BLOCKED`. Leave the task `active`
-and its lock held for the separate `github-after-merge` invocation.
+Post-merge work is outside this profile. Only a later explicit, separate
+`github-after-merge` invocation verifies the accepted revision, completes the
+task, releases the lock, and performs its cleanup contract.
