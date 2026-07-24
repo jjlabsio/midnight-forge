@@ -15,6 +15,9 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
+Third-party sources and terms are recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 **REQUIRED BACKGROUND:** Read
 [test-driven-development.md](test-driven-development.md) completely before
 using this skill. It defines the fundamental RED-GREEN-REFACTOR cycle that

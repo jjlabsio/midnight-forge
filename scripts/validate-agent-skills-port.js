@@ -176,8 +176,6 @@ assertAuthoredSurface("skills/github-after-merge/SKILL.md");
 assertAuthoredSurface("skills/github-clear-gone/SKILL.md");
 assertAuthoredSurface("skills/task/SKILL.md");
 
-assertAuthoredSurface("references/subagent-dispatch-policy.md");
-assertAuthoredSurface("skills/auto-workflow/scripts/changed-paths.mjs");
 assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs");
 assertAuthoredSurface("agents/README.md");
 

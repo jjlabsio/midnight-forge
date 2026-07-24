@@ -46,8 +46,8 @@ the current diff and verification evidence.
    state and unsafe-path conditions before reading or writing MDF state.
 2. Check the checkout, non-default branch, `git status --short`, origin,
    GitHub authentication, default branch, and matching open PRs.
-3. Stop for unrelated dirty changes. If intended changes remain, invoke
-   `github-commit`, then require a clean tree.
+3. Stop for unrelated dirty changes. If intended changes remain,
+   **REQUIRED SUB-SKILL:** invoke `github-commit`, then require a clean tree.
 4. Read every branch commit and the complete base-to-head diff.
 5. Determine the release signal. Stop if it is unclear.
 6. Record local HEAD, fetch the remote base, and verify pre-push mergeability.
