@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.2 - 2026-07-24
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.1...v2.7.2)
+
+### Changes
+
+- fix(task): require explicit completion trigger ([#100](https://github.com/jjlabsio/midnight-forge/pull/100))
 ## v2.7.1 - 2026-07-23
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.0...v2.7.1)
