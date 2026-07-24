@@ -1,6 +1,7 @@
 # Automatic Operation Contract
 
-This reference owns behavior shared by every automatic workflow operation.
+This reference is the only owner of behavior shared by every automatic
+workflow operation.
 Profile references own composition, profile-specific authority, and completion.
 Stage skills remain mode-blind and do not load automatic contracts.
 
@@ -12,9 +13,12 @@ Use observable state, not elapsed caller time:
 | --- | --- |
 | Executor or critic is `running` | Wait for its actual terminal response. |
 | Caller `wait` timed out, the role is silent, or no update arrived | Keep waiting while the role remains `running`. These are not failure, stop, deadlock, completion, or replacement evidence. |
-| Executor returned a terminal report | Observe the target and evidence, persist the report, then dispatch the critic. |
+| Executor returned a successful terminal status with a complete reviewable report | Observe the target and evidence, persist the report, then dispatch the critic. |
 | Executor ended terminally without a report | Follow **Terminal no-report transport failure**. Do not dispatch a critic or accept the attempt. |
-| Critic returned `changes_requested` | Rework the same actual target and dispatch a fresh critic. |
+| Executor returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. Do not dispatch a critic or accept the attempt. |
+| Critic returned a successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
+| Critic returned a successful terminal status with `changes_requested` | Rework the same actual target and dispatch a fresh critic. |
+| Critic returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. |
 | A DDD-class finding has materially changed evidence | Re-enter the affected operation and obtain a fresh adversarial review. |
 | A DDD-class review repeats the core finding without changed evidence | Stop `BLOCKED` or request the user-owned decision. |
 
@@ -60,11 +64,14 @@ For every automatic artifact or implementation operation:
    primitives required by its public contract.
 2. Wait until that executor returns an actual terminal response.
 3. Re-read the actual artifact or diff, Git state, and command results.
-4. Persist the executor report and root-observed changed paths when applicable.
-5. Dispatch one distinct fresh read-only critic with the actual target,
+4. Persist any returned executor report and root-observed changed paths when
+   applicable.
+5. Only after a successful terminal status with a complete reviewable report,
+   dispatch one distinct fresh read-only critic with the actual target,
    canonical critic adapter, and original acceptance baseline. Exclude executor
    reasoning.
-6. In the root, accept, rework, or finish `BLOCKED`.
+6. Wait for the critic's actual terminal response, then apply **State
+   decisions**. In the root, accept, rework, or finish `BLOCKED`.
 
 | Role | May | Must not |
 | --- | --- | --- |

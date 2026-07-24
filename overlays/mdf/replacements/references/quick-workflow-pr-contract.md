@@ -1,6 +1,6 @@
 # Quick Workflow PR Profile
 
-This reference owns `quick-workflow-pr` composition. Load
+This reference is the only owner of `quick-workflow-pr` composition. Load
 `automatic-operation-contract.md` for every shared operation rule.
 
 Use this profile only when the user explicitly selects the bounded
@@ -13,7 +13,7 @@ acceptance baseline.
 | --- | --- |
 | Scope or authority is unverified | Validate both. |
 | No accepted bounded build | Dispatch one bounded build executor. |
-| Executor returned an eligible terminal report | Observe the actual diff and checks, then dispatch one fresh bounded-change critic. A terminal no-report attempt follows the shared failure procedure instead. |
+| Executor returned a successful terminal status with a complete reviewable report | Observe the actual diff and checks, then dispatch one fresh bounded-change critic. Every other terminal response follows the shared evidence and recovery rules instead. |
 | Critic returned `changes_requested`, including any actionable finding | Rework the same bounded target through the shared operation sequence and dispatch a fresh critic. |
 | Fresh critic returned `pass` | Root decides acceptance and commits only the accepted result. |
 | Accepted commit is local only | Invoke `github-pr`. |

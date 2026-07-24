@@ -1,6 +1,6 @@
 # Local Auto Workflow Profile
 
-This reference owns `auto-workflow` composition. Load
+This reference is the only owner of `auto-workflow` composition. Load
 `automatic-operation-contract.md` for every shared operation rule.
 
 ## Sequence

@@ -1,6 +1,6 @@
 # Auto Workflow PR Profile
 
-This reference owns `auto-workflow-pr` composition. Load
+This reference is the only owner of `auto-workflow-pr` composition. Load
 `automatic-operation-contract.md` for shared operation rules and
 `auto-workflow-contract.md` for the local workflow this profile runs or
 resumes.
