@@ -18,9 +18,9 @@ Codex/MDF prompt-dispatch boundary.
   The root selects the MDF model and reasoning record, then resolves exactly
   one instruction source through the generic runtime path:
   `persona-backed` uses the exact `agents/<persona>.md` prompt, while
-  `skill-backed` uses the exact canonical skill adapter and applicable
-  upstream primitives without a persona. Instruction-source and model
-  selection are separate concerns.
+  `skill-backed` uses the exact canonical skill adapter without a persona; the
+  called adapter loads the primitives required by its public contract.
+  Instruction-source and model selection are separate concerns.
 - Do not rely on Codex plugin installation to register `.codex/agents/*.toml`.
   Users may configure native custom agents separately in a project or global
   Codex scope, but MDF's portable path is the exact Markdown prompt above.

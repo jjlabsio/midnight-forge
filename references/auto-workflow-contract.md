@@ -11,9 +11,7 @@ Before every operation:
    Read the exact task, card, lock, worktree, branch, and latest handoff without
    requiring a workflow-readiness field or task-level action grant.
 2. Re-read Git, artifacts, and applicable remote state.
-3. Run exact upstream `using-agent-skills` discovery; load every applicable
-   primitive.
-4. Check whether the task intent is sufficient for this profile:
+3. Check whether the task intent is sufficient for this profile:
    - continue when outcome, constraints, and delegated judgment make the next
      stage unambiguous;
    - use `interview-me` for materially different user outcomes, unresolved
@@ -21,9 +19,9 @@ Before every operation:
    - use `idea-refine` only for requested ideation, stress-testing, or product
      direction, never for delegated technical alternatives;
    - stop when required interaction is unavailable.
-5. Select one profile. Its explicit invocation grants the ordinary operations
+4. Select one profile. Its explicit invocation grants the ordinary operations
    listed by that profile; do not request per-stage ceremonial approval.
-6. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
+5. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
    user-owned decisions, material scope expansion, or action outside the
    profile.
 
@@ -43,8 +41,9 @@ Always:
 
 Use this sequence for automatic artifact and implementation operations:
 
-1. Dispatch one skill-backed executor with the exact adapter, applicable
-   primitives, acceptance baseline, target, owned paths, checks, and stop rules.
+1. Dispatch one skill-backed executor with the exact adapter, acceptance
+   baseline, target, owned paths, checks, and stop rules. The called adapter
+   loads the primitives required by its public contract.
 2. Wait for its actual terminal response; while it remains running, keep
    waiting and never interrupt or replace it merely because a caller wait timed
    out or it stayed silent.
@@ -234,9 +233,11 @@ Authority:
 3. Invoke `github-pr` after GO and fresh preflight.
 4. Verify remote OID, latest-head checks, mergeability, and conflicts.
 5. Write the merged-delivery handoff; keep task `active` and lock held.
-6. Stop for the user to merge.
-7. After merge, `github-after-merge` verifies the accepted revision, completes
-   the task, releases the lock, and performs its cleanup contract.
+6. Finish with verified PR delivery. Do not wait for or monitor the merge.
+
+Post-merge work is outside this profile. A later explicit, separate
+`github-after-merge` invocation verifies the accepted revision, completes the
+task, releases the lock, and performs its cleanup contract.
 
 Ship uses the exact upstream three-specialist parallel fan-out and root merge.
 Do not add an outer ship executor, critic, verifier, or coordinator.
@@ -245,7 +246,7 @@ Authority:
 
 - Allow root-owned push and matching PR create/update after fresh preflight.
 - Omit merge, deploy, deletion, force, stale-lock takeover, and unrelated
-  cleanup before post-merge finalization.
+  cleanup inside this profile.
 
 ### `quick-workflow-pr`
 
@@ -260,8 +261,10 @@ Use only when the user explicitly selects the bounded small-change workflow.
 6. Invoke `github-pr`; verify remote OID, latest-head checks, mergeability, and
    conflicts.
 7. Write the merged-delivery handoff; keep task `active` and lock held.
-8. Stop for the user to merge.
-9. After merge, run `github-after-merge` finalization.
+8. Finish with verified PR delivery. Do not wait for or monitor the merge.
+
+Post-merge work is outside this profile. A later explicit, separate
+`github-after-merge` invocation owns finalization.
 
 Use the user request and current task context as the acceptance baseline. The
 bounded build is the planless port of upstream build: retain applicable RED,
@@ -269,7 +272,7 @@ GREEN, regression, and build steps; keep review and commit in the root.
 
 Omit spec, plan, simplification, ship, separate whole-build verification, and
 separate whole-tree review. Create no empty gates. Omit merge, deploy, deletion,
-force, stale-lock takeover, and unrelated cleanup before finalization.
+force, stale-lock takeover, and unrelated cleanup inside this profile.
 
 ## Per-slice build loop
 
@@ -317,5 +320,7 @@ Do not create a repair task, lifecycle state, or recovery controller.
 - Treat GitHub as authority for PR, remote OID, checks, mergeability, conflicts,
   and merge state.
 - Do not treat a push or PR URL as completion.
-- Keep a delivery task `active` with its lock held until `github-after-merge`
-  verifies the accepted revision and applies task finalization.
+- End a delivery profile after its verified PR handoff, leaving the task
+  `active` with its lock held. A later explicit, separate
+  `github-after-merge` invocation verifies the accepted revision and applies
+  task finalization.

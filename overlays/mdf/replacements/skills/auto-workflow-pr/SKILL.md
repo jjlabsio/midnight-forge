@@ -23,11 +23,10 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 3. Run the profile in order: run or resume `auto-workflow` through its accepted
    local result; canonical root-owned `ship`; `github-pr` after GO and fresh
    preflight; remote OID, latest-head checks, mergeability, and conflict
-   verification; delivery handoff; stop for the user to merge; post-merge
-   `github-after-merge` finalization.
+   verification; delivery handoff; verified PR delivery.
 4. Preserve every applicable upstream acceptance, TDD, verification, fallback,
-   and stop criterion. Route every DDD-class trigger from inherited local
-   operations through the contract's root-owned
+   and stop criterion. Route every DDD-class trigger encountered in a
+   mode-blind stage or executor through the contract's root-owned
    `auto-doubt-driven-development` recovery.
 5. For inherited executor/critic operations, wait for every role's actual
    terminal response and apply this state table:
@@ -56,7 +55,8 @@ failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
 Apply only the profile's authority. Allow push and matching PR create/update
-only after fresh preflight. Keep the task active and its lock held until
-verified post-merge finalization. Before that finalization, do not merge,
-deploy, delete, force, take over a stale lock, or perform unrelated cleanup.
-Stage skills do not interpret the profile.
+only after fresh preflight. Leave the task active and its lock held for a later
+explicit, separate `github-after-merge` invocation. This profile does not wait
+for, monitor, or resume after merge. Do not merge, deploy, delete, force, take
+over a stale lock, or perform unrelated cleanup. Stage skills do not interpret
+the profile.

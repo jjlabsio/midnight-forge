@@ -24,8 +24,8 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
    build executor; root observation of the actual diff and checks; one fresh
    bounded-change critic; rework until a fresh critic passes and the root
    accepts and commits; `github-pr`; remote OID, latest-head checks,
-   mergeability, and conflict verification; delivery handoff; stop for the
-   user to merge; post-merge `github-after-merge` finalization.
+   mergeability, and conflict verification; delivery handoff; verified PR
+   delivery.
 4. Use the user request and current task context as the acceptance baseline.
    Preserve the planless build's applicable RED, GREEN, regression, and build
    steps and every upstream acceptance, verification, fallback, and stop
@@ -57,7 +57,8 @@ failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
 Apply only the profile's authority. Allow push and matching PR create/update
-only after fresh preflight. Keep the task active and its lock held until
-verified post-merge finalization. Before that finalization, do not merge,
-deploy, delete, force, take over a stale lock, or perform unrelated cleanup.
-Stage skills do not interpret the profile.
+only after fresh preflight. Leave the task active and its lock held for a later
+explicit, separate `github-after-merge` invocation. This profile does not wait
+for, monitor, or resume after merge. Do not merge, deploy, delete, force, take
+over a stale lock, or perform unrelated cleanup. Stage skills do not interpret
+the profile.

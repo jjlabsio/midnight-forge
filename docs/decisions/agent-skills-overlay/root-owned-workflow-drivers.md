@@ -27,6 +27,9 @@ Use two explicit planes.
 - Keep command adapters mode-blind and close to their pinned upstream command.
 - Preserve standalone inputs, order, skills, outputs, checkpoints, fallback,
   completion, and stop conditions.
+- Let each called stage adapter load the fixed and conditional upstream
+  primitives required by its own public contract. The root does not perform
+  whole-profile discovery or preselect a later stage's primitive set.
 - Limit MDF adaptation to Codex discovery, canonical artifact storage, task
   safety, and a concise stage report.
 - An executor returns its invocation, inputs, outputs, verification, findings,
@@ -42,7 +45,8 @@ Use two explicit planes.
   order, omissions, automatic checkpoint substitution, recovery, commits,
   lifecycle state, and external actions.
 - Automatic `spec`, `plan`, and each `build` slice run in bounded skill-backed
-  executor subagents. The root observes the actual artifact or diff before a
+  executor subagents with the exact stage adapter. The called adapter resolves
+  its own primitives. The root observes the actual artifact or diff before a
   fresh read-only critic assesses that target.
 - The root alone accepts a result and chooses the next operation. Executor and
   critic reports are evidence, not authority.

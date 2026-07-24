@@ -34,7 +34,7 @@ critic.
 
 | Source | Use | Input |
 | --- | --- | --- |
-| `skill-backed` | Workflow executor or critic | Exact canonical adapter plus every primitive selected by upstream `using-agent-skills` discovery |
+| `skill-backed` | Workflow executor or critic | Exact canonical adapter; the called adapter loads the primitives required by its public contract |
 | `persona-backed` | A canonical skill explicitly names a specialist | Exact installed persona prompt, unchanged |
 
 Do not create a separate routing artifact or repeat task and skill bodies.
@@ -102,7 +102,7 @@ never proves a returned report, changes terminal status, or grants authority.
 ```text
 model choice: <root-selected candidate>
 instruction source: skill-backed | persona-backed
-canonical skill: <adapter and applicable primitives>  # skill-backed
+canonical skill: <exact adapter>                       # skill-backed
 persona: <exact installed prompt>                      # persona-backed
 task input: <bounded target and contract>
 ```

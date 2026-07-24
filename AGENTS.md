@@ -138,11 +138,15 @@ MDF orchestration must not:
 - create router personas, nested persona trees, or sequential agents whose main
   value is summarizing another agent's output.
 
-Load `using-agent-skills` as the exact upstream discovery primitive and then
-load every other applicable upstream primitive. Do not treat `use-mdf` as a
-replacement for upstream skill discovery, lifecycle stages, or Definition of
-Done. When upstream and MDF rules appear to conflict, stop, identify the
-conflict, and record a port decision rather than silently choosing one.
+Use `using-agent-skills` as the exact upstream discovery primitive. Load a
+primitive in the root only when it applies directly to the root's current
+operation. When the root calls a public stage skill, pass intent and verified
+context; the called skill loads the primitives required by its own contract.
+Do not perform whole-profile primitive discovery or preload a later stage's
+primitive set. Do not treat `use-mdf` as a replacement for upstream skill
+discovery, lifecycle stages, or Definition of Done. When upstream and MDF rules
+appear to conflict, stop, identify the conflict, and record a port decision
+rather than silently choosing one.
 
 Use parallel dispatch only for genuinely independent investigations with no
 shared mutable state or ordering dependency. Keep one writer per shared
