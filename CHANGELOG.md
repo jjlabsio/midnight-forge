@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.7.4 - 2026-07-24
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.3...v2.7.4)
+
+### Changes
+
+- fix(routing): constrain subagent model selection ([#102](https://github.com/jjlabsio/midnight-forge/pull/102))
 ## v2.7.3 - 2026-07-24
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.2...v2.7.3)
