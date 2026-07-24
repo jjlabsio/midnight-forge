@@ -293,6 +293,25 @@ Use skill name only, with explicit requirement markers:
 
 **Why no @ links:** `@` syntax force-loads files immediately, consuming 200k+ context before you need them.
 
+### 6. Referencing Files and Roots
+
+Classify the target before writing its locator:
+
+| Target | Locator |
+|---|---|
+| Another skill | Skill name with `REQUIRED SUB-SKILL` or `REQUIRED BACKGROUND` |
+| File owned by this skill | Path relative to this `SKILL.md`, such as `prompt.md` or `references/tools.md` |
+| File owned by another bundled skill | Relative path to that file only when the file itself, rather than the skill workflow, is required |
+| Shared runtime file outside a skill | Resolve the package/plugin root, then use `<package-root>/path/to/file` |
+| Project-owned file or state | Resolve the canonical project root, then use `<project-root>/path/to/file` |
+
+Use the consumer-visible runtime location in skill instructions. Keep
+authoring, overlay, vendor, and generated-source paths in maintenance
+documentation.
+
+Never make a shared or project-owned locator depend on the process working
+directory. Name the root and require its resolution before the file is read.
+
 ## Flowchart Usage
 
 ```dot
