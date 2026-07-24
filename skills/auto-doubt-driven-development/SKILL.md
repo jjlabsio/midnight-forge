@@ -43,7 +43,7 @@ evidence, return `BLOCKED` or `needs-user-decision`. The root still applies the
 current operation's normal acceptance criteria.
 
 Do not use this skill for ordinary `changes_requested` executor/critic rework;
-the automatic workflow contract owns that loop and it is not a DDD cycle.
+the automatic operation contract owns that loop and it is not a DDD cycle.
 
 ## Stop and recovery evidence
 
@@ -58,9 +58,9 @@ the automatic workflow contract owns that loop and it is not a DDD cycle.
   recovery schema, controller, counter, or lifecycle state.
 - For a returned role report, record a transient provider failure or backoff
   separately in that report and handoff. For a terminal no-report failure,
-  follow the automatic contract's immutable transport-retry handoff rule before
-  retrying. It is neither a quality finding nor a DDD review and a later user
-  resume does not discard or reset it.
+  follow the automatic operation contract's immutable transport-retry handoff
+  rule before retrying. It is neither a quality finding nor a DDD review and a
+  later user resume does not discard or reset it.
 
 ## Verification
 

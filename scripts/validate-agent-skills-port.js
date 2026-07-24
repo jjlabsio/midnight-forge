@@ -122,31 +122,60 @@ assert(inventory.task0041SurfaceClasses?.active?.owningTask === "0041", "Task 00
 assert(inventory.task0041SurfaceClasses?.historical?.owningTask === "0041", "Task 0041 historical inventory is missing.");
 assert(inventory.task0041SurfaceClasses?.packaging?.owningTask === "0041", "Task 0041 packaging inventory is missing.");
 
-const autoContractConsumers = [
-  "skills/auto-doubt-driven-development/SKILL.md",
-  "skills/auto-workflow/SKILL.md",
-  "skills/auto-workflow-pr/SKILL.md",
-  "skills/quick-workflow-pr/SKILL.md",
-  "skills/use-mdf/SKILL.md",
-];
-const autoContract = inventory.contracts?.["auto-workflow-contract"];
-assert(autoContract?.output === "references/auto-workflow-contract.md", "Automatic modes must use the shared authored contract as their authority.");
-assert(
-  JSON.stringify([...(autoContract?.requiredConsumers || [])].sort()) === JSON.stringify([...autoContractConsumers].sort()),
-  "Automatic-mode contract consumers must be complete and explicitly attributed."
-);
+const automaticContracts = {
+  "automatic-operation-contract": {
+    output: "references/automatic-operation-contract.md",
+    consumers: [
+      "references/auto-workflow-contract.md",
+      "references/auto-workflow-pr-contract.md",
+      "references/quick-workflow-pr-contract.md",
+      "references/subagent-dispatch-policy.md",
+      "skills/auto-doubt-driven-development/SKILL.md",
+      "skills/auto-workflow/SKILL.md",
+      "skills/auto-workflow/scripts/changed-paths.mjs",
+      "skills/auto-workflow-pr/SKILL.md",
+      "skills/quick-workflow-pr/SKILL.md",
+      "skills/use-mdf/SKILL.md",
+    ],
+  },
+  "auto-workflow-contract": {
+    output: "references/auto-workflow-contract.md",
+    consumers: [
+      "skills/auto-workflow/SKILL.md",
+      "skills/auto-workflow-pr/SKILL.md",
+      "skills/use-mdf/SKILL.md",
+    ],
+  },
+  "auto-workflow-pr-contract": {
+    output: "references/auto-workflow-pr-contract.md",
+    consumers: [
+      "skills/auto-workflow-pr/SKILL.md",
+      "skills/use-mdf/SKILL.md",
+    ],
+  },
+  "quick-workflow-pr-contract": {
+    output: "references/quick-workflow-pr-contract.md",
+    consumers: [
+      "skills/quick-workflow-pr/SKILL.md",
+      "skills/use-mdf/SKILL.md",
+    ],
+  },
+};
+for (const [contractId, expected] of Object.entries(automaticContracts)) {
+  const contract = inventory.contracts?.[contractId];
+  assert(contract?.output === expected.output, `${contractId} must retain its authored output.`);
+  assert(
+    JSON.stringify([...(contract?.requiredConsumers || [])].sort()) === JSON.stringify([...expected.consumers].sort()),
+    `${contractId} consumers must be complete and explicitly attributed.`
+  );
+  assertAuthoredSurface(expected.output);
+  for (const consumer of expected.consumers) assertAuthoredSurface(consumer);
+}
 
-assertAuthoredSurface("references/auto-workflow-contract.md");
 assertAuthoredSurface("skills/github-after-merge/SKILL.md");
 assertAuthoredSurface("skills/github-clear-gone/SKILL.md");
 assertAuthoredSurface("skills/task/SKILL.md");
 
-for (const consumer of autoContractConsumers) {
-  assertAuthoredSurface(consumer);
-}
-
-assertAuthoredSurface("references/subagent-dispatch-policy.md");
-assertAuthoredSurface("skills/auto-workflow/scripts/changed-paths.mjs");
 assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs");
 assertAuthoredSurface("agents/README.md");
 
@@ -204,7 +233,9 @@ for (const stage of stageAdapters) {
       assert(upstreamContract === sourcePrompt.trim(), `${output} must preserve the exact upstream command prompt.`);
     }
   }
-  assert(!(entry?.contractRefs || []).includes("auto-workflow-contract"), `${output} must not consume the automatic workflow contract.`);
+  for (const contractId of Object.keys(automaticContracts)) {
+    assert(!(entry?.contractRefs || []).includes(contractId), `${output} must not consume automatic contract ${contractId}.`);
+  }
 }
 
 assertAuthoredSurface("skills/build/SKILL.md");

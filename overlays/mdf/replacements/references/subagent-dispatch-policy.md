@@ -5,13 +5,15 @@ a runtime selector or controller.
 
 ## Select
 
-1. Load this policy, `model-routing-5.6.md`, and
-   `model-routing-performance.md` from the installed plugin root.
+1. Resolve the installed plugin root. Load this policy,
+   `<plugin-root>/references/model-routing-5.6.md`, and
+   `<plugin-root>/references/model-routing-performance.md`.
 2. Select the smallest suitable candidate from boundedness, ambiguity, risk,
    consequence, verification demand, required quality, runtime support,
    transport compatibility, and one-person-builder feedback costs.
-3. Apply `model-routing-5.6.md`. Do not invent another difficulty scale, fixed
-   task-to-model table, benchmark equivalence, fast profile, or silent downgrade.
+3. Apply `<plugin-root>/references/model-routing-5.6.md`. Do not invent another
+   difficulty scale, fixed task-to-model table, benchmark equivalence, fast
+   profile, or silent downgrade.
 4. Record one compact dispatch entry in the existing root handoff:
    - requested model and effort;
    - qualitative selection and effort rationale, including performance-reference
@@ -25,24 +27,24 @@ Use Terra as the ordinary prior for implementation and review. For narrow,
 clear work needing precise code understanding, Terra medium or high and Sol
 low are valid candidates when they independently clear the operation's floor.
 Use Sol medium or above only with the concrete task characteristic or observed
-failure required by `model-routing-5.6.md`; Sol high or higher also needs its
+failure required by `<plugin-root>/references/model-routing-5.6.md`; Sol high or higher also needs its
 recorded concrete escalation reason. Use `gpt-5.3-codex-spark` only for the
-narrow read-only exploration exception in `model-routing-5.6.md`; it cannot serve as a workflow
+narrow read-only exploration exception in `<plugin-root>/references/model-routing-5.6.md`; it cannot serve as a workflow
 critic.
 
 ## Instruction source
 
 | Source | Use | Input |
 | --- | --- | --- |
-| `skill-backed` | Workflow executor or critic | Exact canonical adapter plus every primitive selected by upstream `using-agent-skills` discovery |
+| `skill-backed` | Workflow executor or critic | Exact canonical adapter; the called adapter loads the primitives required by its public contract |
 | `persona-backed` | A canonical skill explicitly names a specialist | Exact installed persona prompt, unchanged |
 
 Do not create a separate routing artifact or repeat task and skill bodies.
 
 ## Dispatch
 
-- Follow `auto-workflow-contract.md` for executor/critic order, authority,
-  observation, acceptance, and rework.
+- Follow `<plugin-root>/references/automatic-operation-contract.md` for
+  executor/critic order, authority, observation, acceptance, and rework.
 - Keep one writer per shared worktree.
 - Wait for every dispatched subagent's actual terminal response. A caller-side
   wait timeout, no update, or elapsed silence is not terminal or failure
@@ -102,7 +104,7 @@ never proves a returned report, changes terminal status, or grants authority.
 ```text
 model choice: <root-selected candidate>
 instruction source: skill-backed | persona-backed
-canonical skill: <adapter and applicable primitives>  # skill-backed
+canonical skill: <exact adapter>                       # skill-backed
 persona: <exact installed prompt>                      # persona-backed
 task input: <bounded target and contract>
 ```

@@ -5,5 +5,5 @@
   "artifactStorageOverride": false,
   "notes": "MDF-only progress-based recovery for DDD-class decisions selected by automatic workflow roots.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": ["automatic-operation-contract"]
 }

@@ -33,26 +33,12 @@ proportionate to the risk.
 
 ## Skill writing
 
-Use when designing or writing a skill.
-
-- Keep `description` short and generic. Optimize for routing, not documentation.
-- Keep skill bodies concise and operational. Include only what changes agent
-  behavior or is required for correct execution.
-- Start with the minimum guidance that addresses an observed failure. Add
-  detail only when evaluation reveals ambiguity, omission, or a rationalization
-  path.
-- Remove duplicated guidance, obvious explanations, and repeated examples.
-  Prefer one strong rule or example over several weaker variations.
-- Do not shorten carefully chosen behavior-shaping language merely for style or
-  word count; preserve the wording needed to make the behavior reliable.
-- Prefer action-first bullets, numbered workflows, and command examples over
-  explanatory prose.
-- Use a helper script only for frequent, deterministic, mechanical work when
-  the script stays small, obvious, and cheaper to maintain than repeated model
-  instructions.
-- Do not move semantic judgment, routing, authority, lifecycle decisions, or
-  broad workflow orchestration into a helper.
-- Quote `description` in YAML front matter.
+Before creating, editing, or verifying a skill, load and follow the
+project-level `writing-skills` skill at
+`.agents/skills/writing-skills/SKILL.md`. It is the sole source of truth for
+general skill-writing methodology. The remaining rules in this file are
+MDF-specific repository, source, packaging, authority, and orchestration
+constraints rather than alternative skill-writing guidance.
 
 ## MDF convention references
 
@@ -152,11 +138,15 @@ MDF orchestration must not:
 - create router personas, nested persona trees, or sequential agents whose main
   value is summarizing another agent's output.
 
-Load `using-agent-skills` as the exact upstream discovery primitive and then
-load every other applicable upstream primitive. Do not treat `use-mdf` as a
-replacement for upstream skill discovery, lifecycle stages, or Definition of
-Done. When upstream and MDF rules appear to conflict, stop, identify the
-conflict, and record a port decision rather than silently choosing one.
+Use `using-agent-skills` as the exact upstream discovery primitive. Load a
+primitive in the root only when it applies directly to the root's current
+operation. When the root calls a public stage skill, pass intent and verified
+context; the called skill loads the primitives required by its own contract.
+Do not perform whole-profile primitive discovery or preload a later stage's
+primitive set. Do not treat `use-mdf` as a replacement for upstream skill
+discovery, lifecycle stages, or Definition of Done. When upstream and MDF rules
+appear to conflict, stop, identify the conflict, and record a port decision
+rather than silently choosing one.
 
 Use parallel dispatch only for genuinely independent investigations with no
 shared mutable state or ordering dependency. Keep one writer per shared

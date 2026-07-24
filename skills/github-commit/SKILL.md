@@ -11,6 +11,11 @@ When saving commit metadata for MDF continuity, verify MDF user and project init
 
 Create one git commit for the current work, based on the simple `commit-commands` workflow.
 
+## MDF adaptation
+
+1. Resolve the installed plugin and canonical project roots.
+2. **REQUIRED SUB-SKILL:** Load `git-workflow-and-versioning`.
+
 ## Context To Read
 
 Before committing, inspect:

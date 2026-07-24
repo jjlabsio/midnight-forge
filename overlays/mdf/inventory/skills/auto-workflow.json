@@ -6,5 +6,5 @@
   "artifactStorageOverride": false,
   "notes": "Local model-led implementation workflow through review, simplification, and commit without ship or PR delivery.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": ["automatic-operation-contract", "auto-workflow-contract"]
 }

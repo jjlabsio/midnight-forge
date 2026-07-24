@@ -48,9 +48,9 @@ This skill is designed for the **main-session orchestrator**, where Step 3 (DOUB
 
 ## Central dispatch requirement
 
-Before Step 3 delegates a fresh-context reviewer, the root loads the plugin-installed
-`../../references/subagent-dispatch-policy.md` and
-`../../references/model-routing-5.6.md`. The root classifies the decision's
+Before Step 3 delegates a fresh-context reviewer, the root loads
+`<plugin-root>/references/subagent-dispatch-policy.md` and
+`<plugin-root>/references/model-routing-5.6.md`. The root classifies the decision's
 difficulty and risk, verifies a GPT-5.6 capability at the `high` floor, and
 passes the selected dispatch record plus the exact adversarial prompt through
 the generic runtime spawn path. The reviewer receives the artifact and

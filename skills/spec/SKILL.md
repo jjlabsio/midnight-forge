@@ -30,7 +30,8 @@ content and user-confirmation checkpoint; do not create a divergent `SPEC.md`.
    `spec-driven-development`, and every other applicable primitive it selects.
 3. Read the current task, project guidance, decisions, and relevant repository
    state. Stop for unresolved material intent or risk.
-4. Apply `approval-evidence.md` to the exact artifact path and SHA-256.
+4. Apply `<plugin-root>/references/approval-evidence.md` to the exact artifact
+   path and SHA-256.
 5. Stop after the specification. Planning is a separate invocation.
 
 When delegated, report operation, status, inputs, output path and hash,

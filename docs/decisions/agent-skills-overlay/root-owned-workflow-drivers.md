@@ -27,6 +27,9 @@ Use two explicit planes.
 - Keep command adapters mode-blind and close to their pinned upstream command.
 - Preserve standalone inputs, order, skills, outputs, checkpoints, fallback,
   completion, and stop conditions.
+- Let each called stage adapter load the fixed and conditional upstream
+  primitives required by its own public contract. The root does not perform
+  whole-profile discovery or preselect a later stage's primitive set.
 - Limit MDF adaptation to Codex discovery, canonical artifact storage, task
   safety, and a concise stage report.
 - An executor returns its invocation, inputs, outputs, verification, findings,
@@ -34,7 +37,7 @@ Use two explicit planes.
   by a small Git helper for mutating automatic stages from the root-supplied
   baseline. The executor does not calculate or claim Git scope; the helper
   never selects the next operation or grants authority.
-- Stage adapters do not load the automatic-workflow contract.
+- Stage adapters do not load automatic operation or profile contracts.
 
 ### Workflow plane
 
@@ -42,7 +45,8 @@ Use two explicit planes.
   order, omissions, automatic checkpoint substitution, recovery, commits,
   lifecycle state, and external actions.
 - Automatic `spec`, `plan`, and each `build` slice run in bounded skill-backed
-  executor subagents. The root observes the actual artifact or diff before a
+  executor subagents with the exact stage adapter. The called adapter resolves
+  its own primitives. The root observes the actual artifact or diff before a
   fresh read-only critic assesses that target.
 - The root alone accepts a result and chooses the next operation. Executor and
   critic reports are evidence, not authority.
@@ -98,7 +102,8 @@ in another executor, verifier, or coordinator.
 
 The root operation binding may substitute an automatic critic for an upstream
 human checkpoint and may defer an upstream stage's commit or task-completion
-step to the root. The binding must remain explicit in the workflow contract;
+step to the root. The binding must remain explicit in the automatic operation
+contract;
 the stage adapter itself remains unchanged. These substitutions do not weaken
 the upstream acceptance or verification criteria.
 

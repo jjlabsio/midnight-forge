@@ -6,5 +6,8 @@
   "artifactStorageOverride": false,
   "notes": "Direct lightweight implementation and PR workflow that intentionally skips spec and plan while reusing canonical build, review, and GitHub PR skills.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": [
+    "automatic-operation-contract",
+    "quick-workflow-pr-contract"
+  ]
 }

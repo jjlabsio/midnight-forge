@@ -27,7 +27,8 @@ entrypoint.
 - Make `github-after-merge` the single user-facing post-merge composite. It
   verifies the exact merged PR revision, applies the canonical `task`
   post-merge finalization contract, then loads `github-clear-gone` after lock
-  release.
+  release. Invoke it explicitly as a separate operation after merge; delivery
+  workflows do not wait for the merge or resume to run it.
 - Require a root-authored delivery handoff containing repository, PR identity,
   accepted head OID, expected base, checks, and task/work/lock references.
   Branch names or PR text alone never establish task identity.
