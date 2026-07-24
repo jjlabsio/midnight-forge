@@ -1,36 +1,21 @@
 # MDF Subagent Dispatch Policy
 
-Readable policy for MDF-managed delegation. It guides root judgment; it is not
-a runtime selector or controller.
+Dispatch, authority, and observation contract for a root-selected MDF-managed
+subagent. This reference does not select its model or effort and is not a
+runtime selector or controller.
 
-## Select
+## Prepare a dispatch
 
-1. Resolve the installed plugin root. Load this policy,
-   `<plugin-root>/references/model-routing-5.6.md`, and
-   `<plugin-root>/references/model-routing-performance.md`.
-2. Select the smallest suitable candidate from boundedness, ambiguity, risk,
-   consequence, verification demand, required quality, runtime support,
-   transport compatibility, and one-person-builder feedback costs.
-3. Apply `<plugin-root>/references/model-routing-5.6.md`. Do not invent another
-   difficulty scale, fixed task-to-model table, benchmark equivalence, fast
-   profile, or silent downgrade.
-4. Record one compact dispatch entry in the existing root handoff:
+1. Resolve the installed plugin root. Before selecting model or effort for any
+   MDF-managed subagent request, load and apply
+   `<plugin-root>/references/model-routing-5.6.md`.
+2. Record one compact dispatch entry in the existing root handoff:
    - requested model and effort;
    - qualitative selection and effort rationale, including performance-reference
      context and feedback costs;
-   - concrete Sol high-or-higher escalation reason when applicable;
    - instruction source and task kind;
    - risk, capability confidence, and write scope;
    - fallback and degraded status.
-
-Use Terra as the ordinary prior for implementation and review. For narrow,
-clear work needing precise code understanding, Terra medium or high and Sol
-low are valid candidates when they independently clear the operation's floor.
-Use Sol medium or above only with the concrete task characteristic or observed
-failure required by `<plugin-root>/references/model-routing-5.6.md`; Sol high or higher also needs its
-recorded concrete escalation reason. Use `gpt-5.3-codex-spark` only for the
-narrow read-only exploration exception in `<plugin-root>/references/model-routing-5.6.md`; it cannot serve as a workflow
-critic.
 
 ## Instruction source
 

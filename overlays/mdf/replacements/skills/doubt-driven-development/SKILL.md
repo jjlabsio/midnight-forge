@@ -49,18 +49,13 @@ This skill is designed for the **main-session orchestrator**, where Step 3 (DOUB
 ## Central dispatch requirement
 
 Before Step 3 delegates a fresh-context reviewer, the root loads
-`<plugin-root>/references/subagent-dispatch-policy.md` and
-`<plugin-root>/references/model-routing-5.6.md`. The root classifies the decision's
-difficulty and risk, verifies a GPT-5.6 capability at the `high` floor, and
-passes the selected dispatch record plus the exact adversarial prompt through
-the generic runtime spawn path. The reviewer receives the artifact and
-contract, not a model choice. Persona model or effort frontmatter is only a
+`<plugin-root>/references/subagent-dispatch-policy.md` and passes the
+root-selected dispatch record plus the exact adversarial prompt through the
+generic runtime spawn path. The reviewer receives the artifact and contract,
+not a model choice. Persona model or effort frontmatter is only a
 direct-invocation default; the root-selected dispatch record overrides it for
-MDF-managed work.
-
-If GPT-5.6 capability cannot be verified, use the announced degraded root
-fallback or stop. Never silently downgrade, select a fast profile, or let a
-reviewer invoke another persona.
+MDF-managed work. If dispatch cannot proceed, use the announced degraded root
+fallback or stop; never let a reviewer invoke another persona.
 
 ## The Process
 
