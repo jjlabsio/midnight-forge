@@ -23,9 +23,10 @@ and permit parallel writers only when independence can be defended.
 
 ## Decision
 
-Add an MDF-only readable contract with separate local `auto-workflow` and
-delivery `auto-workflow-pr` modes. Task creation/activation remains independent
-from either workflow; the profile reads the task as intent and lifecycle
+Add one MDF-only readable automatic operation contract and separate readable
+profile contracts for local `auto-workflow`, delivery `auto-workflow-pr`, and
+bounded `quick-workflow-pr`. Task creation/activation remains independent from
+any workflow; the selected profile reads the task as intent and lifecycle
 evidence rather than a workflow-readiness or action grant. A direct profile
 invocation grants its documented ordinary scope, while a bare internal mode
 string without current run context grants nothing. The current handoff,
@@ -43,7 +44,7 @@ spec/plan/build/test/review/simplify loop and commit each plan slice while
 leaving the whole MDF task active. `auto-workflow-pr` may resume those slices,
 use the latest spec as its acceptance baseline, run ship, and—only after final
 preflight—push and create/update the PR. It leaves the task active with its
-lock held and returns a merged-delivery handoff. That return ends the delivery
+lock held and returns a delivery handoff. That return ends the delivery
 profile. A later explicit, separate `github-after-merge` invocation completes
 the task only after the accepted PR revision is merged. Both modes
 must still stop for critical product/public-contract/security/privacy/data/

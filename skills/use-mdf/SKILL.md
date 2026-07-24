@@ -20,8 +20,9 @@ description: "Use before software development workflow decisions in Codex or MDF
 ## Automatic workflows
 
 Only `auto-workflow`, `auto-workflow-pr`, and `quick-workflow-pr` load
-`auto-workflow-contract.md` and select a profile. Stage skills do not receive or
-interpret profile names.
+`automatic-operation-contract.md` plus their named profile contract. The PR
+continuation also loads `auto-workflow-contract.md` for its accepted local
+workflow. Stage skills do not receive or interpret profile names.
 
 - `auto-workflow`: local implementation and commits only.
 - `auto-workflow-pr`: plan-backed implementation, canonical ship, push, and PR.

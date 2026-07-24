@@ -3,5 +3,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/auto-workflow-contract.md",
   "overlayKind": "mdfOnly",
-  "notes": "Auto-only lifecycle authority, interview preflight, subagent, writer parallelism, and PR idempotency contract."
+  "notes": "Local plan-backed automatic workflow profile, including slice and whole-build composition.",
+  "contractRefs": ["automatic-operation-contract"]
 }

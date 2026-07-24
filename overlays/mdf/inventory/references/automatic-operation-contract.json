@@ -1,0 +1,7 @@
+{
+  "output": "references/automatic-operation-contract.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/references/automatic-operation-contract.md",
+  "overlayKind": "mdfOnly",
+  "notes": "Shared automatic root boundary, executor/critic binding, evidence, DDD recovery, and failure recovery contract."
+}

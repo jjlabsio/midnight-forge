@@ -6,5 +6,9 @@
   "artifactStorageOverride": false,
   "notes": "PR-capable continuation and delivery workflow for completed local auto-workflow work.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": [
+    "automatic-operation-contract",
+    "auto-workflow-contract",
+    "auto-workflow-pr-contract"
+  ]
 }

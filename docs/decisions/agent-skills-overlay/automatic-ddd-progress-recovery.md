@@ -18,7 +18,7 @@ evidence. Applying the standalone stop there would terminate the automatic
 profile for elapsed cycles rather than for a loss of decision progress.
 
 Routine automatic executor/critic rework is not DDD: a `changes_requested`
-assessment already re-enters the same operation under the automatic workflow
+assessment already re-enters the same operation under the automatic operation
 contract. Transport failures such as provider `429` responses and backoff are
 also not quality findings or decision-review cycles.
 
@@ -65,9 +65,10 @@ fabricates a role report nor adds a new artifact schema. Provider/backoff facts
 do not count as a DDD review or reset on a later user resume. No controller,
 retry schema, helper, or lifecycle state is added.
 
-The automatic workflow contract is the only composition owner. It selects this
-skill only for DDD-class decisions and leaves ordinary executor/critic rework
-under its existing operation binding.
+The automatic operation contract is the only owner of shared executor/critic
+and DDD recovery binding. The selected profile root invokes this skill only for
+DDD-class decisions and leaves ordinary executor/critic rework under that
+shared binding.
 
 ## Trade-off
 

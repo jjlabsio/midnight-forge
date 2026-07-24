@@ -37,7 +37,7 @@ Use two explicit planes.
   by a small Git helper for mutating automatic stages from the root-supplied
   baseline. The executor does not calculate or claim Git scope; the helper
   never selects the next operation or grants authority.
-- Stage adapters do not load the automatic-workflow contract.
+- Stage adapters do not load automatic operation or profile contracts.
 
 ### Workflow plane
 
@@ -102,7 +102,8 @@ in another executor, verifier, or coordinator.
 
 The root operation binding may substitute an automatic critic for an upstream
 human checkpoint and may defer an upstream stage's commit or task-completion
-step to the root. The binding must remain explicit in the workflow contract;
+step to the root. The binding must remain explicit in the automatic operation
+contract;
 the stage adapter itself remains unchanged. These substitutions do not weaken
 the upstream acceptance or verification criteria.
 

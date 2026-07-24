@@ -1,0 +1,8 @@
+{
+  "output": "references/quick-workflow-pr-contract.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/references/quick-workflow-pr-contract.md",
+  "overlayKind": "mdfOnly",
+  "notes": "Explicitly selected bounded planless build, review, commit, and PR delivery profile.",
+  "contractRefs": ["automatic-operation-contract"]
+}

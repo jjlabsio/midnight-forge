@@ -8,18 +8,19 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
 ## Load
 
 1. Resolve the installed plugin root.
-2. Load `auto-workflow-contract.md`, `subagent-dispatch-policy.md`, and the
-   routing references required by that policy.
-3. Select only the `quick-workflow-pr` profile. Use it only when the user
+2. Load `automatic-operation-contract.md`, `quick-workflow-pr-contract.md`,
+   `subagent-dispatch-policy.md`, and the routing references required by that
+   policy.
+3. Select the `quick-workflow-pr` profile. Use it only when the user
    explicitly selected the bounded small-change workflow.
 
 ## Root controller
 
-1. Before every operation, apply the loaded contract's complete root boundary
+1. Before every operation, apply the loaded contracts' complete root boundary
    and revalidate task, card, lock, worktree, branch, latest handoff, Git,
    artifacts, intent, authority, and applicable remote state.
 2. Run the selected profile exactly. This controller map is non-exhaustive and
-   never overrides or omits a loaded contract requirement.
+   never overrides or omits a requirement from the loaded contracts.
 3. Run the profile in order: validate bounded scope and authority; one bounded
    build executor; root observation of the actual diff and checks; one fresh
    bounded-change critic; rework until a fresh critic passes and the root

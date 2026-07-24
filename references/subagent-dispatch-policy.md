@@ -41,7 +41,7 @@ Do not create a separate routing artifact or repeat task and skill bodies.
 
 ## Dispatch
 
-- Follow `auto-workflow-contract.md` for executor/critic order, authority,
+- Follow `automatic-operation-contract.md` for executor/critic order, authority,
   observation, acceptance, and rework.
 - Keep one writer per shared worktree.
 - Wait for every dispatched subagent's actual terminal response. A caller-side

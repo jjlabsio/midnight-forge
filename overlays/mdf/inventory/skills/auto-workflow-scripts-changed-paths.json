@@ -6,5 +6,5 @@
   "artifactStorageOverride": false,
   "notes": "Deterministic changed-path reporting for Git-mutating automatic workflow stages.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": ["automatic-operation-contract"]
 }

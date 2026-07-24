@@ -8,18 +8,19 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 ## Load
 
 1. Resolve the installed plugin root.
-2. Load `auto-workflow-contract.md`, `subagent-dispatch-policy.md`, and the
+2. Load `automatic-operation-contract.md`, `auto-workflow-contract.md`,
+   `auto-workflow-pr-contract.md`, `subagent-dispatch-policy.md`, and the
    routing references required by that policy.
-3. Select only the `auto-workflow-pr` profile.
+3. Select the `auto-workflow-pr` profile.
 
 ## Root controller
 
-1. Before every operation, apply the loaded contract's complete root boundary
+1. Before every operation, apply the loaded contracts' complete root boundary
    and revalidate task, card, lock, worktree, branch, latest handoff, Git,
    artifacts, intent, authority, and applicable remote state.
 2. Run or resume the selected profile exactly without repeating accepted work.
-   This controller map is non-exhaustive and never overrides or omits a loaded
-   contract requirement.
+   This controller map is non-exhaustive and never overrides or omits a
+   requirement from the loaded contracts.
 3. Run the profile in order: run or resume `auto-workflow` through its accepted
    local result; canonical root-owned `ship`; `github-pr` after GO and fresh
    preflight; remote OID, latest-head checks, mergeability, and conflict

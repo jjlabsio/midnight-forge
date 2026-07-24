@@ -5,5 +5,10 @@
   "artifactStorageOverride": false,
   "notes": "MDF-only router for selecting model-led engineering workflow skills and preserved upstream primitives.",
   "overlayKind": "mdfOnly",
-  "contractRefs": ["auto-workflow-contract"]
+  "contractRefs": [
+    "automatic-operation-contract",
+    "auto-workflow-contract",
+    "auto-workflow-pr-contract",
+    "quick-workflow-pr-contract"
+  ]
 }
