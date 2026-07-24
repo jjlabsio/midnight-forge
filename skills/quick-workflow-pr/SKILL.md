@@ -1,18 +1,63 @@
 ---
 name: quick-workflow-pr
-description: "Run a bounded lightweight implementation, review, commit, and GitHub PR workflow."
+description: "Use when the user explicitly requests MDF's bounded small-change workflow with GitHub PR delivery."
 ---
 
 # quick-workflow-pr
 
-Use only when the user explicitly selects the bounded small-change workflow.
+## Load
 
 1. Resolve the installed plugin root.
-2. Run exact upstream `using-agent-skills` discovery and load every applicable
-   primitive.
-3. Load `auto-workflow-contract.md` and select its `quick-workflow-pr` profile.
-4. Validate root-owned local and remote state; run the selected profile exactly.
-5. Write its required delivery handoff; finish with verified PR handoff or
+2. Load `auto-workflow-contract.md`, `subagent-dispatch-policy.md`, and the
+   routing references required by that policy.
+3. Select only the `quick-workflow-pr` profile. Use it only when the user
+   explicitly selected the bounded small-change workflow.
+
+## Root controller
+
+1. Before every operation, apply the loaded contract's complete root boundary
+   and revalidate task, card, lock, worktree, branch, latest handoff, Git,
+   artifacts, intent, authority, and applicable remote state.
+2. Run the selected profile exactly. This controller map is non-exhaustive and
+   never overrides or omits a loaded contract requirement.
+3. Run the profile in order: validate bounded scope and authority; one bounded
+   build executor; root observation of the actual diff and checks; one fresh
+   bounded-change critic; rework until a fresh critic passes and the root
+   accepts and commits; `github-pr`; remote OID, latest-head checks,
+   mergeability, and conflict verification; delivery handoff; stop for the
+   user to merge; post-merge `github-after-merge` finalization.
+4. Use the user request and current task context as the acceptance baseline.
+   Preserve the planless build's applicable RED, GREEN, regression, and build
+   steps and every upstream acceptance, verification, fallback, and stop
+   criterion. Route every DDD-class trigger through the contract's root-owned
+   `auto-doubt-driven-development` recovery.
+5. Wait for every dispatched role's actual terminal response and apply this
+   state table:
+
+   | Observed state | Root action |
+   | --- | --- |
+   | Executor `running` | Wait again. |
+   | Executor terminal without a report | Record changed paths and verification, write the no-acceptance handoff and terminal observation, re-read both, then retry only when the contract permits. Never dispatch a critic or accept the result. |
+   | Executor successful terminal status with a complete reviewable report | Observe the actual diff and checks, persist its report, then dispatch the fresh bounded-change critic. |
+   | Any other executor terminal response | Persist any returned report as evidence and follow ordinary recovery or a substantive stop. Never dispatch a critic or accept the result. |
+   | Critic `running` | Wait again. |
+   | Critic successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
+   | Critic successful terminal status with `changes_requested` | Rework the same bounded build and dispatch a fresh critic. |
+   | Any other critic terminal response | Persist any returned report as evidence and follow the contract's recovery or substantive stop rule. |
+   | Root accepts the verified bounded change | Commit only the exact accepted paths and continue. |
+   | Existing substantive stop condition | Finish `BLOCKED`. |
+
+6. Omit spec, plan, simplification, ship, separate whole-build verification,
+   and separate whole-tree review. Create no empty gates.
+7. Write the required delivery handoff and finish with verified PR handoff or
    `BLOCKED`.
 
-Apply only the profile's authority. Stage skills do not interpret the profile.
+**NEVER treat a caller wait timeout, no update, or elapsed silence as executor
+failure or terminal evidence. While the executor is `running`, keep waiting.
+Do not interrupt it or dispatch a replacement for those reasons.**
+
+Apply only the profile's authority. Allow push and matching PR create/update
+only after fresh preflight. Keep the task active and its lock held until
+verified post-merge finalization. Before that finalization, do not merge,
+deploy, delete, force, take over a stale lock, or perform unrelated cleanup.
+Stage skills do not interpret the profile.
