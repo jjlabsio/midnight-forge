@@ -33,26 +33,12 @@ proportionate to the risk.
 
 ## Skill writing
 
-Use when designing or writing a skill.
-
-- Keep `description` short and generic. Optimize for routing, not documentation.
-- Keep skill bodies concise and operational. Include only what changes agent
-  behavior or is required for correct execution.
-- Start with the minimum guidance that addresses an observed failure. Add
-  detail only when evaluation reveals ambiguity, omission, or a rationalization
-  path.
-- Remove duplicated guidance, obvious explanations, and repeated examples.
-  Prefer one strong rule or example over several weaker variations.
-- Do not shorten carefully chosen behavior-shaping language merely for style or
-  word count; preserve the wording needed to make the behavior reliable.
-- Prefer action-first bullets, numbered workflows, and command examples over
-  explanatory prose.
-- Use a helper script only for frequent, deterministic, mechanical work when
-  the script stays small, obvious, and cheaper to maintain than repeated model
-  instructions.
-- Do not move semantic judgment, routing, authority, lifecycle decisions, or
-  broad workflow orchestration into a helper.
-- Quote `description` in YAML front matter.
+Before creating, editing, or verifying a skill, load and follow the
+project-level `writing-skills` skill at
+`.agents/skills/writing-skills/SKILL.md`. It is the sole source of truth for
+general skill-writing methodology. The remaining rules in this file are
+MDF-specific repository, source, packaging, authority, and orchestration
+constraints rather than alternative skill-writing guidance.
 
 ## MDF convention references
 
