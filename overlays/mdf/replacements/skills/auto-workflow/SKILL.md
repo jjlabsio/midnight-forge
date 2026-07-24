@@ -16,12 +16,20 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
 
 ## Root controller
 
-1. Validate task, lock, worktree, branch, Git, artifacts, intent, and authority.
-2. Run the profile in order: intent preflight; spec; plan; each build slice;
+1. Before every operation, apply the loaded contract's complete root boundary
+   and revalidate task, card, lock, worktree, branch, latest handoff, Git,
+   artifacts, intent, and authority.
+2. Run the selected profile exactly. This controller map is non-exhaustive and
+   never overrides or omits a requirement from the loaded contract.
+3. Run the profile in order: intent preflight; spec; plan; each build slice;
    whole-build verification and review; one simplification pass; complete
    checks and build; fresh simplification critic; root acceptance and a
    separate commit when changed; local handoff.
-3. Wait for every dispatched role's actual terminal response and bind each
+4. Preserve every applicable upstream acceptance, TDD, verification, fallback,
+   and stop criterion. Route every DDD-class trigger through the contract's
+   root-owned `auto-doubt-driven-development` recovery; keep ordinary critic
+   rework in the operation loop.
+5. Wait for every dispatched role's actual terminal response and bind each
    operation to this state table:
 
    | Observed state | Root action |
@@ -34,10 +42,11 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
    | Critic successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
    | Critic successful terminal status with `changes_requested` | Rework the same operation and dispatch a fresh critic. |
    | Any other critic terminal response | Persist any returned report as evidence and follow the contract's recovery or substantive stop rule. |
-   | Root accepts verified work | Commit the exact accepted paths and continue. |
+   | Root accepts verified work and its operation requires a commit | Commit the exact accepted paths and continue. |
+   | Root accepts verified work without a commit step | Persist the required acceptance evidence and continue. |
    | Existing substantive stop condition | Finish `BLOCKED`. |
 
-4. Write the required handoff and finish with verified local success or
+6. Write the required handoff and finish with verified local success or
    `BLOCKED`.
 
 **NEVER treat a caller wait timeout, no update, or elapsed silence as executor
