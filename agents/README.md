@@ -10,13 +10,9 @@ Codex/MDF prompt-dispatch boundary.
   prompts. A persona name is a resolver key, not proof that its instructions
   were loaded.
 - Before every delegation, the root loads
-  `<plugin-root>/references/subagent-dispatch-policy.md`,
-  `<plugin-root>/references/model-routing-5.6.md`, and
-  `<plugin-root>/references/model-routing-performance.md`. GPT-5.6 is the default; only
-  narrow, read-only, report-only exploration uses the exact
-  `gpt-5.3-codex-spark` model with its highest supported reasoning setting.
-  The root selects the MDF model and reasoning record, then resolves exactly
-  one instruction source through the generic runtime path:
+  `<plugin-root>/references/subagent-dispatch-policy.md`. The root provides a
+  model and reasoning record, then resolves exactly one instruction source
+  through the generic runtime path:
   `persona-backed` uses the exact `agents/<persona>.md` prompt, while
   `skill-backed` uses the exact canonical skill adapter without a persona; the
   called adapter loads the primitives required by its public contract.
@@ -34,10 +30,8 @@ Codex/MDF prompt-dispatch boundary.
   bounded task inputs. Only a root-authorized executor may write its exact
   leased paths. It never invokes another persona or advances lifecycle state.
 - Auto-workflow may also use a generic read-only `explorer` dispatch for
-  bounded codebase inventory. The performance reference informs the root's
-  cost/intelligence judgment, but Spark has `report-only` authority and no
-  write scope, and is never treated as an independent design or security
-  decision. No model may use a `fast` option or speed-only profile.
+  bounded codebase inventory. It has `report-only` authority and no write scope
+  and is never treated as an independent design or security decision.
 - An automatic executor/critic operation stops when no suitable independent
   critic is available. A visible root fallback is allowed only for delegation
   that does not require independent criticism; it never claims fresh review.

@@ -34,9 +34,8 @@ dispatch, acceptance, recovery, commits, lifecycle, and external actions.
 
 ## Delegation
 
-Load `<plugin-root>/references/subagent-dispatch-policy.md`,
-`<plugin-root>/references/model-routing-5.6.md`, and
-`<plugin-root>/references/model-routing-performance.md` whenever MDF delegates.
+Load `<plugin-root>/references/subagent-dispatch-policy.md` whenever MDF
+delegates.
 
 - Use skill-backed executors and critics for automatic operations.
 - Use persona-backed dispatch only when the canonical skill names a specialist.

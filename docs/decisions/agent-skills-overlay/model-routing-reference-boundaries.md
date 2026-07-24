@@ -1,0 +1,38 @@
+# Model Routing Reference Boundaries
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-25
+
+## Context
+
+Model selection, chart data, and dispatch evidence were repeated across three
+runtime references. That created conflicting selection guidance and allowed
+cost, capability, and role constraints to diverge by dispatch path.
+
+## Decision
+
+Keep the references with non-overlapping responsibilities:
+
+- `model-routing-5.6.md` is the sole shared model-and-effort selection policy.
+  It owns eligibility, capability-floor selection, performance-informed
+  efficiency, and unplotted-candidate handling.
+- `model-routing-performance.md` contains the chart readings and interpretation
+  limits only. It may provide comparative context but no routing rule.
+- `subagent-dispatch-policy.md` owns dispatch preparation, instruction source,
+  authority, waiting, terminal status, artifact linkage, observation, and the
+  spawn boundary. It records the selected request but does not select it.
+
+The root still owns semantic model selection under the central policy. Dispatch
+mechanics load that policy without restating it.
+
+## Consequences
+
+- One shared reference resolves candidate eligibility and effort judgment.
+- Dispatch retains its complete evidence and authority contract.
+- Performance data informs selection without becoming an independent policy.
+- The former AI-owned model-selection decision remains historical context.

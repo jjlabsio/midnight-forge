@@ -330,21 +330,16 @@ For detailed DevTools setup instructions and workflows, see `browser-testing-wit
 
 When TDD delegates a reproduction test or coverage investigation, the root
 resolves the installed plugin root and loads
-`<plugin-root>/references/subagent-dispatch-policy.md` and
-`<plugin-root>/references/model-routing-5.6.md`. Classify implementation/testing
-difficulty and risk, verify a GPT-5.6 capability at the `high` floor, and pass
-the root-selected dispatch record plus one resolved instruction source through
-the generic runtime spawn path. Automatic test workers use the `skill-backed`
+`<plugin-root>/references/subagent-dispatch-policy.md` and passes the
+root-selected dispatch record plus one resolved instruction source through the
+generic runtime spawn path. Automatic test workers use the `skill-backed`
 source formed by this canonical adapter and applicable upstream primitives
 without a persona. An explicitly named test specialist is `persona-backed` and
 requires its exact installed prompt. Persona model or effort frontmatter is
 only a direct-invocation default; the root-selected record overrides it for MDF
-work.
-
-If capability cannot be verified, use an explicit degraded root fallback or
-stop; never silently choose a fast, older, or future profile. The root verifies
-the failing test, owns the implementation and synthesis, and preserves the
-subagent's report-only write scope.
+work. If dispatch cannot proceed, use an explicit degraded root fallback or
+stop. The root verifies the failing test, owns the implementation and synthesis,
+and preserves the subagent's report-only write scope.
 
 ## When to Use Subagents for Testing
 

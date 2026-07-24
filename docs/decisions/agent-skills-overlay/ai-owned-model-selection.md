@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by
+[Model Routing Reference Boundaries](model-routing-reference-boundaries.md)
 
 ## Date
 

@@ -3,6 +3,7 @@
 ## Agent Skills Overlay
 
 - [Keep model and freshness judgment in the workflow](agent-skills-overlay/controller-capability-boundary.md)
+- [Separate model selection, performance data, and dispatch contracts](agent-skills-overlay/model-routing-reference-boundaries.md)
 - [Preserve upstream command contracts in MDF adapters](agent-skills-overlay/command-adapter-migration.md)
 - [Use generated runtime files](agent-skills-overlay/generated-runtime-files.md)
 - [Keep artifact and task state readable](agent-skills-overlay/overlay-v2-artifact-storage.md)

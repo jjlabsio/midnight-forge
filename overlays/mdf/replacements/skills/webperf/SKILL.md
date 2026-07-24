@@ -40,9 +40,8 @@ Return the full audit report to the user. No synthesis or merge step is needed â
 
 1. Resolve the installed plugin root and run exact upstream
    `using-agent-skills` discovery.
-2. Load `<plugin-root>/references/subagent-dispatch-policy.md`,
-   `<plugin-root>/references/model-routing-5.6.md`, and the exact resolved
-   `web-performance-auditor` persona prompt.
+2. Load `<plugin-root>/references/subagent-dispatch-policy.md` and the exact
+   resolved `web-performance-auditor` persona prompt.
 3. Invoke one generic subagent with the root-selected dispatch record. Do not
    fan out or add a merge step.
 4. If the runtime, prompt, or dispatch record cannot be resolved, disclose a
