@@ -56,14 +56,16 @@ Record decision-recovery and transport facts in existing immutable role reports
 and handoffs. For a terminal transport failure without a returned report, the
 root writes the existing immutable handoff before retrying, puts the raw status
 in its attempt line and the verbatim response, observed time, and
-retry/backoff context in its existing blockers text, then links that handoff in
-the terminal observation. It also runs the existing changed-paths helper from
-the stage-start commit and records its exact output plus root-observed
-verification in that handoff before retrying. The handoff records every
-accepted executor/critic field, artifact, and commit as `none`. It neither
-fabricates a role report nor adds a new artifact schema. Provider/backoff facts
-do not count as a DDD review or reset on a later user resume. No controller,
-retry schema, helper, or lifecycle state is added.
+retry/backoff context in its existing blockers text, and records terminal
+observation with only the invocation ID and exact raw status. The handoff's
+immutable generic `report: none` attempt index is the sole artifact linkage;
+never pass an artifact path to `finish`. The root also runs the existing
+changed-paths helper from the stage-start commit and records its exact output
+plus root-observed verification in that handoff before retrying. The handoff
+records every accepted executor/critic field, artifact, and commit as `none`.
+It neither fabricates a role report nor adds a new artifact schema.
+Provider/backoff facts do not count as a DDD review or reset on a later user
+resume. No controller, retry schema, helper, or lifecycle state is added.
 
 The automatic operation contract is the only owner of shared executor/critic
 and DDD recovery binding. The selected profile root invokes this skill only for

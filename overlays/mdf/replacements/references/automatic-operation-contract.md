@@ -59,18 +59,20 @@ machine-only protocol.
 
 For every automatic artifact or implementation operation:
 
-1. Dispatch one skill-backed executor with the exact adapter, acceptance
+1. Before every actual executor or critic spawn, use the shared policy's
+   `begin` contract and retain only its returned invocation ID.
+2. Dispatch one skill-backed executor with the exact adapter, acceptance
    baseline, target, owned paths, checks, and stop rules. The adapter loads the
    primitives required by its public contract.
-2. Wait until that executor returns an actual terminal response.
-3. Re-read the actual artifact or diff, Git state, and command results.
-4. Persist any returned executor report and root-observed changed paths when
+3. Wait until that executor returns an actual terminal response.
+4. Re-read the actual artifact or diff, Git state, and command results.
+5. Persist any returned executor report and root-observed changed paths when
    applicable.
-5. Only after a successful terminal status with a complete reviewable report,
+6. Only after a successful terminal status with a complete reviewable report,
    dispatch one distinct fresh read-only critic with the actual target,
    canonical critic adapter, and original acceptance baseline. Exclude executor
    reasoning.
-6. Wait for the critic's actual terminal response, then apply **State
+7. Wait for the critic's actual terminal response, then apply **State
    decisions**. In the root, accept, rework, or finish `BLOCKED`.
 
 | Role | May | Must not |
@@ -155,8 +157,8 @@ node <plugin-root>/skills/auto-workflow/scripts/changed-paths.mjs \
 - For critics, record the bound target.
 
 Persist each returned executor and critic report as a separate immutable
-artifact under `.mdf/work/<work-id>/` before acceptance. Pass its path to the
-terminal observation append.
+artifact under `.mdf/work/<work-id>/` before acceptance. Each report declares
+`invocation_id: <id>` on its own line when it is linked from an attempt index.
 
 An executor report contains only applicable fields:
 
@@ -177,15 +179,12 @@ After an executor ends terminally without a report:
 2. Preserve its exact changed paths and root-observed Git and verification
    results in the next handoff's verification text.
 3. Write the immutable handoff before any retry:
-   - include only the actual executor attempt line;
+   - include exactly one generic executor attempt index for the actual dispatch;
    - use `report: none` and preserve the raw terminal status;
    - set every accepted-result and critic field to `none`;
    - preserve the verbatim provider response, root-observed time, and
      retry/backoff context in the existing blocker or verification text.
-4. Append the terminal observation with this handoff as its artifact reference.
-   Create no parallel routing artifact.
-5. Re-read the handoff and observation.
-6. Apply **Recovery**. Retry only when it permits re-entry; otherwise finish at
+4. Apply **Recovery**. Retry only when it permits re-entry; otherwise finish at
    the applicable substantive stop.
 
 This procedure records no accepted executor result, critic result, or lifecycle
@@ -199,10 +198,8 @@ terminal no-report transport failure, write the next immutable
 
 ```text
 operation: <operation>
-# Repeat exactly one role-specific line for each dispatch, in dispatch order;
-# omit roles not yet dispatched.
-executor_attempt: <invocation-id> | report: <project-relative path | none> | status: <raw-status>
-critic_attempt: <invocation-id> | report: <project-relative path | none> | status: <raw-status> | assessment: <pass | changes_requested | blocked | none>
+# Repeat exactly one generic line for each actual dispatch, in dispatch order.
+attempt: <id> | role: <canonical-role> | report: <path | none> | status_b64: <base64url(raw-status)> | disposition: <accepted | not_used | unresolved>
 accepted_executor_invocation_id: <id | none>
 accepted_executor_report: <project-relative path | none>
 accepted_critic_invocation_id: <id | none>
@@ -214,10 +211,11 @@ accepted_commit_oid: <full OID | none>
 
 Handoff invariants:
 
-- Write one role-specific attempt line per actual dispatch, in dispatch order.
-  Omit a role until dispatched; never invent a placeholder invocation ID.
-- Use the matching attempt line as the role-specific terminal-observation link.
-  With `report: none`, use the handoff itself as the artifact reference.
+- Write one generic attempt line per actual dispatch, in dispatch order. Omit a
+  role until dispatched; never invent a placeholder invocation ID.
+- The index is the only artifact linkage for routing analysis. With `report:
+  none`, it records insufficient evidence rather than substituting the handoff
+  as a report.
 - Record task and profile identity, Git state, verification, critic outcome,
   blockers, and the root-owned cursor.
 - Use `report: none` only when no report returned and `assessment: none` only

@@ -42,7 +42,8 @@ Return the full audit report to the user. No synthesis or merge step is needed â
    `using-agent-skills` discovery.
 2. Load `<plugin-root>/references/subagent-dispatch-policy.md` and the exact
    resolved `web-performance-auditor` persona prompt.
-3. Invoke one generic subagent with the root-selected dispatch record. Do not
+3. Invoke one generic subagent with canonical role `web-performance-auditor`
+   and the root-selected dispatch record. Do not
    fan out or add a merge step.
 4. If the runtime, prompt, or dispatch record cannot be resolved, disclose a
    root fallback with degraded status or stop explicitly. Never silently omit

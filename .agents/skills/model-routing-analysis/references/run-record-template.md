@@ -1,6 +1,6 @@
 ---
-schema_version: 4
-method_version: 5
+schema_version: 8
+method_version: 10
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0
@@ -12,15 +12,15 @@ reanalysis_count: 0
 
 ## Source Batch
 
-| Project ID | Start line | End line | New invocations | Resolutions | Reanalyses | Status |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| — | — | — | — | — | — | — |
+| Project ID | Start line | End line | New invocations | Resolutions | Reanalyses | Legacy rows | Status |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| — | — | — | — | — | — | — | — |
 
 ## Invocation Facts
 
-| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Dispatched at | Completed at | Observed duration (s) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Canonical role | Attempt disposition | Task kind | Confidence | Raw status | Begun at | Completed at | Observed duration (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Outcome and Verification
 
@@ -50,11 +50,23 @@ reanalysis_count: 0
 - Verification and rework observed:
 - Evidence limitation:
 
+## Work Sequence Outcomes
+
+| Project ID | Work ID | Cohort status | Attempts | Final disposition | Verification strength | Rework observed | Evidence limitation |
+| --- | --- | --- | ---: | --- | --- | --- | --- |
+| — | — | — | — | — | — | — | — |
+
+## Cross-Cohort Exclusions
+
+| Project ID | Work ID | Affected cohorts | Attempts excluded | Reason |
+| --- | --- | --- | ---: | --- |
+| — | — | — | — | — |
+
 ## Descriptive Aggregates
 
-| Requested model | Requested effort | Task kind | Comparable characteristics | n | Accepted | Changes requested | Failed | Unresolved | Unknown disposition | Verification strength distribution | Rework observed | Insufficient evidence |
-| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Requested model | Requested effort | Task kind | Comparable characteristics | Distinct work items (n) | Attempts represented | Final accepted works | Final changes-requested works | Final failed works | Final unresolved works | Unknown final disposition | Verification strength distribution | Works with rework | Insufficient evidence |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Unknowns and Conflicts
 

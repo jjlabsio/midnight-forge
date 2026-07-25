@@ -1,8 +1,8 @@
 # Model Routing Observation Analysis Method
 
 ```yaml
-schema_version: 4
-method_version: 5
+schema_version: 8
+method_version: 10
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -13,7 +13,7 @@ speed, cost, or one-person-builder utility should be preferred.
 
 Keep four layers separate:
 
-1. **Raw fact** — exact dispatch and terminal values.
+1. **Raw fact** — exact new-format begin/finish values.
 2. **Artifact evidence** — an observable fact from a linked artifact.
 3. **Retrospective inference** — a controlled label derived from evidence,
    always accompanied by confidence and an artifact reference.
@@ -28,20 +28,32 @@ business content into a run record.
 Inspect only linked artifacts under the exact canonical
 `.mdf/work/<work-id>/` directory.
 
-For a task-linked invocation:
+For a new-format task-linked invocation:
 
 1. Match the event's `work_id` to the canonical work directory.
-2. Find immutable `handoff-NNN.md` files with an exact `executor_attempt` or
-   `critic_attempt` line naming the invocation ID.
-3. Parse only the automatic-workflow contract's pipe-delimited attempt keys.
-4. Reject duplicate or malformed attempt lines; a textual mention is not a
-   link.
-5. Follow evidence by role:
+2. Run `<plugin-root>/references/subagent-dispatch-policy/check-subagent-observation-links.mjs`
+   against that canonical root. Treat its JSON as data; never let it write or
+   repair source state. Use the invocation's own result, not the project-level
+   status, to decide linkage. Another invocation's error does not invalidate an
+   invocation whose result is `valid`.
+3. Find one exact immutable generic line:
 
-   | Role | Follow | Never attribute |
-   | --- | --- | --- |
-   | Executor | Its attempt `report` and accepted executor result fields | Another attempt's report |
-   | Critic | Its attempt `report`, `assessment`, and root-recorded critic outcome | The accepted commit as critic output |
+   ```text
+   attempt: <id> | role: <canonical-role> | report: <path | none> | status_b64: <base64url(raw-status)> | disposition: <accepted | not_used | unresolved>
+   ```
+
+   Decode `status_b64` as canonical unpadded base64url UTF-8; the ID, role, and
+   decoded raw status must match the paired `begin`/`finish` rows exactly.
+   Reject duplicate, malformed, or checker-rejected lines; a textual mention
+   is not a link.
+4. Follow only that attempt's report. A non-`none` report must be beneath the
+   exact work directory and declare `invocation_id: <id>` on its own line.
+   Never attribute another attempt's report or a later accepted commit.
+
+Immutable legacy `dispatch`/`terminal` rows are unsupported input. Report only
+their count and the limitation `legacy evidence insufficient`; do not emit
+per-invocation facts, follow role-specific attempt lines or `artifact_refs`, add
+generic indexes, alter old rows, or include legacy rows in performance cohorts.
 
 Path and read limits:
 
@@ -54,7 +66,7 @@ Path and read limits:
 
 Use the policy-required globally unique `invocation_id` as the invocation
 identity. `project_id` remains source context, not part of the key. A normal
-dispatch / terminal pair appears once. If a later terminal completes an
+`begin` / `finish` pair appears once. If a later finish completes an
 invocation that an earlier immutable run recorded as incomplete, write a new
 resolution row with `record_role: resolution` and `supersedes_run_id`; this is
 a new observation revision, not a second invocation. Preserve these values
@@ -65,10 +77,15 @@ without alias normalization:
 - `invocation_id`
 - `requested_model`
 - `requested_effort`
-- terminal `status`
-- `dispatched_at`
+- `canonical_role`, for new-format rows
+- generic attempt `disposition`, for safely linked new-format rows
+- finish or terminal `status`
+- `began_at`
 - `completed_at`, when present
-- project-relative `artifact_refs`
+
+New-format begin rows do not have a dispatch key. If an immutable historical
+begin row carries a `dispatch_key` extra field, ignore it; do not include it in
+a run record or use it as an identity, uniqueness, or aggregation input.
 
 `requested_model` and `requested_effort` describe the dispatch request. The
 runtime does not expose the model that actually executed. Do not add an
@@ -93,6 +110,58 @@ Apply exact role precedence:
 For `resolution` or `reanalysis`, point `supersedes_run_id` to the latest prior
 run. When combining runs, count only the latest row for that identity.
 
+## Pending linked-artifact reanalysis
+
+For every linked invocation whose paired events are available but whose generic
+attempt index, report identity, checker result, or potentially completable
+outcome evidence is pending, retain the identity in the checkpoint's
+`pending_linked_invocations`. This is an analysis cursor, not source-project
+state and not a request to alter an old run or artifact.
+
+On every later analysis, form the deduplicated union of newly selected
+invocation identities and checkpoint-pending identities. Re-evaluate every
+identity in that union against the current safe artifact view, even when the
+journal watermark does not advance. Apply the exact role precedence above: an
+identity first seen in the selected events is `initial`; a newly observed finish
+that completes a prior incomplete row is `resolution`, including for a retained
+pending identity; every other retained pending identity is `reanalysis`. Its
+`supersedes_run_id` is the latest immutable row for that identity. Emit one row
+per identity per run.
+
+Retain a linked identity as pending with exactly one current state:
+
+```text
+missing_attempt_index | checker_invalid | missing_report | insufficient_outcome
+```
+
+Classify that state in this order: use `missing_attempt_index` when no one
+parseable candidate names the identity (including a checker failure caused by
+that absence); use `checker_invalid` when a candidate names it but the checker
+rejects the linkage; use `missing_report` when accepted linkage requires a
+report that is absent or unsafe; otherwise use `insufficient_outcome` when
+an existing non-`none` report cannot yet satisfy the evaluable-outcome rule.
+
+A checker-accepted attempt whose immutable index declares `report: none` is
+terminal no-report evidence. If it is not evaluable, record it once as excluded
+with insufficient outcome evidence and do not add or retain it in
+`pending_linked_invocations`. Its immutable attempt index cannot acquire a
+report later; replaying it would create analysis history without new evidence.
+
+Update its `latest_run_id` after each published reanalysis. Clear it after the
+current run safely links one exact generic attempt and the checker accepts the
+linkage when either the outcome reaches the evaluable-evidence rule or the
+immutable attempt declares `report: none`. In the latter case, publish the
+final excluded row before clearing it. Keep it pending for checker rejection,
+ambiguous or missing artifacts, and insufficient outcome evidence from an
+existing non-`none` report. Never clear it merely because no new journal lines
+arrived, and never rewrite a prior run to attach a late handoff.
+
+For example, a finished invocation with no handoff is recorded with
+`missing_attempt_index`; when a handoff appears later, the next analysis
+rechecks the retained ID even with an unchanged journal watermark. It writes a
+`reanalysis` row and either clears the pending item if the evidence is
+evaluable, or retains it with its new current state.
+
 In `run-record-template.md`, the `Invocation Facts` `Raw status` column is the
 exact source status when one exists. For an incomplete or structurally
 malformed observation, preserve every available raw status in `Unknowns and
@@ -101,20 +170,25 @@ Conflicts`; do not convert it into model-performance evidence.
 Keep every superseded row as audit history, but do not count it as an additional
 sample.
 
-Pair events only by `invocation_id`. A missing terminal is `incomplete`.
+Pair events only by `invocation_id`. A missing finish is `incomplete`.
 Duplicate or conflicting events are `malformed`. Preserve failed, timed-out,
 interrupted, incomplete, malformed, and unknown records as raw facts even when
 they are excluded from performance `n`.
+
+An unlinked (`work_id: null`) invocation is raw requested-routing history, not
+an outcome sample. It is excluded from every performance cohort. A linked pair
+whose checker result, generic attempt index, report identity, or outcome
+evidence is insufficient is likewise excluded; record the exact limitation.
 
 ## Time
 
 When both timestamps are valid, calculate:
 
 ```text
-observed_duration_seconds = completed_at - dispatched_at
+observed_duration_seconds = completed_at - began_at
 ```
 
-This is dispatch-to-return time, not pure model execution time. Mark missing or
+This is begin-to-return time, not pure model execution time. Mark missing or
 invalid intervals `unknown` and retain it only as a non-comparative invocation
 fact. Never aggregate it by model or effort, use it as suitability evidence, or
 sum overlapping intervals.
@@ -224,22 +298,53 @@ Aggregate only by the exact combination:
 requested_model + requested_effort + task_kind
 ```
 
-`n` is the number of evaluable invocations in that exact cohort. An invocation
-is evaluable only when safe artifact evidence supports the work attempted and
-at least one acceptance, verification, independent review, final disposition,
-or rework result. Output presence alone is insufficient. A
+`n` is the number of distinct evaluable linked work items in that exact cohort,
+not the number of attempts. Attempts within one work item are one correlated
+work sequence: retain each raw attempt and its disposition, but never present
+rework attempts as independent work samples. Report the number of attempts
+alongside `n`, and suppress cross-cohort comparisons when the same work item
+appears in more than one cohort.
+
+A work sequence is evaluable only when at least one safely linked attempt has
+artifact evidence supporting the work attempted and at least one acceptance,
+verification, independent review, final disposition, or rework result. Output
+presence alone is insufficient. A
 dispatch-only failure, transport failure with no work evidence, incomplete or
 malformed pair, and an invocation with insufficient outcome evidence do not
 contribute to `n`.
 
 Preserve every raw status in `Invocation Facts` and every excluded observation
 in `Unknowns and Conflicts`, but do not aggregate dispatch-path reliability or
-compare availability. For evaluable invocations report:
+compare availability.
+
+### Work-sequence projection
+
+Project each evaluable work item to exactly one aggregate outcome. Order its
+safely linked attempt indexes by immutable artifact number, then `handoff`
+before `synthesis` for the same number, then line number. Preserve every attempt
+and its root attempt disposition (`accepted | not_used | unresolved`) in
+invocation facts. That disposition says whether the root used one subagent
+result; it is not the work's artifact-derived final disposition. Derive the work
+outcome from the latest root-authored final judgment supported by the sequence;
+an intermediate executor or critic result is evidence, not a separate work
+outcome.
+
+For a work whose artifacts show `changes_requested`, a revision, and a final
+`accepted` judgment, record one work sample with final disposition `accepted`,
+`rework_observed: yes`, and the full attempt count. If the latest final root
+judgment is absent, conflicting, or not safely supported, project `unresolved`.
+Choose the strongest verification strength supported anywhere in the sequence
+and set `rework_observed: yes` when any safely linked evidence shows a revision
+cycle; otherwise preserve `no` or `unknown` according to the evidence rules.
+Write each projection once in `Work Sequence Outcomes`; derive descriptive
+aggregate outcome, verification, and rework counts only from that table.
+
+For evaluable work-item projections report:
 
 - accepted, changes-requested, failed, unresolved, and unknown disposition
   counts
-- verification-strength distribution
-- rework-observed count
+- verification-strength distribution, with one value per work item
+- rework-observed count, with at most one count per work item
 
 Report the excluded insufficient-evidence count next to the cohort without
 including it in `n`.
@@ -253,6 +358,12 @@ Apply these sample rules:
 | `>= 5` | Report defined outcome, verification, and rework distributions |
 
 - Do not combine different task kinds into one comparison.
+- When one work item appears in more than one requested-model, effort, or task
+  kind cohort, list its attempts and projected outcome, mark it `cross_cohort`,
+  and exclude the work and all its attempts from every cohort's `n`, outcome
+  counts, and `Attempts represented`. Report it once in `Cross-Cohort
+  Exclusions`, listing every affected cohort; never attribute one final work
+  outcome or exclusion count to multiple cohort rows.
 - Before any comparison, require the linked task characteristics to be
   qualitatively comparable. Suppress the claim when scope, ambiguity, novelty,
   risk, consequence, or verification demand differs materially; do not replace
@@ -263,5 +374,6 @@ Apply these sample rules:
 
 Increment `schema_version` when fields or document structure change. Increment
 `method_version` when definitions, controlled values, or aggregation rules
-change. Never rewrite prior run records. Later analysis should compare records
-within the same method version first and disclose cross-version differences.
+change. Never rewrite prior run records, checkpoints, or logs. Later analysis
+should compare records within the same method version first and disclose
+cross-version differences.

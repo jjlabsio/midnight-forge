@@ -176,7 +176,23 @@ assertAuthoredSurface("skills/github-after-merge/SKILL.md");
 assertAuthoredSurface("skills/github-clear-gone/SKILL.md");
 assertAuthoredSurface("skills/task/SKILL.md");
 
-assertAuthoredSurface("skills/use-mdf/scripts/record-subagent-observation.mjs");
+const observationPolicyRuntime = "references/subagent-dispatch-policy";
+const observationRuntime = [
+  `${observationPolicyRuntime}/record-subagent-observation.mjs`,
+  `${observationPolicyRuntime}/check-subagent-observation-links.mjs`,
+];
+for (const output of observationRuntime) assertAuthoredSurface(output);
+for (const legacyOutput of [
+  path.join("skills", "subagent-observation", "SKILL.md"),
+  path.join("skills", "subagent-observation", "scripts", "record-subagent-observation.mjs"),
+  path.join("skills", "subagent-observation", "scripts", "check-subagent-observation-links.mjs"),
+  path.join("skills", "use-mdf", "scripts", "record-subagent-observation.mjs"),
+  path.join("skills", "use-mdf", "scripts", "check-subagent-observation-links.mjs"),
+]) {
+  assert(!entryFor(legacyOutput), `${legacyOutput} must not return to the generated inventory.`);
+  assert(!exists(path.join(root, legacyOutput)), `${legacyOutput} must not return to generated output.`);
+  assert(!exists(path.join(overlayRoot, "replacements", legacyOutput)), `${legacyOutput} must not return to overlay source.`);
+}
 assertAuthoredSurface("agents/README.md");
 
 const personaOverlayFiles = filesUnder(path.join(overlayRoot, "replacements"), "agents")
