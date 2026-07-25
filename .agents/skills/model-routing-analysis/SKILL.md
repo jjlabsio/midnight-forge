@@ -72,7 +72,8 @@ card, index, lock, worktree, or other MDF state.
 
 ## Boundaries
 
-- Preserve raw model, effort, status, and timestamps exactly.
+- Preserve raw model, effort, canonical role, attempt disposition, status, and
+  timestamps exactly when those facts exist in the source format.
 - Treat model and effort as requested values; never infer the executed model.
 - Treat dispatch-to-return duration as observation latency, not model runtime.
 - Treat attempts within one linked work item as one correlated work sequence,

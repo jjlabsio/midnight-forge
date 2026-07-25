@@ -8,7 +8,9 @@ import {
   mkdirSync,
   openSync,
   readFileSync,
+  readSync,
   realpathSync,
+  statSync,
   unlinkSync,
   writeFileSync,
   writeSync,
@@ -29,6 +31,7 @@ const roles = new Set([
   "ship-test-engineer",
   "web-performance-auditor",
 ]);
+const JOURNAL_TAIL_BYTES = 1024 * 1024;
 
 function fail(message, code = 2) {
   console.error(message);
@@ -138,10 +141,23 @@ function withJournalLock(state, operation, identity, action) {
   }
 }
 
-function readRows(state) {
+function readTailRows(state) {
   if (!existsSync(state.logPath)) return [];
-  const content = readFileSync(state.logPath, "utf8");
+  const size = statSync(state.logPath).size;
+  const start = Math.max(0, size - JOURNAL_TAIL_BYTES);
+  const descriptor = openSync(state.logPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+  const buffer = Buffer.alloc(size - start);
+  try {
+    readSync(descriptor, buffer, 0, buffer.length, start);
+  } finally {
+    closeSync(descriptor);
+  }
+  let content = buffer.toString("utf8");
   if (content && !content.endsWith("\n")) observationConflict("Observation journal is ambiguous: final row is incomplete.");
+  if (start > 0) {
+    const firstNewline = content.indexOf("\n");
+    content = firstNewline === -1 ? "" : content.slice(firstNewline + 1);
+  }
   return content.split("\n").filter(Boolean).map((line, index) => {
     try {
       const row = JSON.parse(line);
@@ -153,6 +169,19 @@ function readRows(state) {
       observationConflict(`Observation journal is ambiguous at line ${index + 1}: ${error.message}`);
     }
   });
+}
+
+function validateJournalTail(state) {
+  let rows;
+  try {
+    rows = readTailRows(state);
+  } catch (error) {
+    if (error?.observationConflict) observationUnavailable("journal_tail_unavailable");
+    throw error;
+  }
+  if (rows.length === 0 && existsSync(state.logPath) && statSync(state.logPath).size > JOURNAL_TAIL_BYTES) {
+    observationUnavailable("journal_tail_unavailable");
+  }
 }
 
 function append(state, row) {
@@ -189,6 +218,7 @@ if (command === "begin") {
     if (!roles.has(canonicalRole)) observationUnavailable("canonical_role_unavailable");
     if (workId !== "-") canonicalWorkId(state, workId);
     withJournalLock(state, "begin", invocationId, () => {
+      validateJournalTail(state);
       append(state, { event: "begin", invocation_id: invocationId, ...facts, began_at: new Date().toISOString() });
       emit({ status: "recorded", invocation_id: invocationId });
     });
@@ -212,7 +242,8 @@ if (command === "begin") {
   try {
     const state = context();
     withJournalLock(state, "finish", invocationId, () => {
-      const rows = readRows(state).filter((row) => row.invocation_id === invocationId);
+      const rows = readTailRows(state).filter((row) => row.invocation_id === invocationId);
+      if (rows.length === 0) observationUnavailable("invocation_not_in_journal_tail");
       const begins = rows.filter((row) => row.event === "begin");
       const finishes = rows.filter((row) => row.event === "finish");
       if (begins.length !== 1 || finishes.length > 1 || rows.length !== begins.length + finishes.length) {

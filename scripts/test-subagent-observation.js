@@ -150,13 +150,18 @@ async function main() {
       "web-performance-auditor",
     ];
     for (const role of roles) {
-      assert.strictEqual(runJson(["begin", "-", "gpt-test", "medium", role]).status, "recorded");
+      const roleBegin = runJson(["begin", "-", "gpt-test", "medium", role]);
+      assert.strictEqual(roleBegin.status, "recorded");
+      assert.strictEqual(runJson(["finish", roleBegin.invocation_id, "finished"]).status, "recorded");
     }
     const parallelBegins = await Promise.all(Array.from({ length: 8 }, () =>
       runAsync(["begin", "-", "gpt-test", "medium", "ship-test-engineer"])
     ));
     assert.strictEqual(new Set(parallelBegins.map(({ invocation_id }) => invocation_id)).size, 8);
     assert(parallelBegins.every(({ status }) => status === "recorded"));
+    await Promise.all(parallelBegins.map(({ invocation_id }) =>
+      runAsync(["finish", invocation_id, "finished"])
+    ));
 
     const rawStatus = " interrupted | provider detail ";
     assert.strictEqual(runJson(["finish", begin.invocation_id, rawStatus]).status, "recorded");
@@ -186,6 +191,10 @@ async function main() {
     const checked = JSON.parse(execFileSync(process.execPath, [checker, fixture], { encoding: "utf8" }));
     assert.strictEqual(checked.status, "ok");
     assert.strictEqual(checked.checked_attempts, 2);
+    assert.deepStrictEqual(
+      checked.invocations.filter(({ invocation_id }) => invocation_id === begin.invocation_id),
+      [{ invocation_id: begin.invocation_id, status: "valid" }]
+    );
 
     fs.appendFileSync(reportPath, `invocation_id: ${begin.invocation_id}\n`);
     assert.strictEqual(spawnSync(process.execPath, [checker, fixture]).status, 1);
@@ -221,6 +230,19 @@ async function main() {
     expectValidCheckerCase("legacy-dispatch-key-extra-data", legacyExtraRows,
       attemptLine("mdf-key-one", "executor", "none", "finished", "not_used")
       + attemptLine("mdf-key-two", "executor", "none", "finished", "not_used"));
+    const fanoutRows = [
+      ...completeRows("mdf-ship-code", "ship-code-reviewer"),
+      ...completeRows("mdf-ship-security", "ship-security-auditor"),
+      ...completeRows("mdf-ship-test", "ship-test-engineer"),
+      ...completeRows("mdf-rework-executor", "executor"),
+      ...completeRows("mdf-rework-critic", "critic"),
+    ];
+    expectValidCheckerCase("ship-fanout-and-rework", fanoutRows,
+      attemptLine("mdf-ship-code", "ship-code-reviewer", "none", "finished")
+      + attemptLine("mdf-ship-security", "ship-security-auditor", "none", "finished")
+      + attemptLine("mdf-ship-test", "ship-test-engineer", "none", "finished")
+      + attemptLine("mdf-rework-executor", "executor", "none", "finished")
+      + attemptLine("mdf-rework-critic", "critic", "none", "finished"));
     const mismatchId = "mdf-mismatch";
     expectInvalidCheckerCase("mismatched-events", completeRows(mismatchId),
       attemptLine(mismatchId, "tester", "none", "finished", "not_used"));
@@ -270,6 +292,67 @@ async function main() {
 
     const traversal = spawnSync(process.execPath, [helper, fixture, "begin", "work-1\ninvalid", "gpt-test", "high", "executor"]);
     assert.strictEqual(traversal.status, 2);
+
+    const damagedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-damaged-journal-"));
+    try {
+      initialize(damagedRoot);
+      const damagedObservations = path.join(damagedRoot, ".mdf", "observations");
+      fs.mkdirSync(damagedObservations, { recursive: true });
+      const damagedLog = path.join(damagedObservations, "subagent-invocations.jsonl");
+      fs.writeFileSync(damagedLog, "{\"event\":\"begin\"");
+      const before = fs.readFileSync(damagedLog, "utf8");
+      const damagedBegin = runJson(["begin", "work-1", "gpt-test", "high", "executor"], damagedRoot);
+      assert.strictEqual(damagedBegin.status, "unavailable");
+      assert.strictEqual(fs.readFileSync(damagedLog, "utf8"), before);
+    } finally {
+      fs.rmSync(damagedRoot, { recursive: true, force: true });
+    }
+
+    const mixedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-mixed-checker-"));
+    try {
+      initialize(mixedRoot);
+      const mixedObservations = path.join(mixedRoot, ".mdf", "observations");
+      fs.mkdirSync(mixedObservations, { recursive: true });
+      const validId = "mdf-mixed-valid";
+      const incompleteId = "mdf-mixed-incomplete";
+      fs.writeFileSync(
+        path.join(mixedObservations, "subagent-invocations.jsonl"),
+        `${[...completeRows(validId), completeRows(incompleteId)[0]].map(JSON.stringify).join("\n")}\n`
+      );
+      fs.writeFileSync(
+        path.join(mixedRoot, ".mdf", "work", "work-1", "handoff-001.md"),
+        attemptLine(validId, "executor", "none", "finished", "not_used")
+      );
+      const mixed = checkerResult(mixedRoot);
+      assert.strictEqual(mixed.status, 1);
+      assert.deepStrictEqual(mixed.json.invocations, [
+        { invocation_id: incompleteId, status: "incomplete" },
+        { invocation_id: validId, status: "valid" },
+      ]);
+    } finally {
+      fs.rmSync(mixedRoot, { recursive: true, force: true });
+    }
+
+    const boundedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-bounded-finish-"));
+    try {
+      initialize(boundedRoot);
+      const oldBegin = runJson(["begin", "work-1", "gpt-test", "high", "executor"], boundedRoot);
+      const boundedLog = path.join(boundedRoot, ".mdf", "observations", "subagent-invocations.jsonl");
+      const paddingRow = `${JSON.stringify({
+        event: "begin",
+        invocation_id: `mdf-padding-${"x".repeat(200)}`,
+        work_id: null,
+        requested_model: "gpt-test",
+        requested_effort: "low",
+        canonical_role: "tester",
+      })}\n`;
+      fs.appendFileSync(boundedLog, paddingRow.repeat(Math.ceil((1024 * 1024) / Buffer.byteLength(paddingRow)) + 2));
+      const boundedFinish = runJson(["finish", oldBegin.invocation_id, "finished"], boundedRoot);
+      assert.strictEqual(boundedFinish.status, "unavailable");
+      assert.strictEqual(boundedFinish.reason, "invocation_not_in_journal_tail");
+    } finally {
+      fs.rmSync(boundedRoot, { recursive: true, force: true });
+    }
 
     const isolatedLockRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-isolated-lock-"));
     try {

@@ -1,8 +1,8 @@
 # Model Routing Observation Analysis Method
 
 ```yaml
-schema_version: 7
-method_version: 9
+schema_version: 8
+method_version: 10
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -13,7 +13,7 @@ speed, cost, or one-person-builder utility should be preferred.
 
 Keep four layers separate:
 
-1. **Raw fact** — exact begin/finish values (or immutable legacy dispatch/terminal values).
+1. **Raw fact** — exact new-format begin/finish values.
 2. **Artifact evidence** — an observable fact from a linked artifact.
 3. **Retrospective inference** — a controlled label derived from evidence,
    always accompanied by confidence and an artifact reference.
@@ -33,7 +33,9 @@ For a new-format task-linked invocation:
 1. Match the event's `work_id` to the canonical work directory.
 2. Run `<plugin-root>/references/subagent-dispatch-policy/check-subagent-observation-links.mjs`
    against that canonical root. Treat its JSON as data; never let it write or
-   repair source state.
+   repair source state. Use the invocation's own result, not the project-level
+   status, to decide linkage. Another invocation's error does not invalidate an
+   invocation whose result is `valid`.
 3. Find one exact immutable generic line:
 
    ```text
@@ -48,11 +50,10 @@ For a new-format task-linked invocation:
    exact work directory and declare `invocation_id: <id>` on its own line.
    Never attribute another attempt's report or a later accepted commit.
 
-For immutable legacy `dispatch`/`terminal` rows, retain the method-version-5
-compatibility path: role-specific attempt lines and existing `artifact_refs`
-may be read only when they unambiguously identify one safe artifact. Never add
-new generic indexes, alter old rows, or mix legacy linkage with new-format
-facts. Ambiguous legacy history remains raw and insufficient.
+Immutable legacy `dispatch`/`terminal` rows are unsupported input. Report only
+their count and the limitation `legacy evidence insufficient`; do not emit
+per-invocation facts, follow role-specific attempt lines or `artifact_refs`, add
+generic indexes, alter old rows, or include legacy rows in performance cohorts.
 
 Path and read limits:
 
@@ -65,8 +66,7 @@ Path and read limits:
 
 Use the policy-required globally unique `invocation_id` as the invocation
 identity. `project_id` remains source context, not part of the key. A normal
-`begin` / `finish` pair appears once. Legacy `dispatch` / `terminal` pairs stay
-immutable compatibility facts. If a later finish completes an
+`begin` / `finish` pair appears once. If a later finish completes an
 invocation that an earlier immutable run recorded as incomplete, write a new
 resolution row with `record_role: resolution` and `supersedes_run_id`; this is
 a new observation revision, not a second invocation. Preserve these values
@@ -77,10 +77,11 @@ without alias normalization:
 - `invocation_id`
 - `requested_model`
 - `requested_effort`
+- `canonical_role`, for new-format rows
+- generic attempt `disposition`, for safely linked new-format rows
 - finish or terminal `status`
-- `began_at` or legacy `dispatched_at`
+- `began_at`
 - `completed_at`, when present
-- legacy project-relative `artifact_refs`, when present
 
 New-format begin rows do not have a dispatch key. If an immutable historical
 begin row carries a `dispatch_key` extra field, ignore it; do not include it in
@@ -186,8 +187,7 @@ When both timestamps are valid, calculate:
 observed_duration_seconds = completed_at - began_at
 ```
 
-This is begin-to-return time, not pure model execution time. For legacy rows,
-use `dispatched_at` in place of `began_at`. Mark missing or
+This is begin-to-return time, not pure model execution time. Mark missing or
 invalid intervals `unknown` and retain it only as a non-comparative invocation
 fact. Never aggregate it by model or effort, use it as suitability evidence, or
 sum overlapping intervals.
@@ -314,12 +314,36 @@ contribute to `n`.
 
 Preserve every raw status in `Invocation Facts` and every excluded observation
 in `Unknowns and Conflicts`, but do not aggregate dispatch-path reliability or
-compare availability. For evaluable invocations report:
+compare availability.
+
+### Work-sequence projection
+
+Project each evaluable work item to exactly one aggregate outcome. Order its
+safely linked attempt indexes by immutable artifact number, then `handoff`
+before `synthesis` for the same number, then line number. Preserve every attempt
+and its root attempt disposition (`accepted | not_used | unresolved`) in
+invocation facts. That disposition says whether the root used one subagent
+result; it is not the work's artifact-derived final disposition. Derive the work
+outcome from the latest root-authored final judgment supported by the sequence;
+an intermediate executor or critic result is evidence, not a separate work
+outcome.
+
+For a work whose artifacts show `changes_requested`, a revision, and a final
+`accepted` judgment, record one work sample with final disposition `accepted`,
+`rework_observed: yes`, and the full attempt count. If the latest final root
+judgment is absent, conflicting, or not safely supported, project `unresolved`.
+Choose the strongest verification strength supported anywhere in the sequence
+and set `rework_observed: yes` when any safely linked evidence shows a revision
+cycle; otherwise preserve `no` or `unknown` according to the evidence rules.
+Write each projection once in `Work Sequence Outcomes`; derive descriptive
+aggregate outcome, verification, and rework counts only from that table.
+
+For evaluable work-item projections report:
 
 - accepted, changes-requested, failed, unresolved, and unknown disposition
   counts
-- verification-strength distribution
-- rework-observed count
+- verification-strength distribution, with one value per work item
+- rework-observed count, with at most one count per work item
 
 Report the excluded insufficient-evidence count next to the cohort without
 including it in `n`.
@@ -333,6 +357,12 @@ Apply these sample rules:
 | `>= 5` | Report defined outcome, verification, and rework distributions |
 
 - Do not combine different task kinds into one comparison.
+- When one work item appears in more than one requested-model, effort, or task
+  kind cohort, list its attempts and projected outcome, mark it `cross_cohort`,
+  and exclude the work and all its attempts from every cohort's `n`, outcome
+  counts, and `Attempts represented`. Report it once in `Cross-Cohort
+  Exclusions`, listing every affected cohort; never attribute one final work
+  outcome or exclusion count to multiple cohort rows.
 - Before any comparison, require the linked task characteristics to be
   qualitatively comparable. Suppress the claim when scope, ambiguity, novelty,
   risk, consequence, or verification demand differs materially; do not replace

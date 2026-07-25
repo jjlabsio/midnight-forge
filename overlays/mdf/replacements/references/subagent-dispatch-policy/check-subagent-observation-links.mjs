@@ -60,7 +60,7 @@ try {
   process.exit(2);
 }
 
-const result = { status: "ok", checked_attempts: 0, legacy_rows: 0, errors: [] };
+const result = { status: "ok", checked_attempts: 0, legacy_rows: 0, invocations: [], errors: [] };
 const observationsPath = join(canonicalRoot, ".mdf", "observations");
 if (existsSync(observationsPath) && (lstatSync(observationsPath).isSymbolicLink() || !lstatSync(observationsPath).isDirectory())) {
   console.error("Observation directory is unsafe.");
@@ -112,6 +112,7 @@ for (const row of rows) {
 
 const attemptsById = new Map();
 const malformedAttemptIds = new Map();
+const validInvocationIds = new Set();
 let workRoot;
 try {
   workRoot = checkedPath(canonicalRoot, [".mdf", "work"], "directory");
@@ -173,7 +174,7 @@ for (const [invocationId, attempts] of attemptsById) {
 for (const [invocationId, events] of byId) {
   const begins = events.filter((row) => row.event === "begin");
   const finishes = events.filter((row) => row.event === "finish");
-  if (begins.length === 1 && begins[0].work_id === null && finishes.length <= 1 && events.length === begins.length + finishes.length) {
+  if (begins.length === 1 && begins[0].work_id === null && finishes.length === 1 && events.length === begins.length + finishes.length) {
     if ((attemptsById.get(invocationId) || []).length > 0) {
       result.errors.push(`${invocationId}: unlinked invocation must not have a generic attempt index`);
     }
@@ -213,8 +214,56 @@ for (const [invocationId, events] of byId) {
     }
   }
   result.checked_attempts += 1;
+  validInvocationIds.add(invocationId);
 }
 
 if (result.errors.length > 0) result.status = "invalid";
+const classifiedIds = new Set([...byId.keys(), ...attemptsById.keys(), ...malformedAttemptIds.keys()]);
+for (const invocationId of [...classifiedIds].sort()) {
+  const events = byId.get(invocationId) || [];
+  const begins = events.filter((row) => row.event === "begin");
+  const finishes = events.filter((row) => row.event === "finish");
+  let status;
+  if (validInvocationIds.has(invocationId)) {
+    status = "valid";
+  } else if (
+    begins.length === 1
+    && begins[0].work_id === null
+    && finishes.length === 1
+    && events.length === begins.length + finishes.length
+    && (attemptsById.get(invocationId) || []).length === 0
+  ) {
+    status = "unlinked";
+  } else if (
+    begins.length === 1
+    && finishes.length === 0
+    && events.length === 1
+    && !attemptsById.has(invocationId)
+    && !malformedAttemptIds.has(invocationId)
+  ) {
+    status = "incomplete";
+  } else if (
+    events.length === 0
+    && (attemptsById.has(invocationId) || malformedAttemptIds.has(invocationId))
+  ) {
+    status = "linkage_invalid";
+  } else if (
+    begins.length !== 1
+    || finishes.length > 1
+    || events.length !== begins.length + finishes.length
+    || (begins[0] && (
+      (begins[0].work_id !== null && !safeComponent(begins[0].work_id))
+      || !roles.has(begins[0].canonical_role)
+      || !safeValue(begins[0].requested_model)
+      || !safeValue(begins[0].requested_effort)
+    ))
+    || (finishes[0] && !safeValue(finishes[0].status))
+  ) {
+    status = "malformed";
+  } else {
+    status = "linkage_invalid";
+  }
+  result.invocations.push({ invocation_id: invocationId, status });
+}
 process.stdout.write(`${JSON.stringify(result)}\n`);
 process.exit(result.status === "ok" ? 0 : 1);

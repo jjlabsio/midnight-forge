@@ -81,6 +81,13 @@ paths, report content, prompts, responses, secrets, quality scores, or inferred
 runtime facts. Requested model and effort are requests, not executed-runtime
 facts.
 
+The recorder performs only bounded journal work on the workflow path. `begin`
+validates the current journal tail before appending and never repairs, truncates,
+or appends through an incomplete or malformed tail. `finish` searches at most
+the final 1 MiB for its recent invocation facts. When the required facts are
+outside that bound or the tail is unsafe, return `unavailable` without mutation
+and continue the workflow.
+
 New-format begin rows have no dispatch key. If an immutable historical begin
 row contains a `dispatch_key` extra field, ignore it; never rewrite it or use it
 for uniqueness, locking, linking, or analysis.
@@ -128,9 +135,13 @@ node <plugin-root>/references/subagent-dispatch-policy/check-subagent-observatio
 
 It verifies new-format event pairing, canonical work linkage, one generic
 attempt index, reversible raw-status identity, component-safe report paths,
-and exact report/ID identity. It never writes a
-handoff, report, journal, or workflow state. Legacy observation history stays
-immutable and is handled only by the analysis compatibility rules.
+and exact report/ID identity. Its project-level `status` reports overall source
+health, while its sorted per-invocation results use `valid`, `incomplete`,
+`malformed`, `unlinked`, or `linkage_invalid`. Analysis may use a `valid`
+invocation even when another invocation makes the project-level status
+`invalid`. It never writes a handoff, report, journal, or workflow state.
+Legacy observation history stays immutable and is raw insufficient evidence;
+the checker does not reconstruct legacy artifact linkage.
 
 ## Spawn boundary
 
