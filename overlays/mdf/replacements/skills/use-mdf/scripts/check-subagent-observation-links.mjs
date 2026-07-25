@@ -89,7 +89,6 @@ for (const [index, line] of content.split("\n").filter(Boolean).entries()) {
 }
 
 const byId = new Map();
-const byDispatchKey = new Map();
 for (const row of rows) {
   if (row?.event === "dispatch" || row?.event === "terminal") {
     result.legacy_rows += 1;
@@ -103,22 +102,12 @@ for (const row of rows) {
   events.push(row);
   byId.set(row.invocation_id, events);
   if (row.event === "begin") {
-    if (!safeValue(row.dispatch_key)) {
-      result.errors.push(`${row.invocation_id}: missing dispatch key`);
-    } else {
-      const dispatches = byDispatchKey.get(row.dispatch_key) || [];
-      dispatches.push(row.invocation_id);
-      byDispatchKey.set(row.dispatch_key, dispatches);
-    }
     if (!roles.has(row.canonical_role)) result.errors.push(`${row.invocation_id}: uncontrolled canonical role`);
     if (row.work_id !== null && !safeComponent(row.work_id)) result.errors.push(`${row.invocation_id}: missing or unsafe work linkage`);
     if (!safeValue(row.requested_model)) result.errors.push(`${row.invocation_id}: invalid requested_model`);
     if (!safeValue(row.requested_effort)) result.errors.push(`${row.invocation_id}: invalid requested_effort`);
   }
   if (row.event === "finish" && !safeValue(row.status)) result.errors.push(`${row.invocation_id}: missing terminal status`);
-}
-for (const [dispatchKey, invocationIds] of byDispatchKey) {
-  if (invocationIds.length > 1) result.errors.push(`dispatch key ${dispatchKey}: duplicated across ${invocationIds.join(", ")}`);
 }
 
 const attemptsById = new Map();

@@ -85,7 +85,7 @@ Produce a single output:
 2. Run exact upstream `using-agent-skills` discovery. Load this adapter,
    `shipping-and-launch`, specialists' applicable primitives, and the MDF
    subagent dispatch policy. Use its three canonical ship roles for the fan-out
-   and retain one caller dispatch key per specialist invocation.
+   and retain each returned invocation ID for its specialist invocation.
 3. Bind every report and decision to the current task, approved scope, base,
    HEAD, diff, verification, and operational evidence.
 4. The root directly performs upstream fan-out and merge. Do not add a ship

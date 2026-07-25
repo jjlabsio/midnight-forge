@@ -1,6 +1,6 @@
 ---
-schema_version: 6
-method_version: 7
+schema_version: 7
+method_version: 8
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0
@@ -18,9 +18,9 @@ reanalysis_count: 0
 
 ## Invocation Facts
 
-| Invocation ID | Dispatch key | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Begun at | Completed at | Observed duration (s) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Begun at | Completed at | Observed duration (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Outcome and Verification
 

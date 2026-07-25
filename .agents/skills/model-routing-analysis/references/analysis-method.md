@@ -1,8 +1,8 @@
 # Model Routing Observation Analysis Method
 
 ```yaml
-schema_version: 6
-method_version: 7
+schema_version: 7
+method_version: 8
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -75,13 +75,16 @@ without alias normalization:
 - `project_id`
 - `work_id`, when present
 - `invocation_id`
-- `dispatch_key`, when present
 - `requested_model`
 - `requested_effort`
 - finish or terminal `status`
 - `began_at` or legacy `dispatched_at`
 - `completed_at`, when present
 - legacy project-relative `artifact_refs`, when present
+
+New-format begin rows do not have a dispatch key. If an immutable historical
+begin row carries a `dispatch_key` extra field, ignore it; do not include it in
+a run record or use it as an identity, uniqueness, or aggregation input.
 
 `requested_model` and `requested_effort` describe the dispatch request. The
 runtime does not expose the model that actually executed. Do not add an

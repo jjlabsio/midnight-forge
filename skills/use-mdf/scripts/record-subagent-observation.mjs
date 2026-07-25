@@ -164,15 +164,6 @@ function append(state, row) {
   }
 }
 
-function sameBegin(row, facts) {
-  return row.event === "begin"
-    && row.dispatch_key === facts.dispatch_key
-    && row.work_id === facts.work_id
-    && row.requested_model === facts.requested_model
-    && row.requested_effort === facts.requested_effort
-    && row.canonical_role === facts.canonical_role;
-}
-
 function sameFinish(row, status) {
   return row.event === "finish" && row.status === status;
 }
@@ -180,16 +171,14 @@ function sameFinish(row, status) {
 if (!canonicalRootArg || !command) fail("Usage: record-subagent-observation.mjs <canonical-root> <begin|finish> <values...>");
 
 if (command === "begin") {
-  if (values.length !== 5) fail("Begin requires explicit work ID or dash, requested model, requested effort, canonical role, and caller-retained dispatch key.");
-  const [workId, requestedModel, requestedEffort, canonicalRole, dispatchKey] = values;
+  if (values.length !== 4) fail("Begin requires explicit work ID or dash, requested model, requested effort, and canonical role.");
+  const [workId, requestedModel, requestedEffort, canonicalRole] = values;
   safe(workId, "work ID or dash");
   safe(requestedModel, "requested model");
   safe(requestedEffort, "requested effort");
   safe(canonicalRole, "canonical role");
-  safe(dispatchKey, "dispatch key");
   const invocationId = `mdf-${randomUUID()}`;
   const facts = {
-    dispatch_key: dispatchKey,
     work_id: workId === "-" ? null : workId,
     requested_model: requestedModel,
     requested_effort: requestedEffort,
@@ -199,16 +188,7 @@ if (command === "begin") {
     const state = context();
     if (!roles.has(canonicalRole)) observationUnavailable("canonical_role_unavailable");
     if (workId !== "-") canonicalWorkId(state, workId);
-    withJournalLock(state, "begin", dispatchKey, () => {
-      const matching = readRows(state).filter((row) => row.event === "begin" && row.dispatch_key === dispatchKey);
-      if (matching.length > 1) observationConflict("Observation facts conflict or are ambiguous for this dispatch key.");
-      if (matching.length === 1) {
-        if (sameBegin(matching[0], facts)) {
-          emit({ status: "already_recorded", invocation_id: matching[0].invocation_id });
-          return;
-        }
-        observationConflict("Observation facts conflict for this dispatch key.", { storedInvocationId: matching[0].invocation_id });
-      }
+    withJournalLock(state, "begin", invocationId, () => {
       append(state, { event: "begin", invocation_id: invocationId, ...facts, began_at: new Date().toISOString() });
       emit({ status: "recorded", invocation_id: invocationId });
     });

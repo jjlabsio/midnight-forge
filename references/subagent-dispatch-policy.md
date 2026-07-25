@@ -55,15 +55,14 @@ it is dispatched.
 
 ## Minimal observation
 
-Before every actual spawn, generate and retain one opaque per-dispatch key, then
-call `begin` once. A retry uses the same key; a new real dispatch uses a new
-key. `begin` returns a globally unique invocation ID even when observation is
-unavailable.
+Before every actual spawn, call `begin` once and retain only its generated
+invocation ID. Every call represents one actual dispatch observation and
+returns a fresh globally unique ID, including when observation is unavailable.
 
 ```bash
 node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
   <canonical-root> begin <work-id-or-dash> <requested-model> \
-  <requested-effort> <canonical-role> <caller-retained-dispatch-key>
+  <requested-effort> <canonical-role>
 ```
 
 After an actual terminal response, call `finish` once with only that ID and the
@@ -74,13 +73,17 @@ node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
   <canonical-root> finish <invocation-id> <raw-status>
 ```
 
-For a matching key plus immutable begin facts, the helper returns
-`already_recorded` with the original ID. A matching key with different facts
-fails closed without a row; distinct keys permit identical real dispatches.
-`finish` likewise returns `already_recorded` only for the same ID and raw
-status. The helper never accepts artifact paths, report content, prompts,
-responses, secrets, quality scores, or inferred runtime facts. Requested model
-and effort are requests, not executed-runtime facts.
+`finish` returns `already_recorded` only for the same ID and raw status, and
+reports conflicts diagnostically without adding a row. A lost or unavailable
+`begin` observation is not reconstructed or retried for analysis; continue with
+the returned usable ID when one is available. The helper never accepts artifact
+paths, report content, prompts, responses, secrets, quality scores, or inferred
+runtime facts. Requested model and effort are requests, not executed-runtime
+facts.
+
+New-format begin rows have no dispatch key. If an immutable historical begin
+row contains a `dispatch_key` extra field, ignore it; never rewrite it or use it
+for uniqueness, locking, linking, or analysis.
 
 Observation is diagnostic only. A `unavailable` result, a missing event, or an
 incomplete pair never blocks or changes spawn, acceptance, retry, commit, or

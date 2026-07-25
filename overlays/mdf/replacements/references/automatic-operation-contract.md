@@ -59,8 +59,8 @@ machine-only protocol.
 
 For every automatic artifact or implementation operation:
 
-1. Before every actual executor or critic spawn, generate and retain a distinct
-   caller dispatch key and use the shared policy's `begin` contract.
+1. Before every actual executor or critic spawn, use the shared policy's
+   `begin` contract and retain only its returned invocation ID.
 2. Dispatch one skill-backed executor with the exact adapter, acceptance
    baseline, target, owned paths, checks, and stop rules. The adapter loads the
    primitives required by its public contract.

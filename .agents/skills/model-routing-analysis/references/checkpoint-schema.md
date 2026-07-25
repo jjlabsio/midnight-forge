@@ -6,15 +6,15 @@ Path:
 .mdf/analysis/model-routing/checkpoint.json
 ```
 
-Use `schema_version: 6`, `method_version: 7`, and status `included` or
+Use `schema_version: 7`, `method_version: 8`, and status `included` or
 `excluded`.
 
 ## Shape
 
 ```json
 {
-  "schema_version": 6,
-  "method_version": 7,
+  "schema_version": 7,
+  "method_version": 8,
   "projects": [
     {
       "registry_id": "<stable ~/.mdf/projects.json id>",
