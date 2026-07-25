@@ -250,6 +250,7 @@ for (const invocationId of [...classifiedIds].sort()) {
     status = "unlinked";
   } else if (
     begins.length === 1
+    && validBeginFacts(begins[0])
     && finishes.length === 0
     && events.length === 1
     && !attemptsById.has(invocationId)

@@ -276,6 +276,25 @@ async function main() {
         fs.rmSync(invalidRoutingRoot, { recursive: true, force: true });
       }
     }
+    {
+      const malformedIncompleteRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-malformed-incomplete-"));
+      try {
+        initialize(malformedIncompleteRoot);
+        const invalidId = "mdf-malformed-incomplete";
+        const [begin] = completeRows(invalidId);
+        begin.requested_model = "";
+        fs.mkdirSync(path.join(malformedIncompleteRoot, ".mdf", "observations"), { recursive: true });
+        fs.writeFileSync(
+          path.join(malformedIncompleteRoot, ".mdf", "observations", "subagent-invocations.jsonl"),
+          `${JSON.stringify(begin)}\n`
+        );
+        const result = checkerResult(malformedIncompleteRoot);
+        assert.strictEqual(result.json.status, "invalid");
+        assert.deepStrictEqual(result.json.invocations, [{ invocation_id: invalidId, status: "malformed" }]);
+      } finally {
+        fs.rmSync(malformedIncompleteRoot, { recursive: true, force: true });
+      }
+    }
     expectInvalidWithoutJournal("absent-observations-orphan", "absent-directory",
       attemptLine("mdf-absent-directory", "executor", "none", "finished", "not_used"),
       "generic attempt index is orphaned from the journal");

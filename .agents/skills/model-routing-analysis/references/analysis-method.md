@@ -121,11 +121,12 @@ state and not a request to alter an old run or artifact.
 On every later analysis, form the deduplicated union of newly selected
 invocation identities and checkpoint-pending identities. Re-evaluate every
 identity in that union against the current safe artifact view, even when the
-journal watermark does not advance. An identity first seen in the selected
-events is `initial` (or `resolution` when its new finish resolves a prior
-incomplete row). A retained pending identity is `reanalysis`, including when a
-new event for that same identity appears; its `supersedes_run_id` is the latest
-immutable row for that identity. Emit one row per identity per run.
+journal watermark does not advance. Apply the exact role precedence above: an
+identity first seen in the selected events is `initial`; a newly observed finish
+that completes a prior incomplete row is `resolution`, including for a retained
+pending identity; every other retained pending identity is `reanalysis`. Its
+`supersedes_run_id` is the latest immutable row for that identity. Emit one row
+per identity per run.
 
 Retain a linked identity as pending with exactly one current state:
 
