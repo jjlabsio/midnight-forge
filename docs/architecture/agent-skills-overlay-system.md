@@ -66,7 +66,8 @@ to commit plan slices, but not to ship, complete the whole task, push, or
 create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
 after its final preflight and ship GO, it may push and create/update the PR,
 but the task remains active with its lock held until `github-after-merge`
-verifies the accepted revision is merged. A mode string alone is not
+verifies the merged PR's final state through the task-card PR link. A mode
+string alone is not
 authority; the current handoff, task/lock/worktree/branch facts, approved
 artifact hashes, and fresh preflight are required. Neither mode alters
 standalone skill semantics.

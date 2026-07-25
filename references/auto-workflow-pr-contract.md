@@ -28,5 +28,6 @@ root merge. Add no outer ship executor, critic, verifier, or coordinator.
   state.
 
 Post-merge work is outside this profile. Only a later explicit, separate
-`github-after-merge` invocation verifies the accepted revision, completes the
-task, releases the lock, and performs its cleanup contract.
+`github-after-merge` invocation verifies the merged PR's final state through
+the task-card PR link, completes the task, releases the lock, and performs its
+cleanup contract.
