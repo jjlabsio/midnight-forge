@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.8.0 - 2026-07-25
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.4...v2.8.0)
+
+### Changes
+
+- feat(observation): minimize subagent runtime recording ([#103](https://github.com/jjlabsio/midnight-forge/pull/103))
 ## v2.7.4 - 2026-07-24
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.3...v2.7.4)
