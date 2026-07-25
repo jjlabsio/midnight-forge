@@ -21,10 +21,12 @@ and never in the automated run records.
 
 Run records group outcomes by requested model and runtime-native effort; they
 do not claim that the requested model actually ran. They analyze work outcomes,
-not dispatch-path availability. In an aggregate,
-`n` is the number of invocations with enough linked artifact evidence to assess
-the attempted work and at least one outcome. With fewer than three such cases,
-the run lists the cases without generalizing.
+not dispatch-path availability. In each requested-model, effort, and task-kind
+cohort, `n` is the number of distinct evaluable linked work items, not the
+number of invocations. Attempts within one work item are one correlated work
+sequence and are reported separately; if the same work item appears in more
+than one cohort, the run suppresses cross-cohort comparison. With fewer than
+three evaluable work items, the run lists the cases without generalizing.
 
 ## Manual strategy notes
 
