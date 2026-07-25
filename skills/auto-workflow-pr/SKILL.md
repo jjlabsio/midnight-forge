@@ -18,7 +18,7 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 ## Root controller
 
 1. Before every operation, apply the loaded contracts' complete root boundary
-   and revalidate task, card, lock, worktree, branch, latest handoff, Git,
+   and revalidate task, card, lock, worktree, branch, persisted PR link, Git,
    artifacts, intent, authority, and applicable remote state.
 2. Run or resume the selected profile exactly without repeating accepted work.
    This controller map is non-exhaustive and never overrides or omits a
@@ -26,7 +26,7 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 3. Run the profile in order: run or resume `auto-workflow` through its accepted
    local result; canonical root-owned `ship`; `github-pr` after GO and fresh
    preflight; remote OID, latest-head checks, mergeability, and conflict
-   verification; delivery handoff; verified PR delivery.
+   verification; persisted PR link; verified PR delivery.
 4. Preserve every applicable upstream acceptance, TDD, verification, fallback,
    and stop criterion. Route every DDD-class trigger encountered in a
    mode-blind stage or executor through the contract's root-owned
@@ -50,7 +50,7 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
 
 6. Preserve canonical `ship` as its direct three-specialist fan-out and root
    merge; do not wrap it in this executor/critic binding.
-7. Write the required delivery handoff and finish with verified PR handoff or
+7. Store the required task-card PR link and finish with verified PR delivery or
    `BLOCKED`.
 
 **NEVER treat a caller wait timeout, no update, or elapsed silence as executor

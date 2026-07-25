@@ -11,30 +11,32 @@ not need to invoke either skill separately.
 
 ## Preconditions
 
-1. Require an explicit PR number or URL, or the current root-authored delivery
-   handoff. A bare request to sync after merge without an exact task-linked
-   handoff is synchronization-only and must not mutate MDF task state.
+1. Require an explicit PR number or URL. A bare request to sync after merge
+   without an exact task ID or task-card PR link is synchronization-only and
+   must not mutate MDF task state.
 2. Resolve the canonical root and read GitHub as the source of truth. Common
    merge verification requires repository, PR number, URL, `mergedAt`,
    `headRefOid`, and `baseRefName`.
 3. Select one path before task resolution:
-   - Managed finalization: an exact delivery handoff or explicit task ID is
-     present. Resolve its exact task/work/lock; never infer task identity from
-     a branch name alone.
-   - Synchronization-only: no task-linked handoff or task ID is present. Do not
-     resolve, create, or mutate task state.
-4. For managed finalization, require `mergeCommitOid`. A provider that cannot
-   supply it is a stop. Re-read the delivery handoff file and its task `Log`
-   entry, recompute its SHA-256, and require the current repository, PR
-   number/URL, accepted head OID, expected base, and task/work/lock references
-   to match the handoff exactly.
-5. For managed finalization, the current merged PR head must equal the
-   accepted head OID, the base must equal the expected base, and the latest
-   related or required checks for that head must be terminal and passing. After
-   fetching the expected base, verify that its remote tip contains the reported
-   merge commit OID.
+   - Managed finalization: an explicit task ID is present, or exactly one task
+     card has a matching `latest.pr` link. Resolve its exact task/work/lock;
+     never infer task identity from a branch name alone.
+   - Synchronization-only: no task ID and no unique matching task-card link are
+     present. Do not resolve, create, or mutate task state.
+4. For managed finalization, require the card link to be exactly
+   `{ "repository": "<owner>/<repo>", "number": <positive integer> }` and
+   to equal the GitHub repository and requested PR number. A supplied task ID
+   still requires this matching stored link. Stop for a missing, malformed,
+   ambiguous, or mismatched link; historical delivery files and historical
+   string-valued `latest.pr` entries are not migration inputs.
+5. For managed finalization, require `mergeCommitOid`; a provider that cannot
+   supply it is a stop. Resolve the repository default branch and require the
+   merged PR's `baseRefName` to equal it; custom base branches are unsupported.
+   Require the latest related or required checks for the merged PR's final
+   `headRefOid` to be terminal and passing. After fetching the default branch,
+   verify that its remote tip contains the reported merge commit OID.
 6. For managed finalization, stop without task mutation or cleanup for an
-   unmerged/closed PR, changed head, failed or pending checks, base mismatch,
+   unmerged/closed PR, failed or pending final-head checks, non-default base,
    ambiguous linkage, provider failure, lock mismatch, or missing completion
    evidence. Synchronization-only stops only for failed common merge
    verification, unsafe checkout state, or failed cleanup.
@@ -45,7 +47,7 @@ When the synchronization-only path is selected, run the synchronization and
 `github-clear-gone` cleanup phases using only the common merge verification;
 skip the task-only head/check/base and `mergeCommitOid` requirements and skip
 task finalization. This preserves direct sync requests and taskless PR
-handoffs. Do not create a task, lock, or delivery handoff in this path.
+handoffs. Do not create or mutate task state in this path.
 
 ## Finalize the task
 
@@ -57,11 +59,11 @@ After the merged revision passes every precondition, apply the canonical
    index projection, re-read both, then release the lock conditionally by its
    current byte digest.
 3. For `done + matching lock`, treat the operation as interrupted recovery:
-   verify the delivery evidence, repair or append one unambiguous current index
+   verify the merged-PR evidence, repair or append one unambiguous current index
    projection when the card is authoritative, re-read both, then release only
    that exact lock. Do not replay `done`.
 4. For `done + no lock`, finish as an idempotent no-op after verifying the
-   delivery evidence. Any other state is `BLOCKED`.
+   merged-PR evidence. Any other state is `BLOCKED`.
 
 If finalization fails, do not clean branches/worktrees and do not recreate or
 release a lock through a fallback path.

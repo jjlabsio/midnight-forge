@@ -44,9 +44,9 @@ spec/plan/build/test/review/simplify loop and commit each plan slice while
 leaving the whole MDF task active. `auto-workflow-pr` may resume those slices,
 use the latest spec as its acceptance baseline, run ship, and—only after final
 preflight—push and create/update the PR. It leaves the task active with its
-lock held and returns a delivery handoff. That return ends the delivery
-profile. A later explicit, separate `github-after-merge` invocation completes
-the task only after the accepted PR revision is merged. Both modes
+lock held and records the PR's immutable minimal task-card link. That ends the
+delivery profile. A later explicit, separate `github-after-merge` invocation
+completes the task only after directly verifying the merged PR's final state. Both modes
 must still stop for critical product/public-contract/security/privacy/data/
 permission/cost/destructive/irreversible decisions, failed verification,
 repeated no-progress, lock conflicts, changed artifact hashes, uncertain PR

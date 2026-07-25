@@ -3,6 +3,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/auto-workflow-pr-contract.md",
   "overlayKind": "mdfOnly",
-  "notes": "Plan-backed automatic PR delivery profile through canonical ship and verified delivery handoff.",
+  "notes": "Plan-backed automatic PR delivery profile through canonical ship and verified task-card PR link.",
   "contractRefs": ["automatic-operation-contract", "auto-workflow-contract"]
 }

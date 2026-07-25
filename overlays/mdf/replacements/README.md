@@ -66,8 +66,8 @@ code simplification, and commit. It keeps the whole MDF task active and does
 not ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow:
 it resumes valid local work, uses the full spec as its acceptance baseline,
 ships, keeps the task active through PR creation/update and the latest PR
-checks/mergeability/conflict gates, then returns a delivery handoff while the
-task and lock remain active. When accepted local completion evidence matches,
+checks/mergeability/conflict gates, then records its minimal task-card PR link
+while the task and lock remain active. When accepted local completion evidence matches,
 resume begins at ship rather than repeating accepted development stages.
 `$quick-workflow-pr` is the explicit lightweight delivery
 workflow for small documentation or implementation changes: it always skips

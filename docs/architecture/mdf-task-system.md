@@ -73,11 +73,13 @@ actions.
 
 The task skill also supports a completed-task read-only handoff. It does not
 invoke `done` or mutate the task card when the task is already complete. The
-GitHub PR prepares a delivery handoff for an incomplete current task and
-keeps its lock held; `github-after-merge` later composes task finalization and
+GitHub PR records one explicit repository-and-PR-number link in an incomplete
+current task and keeps its lock held; `github-after-merge` later uses that link
+with current GitHub and Git evidence to compose task finalization and
 gone-branch cleanup. It still validates already-completed tasks from persisted
 worktree and branch facts without recreating a lock. GitHub is the source of
-truth for whether an open PR already exists.
+truth for whether an open PR already exists and for the merged PR's final head
+and checks.
 
 ## Workflow model
 
@@ -107,9 +109,9 @@ It does not ship, complete the whole task, push, or create/update a PR.
 finishes pending plan slices when needed, uses the full spec as its acceptance
 baseline even when no plan work remains, then runs ship, performs push and PR
 create/update, and validates the latest-head consumer gates. It leaves the
-task `active` with its lock held and returns a delivery handoff;
-`github-after-merge` completes the task only after the accepted PR revision is
-actually merged. Exact artifact hashes, TDD, review, lock, and high-risk checks
+task `active` with its lock held and records its immutable minimal PR link;
+`github-after-merge` completes the task only after it directly verifies the
+merged PR's final state. Exact artifact hashes, TDD, review, lock, and high-risk checks
 remain required; changed artifacts invalidate prior artifact acceptance. Merge,
 deploy, deletion,
 stale-lock takeover, and unresolved critical or no-progress conditions still
@@ -132,7 +134,7 @@ The root remains responsible for merging, verification, and lifecycle state.
 
 Plan-slice completion and whole-task completion are separate: a local build
 commit records an implementation slice while the MDF card remains active until
-the post-merge final handoff. `github-after-merge` is the single user-facing
+post-merge finalization. `github-after-merge` is the single user-facing
 post-merge entrypoint; it composes task finalization and gone-branch cleanup.
 Review has two readable scope labels:
 `lifecycle-review` for a full approved tree and `task-review` for a direct
