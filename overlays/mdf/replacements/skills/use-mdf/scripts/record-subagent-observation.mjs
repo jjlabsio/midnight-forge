@@ -9,109 +9,252 @@ import {
   openSync,
   readFileSync,
   realpathSync,
+  unlinkSync,
+  writeFileSync,
   writeSync,
 } from "node:fs";
-import { isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { join, resolve } from "node:path";
+import { createHash, randomUUID } from "node:crypto";
 
-const [canonicalRootArg, event, invocationId, ...values] = process.argv.slice(2);
-if (!canonicalRootArg || !event || !invocationId) {
-  console.error("Usage: record-subagent-observation.mjs <canonical-root> <dispatch|terminal> <invocation-id> <values...>");
-  process.exit(2);
-}
+const [canonicalRootArg, command, ...values] = process.argv.slice(2);
+const roles = new Set([
+  "explorer",
+  "tester",
+  "reviewer",
+  "persona",
+  "executor",
+  "critic",
+  "ship-code-reviewer",
+  "ship-security-auditor",
+  "ship-test-engineer",
+  "web-performance-auditor",
+]);
 
-const canonicalRoot = realpathSync(resolve(canonicalRootArg));
-const mdfPath = join(canonicalRoot, ".mdf");
-if (!existsSync(mdfPath) || lstatSync(mdfPath).isSymbolicLink()) {
-  console.error("Canonical .mdf must be a real directory.");
-  process.exit(2);
-}
-const initPath = join(canonicalRoot, ".mdf", "project", "init.json");
-if (!existsSync(initPath)) {
-  console.error("Canonical root is not initialized for MDF.");
-  process.exit(2);
-}
-const init = JSON.parse(readFileSync(initPath, "utf8"));
-if (typeof init.canonical_root !== "string" || realpathSync(init.canonical_root) !== canonicalRoot) {
-  console.error("MDF init marker does not match the canonical root.");
-  process.exit(2);
+function fail(message, code = 2) {
+  console.error(message);
+  process.exit(code);
 }
 
 function safe(value, label) {
-  if (!value || /[\r\n\0]/.test(value)) {
-    console.error(`${label} must be a non-empty single-line value.`);
-    process.exit(2);
-  }
+  if (!value || /[\r\n\0]/.test(value)) fail(`${label} must be a non-empty single-line value.`);
   return value;
 }
 
-function artifactReference(value) {
-  const reference = safe(value, "artifact reference");
-  const normalized = normalize(reference);
-  const workPrefix = join(".mdf", "work") + sep;
-  if (
-    isAbsolute(reference) ||
-    reference !== normalized ||
-    !normalized.startsWith(workPrefix)
-  ) {
-    console.error("Artifact reference must stay under .mdf/work/.");
-    process.exit(2);
-  }
-  return normalized;
+function emit(value) {
+  process.stdout.write(`${JSON.stringify(value)}\n`);
 }
 
-safe(invocationId, "invocation ID");
-let row;
-if (event === "dispatch") {
-  if (values.length !== 3) {
-    console.error("Dispatch requires model, effort, and explicit work ID or dash.");
-    process.exit(2);
+function observationConflict(message, details = {}) {
+  const error = new Error(message);
+  error.observationConflict = true;
+  Object.assign(error, details);
+  throw error;
+}
+
+function unavailable(invocationId, reason) {
+  emit({ status: "unavailable", invocation_id: invocationId, reason });
+  process.exit(0);
+}
+
+function observationUnavailable(reason) {
+  const error = new Error(reason);
+  error.observationUnavailable = true;
+  throw error;
+}
+
+function context() {
+  const canonicalRoot = realpathSync(resolve(canonicalRootArg));
+  const mdfPath = join(canonicalRoot, ".mdf");
+  if (!existsSync(mdfPath) || lstatSync(mdfPath).isSymbolicLink() || !lstatSync(mdfPath).isDirectory()) {
+    observationUnavailable("canonical_mdf_unavailable");
   }
-  const [requestedModel, requestedEffort, workId] = values;
-  row = {
-    event,
-    invocation_id: invocationId,
-    requested_model: safe(requestedModel, "requested model"),
-    requested_effort: safe(requestedEffort, "requested effort"),
-    work_id: workId === "-" ? null : safe(workId, "work ID"),
-    status: "dispatched",
-    dispatched_at: new Date().toISOString(),
-  };
-} else if (event === "terminal") {
-  if (values.length < 1) {
-    console.error("Terminal requires a raw runtime status.");
-    process.exit(2);
+  const projectPath = join(mdfPath, "project");
+  const initPath = join(projectPath, "init.json");
+  if (!existsSync(projectPath) || lstatSync(projectPath).isSymbolicLink() || !existsSync(initPath) || lstatSync(initPath).isSymbolicLink()) {
+    observationUnavailable("canonical_init_unavailable");
   }
-  const [status, ...artifactRefs] = values;
-  row = {
-    event,
-    invocation_id: invocationId,
-    status: safe(status, "raw terminal status"),
-    completed_at: new Date().toISOString(),
-    artifact_refs: artifactRefs.map(artifactReference),
+  const init = JSON.parse(readFileSync(initPath, "utf8"));
+  if (typeof init.canonical_root !== "string" || realpathSync(init.canonical_root) !== canonicalRoot) {
+    observationUnavailable("canonical_root_mismatch");
+  }
+  const observationsPath = join(mdfPath, "observations");
+  const logPath = join(observationsPath, "subagent-invocations.jsonl");
+  return { canonicalRoot, mdfPath, observationsPath, logPath };
+}
+
+function canonicalWorkId(state, value) {
+  if (value === "." || value === ".." || value.includes("/") || value.includes("\\")) observationUnavailable("work_id_unavailable");
+  const workRoot = join(state.mdfPath, "work");
+  const workPath = join(workRoot, value);
+  if (!existsSync(workRoot) || lstatSync(workRoot).isSymbolicLink() || !lstatSync(workRoot).isDirectory() || !existsSync(workPath) || lstatSync(workPath).isSymbolicLink() || !lstatSync(workPath).isDirectory()) {
+    observationUnavailable("work_id_unavailable");
+  }
+  const realWorkRoot = realpathSync(workRoot);
+  if (realpathSync(workPath) !== join(realWorkRoot, value)) observationUnavailable("work_id_unavailable");
+}
+
+function observationsDirectory(state) {
+  if (existsSync(state.observationsPath) && (lstatSync(state.observationsPath).isSymbolicLink() || !lstatSync(state.observationsPath).isDirectory())) {
+    observationUnavailable("journal_unavailable");
+  }
+  mkdirSync(state.observationsPath, { recursive: true, mode: 0o700 });
+  if (existsSync(state.logPath) && lstatSync(state.logPath).isSymbolicLink()) observationUnavailable("journal_unavailable");
+}
+
+function sleep(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function lockPath(state, operation, identity) {
+  const digest = createHash("sha256").update(identity).digest("hex");
+  return join(state.observationsPath, `subagent-invocation-${operation}-${digest}.lock`);
+}
+
+function withJournalLock(state, operation, identity, action) {
+  observationsDirectory(state);
+  const scopedLockPath = lockPath(state, operation, identity);
+  const token = randomUUID();
+  let descriptor;
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      descriptor = openSync(scopedLockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+      writeFileSync(descriptor, token, "utf8");
+      break;
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      sleep(10);
+    }
+  }
+  if (descriptor === undefined) observationUnavailable("journal_lock_unavailable");
+  try {
+    return action();
+  } finally {
+    closeSync(descriptor);
+    try {
+      if (readFileSync(scopedLockPath, "utf8") === token) unlinkSync(scopedLockPath);
+    } catch {
+      // Never remove a lock whose ownership cannot be proven.
+    }
+  }
+}
+
+function readRows(state) {
+  if (!existsSync(state.logPath)) return [];
+  const content = readFileSync(state.logPath, "utf8");
+  if (content && !content.endsWith("\n")) observationConflict("Observation journal is ambiguous: final row is incomplete.");
+  return content.split("\n").filter(Boolean).map((line, index) => {
+    try {
+      const row = JSON.parse(line);
+      if (!row || typeof row !== "object" || typeof row.event !== "string" || typeof row.invocation_id !== "string") {
+        throw new Error("missing event or invocation_id");
+      }
+      return row;
+    } catch (error) {
+      observationConflict(`Observation journal is ambiguous at line ${index + 1}: ${error.message}`);
+    }
+  });
+}
+
+function append(state, row) {
+  const descriptor = openSync(state.logPath, constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY | constants.O_NOFOLLOW, 0o600);
+  try {
+    writeSync(descriptor, `${JSON.stringify(row)}\n`);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function sameBegin(row, facts) {
+  return row.event === "begin"
+    && row.dispatch_key === facts.dispatch_key
+    && row.work_id === facts.work_id
+    && row.requested_model === facts.requested_model
+    && row.requested_effort === facts.requested_effort
+    && row.canonical_role === facts.canonical_role;
+}
+
+function sameFinish(row, status) {
+  return row.event === "finish" && row.status === status;
+}
+
+if (!canonicalRootArg || !command) fail("Usage: record-subagent-observation.mjs <canonical-root> <begin|finish> <values...>");
+
+if (command === "begin") {
+  if (values.length !== 5) fail("Begin requires explicit work ID or dash, requested model, requested effort, canonical role, and caller-retained dispatch key.");
+  const [workId, requestedModel, requestedEffort, canonicalRole, dispatchKey] = values;
+  safe(workId, "work ID or dash");
+  safe(requestedModel, "requested model");
+  safe(requestedEffort, "requested effort");
+  safe(canonicalRole, "canonical role");
+  safe(dispatchKey, "dispatch key");
+  const invocationId = `mdf-${randomUUID()}`;
+  const facts = {
+    dispatch_key: dispatchKey,
+    work_id: workId === "-" ? null : workId,
+    requested_model: requestedModel,
+    requested_effort: requestedEffort,
+    canonical_role: canonicalRole,
   };
+  try {
+    const state = context();
+    if (!roles.has(canonicalRole)) observationUnavailable("canonical_role_unavailable");
+    if (workId !== "-") canonicalWorkId(state, workId);
+    withJournalLock(state, "begin", dispatchKey, () => {
+      const matching = readRows(state).filter((row) => row.event === "begin" && row.dispatch_key === dispatchKey);
+      if (matching.length > 1) observationConflict("Observation facts conflict or are ambiguous for this dispatch key.");
+      if (matching.length === 1) {
+        if (sameBegin(matching[0], facts)) {
+          emit({ status: "already_recorded", invocation_id: matching[0].invocation_id });
+          return;
+        }
+        observationConflict("Observation facts conflict for this dispatch key.", { storedInvocationId: matching[0].invocation_id });
+      }
+      append(state, { event: "begin", invocation_id: invocationId, ...facts, began_at: new Date().toISOString() });
+      emit({ status: "recorded", invocation_id: invocationId });
+    });
+  } catch (error) {
+    if (error?.observationConflict) {
+      emit({
+        status: "conflict",
+        invocation_id: invocationId,
+        ...(error.storedInvocationId ? { stored_invocation_id: error.storedInvocationId } : {}),
+        reason: error.message,
+      });
+      process.exit(0);
+    }
+    unavailable(invocationId, error?.message || "journal_unavailable");
+  }
+} else if (command === "finish") {
+  if (values.length !== 2) fail("Finish requires invocation ID and raw runtime status.");
+  const [invocationId, status] = values;
+  safe(invocationId, "invocation ID");
+  safe(status, "raw terminal status");
+  try {
+    const state = context();
+    withJournalLock(state, "finish", invocationId, () => {
+      const rows = readRows(state).filter((row) => row.invocation_id === invocationId);
+      const begins = rows.filter((row) => row.event === "begin");
+      const finishes = rows.filter((row) => row.event === "finish");
+      if (begins.length !== 1 || finishes.length > 1 || rows.length !== begins.length + finishes.length) {
+        observationConflict("Observation facts conflict or are ambiguous for this invocation ID.");
+      }
+      if (finishes.length === 1) {
+        if (sameFinish(finishes[0], status)) {
+          emit({ status: "already_recorded", invocation_id: invocationId });
+          return;
+        }
+        observationConflict("Observation facts conflict for this invocation ID.");
+      }
+      append(state, { event: "finish", invocation_id: invocationId, status, completed_at: new Date().toISOString() });
+      emit({ status: "recorded", invocation_id: invocationId });
+    });
+  } catch (error) {
+    if (error?.observationConflict) {
+      emit({ status: "conflict", invocation_id: invocationId, reason: error.message });
+      process.exit(0);
+    }
+    unavailable(invocationId, error?.message || "journal_unavailable");
+  }
 } else {
-  console.error("Event must be dispatch or terminal.");
-  process.exit(2);
-}
-
-const observationsPath = join(canonicalRoot, ".mdf", "observations");
-if (existsSync(observationsPath) && lstatSync(observationsPath).isSymbolicLink()) {
-  console.error("Observation directory must not be a symlink.");
-  process.exit(2);
-}
-mkdirSync(observationsPath, { recursive: true, mode: 0o700 });
-const logPath = join(observationsPath, "subagent-invocations.jsonl");
-if (existsSync(logPath) && lstatSync(logPath).isSymbolicLink()) {
-  console.error("Observation log must not be a symlink.");
-  process.exit(2);
-}
-const descriptor = openSync(
-  logPath,
-  constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY | constants.O_NOFOLLOW,
-  0o600
-);
-try {
-  writeSync(descriptor, `${JSON.stringify(row)}\n`);
-} finally {
-  closeSync(descriptor);
+  fail("Command must be begin or finish.");
 }

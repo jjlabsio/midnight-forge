@@ -1,21 +1,18 @@
 # MDF Subagent Dispatch Policy
 
-Dispatch, authority, and observation contract for a root-selected MDF-managed
-subagent. This reference does not select its model or effort and is not a
-runtime selector or controller.
+Dispatch, authority, and best-effort requested-routing observation contract for
+a root-selected MDF-managed subagent. This reference does not select its model
+or effort and is not a runtime selector or controller.
 
 ## Prepare a dispatch
 
 1. Resolve the installed plugin root. Before selecting model or effort for any
    MDF-managed subagent request, load and apply
    `<plugin-root>/references/model-routing-5.6.md`.
-2. Record one compact dispatch entry in the existing root handoff:
-   - requested model and effort;
-   - qualitative selection and effort rationale, including performance-reference
-     context and feedback costs;
-   - instruction source and task kind;
-   - risk, capability confidence, and write scope;
-   - fallback and degraded status.
+2. Record one compact dispatch entry in the existing root handoff or synthesis:
+   requested model and effort; qualitative selection and effort rationale;
+   instruction source and task kind; risk, capability confidence, write scope;
+   fallback and degraded status. Do not create a routing artifact.
 
 ## Instruction source
 
@@ -24,65 +21,110 @@ runtime selector or controller.
 | `skill-backed` | Workflow executor or critic | Exact canonical adapter; the called adapter loads the primitives required by its public contract |
 | `persona-backed` | A canonical skill explicitly names a specialist | Exact installed persona prompt, unchanged |
 
-Do not create a separate routing artifact or repeat task and skill bodies.
-
 ## Dispatch
 
 - Follow `<plugin-root>/references/automatic-operation-contract.md` for
-  executor/critic order, authority, observation, acceptance, and rework.
-- Keep one writer per shared worktree.
-- Wait for every dispatched subagent's actual terminal response. A caller-side
-  wait timeout, no update, or elapsed silence is not terminal or failure
-  evidence: while the subagent remains running, keep waiting, do not interrupt
-  it merely for slowness or silence, and do not dispatch a replacement writer
-  before the prior writer is terminal.
-- Join every required fan-out report before root synthesis.
-- Preserve partial reports only as diagnostics.
+  executor/critic order, authority, acceptance, and rework.
+- Keep one writer per shared worktree. Wait for actual terminal responses and
+  join required fan-out reports before root synthesis.
 - Treat failed, timed-out, interrupted, missing, or incomplete results as
-  non-success.
-- Use a visible root fallback only when the caller permits degraded execution;
-  never claim independent freshness.
+  non-success. Use a visible root fallback only when the caller permits it.
 - Preserve ship's canonical parallel specialist fan-out and root merge; do not
-  use an executor/critic pair for ship.
-- Add no heartbeat, retry, cleanup, or orchestration service.
+  add a retry, cleanup, heartbeat, or orchestration service.
 
-## Mandatory minimal observation
+## Canonical roles
 
-Generate a globally unique invocation ID. Before spawn:
+Use exactly one role for every MDF-managed dispatch:
+
+| Dispatch | Role |
+| --- | --- |
+| Read-only codebase inventory | `explorer` |
+| Generic testing or reproduction worker | `tester` |
+| Generic review | `reviewer` |
+| Persona-backed bounded delegation that is not a review or specialist | `persona` |
+| Automatic implementation worker | `executor` |
+| Automatic workflow critic | `critic` |
+| Ship code review specialist | `ship-code-reviewer` |
+| Ship security specialist | `ship-security-auditor` |
+| Ship testing specialist | `ship-test-engineer` |
+| Web performance specialist | `web-performance-auditor` |
+
+No workflow-specific observation format is permitted. A new MDF-managed role
+requires an explicit update to this table, helper, and analysis method before
+it is dispatched.
+
+## Minimal observation
+
+Before every actual spawn, generate and retain one opaque per-dispatch key, then
+call `begin` once. A retry uses the same key; a new real dispatch uses a new
+key. `begin` returns a globally unique invocation ID even when observation is
+unavailable.
 
 ```bash
 node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
-  <canonical-root> dispatch <invocation-id> <requested-model> \
-  <requested-effort> <work-id-or-dash>
+  <canonical-root> begin <work-id-or-dash> <requested-model> \
+  <requested-effort> <canonical-role> <caller-retained-dispatch-key>
 ```
 
-After an actual terminal response:
+After an actual terminal response, call `finish` once with only that ID and the
+raw status:
 
 ```bash
 node <plugin-root>/skills/use-mdf/scripts/record-subagent-observation.mjs \
-  <canonical-root> terminal <invocation-id> <raw-status> [artifact-ref...]
+  <canonical-root> finish <invocation-id> <raw-status>
 ```
 
-Observation rules:
+For a matching key plus immutable begin facts, the helper returns
+`already_recorded` with the original ID. A matching key with different facts
+fails closed without a row; distinct keys permit identical real dispatches.
+`finish` likewise returns `already_recorded` only for the same ID and raw
+status. The helper never accepts artifact paths, report content, prompts,
+responses, secrets, quality scores, or inferred runtime facts. Requested model
+and effort are requests, not executed-runtime facts.
 
-- Use the canonical work ID for task-linked work; use `-` only when unlinked.
-- Record the raw terminal status verbatim. If none exists, leave the dispatch
-  incomplete.
-- Do not retry a successful append, reuse an invocation ID, or reconstruct a
-  missing terminal fact.
-- Link the persisted role report in the terminal append, then use the existing
-  immutable role-specific handoff attempt line for the same invocation. Link a
-  handoff in the terminal append too when it already exists. These are the
-  method-authorized artifact links for later routing analysis; do not create a
-  synthetic routing artifact or copy report prose.
-- Do not store prompts, responses, secrets, quality scores, synthetic difficulty
-  labels, or inferred runtime facts.
-- Record `requested_model` and `requested_effort` as requested values. The
-  runtime does not report the model that actually executed.
-- Block stage closure on append failure until the missing event is recorded.
+Observation is diagnostic only. A `unavailable` result, a missing event, or an
+incomplete pair never blocks or changes spawn, acceptance, retry, commit, or
+lifecycle closure. Do not reconstruct it, retry it as a workflow gate, or turn
+it into a second dispatch. Preserve the raw limitation for analysis.
 
-The helper supplies UTC timestamps and one `O_APPEND` write. An observation
-never proves a returned report, changes terminal status, or grants authority.
+Only a malformed command, missing field, or empty/multiline value is a
+syntactic input error. After syntactic `begin` parsing, unsafe or unavailable
+canonical-root, work, role, journal, or lock facts return `unavailable` with a
+usable ID; they are excluded from analysis rather than reconstructed.
+
+## Immutable attempt index
+
+Every actual dispatch—success, failure, interruption, no report, or rework—is
+indexed exactly once in the existing immutable handoff or root synthesis that
+already owns that workflow's evidence. The checker recognizes immutable
+`handoff-NNN.md` and `synthesis-NNN.md` artifacts under the linked work item.
+Encode the raw one-line UTF-8 status with unpadded base64url and use this exact
+line. The encoding is reversible; never trim, split, or otherwise normalize the
+raw status before encoding:
+
+```text
+attempt: <id> | role: <canonical-role> | report: <path | none> | status_b64: <base64url(raw-status)> | disposition: <accepted | not_used | unresolved>
+```
+
+Use `accepted` only when the root trusts the result as evidence, whether or not
+it contains findings. Use `not_used` when the root does not use it, and
+`unresolved` when the root has not reached a disposition. A report named in the
+index must be project-relative beneath that work item and contain exactly one
+`invocation_id: <id>` line. Never rewrite an earlier handoff or
+synthesis to add an index.
+
+The analysis-only checker is read-only:
+
+```bash
+node <plugin-root>/skills/use-mdf/scripts/check-subagent-observation-links.mjs \
+  <canonical-root>
+```
+
+It verifies new-format event pairing, canonical work linkage, one generic
+attempt index, reversible raw-status identity, component-safe report paths,
+and exact report/ID identity. It never writes a
+handoff, report, journal, or workflow state. Legacy observation history stays
+immutable and is handled only by the analysis compatibility rules.
 
 ## Spawn boundary
 

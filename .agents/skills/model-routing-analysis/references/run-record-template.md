@@ -1,6 +1,6 @@
 ---
-schema_version: 4
-method_version: 5
+schema_version: 6
+method_version: 7
 run_id: "<analysis-UTC-timestamp-suffix>"
 run_at: "<UTC timestamp>"
 new_invocation_count: 0
@@ -18,9 +18,9 @@ reanalysis_count: 0
 
 ## Invocation Facts
 
-| Invocation ID | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Dispatched at | Completed at | Observed duration (s) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Invocation ID | Dispatch key | Project ID | Work ID | Record role | Supersedes run | Requested model | Requested effort | Task kind | Confidence | Raw status | Begun at | Completed at | Observed duration (s) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Outcome and Verification
 
@@ -52,9 +52,9 @@ reanalysis_count: 0
 
 ## Descriptive Aggregates
 
-| Requested model | Requested effort | Task kind | Comparable characteristics | n | Accepted | Changes requested | Failed | Unresolved | Unknown disposition | Verification strength distribution | Rework observed | Insufficient evidence |
-| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
-| — | — | — | — | — | — | — | — | — | — | — | — | — |
+| Requested model | Requested effort | Task kind | Comparable characteristics | Distinct work items (n) | Attempts represented | Accepted | Changes requested | Failed | Unresolved | Unknown disposition | Verification strength distribution | Rework observed | Insufficient evidence |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| — | — | — | — | — | — | — | — | — | — | — | — | — | — |
 
 ## Unknowns and Conflicts
 

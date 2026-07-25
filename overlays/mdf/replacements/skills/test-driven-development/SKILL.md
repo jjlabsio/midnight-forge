@@ -332,7 +332,7 @@ When TDD delegates a reproduction test or coverage investigation, the root
 resolves the installed plugin root and loads
 `<plugin-root>/references/subagent-dispatch-policy.md` and passes the
 root-selected dispatch record plus one resolved instruction source through the
-generic runtime spawn path. Automatic test workers use the `skill-backed`
+generic runtime spawn path with canonical role `tester`. Automatic test workers use the `skill-backed`
 source formed by this canonical adapter and applicable upstream primitives
 without a persona. An explicitly named test specialist is `persona-backed` and
 requires its exact installed prompt. Persona model or effort frontmatter is

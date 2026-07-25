@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/use-mdf/scripts/record-subagent-observation.mjs",
   "artifactStorageOverride": false,
-  "notes": "Single-write append helper for mandatory minimal subagent observations.",
+  "notes": "Thin replay-keyed begin/finish recorder for best-effort immutable requested-routing observations.",
   "overlayKind": "mdfOnly"
 }

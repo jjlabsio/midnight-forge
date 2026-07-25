@@ -1,0 +1,9 @@
+{
+  "output": "skills/use-mdf/scripts/check-subagent-observation-links.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/use-mdf/scripts/check-subagent-observation-links.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Read-only verifier for generic subagent attempt indexes and their immutable observation links.",
+  "overlayKind": "mdfOnly"
+}

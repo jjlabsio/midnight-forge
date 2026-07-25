@@ -12,7 +12,9 @@ Codex/MDF prompt-dispatch boundary.
 - Before every delegation, the root loads
   `<plugin-root>/references/subagent-dispatch-policy.md`. The root provides a
   model and reasoning record, then resolves exactly one instruction source
-  through the generic runtime path:
+  through the generic runtime path. Use canonical role `persona` for a
+  persona-backed delegation, unless the shared policy assigns its specialist
+  role:
   `persona-backed` uses the exact `agents/<persona>.md` prompt, while
   `skill-backed` uses the exact canonical skill adapter without a persona; the
   called adapter loads the primitives required by its public contract.
@@ -29,7 +31,8 @@ Codex/MDF prompt-dispatch boundary.
 - A generic subagent receives exactly one resolved instruction source and
   bounded task inputs. Only a root-authorized executor may write its exact
   leased paths. It never invokes another persona or advances lifecycle state.
-- Auto-workflow may also use a generic read-only `explorer` dispatch for
+- Auto-workflow may also use a generic read-only `explorer` dispatch with
+  canonical role `explorer` for
   bounded codebase inventory. It has `report-only` authority and no write scope
   and is never treated as an independent design or security decision.
 - An automatic executor/critic operation stops when no suitable independent

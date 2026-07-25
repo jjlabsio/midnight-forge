@@ -51,7 +51,7 @@ This skill is designed for the **main-session orchestrator**, where Step 3 (DOUB
 Before Step 3 delegates a fresh-context reviewer, the root loads
 `<plugin-root>/references/subagent-dispatch-policy.md` and passes the
 root-selected dispatch record plus the exact adversarial prompt through the
-generic runtime spawn path. The reviewer receives the artifact and contract,
+generic runtime spawn path with canonical role `reviewer`. The reviewer receives the artifact and contract,
 not a model choice. Persona model or effort frontmatter is only a
 direct-invocation default; the root-selected dispatch record overrides it for
 MDF-managed work. If dispatch cannot proceed, use the announced degraded root

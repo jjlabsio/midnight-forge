@@ -39,7 +39,7 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
    | Observed state | Root action |
    | --- | --- |
    | Executor `running` | Wait again. |
-   | Executor terminal without a report | Record changed paths and verification, write the no-acceptance handoff and terminal observation, re-read both, then retry only when the contract permits. Never dispatch a critic or accept the result. |
+   | Executor terminal without a report | Record changed paths and verification, write the no-acceptance handoff with its generic attempt index, then retry only when the contract permits. Observation remains best-effort and never gates this path. Never dispatch a critic or accept the result. |
    | Executor successful terminal status with a complete reviewable report | Observe the actual diff and checks, persist its report, then dispatch the fresh bounded-change critic. |
    | Any other executor terminal response | Persist any returned report as evidence and follow ordinary recovery or a substantive stop. Never dispatch a critic or accept the result. |
    | Critic `running` | Wait again. |
