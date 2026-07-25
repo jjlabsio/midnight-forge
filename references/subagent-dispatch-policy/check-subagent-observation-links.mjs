@@ -89,13 +89,17 @@ for (const [index, line] of content.split("\n").filter(Boolean).entries()) {
 }
 
 const byId = new Map();
+const malformedEventIds = new Set();
 for (const row of rows) {
   if (row?.event === "dispatch" || row?.event === "terminal") {
     result.legacy_rows += 1;
     continue;
   }
   if ((row?.event !== "begin" && row?.event !== "finish") || !safeValue(row?.invocation_id)) {
-    result.errors.push("observation journal contains an unknown or malformed event");
+    if (safeValue(row?.invocation_id)) malformedEventIds.add(row.invocation_id);
+    result.errors.push(safeValue(row?.invocation_id)
+      ? `${row.invocation_id}: observation journal contains an unknown or malformed event`
+      : "observation journal contains an unknown or malformed event");
     continue;
   }
   const events = byId.get(row.invocation_id) || [];
@@ -184,6 +188,7 @@ for (const [invocationId, attempts] of attemptsById) {
 }
 
 for (const [invocationId, events] of byId) {
+  if (malformedEventIds.has(invocationId)) continue;
   const begins = events.filter((row) => row.event === "begin");
   const finishes = events.filter((row) => row.event === "finish");
   if (begins.length === 1 && begins[0].work_id === null && finishes.length === 1 && events.length === begins.length + finishes.length) {
@@ -230,7 +235,7 @@ for (const [invocationId, events] of byId) {
 }
 
 if (result.errors.length > 0) result.status = "invalid";
-const classifiedIds = new Set([...byId.keys(), ...attemptsById.keys(), ...malformedAttemptIds.keys()]);
+const classifiedIds = new Set([...byId.keys(), ...attemptsById.keys(), ...malformedAttemptIds.keys(), ...malformedEventIds]);
 for (const invocationId of [...classifiedIds].sort()) {
   const events = byId.get(invocationId) || [];
   const begins = events.filter((row) => row.event === "begin");
@@ -246,6 +251,7 @@ for (const invocationId of [...classifiedIds].sort()) {
     && finishes.length === 1
     && events.length === begins.length + finishes.length
     && (attemptsById.get(invocationId) || []).length === 0
+    && !malformedEventIds.has(invocationId)
   ) {
     status = "unlinked";
   } else if (
@@ -255,6 +261,7 @@ for (const invocationId of [...classifiedIds].sort()) {
     && events.length === 1
     && !attemptsById.has(invocationId)
     && !malformedAttemptIds.has(invocationId)
+    && !malformedEventIds.has(invocationId)
   ) {
     status = "incomplete";
   } else if (
@@ -266,6 +273,7 @@ for (const invocationId of [...classifiedIds].sort()) {
     begins.length !== 1
     || finishes.length > 1
     || events.length !== begins.length + finishes.length
+    || malformedEventIds.has(invocationId)
     || (begins[0] && (
       (begins[0].work_id !== null && !safeComponent(begins[0].work_id))
       || !roles.has(begins[0].canonical_role)

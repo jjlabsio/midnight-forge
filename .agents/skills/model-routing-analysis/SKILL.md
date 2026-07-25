@@ -23,13 +23,15 @@ or `insufficient` value when evidence is absent.
 
 ## Resolve
 
-1. Resolve one canonical root from the checkout or its
+1. Resolve the installed plugin root containing this skill, its references, and
+   the read-only checker. Use that root for every `<plugin-root>` locator.
+2. Resolve one canonical root from the checkout or its
    `<canonical-root>/.worktrees/<branch>` parent.
-2. Require `.mdf/project/init.json`; never create worktree-local MDF state.
-3. Read `~/.mdf/projects.json` only to discover source projects.
-4. Read each valid source log at
+3. Require `.mdf/project/init.json`; never create worktree-local MDF state.
+4. Read `~/.mdf/projects.json` only to discover source projects.
+5. Read each valid source log at
    `<source-root>/.mdf/observations/subagent-invocations.jsonl`.
-5. Write only under:
+6. Write only under:
 
    ```text
    .mdf/analysis/model-routing/
@@ -38,7 +40,7 @@ or `insufficient` value when evidence is absent.
      runs/<run-id>.md
    ```
 
-6. Exclusively create `analysis.lock` before reading the checkpoint. Store run
+7. Exclusively create `analysis.lock` before reading the checkpoint. Store run
    ID and initial checkpoint SHA-256, or `absent`. Never break another lock.
 
 ## Analyze

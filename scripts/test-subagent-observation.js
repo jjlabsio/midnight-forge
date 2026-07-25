@@ -295,6 +295,37 @@ async function main() {
         fs.rmSync(malformedIncompleteRoot, { recursive: true, force: true });
       }
     }
+    {
+      const sameIdMalformedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-same-id-malformed-"));
+      try {
+        initialize(sameIdMalformedRoot);
+        const malformedId = "mdf-same-id-malformed";
+        const validId = "mdf-unrelated-valid";
+        const rows = [
+          ...completeRows(malformedId),
+          { event: "unknown", invocation_id: malformedId },
+          ...completeRows(validId),
+        ];
+        fs.mkdirSync(path.join(sameIdMalformedRoot, ".mdf", "observations"), { recursive: true });
+        fs.writeFileSync(
+          path.join(sameIdMalformedRoot, ".mdf", "observations", "subagent-invocations.jsonl"),
+          `${rows.map(JSON.stringify).join("\n")}\n`
+        );
+        fs.writeFileSync(
+          path.join(sameIdMalformedRoot, ".mdf", "work", "work-1", "handoff-001.md"),
+          attemptLine(malformedId, "executor", "none", "finished", "not_used")
+            + attemptLine(validId, "executor", "none", "finished", "not_used")
+        );
+        const result = checkerResult(sameIdMalformedRoot);
+        assert.strictEqual(result.json.status, "invalid");
+        assert.deepStrictEqual(result.json.invocations, [
+          { invocation_id: malformedId, status: "malformed" },
+          { invocation_id: validId, status: "valid" },
+        ]);
+      } finally {
+        fs.rmSync(sameIdMalformedRoot, { recursive: true, force: true });
+      }
+    }
     expectInvalidWithoutJournal("absent-observations-orphan", "absent-directory",
       attemptLine("mdf-absent-directory", "executor", "none", "finished", "not_used"),
       "generic attempt index is orphaned from the journal");
