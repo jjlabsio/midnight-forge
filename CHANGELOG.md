@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.8.1 - 2026-07-25
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.8.0...v2.8.1)
+
+### Changes
+
+- refactor(github): remove delivery handoff snapshots ([#104](https://github.com/jjlabsio/midnight-forge/pull/104))
 ## v2.8.0 - 2026-07-25
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.7.4...v2.8.0)
