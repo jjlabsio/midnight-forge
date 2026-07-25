@@ -1,0 +1,9 @@
+{
+  "output": "references/subagent-dispatch-policy/record-subagent-observation.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/references/subagent-dispatch-policy/record-subagent-observation.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Dispatch-policy-owned thin no-key begin/finish recorder for best-effort immutable requested-routing observations.",
+  "overlayKind": "mdfOnly"
+}

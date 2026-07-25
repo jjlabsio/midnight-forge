@@ -60,7 +60,7 @@ invocation ID. Every call represents one actual dispatch observation and
 returns a fresh globally unique ID, including when observation is unavailable.
 
 ```bash
-node <plugin-root>/skills/subagent-observation/scripts/record-subagent-observation.mjs \
+node <plugin-root>/references/subagent-dispatch-policy/record-subagent-observation.mjs \
   <canonical-root> begin <work-id-or-dash> <requested-model> \
   <requested-effort> <canonical-role>
 ```
@@ -69,7 +69,7 @@ After an actual terminal response, call `finish` once with only that ID and the
 raw status:
 
 ```bash
-node <plugin-root>/skills/subagent-observation/scripts/record-subagent-observation.mjs \
+node <plugin-root>/references/subagent-dispatch-policy/record-subagent-observation.mjs \
   <canonical-root> finish <invocation-id> <raw-status>
 ```
 
@@ -119,7 +119,7 @@ synthesis to add an index.
 The analysis-only checker is read-only:
 
 ```bash
-node <plugin-root>/skills/subagent-observation/scripts/check-subagent-observation-links.mjs \
+node <plugin-root>/references/subagent-dispatch-policy/check-subagent-observation-links.mjs \
   <canonical-root>
 ```
 

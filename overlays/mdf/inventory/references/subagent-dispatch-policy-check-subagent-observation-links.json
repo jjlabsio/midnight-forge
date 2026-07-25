@@ -1,0 +1,9 @@
+{
+  "output": "references/subagent-dispatch-policy/check-subagent-observation-links.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/references/subagent-dispatch-policy/check-subagent-observation-links.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Dispatch-policy-owned read-only verifier for generic subagent attempt indexes and their immutable observation links.",
+  "overlayKind": "mdfOnly"
+}

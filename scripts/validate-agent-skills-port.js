@@ -176,14 +176,16 @@ assertAuthoredSurface("skills/github-after-merge/SKILL.md");
 assertAuthoredSurface("skills/github-clear-gone/SKILL.md");
 assertAuthoredSurface("skills/task/SKILL.md");
 
-const observationSkill = "skills/subagent-observation";
+const observationPolicyRuntime = "references/subagent-dispatch-policy";
 const observationRuntime = [
-  `${observationSkill}/SKILL.md`,
-  `${observationSkill}/scripts/record-subagent-observation.mjs`,
-  `${observationSkill}/scripts/check-subagent-observation-links.mjs`,
+  `${observationPolicyRuntime}/record-subagent-observation.mjs`,
+  `${observationPolicyRuntime}/check-subagent-observation-links.mjs`,
 ];
 for (const output of observationRuntime) assertAuthoredSurface(output);
 for (const legacyOutput of [
+  path.join("skills", "subagent-observation", "SKILL.md"),
+  path.join("skills", "subagent-observation", "scripts", "record-subagent-observation.mjs"),
+  path.join("skills", "subagent-observation", "scripts", "check-subagent-observation-links.mjs"),
   path.join("skills", "use-mdf", "scripts", "record-subagent-observation.mjs"),
   path.join("skills", "use-mdf", "scripts", "check-subagent-observation-links.mjs"),
 ]) {
