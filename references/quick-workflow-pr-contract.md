@@ -18,8 +18,8 @@ acceptance baseline.
 | Critic returned `changes_requested`, including any actionable finding | Rework the same bounded target through the shared operation sequence and dispatch a fresh critic. |
 | Fresh critic returned `pass` | Root decides acceptance and commits only the accepted result. |
 | Accepted commit is local only | Invoke `github-pr`. |
-| PR exists at the accepted head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
-| Delivery is verified | Write the delivery handoff and finish this profile. |
+| PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
+| PR is verified | Store the immutable task-card PR link when absent and finish this profile. |
 
 The bounded build is the planless port of upstream build. Retain every
 applicable RED, GREEN, regression, and build step; keep review and commit in the
@@ -32,7 +32,7 @@ or separate whole-tree review. Create no empty gates.
 
 ## Authority and completion
 
-- Finish with the verified delivery handoff or `BLOCKED`.
+- Finish with the verified PR link or `BLOCKED`.
 - Keep the task `active` and its lock held.
 - Do not wait for, monitor, or perform the merge.
 - Do not deploy, delete, force, take over a stale lock, or clean unrelated

@@ -18,7 +18,7 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
 ## Root controller
 
 1. Before every operation, apply the loaded contracts' complete root boundary
-   and revalidate task, card, lock, worktree, branch, latest handoff, Git,
+   and revalidate task, card, lock, worktree, branch, persisted PR link, Git,
    artifacts, intent, authority, and applicable remote state.
 2. Run the selected profile exactly. This controller map is non-exhaustive and
    never overrides or omits a requirement from the loaded contracts.
@@ -26,7 +26,7 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
    build executor; root observation of the actual diff and checks; one fresh
    bounded-change critic; rework until a fresh critic passes and the root
    accepts and commits; `github-pr`; remote OID, latest-head checks,
-   mergeability, and conflict verification; delivery handoff; verified PR
+   mergeability, and conflict verification; persisted PR link; verified PR
    delivery.
 4. Use the user request and current task context as the acceptance baseline.
    Preserve the planless build's applicable RED, GREEN, regression, and build
@@ -51,7 +51,7 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
 
 6. Omit spec, plan, simplification, ship, separate whole-build verification,
    and separate whole-tree review. Create no empty gates.
-7. Write the required delivery handoff and finish with verified PR handoff or
+7. Store the required task-card PR link and finish with verified PR delivery or
    `BLOCKED`.
 
 **NEVER treat a caller wait timeout, no update, or elapsed silence as executor

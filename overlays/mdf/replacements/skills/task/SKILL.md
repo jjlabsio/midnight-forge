@@ -216,7 +216,7 @@ Use only `queue`, `active`, and `done`.
 ### Complete
 
 - Never mark a task `done` unless applicable completion criteria and evidence pass,
-  and either the current user message explicitly invokes `task <id> done` or `github-after-merge` verifies the accepted revision merged.
+  and either the current user message explicitly invokes `task <id> done` or `github-after-merge` verifies the merged PR's final state.
 - Never infer completion from criteria, artifacts, commits, PRs, checks, handoffs,
   workflow progress, or prior conversation; otherwise keep the task `active` and its lock held.
 - Require a source commit when source changes are in scope; require none when
@@ -224,8 +224,8 @@ Use only `queue`, `active`, and `done`.
 - Write the card, append and re-read the projection, then release only the exact
   lock bytes with the narrow helper.
 - Keep local completion distinct from push, PR, merge, publication, and cleanup.
-- Delivery tasks complete only after `github-after-merge` verifies the accepted
-  revision as merged.
+- Delivery tasks complete only after `github-after-merge` verifies the merged
+  PR resolved through the task card's explicit repository-and-PR-number link.
 
 ### Drop
 
@@ -241,11 +241,11 @@ mutate the card, replay `done`, or recreate a lock.
 
 ### Post-merge finalization
 
-After `github-after-merge` independently verifies the exact merged revision:
+After `github-after-merge` independently verifies the merged PR's final state:
 
-- `active` with matching lock: card -> projection -> reread -> conditional
+- `active` with matching lock and verified merged-PR evidence: card -> projection -> reread -> conditional
   release;
-- `done` with matching lock: verify delivery evidence, repair one unambiguous
+- `done` with matching lock: verify merged-PR evidence, repair one unambiguous
   projection if needed, reread, then release without replaying `done`;
 - `done` without lock: verified no-op;
 - every other combination: `BLOCKED`.

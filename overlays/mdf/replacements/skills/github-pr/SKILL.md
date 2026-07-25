@@ -46,7 +46,9 @@ the current diff and verification evidence.
    `<plugin-root>/references/mdf-preserved-contract.md`. Stop on its malformed
    state and unsafe-path conditions before reading or writing MDF state.
 2. Check the checkout, non-default branch, `git status --short`, origin,
-   GitHub authentication, default branch, and matching open PRs.
+   GitHub authentication, default branch, and matching open PRs. Require the
+   expected PR base to be the repository default branch; custom bases are
+   unsupported.
 3. Stop for unrelated dirty changes. If intended changes remain,
    **REQUIRED SUB-SKILL:** invoke `github-commit`, then require a clean tree.
 4. Read every branch commit and the complete base-to-head diff.
@@ -108,8 +110,8 @@ not apply. Do not add, remove, rename, translate, merge, or reorder sections.
 1. Recheck branch, remote, diff, HEAD, language, release signal,
    authentication, mergeability, and open PR state immediately before mutation.
 2. Match an open PR by exact head repository owner/name and head branch, then
-   require its base to equal the expected base. Stop on multiple matches,
-   different bases, or uncertain state.
+   require its base to equal the repository default branch. Stop on multiple
+   matches, different bases, or uncertain state.
 3. Push the current branch and verify the remote branch OID equals local HEAD.
 4. Query again. Update the exact match when title or body differs; otherwise
    create one. Never create a duplicate.
@@ -121,12 +123,16 @@ not apply. Do not add, remove, rename, translate, merge, or reorder sections.
    current-tree evidence.
 
 For an active task, keep the task active and lock held. After every gate passes,
-persist the next immutable `.mdf/work/<work-id>/delivery-NNN.md` with repository,
-PR number/URL, accepted HEAD, expected base, checks, and task/work/lock
-references. Link its path and SHA-256 from the active task's `Log` through the
-task contract. `github-after-merge`, not this skill, completes the task and
-releases the lock. Keep verbose PR reports out of `.mdf/`; only this concise
-delivery handoff is canonical lifecycle state.
+store the exact published PR once in the task card's `latest.pr` as
+`{ "repository": "<owner>/<repo>", "number": <positive integer> }`. Only an
+absent link uses the task card-first/index-append contract and re-reads the
+card and projection. A present link must match the same repository and PR
+number; a later publish of that PR, including one with a changed head, does not
+mutate the link, append a projection, or create an artifact. Stop for a
+different or malformed current link. Do not create or update
+`delivery-NNN.md`. `github-after-merge`, not this skill, completes the task and
+releases the lock. Keep verbose PR reports out of `.mdf/`; the task card's
+minimal PR link is the only canonical delivery state.
 
 If push, PR mutation, checks, or mergeability fails, preserve the active task
 and lock and return evidence to the caller. Source repair re-enters

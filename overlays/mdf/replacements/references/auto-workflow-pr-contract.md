@@ -12,8 +12,8 @@ workflow this profile runs or resumes.
 | Local workflow is incomplete | Run or resume `auto-workflow`. |
 | Local result is accepted | Invoke canonical `ship` directly from the root. |
 | `ship` returned GO | Run a fresh preflight, then invoke `github-pr`. |
-| PR exists at the accepted head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
-| Delivery is verified | Write the delivery handoff and finish this profile. |
+| PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
+| PR is verified | Store the immutable task-card PR link when absent and finish this profile. |
 
 Canonical `ship` uses the exact upstream three-specialist parallel fan-out and
 root merge. Add no outer ship executor, critic, verifier, or coordinator.
@@ -21,7 +21,7 @@ root merge. Add no outer ship executor, critic, verifier, or coordinator.
 ## Authority and completion
 
 - After fresh preflight, allow root-owned push and matching PR create or update.
-- Finish with the verified delivery handoff or `BLOCKED`.
+- Finish with the verified PR link or `BLOCKED`.
 - Keep the task `active` and its lock held.
 - Do not wait for, monitor, or perform the merge.
 - Do not deploy, delete, force, take over a stale lock, or clean unrelated

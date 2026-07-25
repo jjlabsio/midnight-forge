@@ -29,9 +29,17 @@ entrypoint.
   post-merge finalization contract, then loads `github-clear-gone` after lock
   release. Invoke it explicitly as a separate operation after merge; delivery
   workflows do not wait for the merge or resume to run it.
-- Require a root-authored delivery handoff containing repository, PR identity,
-  accepted head OID, expected base, checks, and task/work/lock references.
-  Branch names or PR text alone never establish task identity.
+- Require `github-pr` to record one explicit task-card link containing only the
+  GitHub repository and PR number. A later update to that same PR never
+  rewrites the link or creates a delivery artifact. `github-after-merge`
+  resolves task identity from an explicit task ID plus that link, or from one
+  unique matching link; branch names and PR text alone never establish task
+  identity.
+- Verify the merged PR directly from GitHub: its final head's required checks,
+  default-base target, and merge commit are current source-of-truth facts. Git
+  verifies that the default branch contains the reported merge commit. Do not
+  retain or compare a pre-merge head, base, checks, mergeability, conflict, or
+  local-tree snapshot. Custom base branches are unsupported.
 - Make finalization interruption-safe: `active + matching lock` completes the
   card and projection before conditional lock release; `done + matching lock`
   verifies and releases the exact lock; `done + no lock` is a verified no-op;
