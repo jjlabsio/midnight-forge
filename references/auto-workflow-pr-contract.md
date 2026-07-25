@@ -10,13 +10,15 @@ workflow this profile runs or resumes.
 | Current accepted state | Next operation |
 | --- | --- |
 | Local workflow is incomplete | Run or resume `auto-workflow`. |
-| Local result is accepted | Invoke canonical `ship` directly from the root. |
+| Local result is accepted | Invoke canonical `ship` directly from the root with the bound whole-build verification evidence. |
 | `ship` returned GO | Run a fresh preflight, then invoke `github-pr`. |
 | PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
 | PR is verified | Store the immutable task-card PR link when absent and finish this profile. |
 
 Canonical `ship` uses the exact upstream three-specialist parallel fan-out and
-root merge. Add no outer ship executor, critic, verifier, or coordinator.
+root merge. Its specialists inspect the existing bound evidence and identify
+gaps; they do not rerun an identical valid suite. Add no outer ship executor,
+critic, verifier, or coordinator.
 
 ## Authority and completion
 

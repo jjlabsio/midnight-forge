@@ -15,8 +15,8 @@ acceptance baseline.
 | Scope or authority is unverified | Validate both. |
 | No accepted bounded build | Dispatch one bounded build executor. |
 | Executor returned a successful terminal status with a complete reviewable report | Observe the actual diff and checks, then dispatch one fresh bounded-change critic. Every other terminal response follows the shared evidence and recovery rules instead. |
-| Critic returned `changes_requested`, including any actionable finding | Rework the same bounded target through the shared operation sequence and dispatch a fresh critic. |
-| Fresh critic returned `pass` | Root decides acceptance and commits only the accepted result. |
+| Critic returned a successful terminal status with a complete `pass` or `changes_requested` report | Root dispositions every actionable finding through the shared completion standard. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
+| Root accepts the observed bounded change | Commit only the accepted result. |
 | Accepted commit is local only | Invoke `github-pr`. |
 | PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
 | PR is verified | Store the immutable task-card PR link when absent and finish this profile. |

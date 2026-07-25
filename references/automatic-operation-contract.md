@@ -5,6 +5,37 @@ workflow operation.
 Profile references own composition, profile-specific authority, and completion.
 Stage skills remain mode-blind and do not load automatic contracts.
 
+## Completion standard
+
+Every automatic profile targets **solo-operated production**: one builder can
+release the accepted outcome, observe failures, recover without data loss, and
+continue changing the service safely. This standard does not require
+generalization for hypothetical scale, unsupported use, or future product
+scope.
+
+Critics report technical findings and severity independently. The root owns
+the current-delivery disposition for each actionable finding:
+
+| Disposition | Required evidence and action |
+| --- | --- |
+| `fix-now` | An accepted success criterion is unmet; or an existing authority/safety invariant is violated in an accepted or currently supported operation and its impact is not acceptably contained or recoverable. Rework the bounded affected target. |
+| `needs-user` | Repairing a current-delivery blocker changes an accepted outcome, removes or defers an accepted success criterion, or adds a new subsystem, state machine, operational protocol, or general-purpose infrastructure. Stop for the user's scope decision. |
+| `current-delivery-nonblocking` | The finding concerns optional hardening, hypothetical scale, unsupported use, or another condition outside the accepted current outcome and does not violate an existing invariant. Do not rework it in this delivery. |
+| `invalid` | The finding does not apply to the observed target or rests on incorrect evidence. Do not rework it. |
+
+A critic assessment such as `changes_requested` is technical evidence, not an
+unconditional rework command. The root does not repeat the critic's technical
+review; it binds the finding to the accepted baseline and observed operating
+conditions, records its disposition in the next handoff, and follows the table
+above. Never silently remove or defer an accepted success criterion.
+
+Do not create a follow-up task or standing finding backlog merely because a
+finding is nonblocking. If safe current operation depends on an unsupported
+condition or operator constraint, require that boundary in version-controlled
+authoritative project documentation or executable configuration before
+acceptance. Otherwise no durable finding record is required; a temporary MDF
+handoff is not the authority for a long-lived operational constraint.
+
 ## State decisions
 
 Use observable state, not elapsed caller time:
@@ -17,7 +48,7 @@ Use observable state, not elapsed caller time:
 | Executor ended terminally without a report | Follow **Terminal no-report transport failure**. Do not dispatch a critic or accept the attempt. |
 | Executor returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. Do not dispatch a critic or accept the attempt. |
 | Critic returned a successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
-| Critic returned a successful terminal status with `changes_requested` | Rework the same actual target and dispatch a fresh critic. |
+| Critic returned a successful terminal status with `changes_requested` | Re-observe the bound target and disposition every actionable finding. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
 | Critic returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. |
 | A DDD-class finding has materially changed evidence | Re-enter the affected operation and obtain a fresh adversarial review. |
 | A DDD-class review repeats the core finding without changed evidence | Stop `BLOCKED` or request the user-owned decision. |
@@ -59,6 +90,11 @@ machine-only protocol.
 
 For every automatic artifact or implementation operation:
 
+A profile-declared independent read-only audit is a direct assessment, not an
+artifact or implementation operation under this executor-to-critic sequence.
+Do not add an executor or another critic unless the profile explicitly
+requires one after resulting rework.
+
 1. Before every actual executor or critic spawn, use the shared policy's
    `begin` contract and retain only its returned invocation ID.
 2. Dispatch one skill-backed executor with the exact adapter, acceptance
@@ -72,8 +108,10 @@ For every automatic artifact or implementation operation:
    dispatch one distinct fresh read-only critic with the actual target,
    canonical critic adapter, and original acceptance baseline. Exclude executor
    reasoning.
-7. Wait for the critic's actual terminal response, then apply **State
-   decisions**. In the root, accept, rework, or finish `BLOCKED`.
+7. Wait for the critic's actual terminal response, then apply **Completion
+   standard** and **State decisions**. In the root, disposition findings and
+   accept, perform bounded rework, request the user-owned decision, or finish
+   `BLOCKED`.
 
 | Role | May | Must not |
 | --- | --- | --- |
@@ -90,14 +128,32 @@ Bind critics as follows:
 | Simplification | Apply the same review and verify behavior preservation. |
 
 Use distinct suitable quality-critical subagents and the shared dispatch
-policy. After `changes_requested`, rework the actual target and dispatch a
-fresh critic until accepted or an existing substantive stop condition blocks
-progress.
+policy. After a `fix-now` disposition, rework the actual target and dispatch a
+fresh critic until no current-delivery blocker remains or an existing
+substantive stop condition blocks progress.
 
 At an automatic call site:
 
 - critic plus root acceptance replaces intermediate human confirmation;
 - root review and commit replaces an executor commit or completion step.
+
+## Verification reuse
+
+For implementation work:
+
+1. Run the focused RED, GREEN, regression, and build checks applicable to each
+   bounded target.
+2. After all planned targets are accepted, run the plan's full test/build
+   matrix once against the whole tree.
+3. Give reviewers and `ship` the existing command output and bound HEAD/diff.
+   They inspect that evidence and identify gaps; they do not rerun an identical
+   suite merely to reproduce valid evidence.
+4. After rework, rerun the checks invalidated by the changed paths and behavior.
+   Rerun the full matrix only when the impact cannot be bounded reliably.
+
+Fresh evidence is still required when prior output is missing, failed, stale,
+bound to another target, or insufficient for the applicable acceptance
+criterion.
 
 ## DDD-class decision recovery
 
@@ -109,8 +165,9 @@ automatic profile inherits this rule.
   through `auto-doubt-driven-development`.
 - Never let an automatic executor enter standalone
   `doubt-driven-development`. Direct standalone build and DDD remain unchanged.
-- Keep ordinary executor/critic `changes_requested` in the operation sequence;
-  it is not a DDD cycle. Stage adapters neither select nor load automatic DDD.
+- Keep ordinary executor/critic findings in the operation sequence and apply
+  the root disposition contract; they are not a DDD cycle. Stage adapters
+  neither select nor load automatic DDD.
 - Re-enter while a changed artifact, changed contract, or newly verified
   evidence materially addresses a substantive finding and a fresh review
   evaluates that changed target. Apply no numerical cycle cap.

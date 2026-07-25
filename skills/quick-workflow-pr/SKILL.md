@@ -24,10 +24,10 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
    never overrides or omits a requirement from the loaded contracts.
 3. Run the profile in order: validate bounded scope and authority; one bounded
    build executor; root observation of the actual diff and checks; one fresh
-   bounded-change critic; rework until a fresh critic passes and the root
-   accepts and commits; `github-pr`; remote OID, latest-head checks,
-   mergeability, and conflict verification; persisted PR link; verified PR
-   delivery.
+   bounded-change critic; root disposition of its findings; bounded rework only
+   for current-delivery blockers until the root accepts and commits;
+   `github-pr`; remote OID, latest-head checks, mergeability, and conflict
+   verification; persisted PR link; verified PR delivery.
 4. Use the user request and current task context as the acceptance baseline.
    Preserve the planless build's applicable RED, GREEN, regression, and build
    steps and every upstream acceptance, verification, fallback, and stop
@@ -44,7 +44,7 @@ description: "Use when the user explicitly requests MDF's bounded small-change w
    | Any other executor terminal response | Persist any returned report as evidence and follow ordinary recovery or a substantive stop. Never dispatch a critic or accept the result. |
    | Critic `running` | Wait again. |
    | Critic successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
-   | Critic successful terminal status with `changes_requested` | Rework the same bounded build and dispatch a fresh critic. |
+   | Critic successful terminal status with `changes_requested` | Apply the shared root disposition contract. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
    | Any other critic terminal response | Persist any returned report as evidence and follow the contract's recovery or substantive stop rule. |
    | Root accepts the verified bounded change | Commit only the exact accepted paths and continue. |
    | Existing substantive stop condition | Finish `BLOCKED`. |

@@ -22,9 +22,11 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
 2. Run the selected profile exactly. This controller map is non-exhaustive and
    never overrides or omits a requirement from the loaded contracts.
 3. Run the profile in order: intent preflight; spec; plan; each build slice;
-   whole-build verification and review; one simplification pass; complete
-   checks and build; fresh simplification critic; root acceptance and a
-   separate commit when changed; local handoff.
+   one whole-build verification matrix and whole-tree review; one independent
+   read-only simplification audit; bounded simplification, affected checks,
+   and a fresh simplification critic only when that audit finds a material
+   opportunity; root acceptance and a separate commit when changed; local
+   handoff.
 4. Preserve every applicable upstream acceptance, TDD, verification, fallback,
    and stop criterion. Route every DDD-class trigger through the contract's
    root-owned `auto-doubt-driven-development` recovery; keep ordinary critic
@@ -40,7 +42,7 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
    | Any other executor terminal response | Persist any returned report as evidence and follow ordinary recovery or a substantive stop. Never dispatch a critic or accept the result. |
    | Critic `running` | Wait again. |
    | Critic successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
-   | Critic successful terminal status with `changes_requested` | Rework the same operation and dispatch a fresh critic. |
+   | Critic successful terminal status with `changes_requested` | Apply the shared root disposition contract. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
    | Any other critic terminal response | Persist any returned report as evidence and follow the contract's recovery or substantive stop rule. |
    | Root accepts verified work and its operation requires a commit | Commit the exact accepted paths and continue. |
    | Root accepts verified work without a commit step | Persist the required acceptance evidence and continue. |
