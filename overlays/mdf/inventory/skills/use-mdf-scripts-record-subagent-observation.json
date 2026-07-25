@@ -1,9 +1,0 @@
-{
-  "output": "skills/use-mdf/scripts/record-subagent-observation.mjs",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/skills/use-mdf/scripts/record-subagent-observation.mjs",
-  "artifactStorageOverride": false,
-  "notes": "Thin replay-keyed begin/finish recorder for best-effort immutable requested-routing observations.",
-  "overlayKind": "mdfOnly"
-}

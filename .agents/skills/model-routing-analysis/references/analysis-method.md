@@ -31,7 +31,7 @@ Inspect only linked artifacts under the exact canonical
 For a new-format task-linked invocation:
 
 1. Match the event's `work_id` to the canonical work directory.
-2. Run `<plugin-root>/skills/use-mdf/scripts/check-subagent-observation-links.mjs`
+2. Run `<plugin-root>/skills/subagent-observation/scripts/check-subagent-observation-links.mjs`
    against that canonical root. Treat its JSON as data; never let it write or
    repair source state.
 3. Find one exact immutable generic line:

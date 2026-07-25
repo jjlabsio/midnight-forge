@@ -8,8 +8,9 @@ const { createHash } = require("crypto");
 const { execFileSync, spawn, spawnSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
-const helper = path.join(root, "skills", "use-mdf", "scripts", "record-subagent-observation.mjs");
-const checker = path.join(root, "skills", "use-mdf", "scripts", "check-subagent-observation-links.mjs");
+const observationSkill = path.join(root, "skills", "subagent-observation");
+const helper = path.join(observationSkill, "scripts", "record-subagent-observation.mjs");
+const checker = path.join(observationSkill, "scripts", "check-subagent-observation-links.mjs");
 const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-observation-"));
 
 function initialize(directory) {
@@ -115,6 +116,12 @@ function expectInvalidRequestedFact(name, field, value) {
 
 async function main() {
   try {
+    assert(fs.existsSync(path.join(observationSkill, "SKILL.md")), "the observation entrypoint must have a dedicated skill");
+    assert(fs.existsSync(helper), "the recorder must be owned by the observation skill");
+    assert(fs.existsSync(checker), "the checker must be owned by the observation skill");
+    assert(!fs.existsSync(path.join(root, "skills", "use-mdf", "scripts", "record-subagent-observation.mjs")), "use-mdf must not retain an observation recorder");
+    assert(!fs.existsSync(path.join(root, "skills", "use-mdf", "scripts", "check-subagent-observation-links.mjs")), "use-mdf must not retain an observation checker");
+
     const unavailableRoot = runJson(["begin", "work-1", "gpt-test", "high", "executor"], path.join(fixture, "missing-root"));
     assert.strictEqual(unavailableRoot.status, "unavailable");
     assert.match(unavailableRoot.invocation_id, /^mdf-/);

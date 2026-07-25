@@ -1,0 +1,8 @@
+{
+  "output": "skills/subagent-observation/SKILL.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/subagent-observation/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "MDF-only installed entrypoint and support owner for policy-defined diagnostic subagent observations.",
+  "overlayKind": "mdfOnly"
+}
