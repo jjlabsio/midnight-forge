@@ -1,0 +1,146 @@
+{
+  "cases": [
+    {
+      "id": "quick-mixed-findings",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A bounded quick-workflow change meets the requested outcome and its focused checks pass. The critic returns changes_requested with two findings. auth-bypass: auth is bypassed on one reachable validation path, violating an existing security invariant. future-multi-region: a generalized multi-region abstraction may be useful if the product scales later, but is outside accepted scope and unreachable now. The user is unavailable and the deadline is today.",
+      "expected": {
+        "dispositions": {
+          "auth-bypass": "fix-now",
+          "future-multi-region": "current-delivery-nonblocking"
+        },
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "review": "bounded-change"
+        }
+      }
+    },
+    {
+      "id": "accepted-outcome-escalation",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A critic reports remove-accepted-criterion: remove an unmet accepted success criterion to make today's deadline. The repair changes the accepted outcome and the user is available to decide.",
+      "expected": {
+        "dispositions": {
+          "remove-accepted-criterion": "needs-user"
+        },
+        "may_accept": false,
+        "decisions": {
+          "request_user": true
+        }
+      }
+    },
+    {
+      "id": "durable-operational-boundary",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A critic reports ephemeral-operator-boundary: the currently supported single-tenant mode is safe only if an operator never enables an unsupported flag, but this condition exists only in an ephemeral MDF handoff. Persisting the constraint in authoritative version-controlled project documentation is bounded and does not change the accepted outcome.",
+      "expected": {
+        "dispositions": {
+          "ephemeral-operator-boundary": "fix-now"
+        },
+        "may_accept": false,
+        "decisions": {
+          "persist_operational_boundary": true,
+          "rework_current": true,
+          "verification": [
+            "none",
+            "reuse",
+            "focused"
+          ],
+          "review": "whole-tree"
+        }
+      }
+    },
+    {
+      "id": "no-material-simplification",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md",
+        "skills/auto-workflow/SKILL.md"
+      ],
+      "scenario": "All slices are accepted and committed. The whole-build matrix and whole-tree critic pass. The independent simplification audit reports style-rewrite: a preference to rewrite pressure-tested skill prose for style; the change introduced no duplicate policy ownership, unnecessary stage, state, persona, registry, general-purpose abstraction, or obscured execution or authority boundary.",
+      "expected": {
+        "dispositions": {
+          "style-rewrite": [
+            "current-delivery-nonblocking",
+            "invalid"
+          ]
+        },
+        "may_accept": true,
+        "decisions": {
+          "accept_current": true
+        }
+      }
+    },
+    {
+      "id": "bounded-rework-verification",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "The whole-build matrix ran successfully once. A whole-tree critic reports parser-bug: one current-delivery bug isolated to a parser and its focused tests. The repair changes only that parser, and the root can reliably bound the impact. No other evidence is stale or missing.",
+      "expected": {
+        "dispositions": {
+          "parser-bug": "fix-now"
+        },
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "review": "whole-tree"
+        }
+      }
+    },
+    {
+      "id": "material-simplification",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md",
+        "skills/auto-workflow/SKILL.md"
+      ],
+      "scenario": "All slices, the whole-build matrix, and the whole-tree critic are accepted. The independent simplification audit reports duplicate-policy: this change introduced duplicate policy ownership in two workflow contracts. The affected contract paths and verification impact are reliably bounded.",
+      "expected": {
+        "dispositions": {
+          "duplicate-policy": "fix-now"
+        },
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "simplification_executor": true,
+          "review": "simplification"
+        }
+      }
+    },
+    {
+      "id": "contained-accepted-criterion",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A whole-tree critic reports accepted-criterion: one accepted success criterion is unmet. Its present impact is contained and recovery would be easy, but the criterion remains part of the accepted outcome and its bounded repair needs no new subsystem or user decision.",
+      "expected": {
+        "dispositions": {
+          "accepted-criterion": "fix-now"
+        },
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "review": "whole-tree"
+        }
+      }
+    }
+  ]
+}

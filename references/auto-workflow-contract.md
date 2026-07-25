@@ -12,7 +12,7 @@ operation rule.
 | Intent is sufficient; no accepted spec | Run spec executor, critic, and root acceptance. |
 | Spec is accepted; no accepted plan | Run plan executor, critic, and root acceptance. |
 | A ready plan slice remains | Run the per-slice loop. |
-| Every slice is accepted and committed | Run whole-build verification and simplification. |
+| Every slice is accepted and committed | Run whole-build verification, review, and the conditional simplification sequence. |
 | Whole build is accepted | Write the verified local handoff. |
 
 ## Per-slice loop
@@ -20,10 +20,12 @@ operation rule.
 For each ready plan slice:
 
 1. Root selects one slice.
-2. Build executor runs RED, GREEN, regression, and build.
+2. Build executor runs RED, GREEN, and the focused regression/build checks for
+   that slice without repeating the whole-build matrix.
 3. Root observes the actual diff and verification.
 4. Slice critic reviews against the plan and specification.
-5. Rework the same slice until accepted or `BLOCKED`.
+5. Root dispositions the findings through the shared completion standard.
+   Rework only current-delivery blockers until accepted or `BLOCKED`.
 6. Root commits exactly the slice-owned paths.
 7. Root records the accepted slice and commit OID in the handoff.
 8. Root re-reads plan, card, lock, and Git before selecting another slice.
@@ -36,14 +38,25 @@ After every approved slice is committed:
 
 1. Run the plan's whole-build verification matrix.
 2. Run one fresh read-only whole-tree critic against the specification and
-   root-observed tree.
-3. Repair findings through the affected build slice and repeat invalidated
-   checks.
-4. Run `code-simplify` once over the complete changed scope.
-5. Run the complete applicable test suite and build after simplification.
-6. Run a fresh simplification critic over the actual diff and behavior
-   evidence.
-7. Commit simplification separately when changed; create no empty commit.
+   root-observed tree using the existing verification evidence.
+3. Disposition its findings through the shared completion standard. Repair
+   current-delivery blockers through the affected build slice and repeat only
+   invalidated checks.
+4. After whole-tree acceptance, dispatch one independent read-only
+   simplification audit over the complete changed scope. A finding is material
+   only when the change introduced duplicate policy ownership, an unnecessary
+   stage, state, persona, registry, or general-purpose abstraction, or
+   substantially obscured an execution or authority boundary. Stylistic
+   preference, speculative reuse, and rewriting pressure-tested skill guidance
+   are not material findings.
+5. When the audit reports no material simplification finding, accept it
+   without a simplification executor, additional verification, critic, or
+   commit.
+6. When the audit reports a material simplification finding, run
+   `code-simplify` only over that bounded finding, rerun affected verification,
+   and dispatch a fresh simplification critic over the actual diff and
+   behavior evidence.
+7. Commit changed simplification separately; create no empty commit.
 
 ## Authority and completion
 

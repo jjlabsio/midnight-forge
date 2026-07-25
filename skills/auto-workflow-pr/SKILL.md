@@ -24,9 +24,10 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
    This controller map is non-exhaustive and never overrides or omits a
    requirement from the loaded contracts.
 3. Run the profile in order: run or resume `auto-workflow` through its accepted
-   local result; canonical root-owned `ship`; `github-pr` after GO and fresh
-   preflight; remote OID, latest-head checks, mergeability, and conflict
-   verification; persisted PR link; verified PR delivery.
+   local result; canonical root-owned `ship` using the bound whole-build
+   verification evidence; `github-pr` after GO and fresh preflight; remote OID,
+   latest-head checks, mergeability, and conflict verification; persisted PR
+   link; verified PR delivery.
 4. Preserve every applicable upstream acceptance, TDD, verification, fallback,
    and stop criterion. Route every DDD-class trigger encountered in a
    mode-blind stage or executor through the contract's root-owned
@@ -42,7 +43,7 @@ description: "Use when the user explicitly requests MDF's automatic workflow wit
    | Any other executor terminal response | Persist any returned report as evidence and follow ordinary recovery or a substantive stop. Never dispatch a critic or accept the result. |
    | Critic `running` | Wait again. |
    | Critic successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
-   | Critic successful terminal status with `changes_requested` | Rework the same operation and dispatch a fresh critic. |
+   | Critic successful terminal status with `changes_requested` | Apply the shared root disposition contract. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
    | Any other critic terminal response | Persist any returned report as evidence and follow the contract's recovery or substantive stop rule. |
    | Root accepts verified work and its operation requires a commit | Commit the exact accepted paths and continue. |
    | Root accepts verified work without a commit step | Persist the required acceptance evidence and continue. |
