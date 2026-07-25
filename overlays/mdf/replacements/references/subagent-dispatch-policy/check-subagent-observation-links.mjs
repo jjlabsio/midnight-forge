@@ -188,7 +188,7 @@ for (const [invocationId, attempts] of attemptsById) {
 }
 
 for (const [invocationId, events] of byId) {
-  if (malformedEventIds.has(invocationId)) continue;
+  if (malformedEventIds.has(invocationId) || malformedAttemptIds.has(invocationId)) continue;
   const begins = events.filter((row) => row.event === "begin");
   const finishes = events.filter((row) => row.event === "finish");
   if (begins.length === 1 && begins[0].work_id === null && finishes.length === 1 && events.length === begins.length + finishes.length) {

@@ -55,7 +55,7 @@ function completeRows(invocationId, role = "executor", status = "finished") {
   ];
 }
 
-function expectInvalidCheckerCase(name, rows, handoff, errorFragment) {
+function expectInvalidCheckerCase(name, rows, handoff, errorFragment, expectedInvocations) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), `mdf-observation-${name}-`));
   try {
     initialize(directory);
@@ -66,6 +66,7 @@ function expectInvalidCheckerCase(name, rows, handoff, errorFragment) {
     assert.strictEqual(result.status, 1, `${name}: ${result.stdout}`);
     assert.strictEqual(result.json.status, "invalid");
     if (errorFragment) assert(result.json.errors.some((error) => error.includes(errorFragment)), `${name}: ${result.stdout}`);
+    if (expectedInvocations) assert.deepStrictEqual(result.json.invocations, expectedInvocations, `${name}: ${result.stdout}`);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
@@ -203,7 +204,9 @@ async function main() {
     const malformedId = "mdf-malformed";
     expectInvalidCheckerCase("malformed-candidate", completeRows(malformedId),
       attemptLine(malformedId, "executor", "none", "finished", "not_used")
-      + `attempt: ${malformedId} | role: executor | report: none | status_b64: **bad** | disposition: not_used\n`);
+      + `attempt: ${malformedId} | role: executor | report: none | status_b64: **bad** | disposition: not_used\n`,
+      "invalid status encoding",
+      [{ invocation_id: malformedId, status: "linkage_invalid" }]);
     const orphanId = "mdf-orphan";
     expectInvalidCheckerCase("orphan-attempt", completeRows("mdf-known"),
       attemptLine("mdf-known", "executor", "none", "finished", "not_used")
