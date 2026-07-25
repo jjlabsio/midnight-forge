@@ -173,7 +173,12 @@ for (const [invocationId, attempts] of attemptsById) {
 for (const [invocationId, events] of byId) {
   const begins = events.filter((row) => row.event === "begin");
   const finishes = events.filter((row) => row.event === "finish");
-  if (begins.length === 1 && begins[0].work_id === null && finishes.length <= 1 && events.length === begins.length + finishes.length) continue;
+  if (begins.length === 1 && begins[0].work_id === null && finishes.length <= 1 && events.length === begins.length + finishes.length) {
+    if ((attemptsById.get(invocationId) || []).length > 0) {
+      result.errors.push(`${invocationId}: unlinked invocation must not have a generic attempt index`);
+    }
+    continue;
+  }
   if (begins.length !== 1 || finishes.length !== 1 || events.length !== begins.length + finishes.length) {
     result.errors.push(`${invocationId}: expected exactly one begin and one finish`);
     continue;

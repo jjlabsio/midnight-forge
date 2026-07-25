@@ -97,10 +97,13 @@ usable ID; they are excluded from analysis rather than reconstructed.
 
 ## Immutable attempt index
 
-Every actual dispatch—success, failure, interruption, no report, or rework—is
-indexed exactly once in the existing immutable handoff or root synthesis that
-already owns that workflow's evidence. The checker recognizes immutable
-`handoff-NNN.md` and `synthesis-NNN.md` artifacts under the linked work item.
+Every task-linked actual dispatch—success, failure, interruption, no report,
+or rework—is indexed exactly once in the existing immutable handoff or root
+synthesis that already owns that workflow's evidence. An unlinked dispatch
+with `work_id: null` is raw requested-routing history and has no attempt index;
+never create a synthetic work item or artifact for it. The checker recognizes
+immutable `handoff-NNN.md` and `synthesis-NNN.md` artifacts under the linked
+work item.
 Encode the raw one-line UTF-8 status with unpadded base64url and use this exact
 line. The encoding is reversible; never trim, split, or otherwise normalize the
 raw status before encoding:

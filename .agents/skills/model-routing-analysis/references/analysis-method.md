@@ -2,7 +2,7 @@
 
 ```yaml
 schema_version: 7
-method_version: 8
+method_version: 9
 ```
 
 This method produces comparable factual observations. It does not calculate an
@@ -112,8 +112,8 @@ run. When combining runs, count only the latest row for that identity.
 ## Pending linked-artifact reanalysis
 
 For every linked invocation whose paired events are available but whose generic
-attempt index, report identity, checker result, or outcome evidence is pending
-or insufficient, retain the identity in the checkpoint's
+attempt index, report identity, checker result, or potentially completable
+outcome evidence is pending, retain the identity in the checkpoint's
 `pending_linked_invocations`. This is an analysis cursor, not source-project
 state and not a request to alter an old run or artifact.
 
@@ -137,15 +137,22 @@ parseable candidate names the identity (including a checker failure caused by
 that absence); use `checker_invalid` when a candidate names it but the checker
 rejects the linkage; use `missing_report` when accepted linkage requires a
 report that is absent or unsafe; otherwise use `insufficient_outcome` when
-safe linked evidence cannot yet satisfy the evaluable-outcome rule.
+an existing non-`none` report cannot yet satisfy the evaluable-outcome rule.
 
-Update its `latest_run_id` after each published reanalysis. Clear it only after
-the current run safely links one exact generic attempt and any required report,
-the checker accepts the linkage, and the outcome reaches the method's
-evaluable-evidence rule. Keep it pending for checker rejection, ambiguous or
-missing artifacts, and insufficient outcome evidence. Never clear it merely
-because no new journal lines arrived, and never rewrite a prior run to attach a
-late handoff.
+A checker-accepted attempt whose immutable index declares `report: none` is
+terminal no-report evidence. If it is not evaluable, record it once as excluded
+with insufficient outcome evidence and do not add or retain it in
+`pending_linked_invocations`. Its immutable attempt index cannot acquire a
+report later; replaying it would create analysis history without new evidence.
+
+Update its `latest_run_id` after each published reanalysis. Clear it after the
+current run safely links one exact generic attempt and the checker accepts the
+linkage when either the outcome reaches the evaluable-evidence rule or the
+immutable attempt declares `report: none`. In the latter case, publish the
+final excluded row before clearing it. Keep it pending for checker rejection,
+ambiguous or missing artifacts, and insufficient outcome evidence from an
+existing non-`none` report. Never clear it merely because no new journal lines
+arrived, and never rewrite a prior run to attach a late handoff.
 
 For example, a finished invocation with no handoff is recorded with
 `missing_attempt_index`; when a handoff appears later, the next analysis

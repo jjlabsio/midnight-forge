@@ -6,7 +6,7 @@ Path:
 .mdf/analysis/model-routing/checkpoint.json
 ```
 
-Use `schema_version: 7`, `method_version: 8`, and status `included` or
+Use `schema_version: 7`, `method_version: 9`, and status `included` or
 `excluded`.
 
 ## Shape
@@ -14,7 +14,7 @@ Use `schema_version: 7`, `method_version: 8`, and status `included` or
 ```json
 {
   "schema_version": 7,
-  "method_version": 8,
+  "method_version": 9,
   "projects": [
     {
       "registry_id": "<stable ~/.mdf/projects.json id>",
@@ -96,10 +96,12 @@ finish instead satisfies the method's `resolution` rule.
 After the immutable run is created, replace the pending list atomically with
 only identities still in one of the four pending states. For an identity that
 remains pending, preserve `first_pending_run_id` and set `latest_run_id` to
-this run. Remove it only when this run has safe accepted linkage and evaluable
-outcome evidence. Do not remove it for an unchanged watermark, an unavailable
-or invalid checker result, or insufficient evidence. This checkpoint replay
-does not edit source logs, handoffs, reports, or earlier runs.
+this run. Remove it when this run has safe accepted linkage and either
+evaluable outcome evidence or an immutable `report: none` attempt. Record the
+latter once as final excluded evidence before removal. Do not remove an
+identity for an unchanged watermark, an unavailable or invalid checker result,
+or insufficient evidence from an existing non-`none` report. This checkpoint
+replay does not edit source logs, handoffs, reports, or earlier runs.
 
 ## Publication
 

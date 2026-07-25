@@ -199,6 +199,12 @@ async function main() {
     expectInvalidCheckerCase("orphan-attempt", completeRows("mdf-known"),
       attemptLine("mdf-known", "executor", "none", "finished", "not_used")
       + attemptLine(orphanId, "executor", "none", "finished", "not_used"));
+    const unlinkedId = "mdf-unlinked";
+    const unlinkedRows = completeRows(unlinkedId);
+    unlinkedRows[0].work_id = null;
+    expectInvalidCheckerCase("unlinked-attempt", unlinkedRows,
+      attemptLine(unlinkedId, "executor", "none", "finished", "not_used"),
+      "unlinked invocation must not have a generic attempt index");
     const duplicateId = "mdf-duplicate";
     expectInvalidCheckerCase("duplicate-attempt", completeRows(duplicateId),
       attemptLine(duplicateId, "executor", "none", "finished", "not_used")
