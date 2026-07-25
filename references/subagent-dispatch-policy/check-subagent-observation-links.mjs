@@ -113,6 +113,18 @@ for (const row of rows) {
 const attemptsById = new Map();
 const malformedAttemptIds = new Map();
 const validInvocationIds = new Set();
+function validBeginFacts(begin) {
+  return begin
+    && (begin.work_id === null || safeComponent(begin.work_id))
+    && roles.has(begin.canonical_role)
+    && safeValue(begin.requested_model)
+    && safeValue(begin.requested_effort);
+}
+
+function validFinishFacts(finish) {
+  return finish && safeValue(finish.status);
+}
+
 let workRoot;
 try {
   workRoot = checkedPath(canonicalRoot, [".mdf", "work"], "directory");
@@ -186,7 +198,7 @@ for (const [invocationId, events] of byId) {
   }
   const [begin] = begins;
   const [finish] = finishes;
-  if (!safeComponent(begin.work_id) || !roles.has(begin.canonical_role) || !safeValue(finish.status)) continue;
+  if (!validBeginFacts(begin) || !validFinishFacts(finish)) continue;
   const attempts = attemptsById.get(invocationId) || [];
   if (attempts.length !== 1) {
     result.errors.push(`${invocationId}: expected exactly one generic attempt index, found ${attempts.length}`);
@@ -228,6 +240,8 @@ for (const invocationId of [...classifiedIds].sort()) {
     status = "valid";
   } else if (
     begins.length === 1
+    && validBeginFacts(begins[0])
+    && validFinishFacts(finishes[0])
     && begins[0].work_id === null
     && finishes.length === 1
     && events.length === begins.length + finishes.length

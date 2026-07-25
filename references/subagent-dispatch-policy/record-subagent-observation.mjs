@@ -161,14 +161,35 @@ function readTailRows(state) {
   return content.split("\n").filter(Boolean).map((line, index) => {
     try {
       const row = JSON.parse(line);
-      if (!row || typeof row !== "object" || typeof row.event !== "string" || typeof row.invocation_id !== "string") {
-        throw new Error("missing event or invocation_id");
+      if (!validTailRow(row)) {
+        throw new Error("invalid event schema");
       }
       return row;
     } catch (error) {
       observationConflict(`Observation journal is ambiguous at line ${index + 1}: ${error.message}`);
     }
   });
+}
+
+function validTailValue(value) {
+  return typeof value === "string" && value !== "" && !/[\r\n\0]/.test(value);
+}
+
+function validTailComponent(value) {
+  return validTailValue(value) && value !== "." && value !== ".." && !value.includes("/") && !value.includes("\\");
+}
+
+function validTailRow(row) {
+  if (!row || typeof row !== "object" || Array.isArray(row) || !validTailValue(row.invocation_id)) return false;
+  if (row.event === "dispatch" || row.event === "terminal") return true;
+  if (row.event === "begin") {
+    return (row.work_id === null || validTailComponent(row.work_id))
+      && validTailValue(row.requested_model)
+      && validTailValue(row.requested_effort)
+      && roles.has(row.canonical_role);
+  }
+  if (row.event === "finish") return validTailValue(row.status);
+  return false;
 }
 
 function validateJournalTail(state) {
@@ -242,6 +263,7 @@ if (command === "begin") {
   try {
     const state = context();
     withJournalLock(state, "finish", invocationId, () => {
+      validateJournalTail(state);
       const rows = readTailRows(state).filter((row) => row.invocation_id === invocationId);
       if (rows.length === 0) observationUnavailable("invocation_not_in_journal_tail");
       const begins = rows.filter((row) => row.event === "begin");

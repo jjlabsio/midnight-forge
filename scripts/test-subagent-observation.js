@@ -253,6 +253,29 @@ async function main() {
       expectInvalidRequestedFact(`nul-${field}`, field, "contains\0nul");
       expectInvalidRequestedFact(`nonstring-${field}`, field, 7);
     }
+    {
+      const invalidRoutingRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-invalid-routing-status-"));
+      try {
+        initialize(invalidRoutingRoot);
+        const invalidId = "mdf-invalid-routing-status";
+        const rows = completeRows(invalidId);
+        rows[0].requested_model = "";
+        fs.mkdirSync(path.join(invalidRoutingRoot, ".mdf", "observations"), { recursive: true });
+        fs.writeFileSync(
+          path.join(invalidRoutingRoot, ".mdf", "observations", "subagent-invocations.jsonl"),
+          `${rows.map(JSON.stringify).join("\n")}\n`
+        );
+        fs.writeFileSync(
+          path.join(invalidRoutingRoot, ".mdf", "work", "work-1", "handoff-001.md"),
+          attemptLine(invalidId, "executor", "none", "finished", "not_used")
+        );
+        const result = checkerResult(invalidRoutingRoot);
+        assert.strictEqual(result.json.status, "invalid");
+        assert.deepStrictEqual(result.json.invocations, [{ invocation_id: invalidId, status: "malformed" }]);
+      } finally {
+        fs.rmSync(invalidRoutingRoot, { recursive: true, force: true });
+      }
+    }
     expectInvalidWithoutJournal("absent-observations-orphan", "absent-directory",
       attemptLine("mdf-absent-directory", "executor", "none", "finished", "not_used"),
       "generic attempt index is orphaned from the journal");
@@ -306,6 +329,26 @@ async function main() {
       assert.strictEqual(fs.readFileSync(damagedLog, "utf8"), before);
     } finally {
       fs.rmSync(damagedRoot, { recursive: true, force: true });
+    }
+
+    for (const [name, tailRow] of [
+      ["unknown-event", { event: "unknown", invocation_id: "mdf-unknown-event" }],
+      ["incomplete-begin", { event: "begin", invocation_id: "mdf-incomplete-begin" }],
+    ]) {
+      const malformedTailRoot = fs.mkdtempSync(path.join(os.tmpdir(), `mdf-malformed-tail-${name}-`));
+      try {
+        initialize(malformedTailRoot);
+        const observations = path.join(malformedTailRoot, ".mdf", "observations");
+        fs.mkdirSync(observations, { recursive: true });
+        const journal = path.join(observations, "subagent-invocations.jsonl");
+        fs.writeFileSync(journal, `${JSON.stringify(tailRow)}\n`);
+        const before = fs.readFileSync(journal, "utf8");
+        const result = runJson(["begin", "work-1", "gpt-test", "high", "executor"], malformedTailRoot);
+        assert.strictEqual(result.status, "unavailable");
+        assert.strictEqual(fs.readFileSync(journal, "utf8"), before);
+      } finally {
+        fs.rmSync(malformedTailRoot, { recursive: true, force: true });
+      }
     }
 
     const mixedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-mixed-checker-"));
