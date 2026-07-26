@@ -72,20 +72,24 @@ Use two explicit planes.
   merely for slowness or silence, and never dispatch a replacement writer
   before the prior writer is terminal.
 - A critic request is not rework authority. Rework the actual target only when
-  the automatic operation contract's `fix-now` proof gate grants a bounded
-  repair, then dispatch a fresh critic. After rework, continue only when the
-  accepted guarantee remains unmet; a newly proposed stronger guarantee does
-  not expand the current delivery. An executor stops for user scope authority
-  rather than implementing beyond its granted repair boundary. Raw executor or
-  critic dispatch count alone never causes `BLOCKED`.
+  the automatic operation contract's ordered disposition gate grants an exact
+  bounded repair. Before another executor can run, root records each finding's
+  disposition and only `fix-now` repair grant in the immutable handoff. The
+  executor receives those grants, not the critic report as a work list. After
+  rework, continue only when the accepted guarantee remains unmet; a newly
+  proposed stronger guarantee does not expand the current delivery. An executor
+  stops for user scope authority rather than implementing beyond its granted
+  repair boundary. Raw executor or critic dispatch count alone never causes
+  `BLOCKED`.
 - Use actual artifact bytes, Git state, command results, and commit OIDs as
-  evidence. After each accepted operation, write an immutable canonical root
-  handoff that links every executor and critic attempt to its role-specific
-  report and links the accepted executor result to its artifact or commit. This
-  evidence survives branch and worktree deletion. Record each attempt on one
-  deterministic role-specific line so later analysis can link an invocation to
-  exactly one report without parsing prose. Keep each handoff concise and
-  revalidate actual state on resume.
+  evidence. After each accepted operation and every critic change request,
+  write an immutable canonical root handoff that links every executor and critic
+  attempt to its role-specific report, preserves the root's finding-by-finding
+  disposition, and links the accepted executor result to its artifact or
+  commit. This evidence survives branch and worktree deletion. Record each
+  attempt on one deterministic role-specific line so later analysis can link an
+  invocation to exactly one report without parsing prose. Keep each handoff
+  concise and revalidate actual state on resume.
 
 ### Build lifecycle
 
