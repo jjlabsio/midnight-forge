@@ -175,7 +175,7 @@
         "references/automatic-operation-contract.md",
         "references/auto-workflow-contract.md"
       ],
-      "scenario": "The accepted migration criterion requires one disposable local PostgreSQL run with protection against accidentally targeting production. A critic reports production-db-guard: the current command lacks a loopback-only guard; adding that guard, one seeded integration run, and finally cleanup is a bounded repair. The same critic reports lifecycle-framework: a task-specific command-capture layer, schema allowlist, fake-executor matrix, and reusable database lifecycle protocol would provide broader future assurance but are not needed by the accepted criterion or any current supported operation. The executor must stay within whatever repair the root authorizes.",
+      "scenario": "The accepted migration criterion requires one disposable local PostgreSQL run with protection against accidentally targeting production. A whole-tree critic reports production-db-guard: the current command lacks a loopback-only guard; adding that guard, one seeded integration run, and finally cleanup is a bounded repair. The same critic reports lifecycle-framework: a task-specific command-capture layer, schema allowlist, fake-executor matrix, and reusable database lifecycle protocol would provide broader future assurance but are not needed by the accepted criterion or any current supported operation. The executor must stay within whatever repair the root authorizes, and a fresh whole-tree re-review follows the bounded repair.",
       "expected": {
         "dispositions": {
           "production-db-guard": "fix-now",
@@ -190,6 +190,21 @@
           "rework_current": true,
           "verification": "focused",
           "review": "whole-tree"
+        }
+      }
+    },
+    {
+      "id": "operation-sized-plan-granularity",
+      "files": [
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "The accepted specification requires a subscription-backed provider entitlement lifecycle across schema and migration, shared eligibility and provisioning, scheduled/event/recovery provider gates, OAuth/reclaim/webhook integration, and an out-of-order Polar reducer with backfill. The completed plan passed the canonical planning criteria, but creates twelve separately executable slices for schema, migration harness, predicate helper, provisioning service, scheduled gate, event gate, recovery gate, webhook gate, OAuth hook, reducer, backfill, and documentation. Most adjacent slices serve the same accepted outcome and verification boundary. The plan critic must decide whether the automatic profile accepts this component-sliced plan, requires an operation-sized revision that coalesces those adjacent slices while preserving distinct outcomes, risks, and dependency checkpoints, or collapses everything into one monolithic slice. This is plan acceptance, not a finding disposition; return an empty dispositions array. Report component-sliced, operation-sized, or monolithic as plan_granularity and whether the current plan may be accepted.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": false,
+        "plan_granularity": "operation-sized",
+        "decisions": {
+          "rework_current": true
         }
       }
     }

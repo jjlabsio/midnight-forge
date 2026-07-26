@@ -89,6 +89,17 @@ Use two explicit planes.
 
 ### Build lifecycle
 
+An accepted automatic plan slice is one complete build executor, critic, and
+root-commit operation. Accept the fewest bounded vertical slices that preserve
+meaningful independent acceptance, verification, and recovery. A separate
+slice boundary must be earned by an independently accepted user or operational
+outcome, isolation of a materially distinct implementation risk, or a
+dependency checkpoint whose failure should stop later work. Do not split work
+only by file, architectural layer, helper, test category, small commit, or
+implementation order; coalesce adjacent work that serves the same accepted
+outcome and meaningful verification boundary. Do not create a monolithic slice
+that obscures an earned boundary merely to reduce dispatches.
+
 For each approved plan slice:
 
 ```text
