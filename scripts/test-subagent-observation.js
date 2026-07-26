@@ -29,6 +29,20 @@ function runJson(args, directory = fixture) {
   return JSON.parse(run(args, directory));
 }
 
+function expectIneligibleBegin(requestedModel, requestedEffort) {
+  const journal = path.join(fixture, ".mdf", "observations", "subagent-invocations.jsonl");
+  const before = fs.existsSync(journal) ? fs.readFileSync(journal, "utf8") : null;
+  const result = spawnSync(
+    process.execPath,
+    [helper, fixture, "begin", "work-1", requestedModel, requestedEffort, "executor"],
+    { encoding: "utf8" }
+  );
+  assert.strictEqual(result.status, 2, result.stderr);
+  assert.match(result.stderr, /ineligible/i);
+  if (before === null) assert(!fs.existsSync(journal));
+  else assert.strictEqual(fs.readFileSync(journal, "utf8"), before);
+}
+
 function runAsync(args) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [helper, fixture, ...args]);
@@ -122,6 +136,16 @@ async function main() {
     assert(fs.existsSync(checker), "the checker must be owned by the dispatch policy");
     assert(!fs.existsSync(path.join(root, "skills", "use-mdf", "scripts", "record-subagent-observation.mjs")), "use-mdf must not retain an observation recorder");
     assert(!fs.existsSync(path.join(root, "skills", "use-mdf", "scripts", "check-subagent-observation-links.mjs")), "use-mdf must not retain an observation checker");
+
+    expectIneligibleBegin("gpt-5.6-luna", "low");
+    expectIneligibleBegin("gpt-5.6-luna-future", "medium");
+    for (const effort of ["high", "xhigh", "max", "ultra"]) {
+      expectIneligibleBegin("gpt-5.6-sol", effort);
+    }
+    const eligibleSol = runJson(["begin", "-", "gpt-5.6-sol", "medium", "executor"]);
+    assert.strictEqual(eligibleSol.status, "recorded");
+    expectIneligibleBegin("gpt-5.6-sol", "high");
+    assert.strictEqual(runJson(["finish", eligibleSol.invocation_id, "finished"]).status, "recorded");
 
     const unavailableRoot = runJson(["begin", "work-1", "gpt-test", "high", "executor"], path.join(fixture, "missing-root"));
     assert.strictEqual(unavailableRoot.status, "unavailable");

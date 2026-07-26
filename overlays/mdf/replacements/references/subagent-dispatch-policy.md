@@ -58,6 +58,9 @@ it is dispatched.
 Before every actual spawn, call `begin` once and retain only its generated
 invocation ID. Every call represents one actual dispatch observation and
 returns a fresh globally unique ID, including when observation is unavailable.
+An eligibility error means the requested model and effort are forbidden by
+`model-routing-5.6.md`: do not spawn, select an eligible request, and call
+`begin` again.
 
 ```bash
 node <plugin-root>/references/subagent-dispatch-policy/record-subagent-observation.mjs \
@@ -97,10 +100,11 @@ incomplete pair never blocks or changes spawn, acceptance, retry, commit, or
 lifecycle closure. Do not reconstruct it, retry it as a workflow gate, or turn
 it into a second dispatch. Preserve the raw limitation for analysis.
 
-Only a malformed command, missing field, or empty/multiline value is a
-syntactic input error. After syntactic `begin` parsing, unsafe or unavailable
-canonical-root, work, role, journal, or lock facts return `unavailable` with a
-usable ID; they are excluded from analysis rather than reconstructed.
+Only a malformed command, missing field, empty/multiline value, or explicit
+model-routing eligibility error is a blocking `begin` input error. After
+syntactic parsing, unsafe or unavailable canonical-root, work, role, journal,
+or lock facts return `unavailable` with a usable ID; they are excluded from
+analysis rather than reconstructed.
 
 ## Immutable attempt index
 

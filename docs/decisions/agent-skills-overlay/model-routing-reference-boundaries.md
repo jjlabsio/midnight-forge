@@ -25,7 +25,9 @@ Keep the references with non-overlapping responsibilities:
   limits only. It may provide comparative context but no routing rule.
 - `subagent-dispatch-policy.md` owns dispatch preparation, instruction source,
   authority, waiting, terminal status, artifact linkage, observation, and the
-  spawn boundary. It records the selected request but does not select it.
+  spawn boundary. It records the selected request and mechanically rejects a
+  request explicitly ineligible under `model-routing-5.6.md`, but does not
+  select a candidate.
 
 The root still owns semantic model selection under the central policy. Dispatch
 mechanics load that policy without restating it.
@@ -34,5 +36,7 @@ mechanics load that policy without restating it.
 
 - One shared reference resolves candidate eligibility and effort judgment.
 - Dispatch retains its complete evidence and authority contract.
+- The recorder can enforce an explicit eligibility exclusion at the existing
+  pre-spawn boundary without becoming a model selector or capability evaluator.
 - Performance data informs selection without becoming an independent policy.
 - The former AI-owned model-selection decision remains historical context.
