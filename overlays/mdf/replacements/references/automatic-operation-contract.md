@@ -18,16 +18,30 @@ the current-delivery disposition for each actionable finding:
 
 | Disposition | Required evidence and action |
 | --- | --- |
-| `fix-now` | An accepted success criterion is unmet; or an existing authority/safety invariant is violated in an accepted or currently supported operation and its impact is not acceptably contained or recoverable. Rework the bounded affected target. |
+| `fix-now` | The critic identifies evidence on an affected currently supported path that an accepted criterion remains unmet, or that an existing authority/safety invariant is violated with impact that is not acceptably contained or recoverable. A repair is bounded inside the accepted outcome without a new subsystem, state machine, operational protocol, or general-purpose infrastructure. Grant only that bounded repair. |
 | `needs-user` | Repairing a current-delivery blocker changes an accepted outcome, removes or defers an accepted success criterion, or adds a new subsystem, state machine, operational protocol, or general-purpose infrastructure. Stop for the user's scope decision. |
-| `current-delivery-nonblocking` | The finding concerns optional hardening, hypothetical scale, unsupported use, or another condition outside the accepted current outcome and does not violate an existing invariant. Do not rework it in this delivery. |
+| `current-delivery-nonblocking` | The finding is technically applicable but is not proven to block the accepted current outcome, or concerns optional hardening, hypothetical scale, unsupported use, or a stronger guarantee than the accepted one. Do not rework it or run finding-driven verification in this delivery. |
 | `invalid` | The finding does not apply to the observed target or rests on incorrect evidence. Do not rework it. |
 
 A critic assessment such as `changes_requested` is technical evidence, not an
-unconditional rework command. The root does not repeat the critic's technical
-review; it binds the finding to the accepted baseline and observed operating
-conditions, records its disposition in the next handoff, and follows the table
-above. Never silently remove or defer an accepted success criterion.
+unconditional rework command. For each actionable finding, the automatic
+critic reports its evidence, affected currently supported path, violated
+accepted criterion or existing invariant—or that no current binding exists—and
+a bounded repair candidate or why repair exceeds the current scope. This
+supplements rather than changes the canonical review contract.
+
+The root verifies target identity, freshness, and the existence of cited
+evidence. It does not independently search for defects, reproduce the review,
+reassess technical severity, or design the repair. It binds the finding to the
+accepted baseline, records its disposition and any bounded repair authority in
+the next handoff, and follows the table above. Never silently remove or defer
+an accepted success criterion.
+
+After rework, distinguish evidence that the existing accepted guarantee
+remains unmet from a request for a stronger guarantee. Only the former may
+re-enter the `fix-now` gate. Treat the latter as
+`current-delivery-nonblocking` unless the user changes the accepted outcome.
+Add no finding taxonomy, registry, or workflow state for this judgment.
 
 Do not create a follow-up task or standing finding backlog merely because a
 finding is nonblocking. If safe current operation depends on an unsupported
@@ -98,8 +112,11 @@ requires one after resulting rework.
 1. Before every actual executor or critic spawn, use the shared policy's
    `begin` contract and retain only its returned invocation ID.
 2. Dispatch one skill-backed executor with the exact adapter, acceptance
-   baseline, target, owned paths, checks, and stop rules. The adapter loads the
-   primitives required by its public contract.
+   baseline, target, owned paths, checks, bounded repair authority when
+   applicable, and stop rules. The adapter loads the primitives required by
+   its public contract. The executor must stop for `needs-user` rather than
+   adding a new subsystem, state machine, operational protocol, general-purpose
+   infrastructure, or broader outcome beyond that authority.
 3. Wait until that executor returns an actual terminal response.
 4. Re-read the actual artifact or diff, Git state, and command results.
 5. Persist any returned executor report and root-observed changed paths when
@@ -115,7 +132,7 @@ requires one after resulting rework.
 
 | Role | May | Must not |
 | --- | --- | --- |
-| Executor | Write only its bounded target; return a concise report | Change cards, locks, indexes, approvals, handoffs, observations, or lifecycle; commit; select the next operation; act externally |
+| Executor | Write only its bounded target and granted repair authority; return a concise report | Expand a repair into a new subsystem, state machine, operational protocol, general-purpose infrastructure, or broader outcome; change cards, locks, indexes, approvals, handoffs, observations, or lifecycle; commit; select the next operation; act externally |
 | Critic | Assess the root-observed target | Write, delegate, commit, accept, advance lifecycle, or receive another verifier |
 | Root | Observe state, persist evidence, decide, commit, and continue | Accept missing, partial, stale, changed-target, or non-independent results |
 
@@ -128,9 +145,11 @@ Bind critics as follows:
 | Simplification | Apply the same review and verify behavior preservation. |
 
 Use distinct suitable quality-critical subagents and the shared dispatch
-policy. After a `fix-now` disposition, rework the actual target and dispatch a
-fresh critic until no current-delivery blocker remains or an existing
-substantive stop condition blocks progress.
+policy. After a `fix-now` disposition, rework only the granted bounded target
+and dispatch a fresh critic. Re-enter again only when the accepted guarantee
+remains unmet; do not expand the delivery for a stronger guarantee. Continue
+until no current-delivery blocker remains or an existing substantive stop
+condition blocks progress.
 
 At an automatic call site:
 
