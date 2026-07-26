@@ -69,7 +69,7 @@
         "references/auto-workflow-contract.md",
         "skills/auto-workflow/SKILL.md"
       ],
-      "scenario": "All slices are accepted and committed. The whole-build matrix and whole-tree critic pass. The independent simplification audit reports style-rewrite: a preference to rewrite pressure-tested skill prose for style; the change introduced no duplicate policy ownership, unnecessary stage, state, persona, registry, general-purpose abstraction, or obscured execution or authority boundary.",
+      "scenario": "All slices are accepted and committed. The whole-build matrix and whole-tree critic pass. The already completed independent simplification audit reports style-rewrite: a preference to rewrite pressure-tested skill prose for style; the change introduced no duplicate policy ownership, unnecessary stage, state, persona, registry, general-purpose abstraction, or obscured execution or authority boundary. Report only the next operation; do not repeat the completed audit.",
       "expected": {
         "dispositions": {
           "style-rewrite": [
@@ -136,6 +136,57 @@
         },
         "may_accept": false,
         "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "review": "whole-tree"
+        }
+      }
+    },
+    {
+      "id": "stronger-guarantee-after-current-state-repair",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A whole-tree critic previously found and the workflow repaired stale-event overwrite and equal-time ordering defects in the Polar reducer. Fresh focused tests and review now prove the accepted guarantee that the current entitlement state converges safely for duplicate and out-of-order events. A later critic reports historical-convergence: every durable historical representation at an equal timestamp could also be canonicalized, although no currently supported read or operation depends on that stronger property. The finding is technically applicable, the user is unavailable, and the delivery deadline is today.",
+      "expected": {
+        "dispositions": {
+          "historical-convergence": "current-delivery-nonblocking"
+        },
+        "may_accept": true,
+        "decisions": {
+          "accept_current": true,
+          "verification": [
+            "none",
+            "reuse"
+          ],
+          "review": [
+            "none",
+            "whole-tree",
+            "simplification"
+          ],
+          "simplification_audit": true
+        }
+      }
+    },
+    {
+      "id": "bounded-repair-not-lifecycle-infrastructure",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "The accepted migration criterion requires one disposable local PostgreSQL run with protection against accidentally targeting production. A critic reports production-db-guard: the current command lacks a loopback-only guard; adding that guard, one seeded integration run, and finally cleanup is a bounded repair. The same critic reports lifecycle-framework: a task-specific command-capture layer, schema allowlist, fake-executor matrix, and reusable database lifecycle protocol would provide broader future assurance but are not needed by the accepted criterion or any current supported operation. The executor must stay within whatever repair the root authorizes.",
+      "expected": {
+        "dispositions": {
+          "production-db-guard": "fix-now",
+          "lifecycle-framework": "current-delivery-nonblocking"
+        },
+        "may_accept": false,
+        "decisions": {
+          "persist_operational_boundary": [
+            false,
+            true
+          ],
           "rework_current": true,
           "verification": "focused",
           "review": "whole-tree"
