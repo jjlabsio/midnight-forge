@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.9.1 - 2026-07-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.0...v2.9.1)
+
+### Changes
+
+- fix(routing): enforce ineligible dispatch requests ([#106](https://github.com/jjlabsio/midnight-forge/pull/106))
 ## v2.9.0 - 2026-07-25
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.8.1...v2.9.0)
