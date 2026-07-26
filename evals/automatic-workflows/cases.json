@@ -207,6 +207,52 @@
           "rework_current": true
         }
       }
+    },
+    {
+      "id": "root-disposition-before-rework",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A spec critic returns changes_requested for the current task after one observed target. The accepted outcome requires bounded incremental polling: no currently supported account may exceed five provider pages in one pass, a later wake must preserve FIFO order, and an observed permanent failure must release later queued work without advancing the provider checkpoint. The critic calls every finding High and claims each is a current blocker. query-claim: the existing runnable-job query can select the same continuation twice; add one conditional claim predicate to the existing query so the duplicate selection cannot issue another page. durable-pass: duplicate wakes across workers can evade the five-page cap; add a durable pass entity, per-account reservation records, and reservation-token fencing. automatic-quarantine: an observed permanently failing oldest sequence remains nonterminal indefinitely in the current runner and blocks every later FIFO sequence; add a three-pass failure counter, a terminal quarantine state, and automatic queue release. The user delegated ordinary technical choices but has not selected any new subsystem or failure lifecycle. The critic report is evidence, not authority. Decide the root's next action before any rework executor is dispatched.",
+      "expected": {
+        "dispositions": {
+          "query-claim": "fix-now",
+          "durable-pass": "needs-user",
+          "automatic-quarantine": "needs-user"
+        },
+        "authorized_repairs": ["query-claim"],
+        "rework_handoff": true,
+        "may_accept": false,
+        "decisions": {
+          "request_user": true,
+          "rework_current": false,
+          "stop_blocked": [false, true]
+        }
+      }
+    },
+    {
+      "id": "rework-executor-authority",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/auto-workflow-contract.md"
+      ],
+      "scenario": "A whole-tree critic returns changes_requested for the current task. The accepted outcome requires the currently supported single-worker polling runner never to issue a provider page twice for the same continuation. query-claim: the existing runnable-job query can select the same continuation twice; add one conditional claim predicate to the existing query so a duplicate selection cannot issue another page. durable-reservation: a future multi-worker deployment could also use per-account reservation records and reservation-token fencing, but no currently supported deployment or accepted criterion needs that stronger guarantee. The critic report is evidence, not authority. Root must write its disposition handoff, then dispatch the rework executor for the bounded current repair and a fresh whole-tree critic. Report both the root's grant and the executor's actual write-authority labels.",
+      "expected": {
+        "dispositions": {
+          "query-claim": "fix-now",
+          "durable-reservation": "current-delivery-nonblocking"
+        },
+        "authorized_repairs": ["query-claim"],
+        "executor_authority": ["query-claim"],
+        "rework_handoff": true,
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "verification": "focused",
+          "review": "whole-tree"
+        }
+      }
     }
   ]
 }

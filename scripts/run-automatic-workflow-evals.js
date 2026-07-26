@@ -99,6 +99,7 @@ function promptFor(testCase) {
     "Apply their current automatic-workflow rules to the scenario below.",
     "Fill every decision field for the next required workflow behavior. Use false or none when an operation must not run.",
     "For review, use bounded-change only for the quick-workflow critic, whole-tree for an auto-workflow whole-tree re-review, and simplification for the fresh critic after code-simplify.",
+    "When rework_current is true, review denotes the fresh critic required after that rework, not a review already completed.",
     "Do not add future hardening, follow-up work, or preferred cleanup.",
     "Use finding labels exactly as written before each colon in the scenario when labels are present.",
     `Set case_id to ${JSON.stringify(testCase.id)}.`,
@@ -112,21 +113,59 @@ function promptFor(testCase) {
       "Set top-level plan_granularity to component-sliced, operation-sized, or monolithic as requested."
     );
   }
+  if (testCase.expected.authorized_repairs !== undefined) {
+    lines.splice(
+      4,
+      0,
+      "Set top-level rework_handoff to whether the root writes its immutable disposition handoff before another executor can run, and authorized_repairs to the exact finding labels granted to a rework executor."
+    );
+  }
+  if (testCase.expected.executor_authority !== undefined) {
+    lines.splice(
+      4,
+      0,
+      "Set top-level executor_authority to the exact finding labels actually passed to the rework executor as write authority; use an empty array when no rework executor is dispatched."
+    );
+  }
   return lines.join("\n\n");
 }
 
 function schemaFor(testCase) {
-  if (testCase.expected.plan_granularity === undefined) return responseSchema;
+  if (
+    testCase.expected.plan_granularity === undefined
+    && testCase.expected.authorized_repairs === undefined
+    && testCase.expected.executor_authority === undefined
+  ) {
+    return responseSchema;
+  }
+  const properties = { ...responseSchema.properties };
+  const required = [...responseSchema.required];
+  if (testCase.expected.plan_granularity !== undefined) {
+    required.push("plan_granularity");
+    properties.plan_granularity = {
+      type: "string",
+      enum: ["component-sliced", "operation-sized", "monolithic"]
+    };
+  }
+  if (testCase.expected.authorized_repairs !== undefined) {
+    required.push("rework_handoff", "authorized_repairs");
+    properties.rework_handoff = { type: "boolean" };
+    properties.authorized_repairs = {
+      type: "array",
+      items: { type: "string" }
+    };
+  }
+  if (testCase.expected.executor_authority !== undefined) {
+    required.push("executor_authority");
+    properties.executor_authority = {
+      type: "array",
+      items: { type: "string" }
+    };
+  }
   return {
     ...responseSchema,
-    required: [...responseSchema.required, "plan_granularity"],
-    properties: {
-      ...responseSchema.properties,
-      plan_granularity: {
-        type: "string",
-        enum: ["component-sliced", "operation-sized", "monolithic"]
-      }
-    }
+    required,
+    properties
   };
 }
 
@@ -151,6 +190,37 @@ function grade(testCase, actual) {
     }
   } else if (actual.plan_granularity !== undefined) {
     errors.push(`unexpected plan_granularity=${actual.plan_granularity}`);
+  }
+  if (expected.authorized_repairs !== undefined) {
+    if (actual.rework_handoff !== expected.rework_handoff) {
+      errors.push(`rework_handoff=${actual.rework_handoff}, expected ${expected.rework_handoff}`);
+    }
+    const actualRepairs = [...actual.authorized_repairs].sort();
+    const expectedRepairs = [...expected.authorized_repairs].sort();
+    if (new Set(actualRepairs).size !== actualRepairs.length) {
+      errors.push("duplicate authorized repair");
+    }
+    if (JSON.stringify(actualRepairs) !== JSON.stringify(expectedRepairs)) {
+      errors.push(
+        `authorized_repairs=${JSON.stringify(actualRepairs)}, expected ${JSON.stringify(expectedRepairs)}`
+      );
+    }
+  } else if (actual.rework_handoff !== undefined || actual.authorized_repairs !== undefined) {
+    errors.push("unexpected rework handoff output");
+  }
+  if (expected.executor_authority !== undefined) {
+    const actualAuthority = [...actual.executor_authority].sort();
+    const expectedAuthority = [...expected.executor_authority].sort();
+    if (new Set(actualAuthority).size !== actualAuthority.length) {
+      errors.push("duplicate executor authority");
+    }
+    if (JSON.stringify(actualAuthority) !== JSON.stringify(expectedAuthority)) {
+      errors.push(
+        `executor_authority=${JSON.stringify(actualAuthority)}, expected ${JSON.stringify(expectedAuthority)}`
+      );
+    }
+  } else if (actual.executor_authority !== undefined) {
+    errors.push("unexpected executor authority output");
   }
   for (const [finding, expectedDisposition] of Object.entries(expected.dispositions)) {
     const allowed = Array.isArray(expectedDisposition)

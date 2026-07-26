@@ -14,28 +14,31 @@ generalization for hypothetical scale, unsupported use, or future product
 scope.
 
 Critics report technical findings and severity independently. The root owns
-the current-delivery disposition for each actionable finding:
+the current-delivery disposition for each actionable finding. Apply this order;
+a later row never overrides an earlier row:
 
 | Disposition | Required evidence and action |
 | --- | --- |
-| `fix-now` | The critic identifies evidence on an affected currently supported path that an accepted criterion remains unmet, or that an existing authority/safety invariant is violated with impact that is not acceptably contained or recoverable. A repair is bounded inside the accepted outcome without a new subsystem, state machine, operational protocol, or general-purpose infrastructure. Grant only that bounded repair. |
-| `needs-user` | Repairing a current-delivery blocker changes an accepted outcome, removes or defers an accepted success criterion, or adds a new subsystem, state machine, operational protocol, or general-purpose infrastructure. Stop for the user's scope decision. |
-| `current-delivery-nonblocking` | The finding is technically applicable but is not proven to block the accepted current outcome, or concerns optional hardening, hypothetical scale, unsupported use, or a stronger guarantee than the accepted one. Do not rework it or run finding-driven verification in this delivery. |
 | `invalid` | The finding does not apply to the observed target or rests on incorrect evidence. Do not rework it. |
+| `needs-user` | An evidenced current-delivery blocker can be repaired only by changing the accepted outcome, removing or deferring an accepted success criterion, or adding a subsystem, state machine, operational protocol, or general-purpose infrastructure. Stop for the user's scope decision. |
+| `current-delivery-nonblocking` | The finding is technically applicable but is not proven to block the accepted current outcome, or concerns optional hardening, hypothetical scale, unsupported use, or a stronger guarantee than the accepted one. Do not rework it or run finding-driven verification in this delivery. |
+| `fix-now` | Only after the earlier rows do not apply: the critic identifies evidence on an affected currently supported path that an accepted criterion remains unmet, or that an existing authority/safety invariant is violated with impact that is not acceptably contained or recoverable. Grant only the exact repair bounded inside the accepted outcome without a new subsystem, state machine, operational protocol, or general-purpose infrastructure. |
 
 A critic assessment such as `changes_requested` is technical evidence, not an
 unconditional rework command. For each actionable finding, the automatic
 critic reports its evidence, affected currently supported path, violated
 accepted criterion or existing invariant—or that no current binding exists—and
-a bounded repair candidate or why repair exceeds the current scope. This
-supplements rather than changes the canonical review contract.
+a smallest repair candidate, including why that candidate exceeds current
+scope when it needs a new mechanism. This supplements rather than changes the
+canonical review contract. A critic never grants the candidate as rework
+authority.
 
 The root verifies target identity, freshness, and the existence of cited
 evidence. It does not independently search for defects, reproduce the review,
 reassess technical severity, or design the repair. It binds the finding to the
-accepted baseline, records its disposition and any bounded repair authority in
-the next handoff, and follows the table above. Never silently remove or defer
-an accepted success criterion.
+accepted baseline, records its disposition before any rework dispatch, and
+grants an exact repair only for `fix-now`. Never silently remove or defer an
+accepted success criterion.
 
 After rework, distinguish evidence that the existing accepted guarantee
 remains unmet from a request for a stronger guarantee. Only the former may
@@ -62,7 +65,7 @@ Use observable state, not elapsed caller time:
 | Executor ended terminally without a report | Follow **Terminal no-report transport failure**. Do not dispatch a critic or accept the attempt. |
 | Executor returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. Do not dispatch a critic or accept the attempt. |
 | Critic returned a successful terminal status with a complete `pass` report | Re-observe the bound target and let the root decide acceptance. |
-| Critic returned a successful terminal status with `changes_requested` | Re-observe the bound target and disposition every actionable finding. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
+| Critic returned a successful terminal status with `changes_requested` | Re-observe the bound target, disposition every actionable finding in the required order, and write the disposition handoff before another executor can run. Rework only its listed `fix-now` grants, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
 | Critic returned any other terminal response | Persist any returned report as evidence and follow **Recovery** or a substantive stop. |
 | A DDD-class finding has materially changed evidence | Re-enter the affected operation and obtain a fresh adversarial review. |
 | A DDD-class review repeats the core finding without changed evidence | Stop `BLOCKED` or request the user-owned decision. |
@@ -112,11 +115,13 @@ requires one after resulting rework.
 1. Before every actual executor or critic spawn, use the shared policy's
    `begin` contract and retain only its returned invocation ID.
 2. Dispatch one skill-backed executor with the exact adapter, acceptance
-   baseline, target, owned paths, checks, bounded repair authority when
-   applicable, and stop rules. The adapter loads the primitives required by
-   its public contract. The executor must stop for `needs-user` rather than
-   adding a new subsystem, state machine, operational protocol, general-purpose
-   infrastructure, or broader outcome beyond that authority.
+   baseline, target, owned paths, checks, and stop rules. For rework, its only
+   write authority is the exact `authorized_repair` entries in the latest
+   disposition handoff; a critic report is evidence, never additional repair
+   authority. The adapter loads the primitives required by its public contract.
+   The executor must stop for `needs-user` rather than adding a new subsystem,
+   state machine, operational protocol, general-purpose infrastructure, or
+   broader outcome beyond that authority.
 3. Wait until that executor returns an actual terminal response.
 4. Re-read the actual artifact or diff, Git state, and command results.
 5. Persist any returned executor report and root-observed changed paths when
@@ -127,8 +132,8 @@ requires one after resulting rework.
    reasoning.
 7. Wait for the critic's actual terminal response, then apply **Completion
    standard** and **State decisions**. In the root, disposition findings and
-   accept, perform bounded rework, request the user-owned decision, or finish
-   `BLOCKED`.
+   accept, or write the disposition handoff before a bounded rework, a
+   user-owned decision request, or `BLOCKED`.
 
 | Role | May | Must not |
 | --- | --- | --- |
@@ -145,11 +150,11 @@ Bind critics as follows:
 | Simplification | Apply the same review and verify behavior preservation. |
 
 Use distinct suitable quality-critical subagents and the shared dispatch
-policy. After a `fix-now` disposition, rework only the granted bounded target
-and dispatch a fresh critic. Re-enter again only when the accepted guarantee
-remains unmet; do not expand the delivery for a stronger guarantee. Continue
-until no current-delivery blocker remains or an existing substantive stop
-condition blocks progress.
+policy. After a `fix-now` disposition handoff, rework only its exact granted
+target and dispatch a fresh critic. Re-enter again only when the accepted
+guarantee remains unmet; do not expand the delivery for a stronger guarantee.
+Continue until no current-delivery blocker remains or an existing substantive
+stop condition blocks progress.
 
 At an automatic call site:
 
@@ -268,8 +273,9 @@ transition. Do not dispatch a critic for the failed attempt.
 
 ## Root handoff
 
-After each accepted or terminally blocked operation, and before retrying a
-terminal no-report transport failure, write the next immutable
+After each accepted operation, every critic `changes_requested` assessment,
+terminally blocked operation, and before retrying a terminal no-report
+transport failure, write the next immutable
 `.mdf/work/<work-id>/handoff-NNN.md`:
 
 ```text
@@ -281,6 +287,8 @@ accepted_executor_report: <project-relative path | none>
 accepted_critic_invocation_id: <id | none>
 accepted_critic_report: <project-relative path | none>
 critic_assessment: <pass | changes_requested | blocked | none>
+# Repeat exactly one line for every actionable critic finding when assessment is changes_requested.
+finding: <critic finding label> | disposition: <fix-now | needs-user | current-delivery-nonblocking | invalid> | binding: <accepted criterion or invariant | none> | authorized_repair: <exact bounded repair | none>
 accepted_artifact: <path and SHA-256 | none>
 accepted_commit_oid: <full OID | none>
 ```
@@ -294,6 +302,11 @@ Handoff invariants:
   as a report.
 - Record task and profile identity, Git state, verification, critic outcome,
   blockers, and the root-owned cursor.
+- Before any rework executor dispatch, a `changes_requested` handoff has one
+  finding line for each actionable critic finding. `authorized_repair` is
+  non-`none` only for `fix-now`; those exact entries are the rework executor's
+  complete write authority. Do not pass an unselected critic finding as a
+  repair instruction.
 - Use `report: none` only when no report returned and `assessment: none` only
   when no critic assessment exists. Never fabricate a report.
 - Use `none` for every unaccepted result in a blocked or terminal no-report
