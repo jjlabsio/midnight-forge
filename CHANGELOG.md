@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.9.2 - 2026-07-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.1...v2.9.2)
+
+### Changes
+
+- docs: restore gone branch lifecycle tracking ([#108](https://github.com/jjlabsio/midnight-forge/pull/108))
 ## v2.9.1 - 2026-07-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.0...v2.9.1)
