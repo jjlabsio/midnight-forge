@@ -15,6 +15,24 @@ operation rule.
 | Every slice is accepted and committed | Run whole-build verification, review, and the conditional simplification sequence. |
 | Whole build is accepted | Write the verified local handoff. |
 
+## Automatic plan granularity
+
+Each accepted plan slice becomes one complete build executor, critic, and
+root-commit operation. Accept the fewest bounded vertical slices that preserve
+meaningful independent acceptance, verification, and recovery.
+
+A separate slice boundary must be justified by at least one of:
+
+- an independently accepted user or operational outcome;
+- isolation of a materially distinct implementation risk;
+- a dependency checkpoint whose failure should stop later work.
+
+Coalesce consecutive work that serves the same accepted outcome and meaningful
+verification boundary. A file, architectural layer, helper, test category,
+small commit, or implementation-order step alone does not justify a separate
+slice. Do not make a slice larger merely to reduce dispatches when doing so
+obscures independent acceptance, verification, or recovery.
+
 ## Per-slice loop
 
 For each ready plan slice:

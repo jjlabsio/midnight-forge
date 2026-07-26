@@ -93,7 +93,7 @@ function validateCase(testCase) {
 }
 
 function promptFor(testCase) {
-  return [
+  const lines = [
     "This is an executable behavior evaluation, not a request to edit files.",
     `Read only these repository contracts: ${testCase.files.join(", ")}.`,
     "Apply their current automatic-workflow rules to the scenario below.",
@@ -104,7 +104,30 @@ function promptFor(testCase) {
     `Set case_id to ${JSON.stringify(testCase.id)}.`,
     `Scenario: ${testCase.scenario}`,
     "Return only the JSON object required by the response schema."
-  ].join("\n\n");
+  ];
+  if (testCase.expected.plan_granularity !== undefined) {
+    lines.splice(
+      4,
+      0,
+      "Set top-level plan_granularity to component-sliced, operation-sized, or monolithic as requested."
+    );
+  }
+  return lines.join("\n\n");
+}
+
+function schemaFor(testCase) {
+  if (testCase.expected.plan_granularity === undefined) return responseSchema;
+  return {
+    ...responseSchema,
+    required: [...responseSchema.required, "plan_granularity"],
+    properties: {
+      ...responseSchema.properties,
+      plan_granularity: {
+        type: "string",
+        enum: ["component-sliced", "operation-sized", "monolithic"]
+      }
+    }
+  };
 }
 
 function grade(testCase, actual) {
@@ -119,6 +142,15 @@ function grade(testCase, actual) {
   if (actual.case_id !== testCase.id) errors.push(`case_id=${actual.case_id}`);
   if (actual.may_accept !== expected.may_accept) {
     errors.push(`may_accept=${actual.may_accept}, expected ${expected.may_accept}`);
+  }
+  if (expected.plan_granularity !== undefined) {
+    if (actual.plan_granularity !== expected.plan_granularity) {
+      errors.push(
+        `plan_granularity=${actual.plan_granularity}, expected ${expected.plan_granularity}`
+      );
+    }
+  } else if (actual.plan_granularity !== undefined) {
+    errors.push(`unexpected plan_granularity=${actual.plan_granularity}`);
   }
   for (const [finding, expectedDisposition] of Object.entries(expected.dispositions)) {
     const allowed = Array.isArray(expectedDisposition)
@@ -158,7 +190,6 @@ if (!cases.length) {
 } else {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-workflow-evals-"));
   const schemaPath = path.join(tempDir, "response.schema.json");
-  fs.writeFileSync(schemaPath, `${JSON.stringify(responseSchema, null, 2)}\n`);
   try {
     for (const testCase of cases) {
       validateCase(testCase);
@@ -166,6 +197,10 @@ if (!cases.length) {
         console.log(`[dry-run] ${testCase.id}`);
         continue;
       }
+      fs.writeFileSync(
+        schemaPath,
+        `${JSON.stringify(schemaFor(testCase), null, 2)}\n`
+      );
       const outputPath = path.join(tempDir, `${testCase.id}.json`);
       const result = spawnSync(
         "codex",
