@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.10.0 - 2026-07-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.2...v2.10.0)
+
+### Changes
+
+- feat(workflow): gate automatic rework by delivery proof ([#107](https://github.com/jjlabsio/midnight-forge/pull/107))
 ## v2.9.2 - 2026-07-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.1...v2.9.2)
