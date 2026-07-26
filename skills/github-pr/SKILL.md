@@ -112,7 +112,7 @@ not apply. Do not add, remove, rename, translate, merge, or reorder sections.
 2. Match an open PR by exact head repository owner/name and head branch, then
    require its base to equal the repository default branch. Stop on multiple
    matches, different bases, or uncertain state.
-3. Push the current branch and verify the remote branch OID equals local HEAD.
+3. Push the current branch with `git push --set-upstream origin <current-branch>` so its upstream is the same-named remote branch, then verify that remote branch's OID equals local HEAD.
 4. Query again. Update the exact match when title or body differs; otherwise
    create one. Never create a duplicate.
 5. Re-read the published title and body. Require the title convention and exact
