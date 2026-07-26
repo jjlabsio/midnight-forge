@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.11.0 - 2026-07-26
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.10.0...v2.11.0)
+
+### Changes
+
+- feat(workflow): calibrate automatic plan granularity ([#109](https://github.com/jjlabsio/midnight-forge/pull/109))
 ## v2.10.0 - 2026-07-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.9.2...v2.10.0)
