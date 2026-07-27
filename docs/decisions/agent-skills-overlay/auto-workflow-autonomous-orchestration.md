@@ -25,7 +25,7 @@ and permit parallel writers only when independence can be defended.
 
 Add one MDF-only readable automatic operation contract and separate readable
 profile contracts for local `auto-workflow`, delivery `auto-workflow-pr`, and
-bounded `quick-workflow-pr`. Task creation/activation remains independent from
+planless `quick-workflow-pr`. Task creation/activation remains independent from
 any workflow; the selected profile reads the task as intent and lifecycle
 evidence rather than a workflow-readiness or action grant. A direct profile
 invocation grants its documented ordinary scope, while a bare internal mode

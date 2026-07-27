@@ -17,21 +17,6 @@ description: "Use before software development workflow decisions in Codex or MDF
 6. Keep ambiguity, destructive confirmation, and external authority in the
    root. Do not add a controller, router persona, or machine-only protocol.
 
-## Automatic workflows
-
-Only `auto-workflow`, `auto-workflow-pr`, and `quick-workflow-pr` load
-`<plugin-root>/references/automatic-operation-contract.md` plus their named
-profile contract. The PR continuation also loads
-`<plugin-root>/references/auto-workflow-contract.md` for its accepted local
-workflow. Stage skills do not receive or interpret profile names.
-
-- `auto-workflow`: local implementation and commits only.
-- `auto-workflow-pr`: plan-backed implementation, canonical ship, push, and PR.
-- `quick-workflow-pr`: explicitly selected bounded build, review, commit, and PR.
-
-The root owns profile selection, operation order, omissions, executor/critic
-dispatch, acceptance, recovery, commits, lifecycle, and external actions.
-
 ## Delegation
 
 Load `<plugin-root>/references/subagent-dispatch-policy.md` whenever MDF

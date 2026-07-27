@@ -135,7 +135,6 @@ const automaticContracts = {
       "skills/auto-workflow/scripts/changed-paths.mjs",
       "skills/auto-workflow-pr/SKILL.md",
       "skills/quick-workflow-pr/SKILL.md",
-      "skills/use-mdf/SKILL.md",
     ],
   },
   "auto-workflow-contract": {
@@ -143,22 +142,15 @@ const automaticContracts = {
     consumers: [
       "skills/auto-workflow/SKILL.md",
       "skills/auto-workflow-pr/SKILL.md",
-      "skills/use-mdf/SKILL.md",
     ],
   },
   "auto-workflow-pr-contract": {
     output: "references/auto-workflow-pr-contract.md",
-    consumers: [
-      "skills/auto-workflow-pr/SKILL.md",
-      "skills/use-mdf/SKILL.md",
-    ],
+    consumers: ["skills/auto-workflow-pr/SKILL.md"],
   },
   "quick-workflow-pr-contract": {
     output: "references/quick-workflow-pr-contract.md",
-    consumers: [
-      "skills/quick-workflow-pr/SKILL.md",
-      "skills/use-mdf/SKILL.md",
-    ],
+    consumers: ["skills/quick-workflow-pr/SKILL.md"],
   },
 };
 for (const [contractId, expected] of Object.entries(automaticContracts)) {

@@ -69,8 +69,8 @@ ships, keeps the task active through PR creation/update and the latest PR
 checks/mergeability/conflict gates, then records its minimal task-card PR link
 while the task and lock remain active. When accepted local completion evidence matches,
 resume begins at ship rather than repeating accepted development stages.
-`$quick-workflow-pr` is the explicit lightweight delivery
-workflow for small documentation or implementation changes: it always skips
+`$quick-workflow-pr` is the explicit direct delivery workflow for documentation
+or implementation changes: it always skips
 spec and plan, reuses the canonical build/review/GitHub PR skills, loops back
 to build for actionable review findings, and does not invoke ship or
 code-simplify. CI or conflict failures stay on the same task, worktree,
