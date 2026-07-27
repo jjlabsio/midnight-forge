@@ -19,30 +19,26 @@
         "skills/auto-workflow/SKILL.md",
         "skills/auto-workflow/scripts/changed-paths.mjs",
         "skills/auto-workflow-pr/SKILL.md",
-        "skills/quick-workflow-pr/SKILL.md",
-        "skills/use-mdf/SKILL.md"
+        "skills/quick-workflow-pr/SKILL.md"
       ]
     },
     "auto-workflow-contract": {
       "output": "references/auto-workflow-contract.md",
       "requiredConsumers": [
         "skills/auto-workflow/SKILL.md",
-        "skills/auto-workflow-pr/SKILL.md",
-        "skills/use-mdf/SKILL.md"
+        "skills/auto-workflow-pr/SKILL.md"
       ]
     },
     "auto-workflow-pr-contract": {
       "output": "references/auto-workflow-pr-contract.md",
       "requiredConsumers": [
-        "skills/auto-workflow-pr/SKILL.md",
-        "skills/use-mdf/SKILL.md"
+        "skills/auto-workflow-pr/SKILL.md"
       ]
     },
     "quick-workflow-pr-contract": {
       "output": "references/quick-workflow-pr-contract.md",
       "requiredConsumers": [
-        "skills/quick-workflow-pr/SKILL.md",
-        "skills/use-mdf/SKILL.md"
+        "skills/quick-workflow-pr/SKILL.md"
       ]
     },
     "approval-evidence": {
