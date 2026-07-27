@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.11.2 - 2026-07-27
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.1...v2.11.2)
+
+### Changes
+
+- fix(workflow): run quick PRs without size gating ([#111](https://github.com/jjlabsio/midnight-forge/pull/111))
 ## v2.11.1 - 2026-07-26
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.0...v2.11.1)
