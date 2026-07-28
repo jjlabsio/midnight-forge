@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by
+[Keep Operational Model Routing Out of the Generated Runtime](operational-model-routing-policy.md)
 
 ## Date
 

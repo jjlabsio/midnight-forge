@@ -139,12 +139,12 @@ async function main() {
 
     expectIneligibleBegin("gpt-5.6-luna", "low");
     expectIneligibleBegin("gpt-5.6-luna-future", "medium");
-    for (const effort of ["high", "xhigh", "max", "ultra"]) {
+    for (const effort of ["medium", "high", "xhigh", "max", "ultra"]) {
       expectIneligibleBegin("gpt-5.6-sol", effort);
     }
-    const eligibleSol = runJson(["begin", "-", "gpt-5.6-sol", "medium", "executor"]);
+    const eligibleSol = runJson(["begin", "-", "gpt-5.6-sol", "low", "executor"]);
     assert.strictEqual(eligibleSol.status, "recorded");
-    expectIneligibleBegin("gpt-5.6-sol", "high");
+    expectIneligibleBegin("gpt-5.6-sol", "medium");
     assert.strictEqual(runJson(["finish", eligibleSol.invocation_id, "finished"]).status, "recorded");
 
     const unavailableRoot = runJson(["begin", "work-1", "gpt-test", "high", "executor"], path.join(fixture, "missing-root"));

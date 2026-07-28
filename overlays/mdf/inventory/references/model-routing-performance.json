@@ -1,9 +1,0 @@
-{
-  "output": "references/model-routing-performance.md",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/references/model-routing-performance.md",
-  "artifactStorageOverride": false,
-  "notes": "Human-readable chart transcription and qualitative solo-builder routing context.",
-  "overlayKind": "mdfOnly"
-}

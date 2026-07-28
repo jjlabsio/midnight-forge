@@ -85,8 +85,6 @@
       "inventory/references/subagent-dispatch-policy.json",
       "inventory/references/subagent-dispatch-policy-check-subagent-observation-links.json",
       "inventory/references/subagent-dispatch-policy-record-subagent-observation.json",
-      "inventory/references/model-routing-5.6.json",
-      "inventory/references/model-routing-performance.json",
       "inventory/references/automatic-operation-contract.json",
       "inventory/references/auto-workflow-contract.json",
       "inventory/references/auto-workflow-pr-contract.json",

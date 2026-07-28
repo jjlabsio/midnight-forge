@@ -8,7 +8,7 @@ or effort and is not a runtime selector or controller.
 
 1. Resolve the installed plugin root. Before selecting model or effort for any
    MDF-managed subagent request, load and apply
-   `<plugin-root>/references/model-routing-5.6.md`.
+   `<plugin-root>/docs/operations/model-routing.md`.
 2. Record one compact dispatch entry in the existing root handoff or synthesis:
    requested model and effort; qualitative selection and effort rationale;
    instruction source and task kind; risk, capability confidence, write scope;
@@ -58,9 +58,11 @@ it is dispatched.
 Before every actual spawn, call `begin` once and retain only its generated
 invocation ID. Every call represents one actual dispatch observation and
 returns a fresh globally unique ID, including when observation is unavailable.
-An eligibility error means the requested model and effort are forbidden by
-`model-routing-5.6.md`: do not spawn, select an eligible request, and call
-`begin` again.
+An eligibility error means the requested model and effort are explicitly
+forbidden by the operational model-routing policy: do not spawn, select an
+eligible request, and call `begin` again. The recorder mechanically enforces
+only those explicit exclusions; it does not read a policy at runtime, select a
+candidate, score capability, or assign a model to a role.
 
 ```bash
 node <plugin-root>/references/subagent-dispatch-policy/record-subagent-observation.mjs \
