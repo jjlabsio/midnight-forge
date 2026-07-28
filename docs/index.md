@@ -8,6 +8,7 @@ Midnight Forge (`mdf`) is a Codex plugin harness for solo developers. It ships M
 - [Architecture](architecture/index.md): system design and runtime generation model.
 - [Decisions](decisions/index.md): durable decision records.
 - [Operations](operations/index.md): release and verification notes.
+- [Research](research/model-routing-evidence.md): historical model-routing evidence and its limits.
 
 ## Documentation Rules
 

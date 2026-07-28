@@ -3,7 +3,7 @@
 ## Status
 
 Superseded by
-[Model Routing Reference Boundaries](model-routing-reference-boundaries.md)
+[Keep Operational Model Routing Out of the Generated Runtime](model-routing-reference-boundaries.md)
 
 ## Date
 

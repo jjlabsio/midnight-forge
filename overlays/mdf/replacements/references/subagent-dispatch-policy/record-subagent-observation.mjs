@@ -31,7 +31,6 @@ const roles = new Set([
   "ship-test-engineer",
   "web-performance-auditor",
 ]);
-const ineligibleSolEfforts = new Set(["high", "xhigh", "max", "ultra"]);
 const JOURNAL_TAIL_BYTES = 1024 * 1024;
 
 function fail(message, code = 2) {
@@ -47,7 +46,7 @@ function safe(value, label) {
 function ineligibleRequest(model, effort) {
   return model === "gpt-5.6-luna"
     || model.startsWith("gpt-5.6-luna-")
-    || (model === "gpt-5.6-sol" && ineligibleSolEfforts.has(effort));
+    || (model === "gpt-5.6-sol" && effort !== "low");
 }
 
 function emit(value) {
@@ -235,7 +234,7 @@ if (command === "begin") {
   safe(requestedEffort, "requested effort");
   safe(canonicalRole, "canonical role");
   if (ineligibleRequest(requestedModel, requestedEffort)) {
-    fail("Requested model and effort are ineligible under model-routing-5.6.");
+    fail("Requested model and effort are ineligible under the subagent dispatch policy.");
   }
   const invocationId = `mdf-${randomUUID()}`;
   const facts = {

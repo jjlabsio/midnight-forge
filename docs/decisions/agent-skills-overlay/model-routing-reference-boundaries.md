@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Superseded by
+[Keep Active Model Routing in the Dispatch Policy](operational-model-routing-policy.md)
 
 ## Date
 

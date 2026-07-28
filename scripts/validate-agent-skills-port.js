@@ -194,8 +194,10 @@ assert(
   `MDF must not add synthetic persona files: ${personaOverlayFiles.join(", ")}`
 );
 
-assertAuthoredSurface("references/model-routing-5.6.md");
-assertAuthoredSurface("references/model-routing-performance.md");
+for (const removed of ["references/model-routing-5.6.md", "references/model-routing-performance.md"]) {
+  assert(!entryFor(removed), `${removed} must not remain in inventory.`);
+  assert(!exists(path.join(root, removed)), `${removed} must not be generated.`);
+}
 
 const commandAdapterSources = {
   spec: "commands/spec.toml",
