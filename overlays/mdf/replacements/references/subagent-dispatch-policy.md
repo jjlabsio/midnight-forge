@@ -1,18 +1,36 @@
 # MDF Subagent Dispatch Policy
 
-Dispatch, authority, and best-effort requested-routing observation contract for
-a root-selected MDF-managed subagent. This reference does not select its model
-or effort and is not a runtime selector or controller.
+Dispatch, lightweight requested-routing, authority, and best-effort
+observation contract for a root-selected MDF-managed subagent. It is guidance,
+not a runtime selector, controller, capability scorer, or model-to-role table.
 
 ## Prepare a dispatch
 
-1. Resolve the installed plugin root. Before selecting model or effort for any
-   MDF-managed subagent request, load and apply
-   `<plugin-root>/docs/operations/model-routing.md`.
+1. Resolve the installed plugin root. Apply the model-and-effort rules below
+   before every MDF-managed subagent request.
 2. Record one compact dispatch entry in the existing root handoff or synthesis:
    requested model and effort; qualitative selection and effort rationale;
    instruction source and task kind; risk, capability confidence, write scope;
    fallback and degraded status. Do not create a routing artifact.
+
+## Model and effort
+
+- Never request any GPT-5.6 Luna candidate. `gpt-5.6-sol` is eligible only at
+  `low`. Terra `high` is not a general candidate.
+- After the task is bounded and its concrete capability floor is clear, consider
+  candidates in this order: Terra `medium` → Sol `low` → Terra `xhigh` → Terra
+  `max`.
+- Before escalating, split a broad request or clarify an ambiguous one. State
+  its acceptance boundary, verification method, and out-of-scope work. Surface
+  scope expansion to the root or user rather than silently implementing it.
+- Terra `xhigh` and `max` need concrete capability-floor grounds, such as
+  unresolved material ambiguity, high error consequence, non-trivial
+  verification, or a lower-rung failure. They are never automatic promotions
+  for a role, tree size, generic quality preference, or future possibility.
+
+The root owns semantic selection and scope judgment. The recorder enforces only
+the explicit Luna and Sol exclusions before spawn; it does not select,
+recommend, score, or assign a candidate.
 
 ## Instruction source
 
@@ -59,8 +77,8 @@ Before every actual spawn, call `begin` once and retain only its generated
 invocation ID. Every call represents one actual dispatch observation and
 returns a fresh globally unique ID, including when observation is unavailable.
 An eligibility error means the requested model and effort are explicitly
-forbidden by the operational model-routing policy: do not spawn, select an
-eligible request, and call `begin` again. The recorder mechanically enforces
+forbidden by this policy: do not spawn, select an eligible request, and call
+`begin` again. The recorder mechanically enforces
 only those explicit exclusions; it does not read a policy at runtime, select a
 candidate, score capability, or assign a model to a role.
 

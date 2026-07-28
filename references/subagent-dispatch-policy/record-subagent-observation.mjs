@@ -234,7 +234,7 @@ if (command === "begin") {
   safe(requestedEffort, "requested effort");
   safe(canonicalRole, "canonical role");
   if (ineligibleRequest(requestedModel, requestedEffort)) {
-    fail("Requested model and effort are ineligible under the operational model-routing policy.");
+    fail("Requested model and effort are ineligible under the subagent dispatch policy.");
   }
   const invocationId = `mdf-${randomUUID()}`;
   const facts = {

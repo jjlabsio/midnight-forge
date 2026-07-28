@@ -3,7 +3,7 @@
 ## Status
 
 Superseded by
-[Keep Operational Model Routing Out of the Generated Runtime](operational-model-routing-policy.md)
+[Keep Active Model Routing in the Dispatch Policy](operational-model-routing-policy.md)
 
 ## Date
 

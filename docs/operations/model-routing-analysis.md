@@ -1,8 +1,8 @@
 # Model Routing Analysis
 
-This is a manually maintained strategy document for Midnight Forge. The
-project-local `model-routing-analysis` skill does not update this file during
-automated analysis.
+This is a manually maintained observation-analysis document for Midnight
+Forge. It is not an active routing policy, and the project-local
+`model-routing-analysis` skill does not update it during automated analysis.
 
 Automated, factual run records are written outside the tracked repository
 surface at:
@@ -13,11 +13,11 @@ surface at:
   runs/<run-id>.md
 ```
 
-Use those immutable run records as evidence when manually reviewing or
-changing the model-routing strategy. A manual update may decide which goals to
-optimize, including whether to favor maximal first-pass quality or a
-one-person-builder's broader utility, but those value judgments belong here
-and never in the automated run records.
+Use those immutable run records as evidence when manually reviewing the
+dispatch policy. A later decision may set policy goals, including whether to
+favor maximal first-pass quality or a one-person-builder's broader utility, but
+those value judgments belong in a decision record and never in the automated
+run records.
 
 Run records group outcomes by requested model and runtime-native effort; they
 do not claim that the requested model actually ran. They analyze work outcomes,

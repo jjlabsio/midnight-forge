@@ -1,9 +1,8 @@
 # Model Routing Evidence
 
-This document preserves historical inputs for manual review of the active
-[model-routing policy](../operations/model-routing.md). It is not a selector,
-eligibility source, capability guarantee, or proof that a requested model
-executed.
+This document preserves historical inputs for a later manual review of the
+dispatch policy. It is not a selector, eligibility source, capability
+guarantee, or proof that a requested model executed.
 
 ## Artificial Analysis chart snapshot
 

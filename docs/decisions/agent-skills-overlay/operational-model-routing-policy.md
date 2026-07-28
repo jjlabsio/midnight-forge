@@ -1,4 +1,4 @@
-# Keep Operational Model Routing Out of the Generated Runtime
+# Keep Active Model Routing in the Dispatch Policy
 
 ## Status
 
@@ -23,27 +23,28 @@ experience, not to preserve its former candidate rules.
 
 ## Decision
 
-`docs/operations/model-routing.md` is the sole authoritative active policy for
-MDF-managed requested model and effort selection. The root reads and applies it
-before dispatch, retains semantic judgment, and records requested—not
-executed—routing facts and a concise rationale.
+`references/subagent-dispatch-policy.md` directly contains the sole active,
+minimal model-and-effort guidance for MDF-managed requests. The root reads and
+applies that runtime reference before dispatch, retains semantic judgment, and
+records requested—not executed—routing facts and a concise rationale.
 
 The generated `references/model-routing-5.6.md` and
 `references/model-routing-performance.md` surfaces, their overlay inputs, and
-their inventory entries are removed. The dispatch policy points directly to the
-operational policy. The recorder retains only a narrow pre-dispatch guard for
-explicitly ineligible requests, before invocation-ID allocation, journal append,
-or spawn. That guard is not a policy parser, selector, capability scorer, or
-model-to-role table.
+their inventory entries are removed. There is no replacement model-routing
+runtime reference and no runtime load from `docs/**`. The recorder retains only
+a narrow pre-dispatch guard for explicitly ineligible requests, before
+invocation-ID allocation, journal append, or spawn. That guard is not a policy
+parser, selector, capability scorer, or model-to-role table.
 
-Chart readings, external benchmarks, and factual MDF observations move to
-tracked research and operations documents as evidence for a later manual
-policy revision. They may not automatically select, recommend, or change a
-candidate.
+Chart readings, external benchmarks, and factual MDF observations remain in
+non-runtime research, operations, and decision documents as evidence for a
+later manual policy revision. They may not automatically select, recommend, or
+change a candidate.
 
 ## Consequences
 
-- There is one readable active-policy source outside generated runtime output.
+- There is one readable active-policy source in the generated dispatch runtime
+  reference.
 - The root must contain scope before escalating effort and retains selection
   accountability.
 - Explicitly forbidden Luna and Sol requests still fail mechanically at the
