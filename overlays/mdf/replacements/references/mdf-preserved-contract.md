@@ -73,17 +73,22 @@ worktree facts are confirmed. Never infer staleness from elapsed time alone.
 - Semantic reference resolution remains model judgment. Do not replace it with
   a transcript copier, phrase list, intent parser, completeness score, schema,
   or broad validator.
-- A task records user intent, uncertainty, and evidence. It does not collect
-  advance authority for a consuming workflow or action.
+- A task records user intent, uncertainty, and evidence. An explicit automatic
+  workflow invocation uses that recorded outcome and acceptance criteria to
+  scope every action required to complete them.
 - A task create or revise request authorizes that exact card mutation. Do not
   ask the user to approve the resulting card again.
-- An explicit skill or workflow invocation authorizes its documented ordinary
-  in-scope operations. Do not add ceremonial approval between those operations.
+- An explicit standalone skill invocation authorizes its documented ordinary
+  in-scope operations. An explicit automatic workflow invocation authorizes
+  every action required by its recorded outcome and acceptance criteria. Do not
+  add ceremonial approval between those operations.
 - The skill performing an action owns current target, state, permission,
   safety, verification, rollback, and stop checks.
-- Ask only for a new user-owned decision, material scope expansion, an
-  unrequested external action, destructive or irreversible work, or an
-  unsafe/ambiguous target.
+- Ask only for a new user-owned decision or material scope expansion. Report
+  `BLOCKED` with evidence for an unsafe or ambiguous target or unavailable
+  required interaction; do not turn that stop into an authority request. An
+  action is not a new decision merely because it is external, cost-incurring,
+  destructive, irreversible, or cleanup.
 - Task cards, handoffs, reports, and historical approvals are evidence, not
   reusable authority for a different action.
 

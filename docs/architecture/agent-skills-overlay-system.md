@@ -60,24 +60,19 @@ and owns acceptance, sequencing, commits, lifecycle, external authority, and
 synthesis. See
 [`root-owned-workflow-drivers.md`](../decisions/agent-skills-overlay/root-owned-workflow-drivers.md).
 
-When the caller explicitly establishes `mode: auto-workflow`, the run-scoped
-contract grants the root authority to complete in-scope local MDF skills and
-to commit plan slices, but not to ship, complete the whole task, push, or
-create/update a PR. `mode: auto-workflow-pr` is the separate delivery mode:
-after its final preflight and ship GO, it may push and create/update the PR,
-but the task remains active with its lock held until `github-after-merge`
-verifies the merged PR's final state through the task-card PR link. A mode
-string alone is not
-authority; the current handoff, task/lock/worktree/branch facts, approved
-artifact hashes, and fresh preflight are required. Neither mode alters
-standalone skill semantics.
-Merge, deploy, deletion, stale-lock takeover, unrelated cleanup, and
-unresolved critical decisions remain outside the grant.
+When the caller explicitly invokes an automatic workflow, the run-scoped
+contract grants the root every action required by the recorded outcome and
+acceptance criteria. Profiles define composition and completion, not an action
+allowlist. A workflow invocation—not a bare mode string—supplies this grant;
+the current handoff, task/lock/worktree/branch facts, accepted artifact hashes,
+and fresh preflight remain required. Neither mode alters standalone skill
+semantics. An ambiguous target, action outside the accepted outcome, or a new
+user-owned decision still stops; external effect, cost, destructiveness,
+irreversibility, merge, deployment, deletion, and cleanup do not alone do so.
 
-Everything else is performed by the model and ordinary project commands with
-explicit confirmation where a write is destructive or external. Historical
-workflow artifacts remain readable even when their old producer has been
-removed.
+The root performs required actions through ordinary project commands without
+an additional confirmation based on action type. Historical workflow artifacts
+remain readable even when their old producer has been removed.
 
 ## Upstream boundary
 

@@ -254,18 +254,23 @@ Cleanup occurs only after finalization and lock release.
 
 ## Authority and stop rules
 
-- Task text records intent and evidence; it does not pre-authorize a consuming
-  workflow or external action.
-- An explicit invocation authorizes its named operation and ordinary in-scope
-  steps. Do not request ceremonial reapproval for those steps.
+- Task text records intent and evidence. An explicit automatic workflow uses
+  the recorded outcome and acceptance criteria to scope its required actions.
+- An explicit standalone invocation authorizes its named operation and
+  ordinary in-scope steps. An explicit automatic workflow authorizes every
+  action required by its recorded outcome and acceptance criteria. Do not
+  request ceremonial reapproval for those steps.
 - The skill performing an action owns its current target, state, permission,
   safety, verification, and rollback checks.
-- Stop for a new user-owned decision, material scope expansion, an unrequested
-  external action, destructive or irreversible work, or an unsafe/ambiguous
-  target.
-- Reject lock bypass, unsafe paths, unrelated staging, history deletion, force,
-  merge, deploy, cleanup, or writes outside the canonical root/task-owned scope
-  unless the current consuming invocation explicitly covers them.
+- Stop for a new user-owned decision or material scope expansion. Report
+  `BLOCKED` with evidence for an unsafe or ambiguous target or unavailable
+  required interaction; do not turn that stop into an authority request. Do
+  not treat an action as a new decision merely because it is external,
+  cost-incurring, destructive, irreversible, or cleanup.
+- Reject lock bypass, unsafe paths, unrelated staging, history deletion, or
+  writes outside the canonical root/task-owned scope. An automatic workflow's
+  accepted outcome and criteria cover its required merge, deploy, deletion,
+  force, and cleanup actions.
 - Stop for malformed state, duplicate IDs, lock conflicts, stale dependencies,
   unrelated dirt, failed required checks, provider uncertainty, or repeated
   no-progress.
@@ -277,4 +282,4 @@ Cleanup occurs only after finalization and lock release.
 - [ ] Required outcomes, evidence, tests, and source commit are present.
 - [ ] Only task-owned paths changed or staged; `.mdf` remained local.
 - [ ] External, destructive, completion, finalization, release, and cleanup
-      boundaries were preserved.
+      targets were verified against the recorded outcome and criteria.

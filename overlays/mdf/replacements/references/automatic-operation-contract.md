@@ -2,7 +2,7 @@
 
 This reference is the only owner of behavior shared by every automatic
 workflow operation.
-Profile references own composition, profile-specific authority, and completion.
+Profile references own composition and completion.
 Stage skills remain mode-blind and do not load automatic contracts.
 
 ## Completion standard
@@ -89,12 +89,17 @@ Before every operation:
      user-owned trade-offs, or missing intent that specification cannot settle;
    - use `idea-refine` only for requested ideation, stress-testing, or product
      direction, never for delegated technical alternatives;
-   - stop when required interaction is unavailable.
-4. Apply only the explicitly selected profile. Its invocation grants its
-   ordinary operations; request no per-stage ceremonial approval.
+   - finish `BLOCKED` with evidence when required interaction is unavailable;
+     do not turn that stop into an authority request.
+4. Apply the explicitly selected profile for its composition and completion.
+   Its invocation grants the root every action required by the accepted outcome
+   and criteria; request no per-stage or action-type approval.
 5. Stop on ambiguous ownership, unrelated dirt, stale evidence, unresolved
-   user-owned decisions, material scope expansion, or action outside the
-   profile.
+   user-owned decisions, material scope expansion, or an action outside the
+   accepted outcome and criteria. Do not stop merely because the required
+   action is external, cost-incurring, destructive, irreversible, or cleanup.
+   Report `BLOCKED` rather than requesting authority when the target is unsafe
+   or ambiguous.
 
 Only the root may select, skip, accept, retry, commit, advance lifecycle, write
 canonical handoffs or observations, act externally, or synthesize the result.
@@ -203,7 +208,8 @@ automatic profile inherits this rule.
   relevant evidence as no progress. Stop `BLOCKED` or request the user-owned
   decision.
 
-Existing scope, authority, safety, and destructive-action stops still apply.
+Existing scope, authority, and safety stops still apply; action type alone is
+not a stop condition.
 Preserve every upstream acceptance, TDD, verification, fallback, and stop
 criterion. Standalone stage behavior remains unchanged.
 
@@ -324,8 +330,10 @@ On failure:
    or plan scope and dependencies, completed commits, and the current tree.
 3. Re-enter the earliest invalidated operation.
 4. Make no source change for external or flaky evidence alone.
-5. Stop for changed user intent, public behavior, security, privacy or data
-   boundaries, material architecture, cost, rollback, or destructive action.
+5. Stop for changed user intent or a public, security, privacy, data,
+   architecture, rollback, or target decision that the accepted outcome does
+   not settle. Cost, external effect, destructiveness, irreversibility, or
+   cleanup alone is not a stop condition.
 
 Do not create a repair task, lifecycle state, or recovery controller.
 

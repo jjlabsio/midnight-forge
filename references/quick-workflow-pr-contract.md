@@ -30,11 +30,12 @@ or separate whole-tree review. Create no empty gates.
 
 ## Authority and completion
 
+- The selected profile grants the root every action required by the accepted
+  outcome and criteria. This profile defines the direct PR delivery sequence;
+  it is not an action allowlist.
 - Finish with the verified PR link or `BLOCKED`.
 - Keep the task `active` and its lock held.
-- Do not wait for, monitor, or perform the merge.
-- Do not deploy, delete, force, take over a stale lock, or clean unrelated
-  state.
 
-Post-merge work is outside this profile. Only a later explicit, separate
-`github-after-merge` invocation owns finalization.
+Only a later explicit, separate `github-after-merge` invocation owns task
+finalization. That lifecycle division does not restrict actions required by the
+accepted outcome and criteria.

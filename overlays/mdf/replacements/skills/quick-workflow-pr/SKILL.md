@@ -56,9 +56,7 @@ description: "Use when the user explicitly requests MDF's direct GitHub PR deliv
 failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
-Apply only the profile's authority. Allow push and matching PR create/update
-only after fresh preflight. Leave the task active and its lock held for a later
-explicit, separate `github-after-merge` invocation. This profile does not wait
-for, monitor, or resume after merge. Do not merge, deploy, delete, force, take
-over a stale lock, or perform unrelated cleanup. Stage skills do not interpret
-the profile.
+Use the profile for composition and task-state completion, and the shared root
+boundary for outcome-based authority. Leave the task active and its lock held
+for a later explicit, separate `github-after-merge` invocation. Stage skills do
+not interpret the profile.
