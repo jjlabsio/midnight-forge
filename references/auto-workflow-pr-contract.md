@@ -22,14 +22,13 @@ critic, verifier, or coordinator.
 
 ## Authority and completion
 
-- After fresh preflight, allow root-owned push and matching PR create or update.
+- The selected profile grants the root every action required by the accepted
+  outcome and criteria. This profile defines PR delivery and task-state
+  completion; it is not an action allowlist.
 - Finish with the verified PR link or `BLOCKED`.
 - Keep the task `active` and its lock held.
-- Do not wait for, monitor, or perform the merge.
-- Do not deploy, delete, force, take over a stale lock, or clean unrelated
-  state.
 
-Post-merge work is outside this profile. Only a later explicit, separate
-`github-after-merge` invocation verifies the merged PR's final state through
-the task-card PR link, completes the task, releases the lock, and performs its
-cleanup contract.
+Only a later explicit, separate `github-after-merge` invocation verifies the
+merged PR's final state through the task-card PR link, completes the task,
+releases the lock, and performs its cleanup contract. That lifecycle division
+does not restrict actions required by the accepted outcome and criteria.

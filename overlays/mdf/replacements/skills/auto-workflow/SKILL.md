@@ -55,5 +55,6 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
 failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
-Apply only the profile's local authority. Keep the task active and its lock
-held. Stage skills do not interpret the profile.
+Use the profile for composition and completion, and the shared root boundary
+for outcome-based authority. Keep the task active and its lock held. Stage
+skills do not interpret the profile.

@@ -14,8 +14,8 @@ description: "Use before software development workflow decisions in Codex or MDF
 4. Let the called skill load the primitives required by its own contract.
 5. Treat MDF as routing, state, authority, and Codex adaptation over upstream
    workflow meaning.
-6. Keep ambiguity, destructive confirmation, and external authority in the
-   root. Do not add a controller, router persona, or machine-only protocol.
+6. Keep ambiguity, destructive execution, and external authority in the root.
+   Do not add a controller, router persona, or machine-only protocol.
 
 ## Delegation
 

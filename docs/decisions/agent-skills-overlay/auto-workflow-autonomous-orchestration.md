@@ -27,9 +27,10 @@ Add one MDF-only readable automatic operation contract and separate readable
 profile contracts for local `auto-workflow`, delivery `auto-workflow-pr`, and
 planless `quick-workflow-pr`. Task creation/activation remains independent from
 any workflow; the selected profile reads the task as intent and lifecycle
-evidence rather than a workflow-readiness or action grant. A direct profile
-invocation grants its documented ordinary scope, while a bare internal mode
-string without current run context grants nothing. The current handoff,
+evidence. Its direct invocation grants the root every action required by the
+recorded outcome and acceptance criteria, while a bare internal mode string
+without current run context grants nothing. Profiles define composition and
+completion rather than an action allowlist. The current handoff,
 task/lock/worktree/branch facts, and accepted artifact hashes remain required.
 
 The profile owns intent sufficiency. It invokes `interview-me` before spec only
@@ -46,12 +47,13 @@ use the latest spec as its acceptance baseline, run ship, and—only after final
 preflight—push and create/update the PR. It leaves the task active with its
 lock held and records the PR's immutable minimal task-card link. That ends the
 delivery profile. A later explicit, separate `github-after-merge` invocation
-completes the task only after directly verifying the merged PR's final state. Both modes
-must still stop for critical product/public-contract/security/privacy/data/
-permission/cost/destructive/irreversible decisions, failed verification,
-repeated no-progress, lock conflicts, changed artifact hashes, uncertain PR
-state, or scope expansion. Merge, deploy, deletion, stale-lock takeover, and
-unrelated cleanup are never implied.
+completes the task only after directly verifying the merged PR's final state.
+Both modes must still stop for a new user-owned product, public-contract,
+security, privacy, data, target, or scope decision; failed verification,
+repeated no-progress, lock conflicts, changed artifact hashes, or uncertain PR
+state. External effect, cost, destructiveness, irreversibility, merge,
+deployment, deletion, stale-lock takeover, and cleanup are not independent
+permission boundaries when required by the accepted outcome and criteria.
 
 Resume is state-based rather than a replay of the profile. When the latest
 handoff, accepted commit OID, task, lock, worktree, branch, and clean Git state
@@ -87,8 +89,8 @@ serial; unknown ownership or completion ends blocked.
 - Auto-workflow can complete routine work without repeated approval prompts.
 - Delivery resumes at `ship` when accepted local completion evidence matches;
   it does not repeat accepted development operations.
-- The automatic grant is explicit and bounded, so it does not turn ambiguity
-  into consent or silently authorize high-impact actions.
+- The automatic grant is explicit and outcome-bounded, so it does not turn
+  ambiguity into consent while avoiding action-type confirmation prompts.
 - Branch-level orchestration tests must identify the runtime revision they
   execute; an older installed cache is not evidence for changed branch
   behavior.

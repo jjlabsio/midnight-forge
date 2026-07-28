@@ -78,8 +78,8 @@ After every approved slice is committed:
 
 ## Authority and completion
 
-- Allow task-owned local writes and focused commits.
+- The selected profile grants the root every action required by the accepted
+  outcome and criteria. This profile defines the local workflow sequence and
+  handoff; it is not an action allowlist.
 - Finish with a verified local handoff or `BLOCKED`.
 - Keep the task `active` and its lock held.
-- Do not ship, complete the whole task, push, mutate a PR, merge, deploy,
-  delete, force, take over a stale lock, or clean unrelated state.
