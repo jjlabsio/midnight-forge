@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.12.0 - 2026-07-28
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.3...v2.12.0)
+
+### Changes
+
+- feat(workflow): make automatic authority outcome-based ([#113](https://github.com/jjlabsio/midnight-forge/pull/113))
 ## v2.11.3 - 2026-07-28
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.2...v2.11.3)
