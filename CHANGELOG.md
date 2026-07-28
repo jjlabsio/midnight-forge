@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.11.3 - 2026-07-28
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.2...v2.11.3)
+
+### Changes
+
+- fix(workflow): use task PR links after merge ([#112](https://github.com/jjlabsio/midnight-forge/pull/112))
 ## v2.11.2 - 2026-07-27
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.1...v2.11.2)
