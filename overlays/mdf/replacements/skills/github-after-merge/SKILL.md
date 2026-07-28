@@ -11,7 +11,7 @@ not need to invoke either skill separately.
 
 ## Preconditions
 
-1. Require an explicit PR number or URL. A bare request to sync after merge
+1. Require a PR number or URL only when the current task cannot provide a unique, well-formed `latest.pr` link; otherwise use that link. A bare request to sync after merge
    without an exact task ID or task-card PR link is synchronization-only and
    must not mutate MDF task state.
 2. Resolve the canonical root and read GitHub as the source of truth. Common
