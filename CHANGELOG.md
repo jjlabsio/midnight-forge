@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.12.1 - 2026-07-28
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.12.0...v2.12.1)
+
+### Changes
+
+- refactor(routing): inline dispatch policy ([#114](https://github.com/jjlabsio/midnight-forge/pull/114))
 ## v2.12.0 - 2026-07-28
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.11.3...v2.12.0)
