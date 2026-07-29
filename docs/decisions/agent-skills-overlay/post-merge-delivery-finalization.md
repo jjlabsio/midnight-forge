@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted
+Superseded for task-state, lock, and finalization representation by task 0103
+on 2026-07-29. It remains historical context only; the active finalization
+contract is [MDF Task System](../../architecture/mdf-task-system.md) and the
+generated `github-after-merge` skill.
 
 ## Date
 

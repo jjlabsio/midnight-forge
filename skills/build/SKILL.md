@@ -58,7 +58,7 @@ If any step fails, follow the debugging-and-error-recovery skill.
    `tasks/todo.md` to the approved checklist-style
    `.mdf/work/<work-id>/plan-NNN.md`. If autonomous mode needs a missing plan,
    invoke the MDF `plan` adapter and use its canonical artifact.
-4. Resolve the exact task, matching worktree and lock, task-owned paths, and
+4. Resolve the exact task, its recorded worktree and branch facts, task-owned paths, and
    clean baseline. Standalone invocation preserves every upstream mode and
    step after the canonical artifact binding above.
 5. Plan-task completion is not MDF whole-task `done`. Stop for ownership

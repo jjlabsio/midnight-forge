@@ -16,7 +16,7 @@ description: "Use when the user explicitly requests MDF's local automatic workfl
 ## Root controller
 
 1. Before every operation, apply the loaded contracts' complete root boundary
-   and revalidate task, card, lock, worktree, branch, latest handoff, Git,
+   and revalidate task state, intent, worktree, branch, latest handoff, Git,
    artifacts, intent, and authority.
 2. Run the selected profile exactly. This controller map is non-exhaustive and
    never overrides or omits a requirement from the loaded contracts.
@@ -55,5 +55,5 @@ failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
 Use the profile for composition and completion, and the shared root boundary
-for outcome-based authority. Keep the task active and its lock held. Stage
+for outcome-based authority. Keep the task active. Stage
 skills do not interpret the profile.

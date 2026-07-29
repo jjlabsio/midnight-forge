@@ -31,7 +31,7 @@ correctness, or user authority.
 
 - Workflow surfaces are shorter and more flexible.
 - Human-readable reports explain what ran and what judgment was made.
-- Exact artifact approvals, task locks, owned paths, and external confirmation
+- Exact artifact approvals, task current state, owned paths, and external confirmation
   remain explicit safety boundaries.
 - Review quality depends on following the upstream skill and truthfully stating
   limitations; no script can manufacture semantic certainty.

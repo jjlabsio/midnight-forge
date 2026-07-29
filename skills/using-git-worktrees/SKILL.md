@@ -15,16 +15,17 @@ Ensure implementation work happens in an isolated git worktree under the project
 - Do not run tests, builds, or lint checks.
 - Copy local environment files, install dependencies, and run conventional generated-client setup only after the worktree is created.
 
-This skill guarantees an isolated workspace. The caller remains responsible for task locks, commit workflow, PR workflow, and test/build verification.
+This skill guarantees an isolated workspace. The caller remains responsible for
+recording task execution facts, commit workflow, PR workflow, and test/build verification.
 
 This skill only prepares or selects an isolated workspace. It does not authorize implementation by itself. After reporting the worktree, return to the caller workflow and continue only within that workflow's explicit scope.
 
-MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows should record `canonical_root` in task locks and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
+MDF workflow state is not stored in linked worktrees. The canonical project root owns `.mdf/`, and a linked worktree under `<project-root>/.worktrees/<branch-name>` must not create its own independent `.mdf/` directory. Caller workflows record execution facts in the task's current state and write artifacts to `<canonical_root>/.mdf/work/{work_id}/`.
 
 All worktree checks and changes are model-led. Inspect Git, the canonical MDF
 root, remotes, ignore rules, existing worktrees, branches, and local setup
 files directly, then explain the result before any write. Keep the caller's
-task intent, branch naming, lock ownership, conflict explanation, and reuse or
+task intent, branch naming, recorded execution facts, conflict explanation, and reuse or
 removal decision separate from mechanical facts. A failed or ambiguous check
 is a stop; never infer success from a partial command result.
 
@@ -51,7 +52,7 @@ If `git_dir != git_common`, the current checkout is already a linked worktree:
 
 1. Require a non-empty branch name. If HEAD is detached, stop.
 2. Stop if the branch is `main` or the repository default branch. A linked worktree is only acceptable when it is isolated from main/default branch work.
-3. If the caller provided an expected MDF task lock worktree path, it must equal the current worktree path. If it does not match, stop.
+3. If the caller provided an expected MDF task worktree path, it must equal the current worktree path. If it does not match, stop.
 4. Report the current worktree path and branch.
 5. Continue using the current worktree. Do not create another worktree.
 
@@ -200,7 +201,7 @@ Stop instead of warning and continuing when:
 - The current directory is inside a submodule.
 - The current checkout is detached.
 - The current linked worktree is on `main` or the repository default branch.
-- The current linked worktree does not match the caller's expected MDF task lock path.
+- The current linked worktree does not match the caller's expected MDF task worktree path.
 - The repository does not have an `origin` remote.
 - The remote default branch cannot be resolved, fetched, or verified.
 - MDF project init is missing or `.worktrees/` is not ignored.
@@ -213,6 +214,6 @@ Stop instead of warning and continuing when:
 
 ## Caller Responsibilities
 
-This skill does not write MDF task locks. For MDF task work, the `task` skill should call this skill before creating a lock, then write `locks/{id}.lock` using the resulting worktree path and branch. In the canonical storage model, the actual lock path is `<canonical-root>/.mdf/locks/{id}.lock`, and the lock should include `canonical_root`, `work_id`, `worktree`, and `branch`.
+This skill does not mutate MDF task state. For MDF task work, `task <id> set` calls this skill, then records the resulting worktree and branch in that task's `task.json`.
 
 This skill does not prepare commits or PRs. Commit and PR lifecycle checks should live in dedicated MDF workflow skills.

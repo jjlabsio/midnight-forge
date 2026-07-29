@@ -34,7 +34,7 @@ or separate whole-tree review. Create no empty gates.
   outcome and criteria. This profile defines the direct PR delivery sequence;
   it is not an action allowlist.
 - Finish with the verified PR link or `BLOCKED`.
-- Keep the task `active` and its lock held.
+- Keep the task `active`; execution facts remain in `task.json`.
 
 Only a later explicit, separate `github-after-merge` invocation owns task
 finalization. That lifecycle division does not restrict actions required by the

@@ -79,7 +79,7 @@ occupied. Raw dispatch count alone never causes `BLOCKED`.
 Before every operation:
 
 1. Treat task creation or activation and the workflow as independent
-   operations. Read the exact task, card, lock, worktree, branch, and latest
+   operations. Read the exact task state and intent, worktree, branch, and latest
    handoff; require no workflow-readiness field or task-level action grant.
 2. Re-read Git, artifacts, and applicable remote state.
 3. Resolve intent:
@@ -142,7 +142,7 @@ requires one after resulting rework.
 
 | Role | May | Must not |
 | --- | --- | --- |
-| Executor | Write only its bounded target and granted repair authority; return a concise report | Expand a repair into a new subsystem, state machine, operational protocol, general-purpose infrastructure, or broader outcome; change cards, locks, indexes, approvals, handoffs, observations, or lifecycle; commit; select the next operation; act externally |
+| Executor | Write only its bounded target and granted repair authority; return a concise report | Expand a repair into a new subsystem, state machine, operational protocol, general-purpose infrastructure, or broader outcome; change task state, persistent locks, indexes, approvals, handoffs, observations, or lifecycle; commit; select the next operation; act externally |
 | Critic | Assess the root-observed target | Write, delegate, commit, accept, advance lifecycle, or receive another verifier |
 | Root | Observe state, persist evidence, decide, commit, and continue | Accept missing, partial, stale, changed-target, or non-independent results |
 
@@ -319,13 +319,13 @@ Handoff invariants:
   handoff.
 - Never rewrite an earlier handoff.
 - On resume, derive the next operation from the profile and actual state. Never
-  trust the cursor over the card, lock, artifacts, Git, or remote state.
+  trust the cursor over task state, intent, artifacts, Git, or remote state.
 
 ## Recovery
 
 On failure:
 
-1. Keep the same task, worktree, branch, and lock.
+1. Keep the same task, worktree, and branch.
 2. Revalidate HEAD and base evidence, the acceptance baseline, applicable spec
    or plan scope and dependencies, completed commits, and the current tree.
 3. Re-enter the earliest invalidated operation.

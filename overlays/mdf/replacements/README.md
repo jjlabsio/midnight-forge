@@ -39,7 +39,8 @@ Common entrypoints:
 
 ```text
 $task add "Write the release checklist"
-$task work 001
+$task 001 set
+$task 001 cancel
 $tasks-project
 $tasks-user
 $auto-workflow
@@ -55,28 +56,26 @@ $ship
 $webperf
 ```
 
-Each workflow is model-led. Skills resolve the canonical root, read Markdown
-cards and artifacts, explain ambiguity, and stop for current human or
-external confirmation. No broad workflow runtime owns routing or semantic
-success. The narrow lock helper, when used, only inspects, exclusively
-acquires, and byte-conditionally releases a lock.
+Each workflow is model-led. Skills resolve the canonical root, read task
+intent, current task facts, and artifacts, explain ambiguity, and stop for
+current human or external confirmation. No broad workflow runtime owns routing
+or semantic success.
 
 `$auto-workflow` runs the repeatable local implementation loop through review,
-code simplification, and commit. It keeps the whole MDF task active and does
-not ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow:
-it resumes valid local work, uses the full spec as its acceptance baseline,
-ships, keeps the task active through PR creation/update and the latest PR
-checks/mergeability/conflict gates, then records its minimal task-card PR link
-while the task and lock remain active. When accepted local completion evidence matches,
-resume begins at ship rather than repeating accepted development stages.
+code simplification, and commit. It keeps the MDF task active and does not
+ship, push, or create a PR. `$auto-workflow-pr` is the delivery workflow: it
+uses the full spec as its acceptance baseline, ships, keeps the task active
+through PR creation/update and the latest PR checks/mergeability/conflict
+gates, then records its minimal task-card PR link. A later explicit
+`$github-after-merge` verifies the merged PR, records `done`, and runs cleanup.
 `$quick-workflow-pr` is the explicit direct delivery workflow for documentation
 or implementation changes: it always skips
 spec and plan, reuses the canonical build/review/GitHub PR skills, loops back
 to build for actionable review findings, and does not invoke ship or
-code-simplify. CI or conflict failures stay on the same task, worktree,
-branch, and lock and re-enter the shared evidence/spec-validity/
-plan-compatibility/current-tree recovery protocol; they do not create a new
-lifecycle state or repair task.
+code-simplify. CI or conflict failures stay on the same task, worktree, and
+branch and re-enter the shared evidence/spec-validity/plan-compatibility/
+current-tree recovery protocol; they do not create a new lifecycle state or
+repair task.
 Plan-slice completion and whole-task completion are distinct.
 
 ## Architecture
@@ -108,18 +107,17 @@ MDF task state and readable workflow artifacts are local by default:
 <canonical-project-root>/.mdf/
   project.json
   project/init.json
-  index.jsonl
-  work/
-  locks/
+  work/{work_id}/
+    item.md
+    task.json
+    <artifacts>
 ```
 
 Linked worktrees under `<canonical-project-root>/.worktrees/<branch>` use the
 canonical root `.mdf/` directory and never create independent state. `item.md`
-is the card source of truth; `index.jsonl` is a rebuildable board projection.
-Normal task mutations append a current-schema projection, while task and board
-skills automatically normalize known legacy rows and compact the index when
-cards and locks make the result unambiguous. Locks are ownership markers, not
-semantic authorization.
+preserves self-contained intent and artifacts; adjacent `task.json` is the
+single current lifecycle state. Boards use a read-only helper. There is no
+index, lock, tombstone, repair, migration, work, resume, or drop runtime.
 
 ## Validation
 

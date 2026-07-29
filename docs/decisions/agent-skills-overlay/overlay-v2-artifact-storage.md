@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded for task-state representation by task 0103 on 2026-07-29. It
+remains historical context only; [MDF Task System](../../architecture/mdf-task-system.md)
+defines the active store.
 
 ## Date
 

@@ -95,7 +95,7 @@
       "inventory/skills/auto-workflow-scripts-changed-paths.json",
       "inventory/skills/auto-workflow-pr.json",
       "inventory/skills/quick-workflow-pr.json",
-      "inventory/skills/task-scripts-task-brief.json",
+      "inventory/skills/task-scripts-task-store.json",
       "inventory/skills/github-after-merge-scripts-post-merge-facts.json",
       "inventory/skills/browser-testing-with-devtools.json",
       "inventory/skills/build.json",
@@ -122,7 +122,6 @@
       "inventory/skills/incremental-implementation.json",
       "inventory/skills/init.json",
       "inventory/skills/interview-me.json",
-      "inventory/skills/migrate-tasks.json",
       "inventory/skills/performance-optimization.json",
       "inventory/skills/observability-and-instrumentation.json",
       "inventory/skills/plan.json",
@@ -187,7 +186,7 @@
     },
     "historical": {
       "owningTask": "0041",
-      "paths": [".mdf/work/", ".mdf/index.jsonl", ".mdf/locks/"],
+      "paths": [".mdf/work/"],
       "disposition": "read-only historical state; do not rewrite or delete"
     },
     "packaging": {

@@ -26,9 +26,9 @@ critic, verifier, or coordinator.
   outcome and criteria. This profile defines PR delivery and task-state
   completion; it is not an action allowlist.
 - Finish with the verified PR link or `BLOCKED`.
-- Keep the task `active` and its lock held.
+- Keep the task `active`; execution facts remain in `task.json`.
 
 Only a later explicit, separate `github-after-merge` invocation verifies the
-merged PR's final state through the task-card PR link, completes the task,
-releases the lock, and performs its cleanup contract. That lifecycle division
+merged PR's final state through the task-card PR link, records `done`, and
+performs its cleanup contract. That lifecycle division
 does not restrict actions required by the accepted outcome and criteria.
