@@ -21,13 +21,42 @@ function positivePrNumber(value) {
   return Number.isSafeInteger(number) ? number : null;
 }
 
-async function ghJson(args, label) {
+async function ghJson(args, label, { parseNonzeroCheckOutput = false } = {}) {
   try {
     const { stdout } = await execFileAsync("gh", args, { encoding: "utf8", maxBuffer: 1024 * 1024 });
     return JSON.parse(stdout);
   } catch (error) {
+    if (parseNonzeroCheckOutput && typeof error?.stdout === "string" && error.stdout.length > 0) {
+      try {
+        return { value: JSON.parse(error.stdout), cause: error };
+      } catch {
+        throw { code: "MALFORMED_PROVIDER_JSON", message: `${label} returned malformed JSON` };
+      }
+    }
     if (error instanceof SyntaxError) throw { code: "MALFORMED_PROVIDER_JSON", message: `${label} returned malformed JSON` };
-    throw { code: "COMMAND_FAILED", message: `${label} failed` };
+    throw { code: "COMMAND_FAILED", message: `${label} failed`, cause: error };
+  }
+}
+
+async function checkOutput(args, label) {
+  const output = await ghJson(args, label, { parseNonzeroCheckOutput: true });
+  if (!output?.cause) return output;
+
+  const checks = validatedChecks(output.value, label);
+  if (checks.every((check) => check.bucket.toLowerCase() === "pass")) {
+    throw { code: "COMMAND_FAILED", message: `${label} failed`, cause: output.cause };
+  }
+  return checks;
+}
+
+async function requiredChecks(repository, number) {
+  try {
+    return await checkOutput(["pr", "checks", String(number), "--repo", repository, "--required", "--json", "name,state,bucket"], "gh pr checks --required");
+  } catch (error) {
+    if (error?.code === "COMMAND_FAILED" && /\bno required checks reported\b/i.test(error?.cause?.stderr || "")) {
+      return null;
+    }
+    throw error;
   }
 }
 
@@ -39,7 +68,19 @@ function oid(value) {
   return typeof value === "string" && /^[0-9a-f]{7,64}$/i.test(value);
 }
 
-function facts(pr, checks, repo, repository, number) {
+function validatedChecks(checks, label) {
+  if (!Array.isArray(checks)) {
+    throw { code: "MALFORMED_PROVIDER_JSON", message: `${label} response is not an array` };
+  }
+  return checks.map((check) => {
+    if (!check || typeof check !== "object" || Array.isArray(check) || !nonEmptyString(check.name) || !nonEmptyString(check.state) || !nonEmptyString(check.bucket)) {
+      throw { code: "MALFORMED_PROVIDER_JSON", message: `${label} response has an invalid check` };
+    }
+    return { name: check.name, state: check.state, bucket: check.bucket };
+  });
+}
+
+function facts(pr, required, related, repo, repository, number) {
   if (!pr || typeof pr !== "object" || Array.isArray(pr) || !nonEmptyString(pr.url) || !nonEmptyString(pr.mergedAt)) {
     throw { code: "UNMERGED_PR", message: "PR is not merged" };
   }
@@ -47,25 +88,23 @@ function facts(pr, checks, repo, repository, number) {
     || !repo || typeof repo !== "object" || Array.isArray(repo) || !nonEmptyString(repo.defaultBranchRef?.name)) {
     throw { code: "MALFORMED_PROVIDER_JSON", message: "GitHub response is missing required merge facts" };
   }
-  if (!Array.isArray(checks)) {
-    throw { code: "MALFORMED_PROVIDER_JSON", message: "required checks response is not an array" };
-  }
-  const requiredChecks = checks.map((check) => {
-    if (!check || typeof check !== "object" || Array.isArray(check) || !nonEmptyString(check.name) || !nonEmptyString(check.state) || !nonEmptyString(check.bucket)) {
-      throw { code: "MALFORMED_PROVIDER_JSON", message: "required checks response has an invalid check" };
-    }
-    return { name: check.name, state: check.state, bucket: check.bucket };
-  });
+  const requiredChecks = required === null ? [] : validatedChecks(required, "required checks");
+  const relatedChecks = related === null ? [] : validatedChecks(related, "related checks");
   if (requiredChecks.some((check) => check.bucket.toLowerCase() !== "pass")) {
     throw { code: "REQUIRED_CHECKS_NOT_PASSING", message: "required checks are pending or failing" };
   }
-  return {
+  if (relatedChecks.some((check) => check.bucket.toLowerCase() !== "pass")) {
+    throw { code: "RELATED_CHECKS_NOT_PASSING", message: "related checks are pending or failing" };
+  }
+  const result = {
     ok: true,
     repository,
     pr: { number, url: pr.url, merged_at: pr.mergedAt, head_oid: pr.headRefOid, base_branch: pr.baseRefName, merge_commit_oid: pr.mergeCommit.oid },
     default_branch: repo.defaultBranchRef.name,
     required_checks: requiredChecks,
   };
+  if (required === null) result.related_checks = relatedChecks;
+  return result;
 }
 
 if (extra.length > 0 || !validRepository(repository)) {
@@ -76,12 +115,15 @@ if (extra.length > 0 || !validRepository(repository)) {
     fail("INVALID_PR_NUMBER", "PR number must be a positive integer");
   } else {
     try {
-      const [pr, checks, repo] = await Promise.all([
+      const [pr, required, repo] = await Promise.all([
         ghJson(["pr", "view", String(number), "--repo", repository, "--json", "url,mergedAt,headRefOid,baseRefName,mergeCommit"], "gh pr view"),
-        ghJson(["pr", "checks", String(number), "--repo", repository, "--required", "--json", "name,state,bucket"], "gh pr checks --required"),
+        requiredChecks(repository, number),
         ghJson(["repo", "view", repository, "--json", "defaultBranchRef"], "gh repo view"),
       ]);
-      process.stdout.write(`${JSON.stringify(facts(pr, checks, repo, repository, number))}\n`);
+      const related = required === null
+        ? await checkOutput(["pr", "checks", String(number), "--repo", repository, "--json", "name,state,bucket"], "gh pr checks")
+        : null;
+      process.stdout.write(`${JSON.stringify(facts(pr, required, related, repo, repository, number))}\n`);
     } catch (error) {
       fail(error?.code || "COMMAND_FAILED", error?.message || "GitHub fact lookup failed");
     }

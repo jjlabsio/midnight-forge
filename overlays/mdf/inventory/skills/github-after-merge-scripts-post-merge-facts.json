@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/github-after-merge/scripts/post-merge-facts.mjs",
   "artifactStorageOverride": false,
-  "notes": "Read-only concurrent GitHub merged-PR, required-check, and default-branch facts for github-after-merge.",
+  "notes": "Read-only GitHub merged-PR, required-check or no-required related-check, and default-branch facts for github-after-merge.",
   "overlayKind": "mdfOnly"
 }

@@ -40,6 +40,13 @@ entrypoint.
   verifies that the default branch contains the reported merge commit. Do not
   retain or compare a pre-merge head, base, checks, mergeability, conflict, or
   local-tree snapshot. Custom base branches are unsupported.
+- Treat GitHub CLI's explicit `no required checks reported` result from
+  `gh pr checks --required` as a distinct successful lookup state, not a
+  provider failure. Only in that state, query the merged PR's related checks;
+  every related check must be terminal and passing before finalization may
+  proceed. When required checks are reported, retain the required-check policy.
+  Pending, failing, malformed, CLI/API, or authentication results in either
+  lookup remain finalization blockers.
 - Make finalization interruption-safe: `active + matching lock` completes the
   card and projection before conditional lock release; `done + matching lock`
   verifies and releases the exact lock; `done + no lock` is a verified no-op;
