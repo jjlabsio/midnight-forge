@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.13.0 - 2026-07-29
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.12.1...v2.13.0)
+
+### Changes
+
+- feat: add post-merge GitHub facts helper ([#115](https://github.com/jjlabsio/midnight-forge/pull/115))
 ## v2.12.1 - 2026-07-28
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.12.0...v2.12.1)
