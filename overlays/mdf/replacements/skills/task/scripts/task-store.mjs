@@ -11,6 +11,15 @@ const taskId = (value) => {
   return value.padStart(4, "0");
 };
 const digest = (content) => crypto.createHash("sha256").update(content).digest("hex");
+function regularFile(file, required = false) {
+  const stat = fs.lstatSync(file, { throwIfNoEntry: false });
+  if (!stat) {
+    if (required) fail("MALFORMED_TASK", `Missing task file: ${file}`);
+    return false;
+  }
+  if (!stat.isFile()) fail("MALFORMED_TASK", `Task file must be a regular file: ${file}`);
+  return true;
+}
 function readStateFromValue(value, file) {
   if (!value || typeof value !== "object" || Array.isArray(value)
     || value.version !== 1
@@ -27,6 +36,7 @@ function readStateFromValue(value, file) {
 }
 function readState(file) {
   let content, value;
+  regularFile(file, true);
   try { content = fs.readFileSync(file, "utf8"); value = JSON.parse(content); } catch { fail("MALFORMED_TASK", `Invalid task state: ${file}`); }
   return { value: readStateFromValue(value, file), digest: digest(content) };
 }
@@ -37,9 +47,9 @@ function scan(root) {
   for (const entry of fs.readdirSync(work, { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
     const file = path.join(work, entry.name, "task.json");
-    if (!fs.statSync(file, { throwIfNoEntry: false })?.isFile()) continue;
+    if (!regularFile(file)) continue;
     const { value: state, digest: stateDigest } = readState(file);
-    if (state.work_id !== entry.name || !fs.statSync(path.join(work, entry.name, "item.md"), { throwIfNoEntry: false })?.isFile()) fail("MALFORMED_TASK", `Task state and intent must share ${entry.name}`);
+    if (state.work_id !== entry.name || !regularFile(path.join(work, entry.name, "item.md"))) fail("MALFORMED_TASK", `Task state and intent must share ${entry.name}`);
     tasks.push({ ...state, path: file, digest: stateDigest });
   }
   const ids = new Set();

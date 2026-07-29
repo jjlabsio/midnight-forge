@@ -41,6 +41,27 @@ try {
   assert.strictEqual(error(unlinked), "MALFORMED_TASK");
   fs.renameSync(path.join(work, "2026-07-29-0001-alpha", "missing-item.md"), path.join(work, "2026-07-29-0001-alpha", "item.md"));
 
+  const taskDir = path.join(work, "2026-07-29-0001-alpha");
+  const linkedState = path.join(temp, "linked-task.json");
+  fs.writeFileSync(linkedState, fs.readFileSync(path.join(taskDir, "task.json")));
+  fs.unlinkSync(path.join(taskDir, "task.json"));
+  fs.symlinkSync(linkedState, path.join(taskDir, "task.json"));
+  const symlinkedState = run("list");
+  assert.strictEqual(symlinkedState.status, 2, symlinkedState.stderr);
+  assert.strictEqual(error(symlinkedState), "MALFORMED_TASK");
+  fs.unlinkSync(path.join(taskDir, "task.json"));
+  fs.writeFileSync(path.join(taskDir, "task.json"), fs.readFileSync(linkedState));
+
+  const linkedIntent = path.join(temp, "linked-item.md");
+  fs.writeFileSync(linkedIntent, fs.readFileSync(path.join(taskDir, "item.md")));
+  fs.unlinkSync(path.join(taskDir, "item.md"));
+  fs.symlinkSync(linkedIntent, path.join(taskDir, "item.md"));
+  const symlinkedIntent = run("list");
+  assert.strictEqual(symlinkedIntent.status, 2, symlinkedIntent.stderr);
+  assert.strictEqual(error(symlinkedIntent), "MALFORMED_TASK");
+  fs.unlinkSync(path.join(taskDir, "item.md"));
+  fs.writeFileSync(path.join(taskDir, "item.md"), fs.readFileSync(linkedIntent));
+
   const set = run("set-status", "0001", "active", "queue", JSON.parse(inspected.stdout).digest);
   assert.strictEqual(set.status, 0, set.stderr);
   assert.strictEqual(JSON.parse(set.stdout).task.status, "active");

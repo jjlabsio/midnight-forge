@@ -11,8 +11,9 @@ lock lifecycle.
 
 ## Managed finalization
 
-1. Resolve the canonical root and one active task by explicit ID or its unique
-   `task.json.latest.pr` link. Never infer identity from a branch name. Require
+1. Resolve the canonical root and one current task with status `active` or
+   `done` by explicit ID or its unique `task.json.latest.pr` link. Never infer
+   identity from a branch name. Require
    that link to equal `{ "repository": "<owner>/<repo>", "number": <positive
    integer> }` and match the requested PR.
 2. Run `<skill-root>/scripts/post-merge-facts.mjs <owner/repo> <positive-pr-number>`.
