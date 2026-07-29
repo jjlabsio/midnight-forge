@@ -17,10 +17,14 @@ not need to invoke either skill separately.
 2. Resolve the canonical root. For managed finalization, use
    `<skill-root>/scripts/post-merge-facts.mjs <owner/repo>
    <positive-pr-number>` for the read-only GitHub facts. It concurrently runs
-   `gh pr view`, `gh pr checks --required`, and `gh repo view`; on success it
-   provides the PR URL, merged time, final head OID, base branch, merge commit
-   OID, default branch, and terminal passing required checks. Treat its facts
-   only as evidence: retain card-link resolution, Git containment, task
+   `gh pr view`, `gh pr checks --required`, and `gh repo view`. When GitHub
+   explicitly reports no required checks, it then queries related checks and
+   succeeds only when every related check is terminal and passing; all other
+   CLI/API/authentication failures remain structured failures. When required
+   checks are reported, their existing terminal-passing requirement applies.
+   On success it provides the PR URL, merged time, final head OID, base branch,
+   merge commit OID, default branch, and the verified check facts. Treat its
+   facts only as evidence: retain card-link resolution, Git containment, task
    finalization, synchronization, cleanup, and every stop rule in this skill.
    Stop on its structured nonzero result. Synchronization-only retains its
    narrower common merge verification and does not require this helper's
@@ -40,9 +44,10 @@ not need to invoke either skill separately.
 5. For managed finalization, require `mergeCommitOid`; a provider that cannot
    supply it is a stop. Resolve the repository default branch and require the
    merged PR's `baseRefName` to equal it; custom base branches are unsupported.
-   Require the latest related or required checks for the merged PR's final
-   `headRefOid` to be terminal and passing. After fetching the default branch,
-   verify that its remote tip contains the reported merge commit OID.
+   Require the final head's reported required checks to be terminal and
+   passing, or, only when GitHub reports no required checks, every related
+   check to be terminal and passing. After fetching the default branch, verify
+   that its remote tip contains the reported merge commit OID.
 6. For managed finalization, stop without task mutation or cleanup for an
    unmerged/closed PR, failed or pending final-head checks, non-default base,
    ambiguous linkage, provider failure, lock mismatch, or missing completion
