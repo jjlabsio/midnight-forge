@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.13.2 - 2026-07-29
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.1...v2.13.2)
+
+### Changes
+
+- refactor: replace MDF task store ([#117](https://github.com/jjlabsio/midnight-forge/pull/117))
 ## v2.13.1 - 2026-07-29
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.0...v2.13.1)
