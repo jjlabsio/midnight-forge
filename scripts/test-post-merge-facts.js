@@ -16,7 +16,7 @@ function write(filePath, content) {
   fs.writeFileSync(filePath, content, { mode: 0o755 });
 }
 
-function ghScript({ pr = {}, checks = [], repo = {}, status = {}, waitForPeers = false } = {}) {
+function ghScript({ pr = {}, requiredChecks = [], relatedChecks = [], repo = {}, status = {}, waitForPeers = false } = {}) {
   return `#!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
@@ -24,12 +24,13 @@ const command = process.argv.slice(2);
 const status = ${JSON.stringify(status)};
 const output = {
   "pr view": ${JSON.stringify(pr)},
-  "pr checks": ${JSON.stringify(checks)},
+  "pr checks --required": ${JSON.stringify(requiredChecks)},
+  "pr checks": ${JSON.stringify(relatedChecks)},
   "repo view": ${JSON.stringify(repo)},
 };
-const key = command.slice(0, 2).join(" ");
+const key = command.includes("--required") ? "pr checks --required" : command.slice(0, 2).join(" ");
 if (${JSON.stringify(waitForPeers)}) {
-  fs.writeFileSync(path.join(process.env.MDF_GH_CALLS, key.replace(" ", "-")), "");
+  fs.writeFileSync(path.join(process.env.MDF_GH_CALLS, key.replaceAll(" ", "-")), "");
   const deadline = Date.now() + 1000;
   while (fs.readdirSync(process.env.MDF_GH_CALLS).length < 3 && Date.now() < deadline) {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
@@ -37,6 +38,10 @@ if (${JSON.stringify(waitForPeers)}) {
   if (fs.readdirSync(process.env.MDF_GH_CALLS).length < 3) process.exit(3);
 }
 if (status[key]) {
+  if (typeof status[key] === "object") {
+    process.stdout.write(status[key].stdout ?? JSON.stringify(output[key]));
+    process.exit(status[key].exitCode);
+  }
   process.stderr.write(status[key]);
   process.exit(1);
 }
@@ -77,7 +82,7 @@ try {
       baseRefName: "main",
       mergeCommit: { oid: "89abcdef0123456789abcdef0123456789abcdef" },
     },
-    checks: [{ name: "test", state: "SUCCESS", bucket: "pass" }],
+    requiredChecks: [{ name: "test", state: "SUCCESS", bucket: "pass" }],
     repo: { defaultBranchRef: { name: "main" } },
   });
   const success = run("acme/widgets", "17");
@@ -107,12 +112,12 @@ try {
       baseRefName: "main",
       mergeCommit: { oid: "89abcdef0123456789abcdef0123456789abcdef" },
     },
-    checks: [{ name: "test", state: "SUCCESS", bucket: "pass" }],
+    requiredChecks: [{ name: "test", state: "SUCCESS", bucket: "pass" }],
     repo: { defaultBranchRef: { name: "main" } },
     waitForPeers: true,
   });
   assert.strictEqual(runWithEnv({ MDF_GH_CALLS: calls }, "acme/widgets", "17").status, 0);
-  assert.deepStrictEqual(fs.readdirSync(calls).sort(), ["pr-checks", "pr-view", "repo-view"]);
+  assert.deepStrictEqual(fs.readdirSync(calls).sort(), ["pr-checks---required", "pr-view", "repo-view"]);
 
   failure(run("acme/widgets", "0"), "INVALID_PR_NUMBER");
   failure(run("acme/widgets/extra", "17"), "INVALID_REPOSITORY");
@@ -132,7 +137,7 @@ try {
       baseRefName: "main",
       mergeCommit: { oid: "89abcdef0123456789abcdef0123456789abcdef" },
     },
-    checks: [],
+    requiredChecks: [],
     repo: { defaultBranchRef: { name: "main" } },
   });
   failure(run("acme/widgets", "17"), "UNMERGED_PR");
@@ -145,10 +150,79 @@ try {
       baseRefName: "main",
       mergeCommit: { oid: "89abcdef0123456789abcdef0123456789abcdef" },
     },
-    checks: [{ name: "test", state: "IN_PROGRESS", bucket: "pending" }],
+    requiredChecks: [{ name: "test", state: "IN_PROGRESS", bucket: "pending" }],
     repo: { defaultBranchRef: { name: "main" } },
+    status: { "pr checks --required": { exitCode: 8 } },
   });
   failure(run("acme/widgets", "17"), "REQUIRED_CHECKS_NOT_PASSING");
+
+  const mergedPr = {
+    url: "https://github.com/acme/widgets/pull/17",
+    mergedAt: "2026-07-29T12:00:00Z",
+    headRefOid: "0123456789abcdef0123456789abcdef01234567",
+    baseRefName: "main",
+    mergeCommit: { oid: "89abcdef0123456789abcdef0123456789abcdef" },
+  };
+  const defaultRepo = { defaultBranchRef: { name: "main" } };
+  const noRequiredChecks = { "pr checks --required": "no required checks reported on the 'main' branch\n" };
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: noRequiredChecks,
+    relatedChecks: [{ name: "deploy", state: "SUCCESS", bucket: "pass" }],
+  });
+  const relatedSuccess = run("acme/widgets", "17");
+  assert.strictEqual(relatedSuccess.status, 0, relatedSuccess.stderr);
+  assert.deepStrictEqual(JSON.parse(relatedSuccess.stdout).related_checks, [
+    { name: "deploy", state: "SUCCESS", bucket: "pass" },
+  ]);
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: noRequiredChecks,
+    relatedChecks: [
+      { name: "deploy", state: "IN_PROGRESS", bucket: "pending" },
+      { name: "lint", state: "FAILURE", bucket: "fail" },
+    ],
+    status: { ...noRequiredChecks, "pr checks": { exitCode: 1 } },
+  });
+  failure(run("acme/widgets", "17"), "RELATED_CHECKS_NOT_PASSING");
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: { ...noRequiredChecks, "pr checks": { exitCode: 8, stdout: "{" } },
+  });
+  failure(run("acme/widgets", "17"), "MALFORMED_PROVIDER_JSON");
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: { ...noRequiredChecks, "pr checks": { exitCode: 1, stdout: "[]" } },
+  });
+  failure(run("acme/widgets", "17"), "COMMAND_FAILED");
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: {
+      ...noRequiredChecks,
+      "pr checks": {
+        exitCode: 1,
+        stdout: JSON.stringify([{ name: "deploy", state: "SUCCESS", bucket: "pass" }]),
+      },
+    },
+  });
+  failure(run("acme/widgets", "17"), "COMMAND_FAILED");
+
+  installGh({
+    pr: mergedPr,
+    repo: defaultRepo,
+    status: { ...noRequiredChecks, "pr checks": "provider unavailable" },
+  });
+  failure(run("acme/widgets", "17"), "COMMAND_FAILED");
 
   console.log("post-merge facts helper tests passed");
 } finally {
