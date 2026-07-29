@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.13.1 - 2026-07-29
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.0...v2.13.1)
+
+### Changes
+
+- fix: verify related checks without required checks ([#116](https://github.com/jjlabsio/midnight-forge/pull/116))
 ## v2.13.0 - 2026-07-29
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.12.1...v2.13.0)
