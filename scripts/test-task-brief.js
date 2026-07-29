@@ -7,195 +7,109 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
-const helper = path.join(root, "skills", "task", "scripts", "task-brief.mjs");
+const helper = path.join(root, "skills", "task", "scripts", "task-store.mjs");
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-task-store-"));
+const project = path.join(temp, "project");
+const work = path.join(project, ".mdf", "work");
 
-function write(filePath, content) {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, content);
-}
+function write(file, value) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, value); }
+function run(...args) { return spawnSync(process.execPath, [helper, project, ...args], { encoding: "utf8" }); }
+function state(workId, value) { write(path.join(work, workId, "task.json"), `${JSON.stringify(value)}\n`); }
+function error(result) { return JSON.parse(result.stderr).error.code; }
 
-function card({ taskId, workId, title, status, worktree, branch, dependsOn = [] }) {
-  return [
-    "---",
-    `work_id: ${JSON.stringify(workId)}`,
-    `task_id: ${JSON.stringify(taskId)}`,
-    'kind: "task"',
-    `title: ${JSON.stringify(title)}`,
-    "order: 1",
-    `status: ${JSON.stringify(status)}`,
-    'created: "2026-07-23"',
-    `depends_on: ${JSON.stringify(dependsOn)}`,
-    `worktree: ${JSON.stringify(worktree)}`,
-    `branch: ${JSON.stringify(branch)}`,
-    "latest:",
-    '  quick_handoff: "quick-handoff-001.md"',
-    "---",
-    "## Context",
-    "",
-    "A deterministic briefing fixture.",
-    "",
-    "## Files",
-    "",
-    "- `overlays/mdf/replacements/skills/task/SKILL.md`",
-    "",
-    "## Criteria",
-    "",
-    "- [ ] Reports task facts without writing state.",
-    "",
-    "## Log",
-    "",
-    "- 2026-07-23: fixture",
-    "",
-  ].join("\n");
-}
-
-function fixture({ duplicate = false, malformed = false, unsafeWorktree = false, missingLock = false } = {}) {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-task-brief-"));
-  const project = path.join(base, "project");
-  const home = path.join(base, "home");
-  const worktree = path.join(project, ".worktrees", "task-0077-fixture");
-  const workId = "2026-07-23-0077-fixture";
-  const taskDir = path.join(project, ".mdf", "work", workId);
-  const dependencyDir = path.join(project, ".mdf", "work", "2026-07-23-0076-fixture");
-
-  write(path.join(home, ".mdf", "user", "init.json"), '{"version":1}\n');
-  write(path.join(home, ".mdf", "user", "preferences.json"), '{"human_language":"en"}\n');
-  write(
-    path.join(project, ".mdf", "project", "init.json"),
-    `${JSON.stringify({ version: 1, canonical_root: project })}\n`
-  );
-  fs.mkdirSync(path.join(project, ".mdf", "locks"), { recursive: true });
-  fs.mkdirSync(worktree, { recursive: true });
-  const realProject = fs.realpathSync(project);
-  const realWorktree = fs.realpathSync(worktree);
-  write(path.join(project, ".mdf", "index.jsonl"), "\n");
-  write(
-    path.join(dependencyDir, "item.md"),
-    card({
-      taskId: "0076",
-      workId: "2026-07-23-0076-fixture",
-      title: "Dependency",
-      status: "done",
-      worktree: path.join(project, ".worktrees", "task-0076-fixture"),
-      branch: "task-0076-fixture",
-    })
-  );
-  write(
-    path.join(taskDir, "item.md"),
-    malformed
-      ? "---\ntask_id: \"0077\"\ndepends_on: not-an-array\n"
-      : card({
-          taskId: "0077",
-          workId,
-          title: "Fixture task",
-          status: "active",
-          worktree: unsafeWorktree ? "/tmp/outside" : realWorktree,
-          branch: "task-0077-fixture",
-          dependsOn: ["0076"],
-        })
-  );
-  if (duplicate) {
-    write(
-      path.join(project, ".mdf", "work", "2026-07-23-0077-duplicate", "item.md"),
-      card({
-        taskId: "0077",
-        workId: "2026-07-23-0077-duplicate",
-        title: "Duplicate task",
-        status: "queue",
-        worktree: path.join(project, ".worktrees", "task-0077-duplicate"),
-        branch: "task-0077-duplicate",
-      })
-    );
-  }
-  if (!malformed && !unsafeWorktree && !missingLock) {
-    write(
-      path.join(project, ".mdf", "locks", "0077.lock"),
-      `${JSON.stringify({
-        task_id: "0077",
-        work_id: workId,
-        canonical_root: project,
-        worktree: realWorktree,
-        branch: "task-0077-fixture",
-        started: "2026-07-23T00:00:00Z",
-        runtime: "test",
-      })}\n`
-    );
-  }
-  return { base, project: realProject, home, worktree: realWorktree, workId };
-}
-
-function run(fixtureRoot, taskId = "77") {
-  return spawnSync(process.execPath, [helper, taskId], {
-    cwd: fixtureRoot.worktree,
-    env: { ...process.env, HOME: fixtureRoot.home },
-    encoding: "utf8",
-  });
-}
-
-function snapshot(directory) {
-  const files = [];
-  function visit(current) {
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const filePath = path.join(current, entry.name);
-      if (entry.isDirectory()) visit(filePath);
-      else files.push([path.relative(directory, filePath), fs.readFileSync(filePath)]);
-    }
-  }
-  visit(directory);
-  return files;
-}
-
-function errorResult(result, code) {
-  assert.strictEqual(result.status, 2, result.stderr);
-  assert.strictEqual(JSON.parse(result.stderr).error.code, code);
-}
-
-const fixtures = [];
 try {
-  const valid = fixture();
-  fixtures.push(valid);
-  const before = snapshot(valid.project);
-  const result = run(valid);
-  assert.strictEqual(result.status, 0, result.stderr);
-  const report = JSON.parse(result.stdout);
-  assert.strictEqual(report.ok, true);
-  assert.strictEqual(report.task.task_id, "0077");
-  assert.strictEqual(report.task.work_id, valid.workId);
-  assert.strictEqual(report.task.title, "Fixture task");
-  assert.strictEqual(report.task.status, "active");
-  assert.strictEqual(report.task.worktree, valid.worktree);
-  assert.strictEqual(report.task.branch, "task-0077-fixture");
-  assert.deepStrictEqual(report.dependencies, [{ task_id: "0076", status: "done", lock_present: false }]);
-  assert.deepStrictEqual(report.lock, {
-    present: true,
-    task_id: "0077",
-    work_id: valid.workId,
-    worktree: valid.worktree,
-    branch: "task-0077-fixture",
-  });
-  assert.deepStrictEqual(snapshot(valid.project), before);
+  write(path.join(project, ".mdf", "project", "init.json"), JSON.stringify({ version: 1, canonical_root: project }));
+  write(path.join(work, "2026-07-29-0001-alpha", "item.md"), "# Alpha intent\n");
+  state("2026-07-29-0001-alpha", { version: 1, task_id: "0001", work_id: "2026-07-29-0001-alpha", title: "Alpha", status: "queue", order: 1, created: "2026-07-29", depends_on: [] });
 
-  const missing = fixture();
-  fixtures.push(missing);
-  errorResult(run(missing, "9999"), "TASK_NOT_FOUND");
+  const before = fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "task.json"));
+  const inspected = run("inspect", "1");
+  assert.strictEqual(inspected.status, 0, inspected.stderr);
+  assert.strictEqual(JSON.parse(inspected.stdout).task.status, "queue");
+  assert.match(JSON.parse(inspected.stdout).digest, /^[a-f0-9]{64}$/);
+  assert.deepStrictEqual(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "task.json")), before);
 
-  const duplicate = fixture({ duplicate: true });
-  fixtures.push(duplicate);
-  errorResult(run(duplicate), "DUPLICATE_TASK_ID");
+  const listed = run("list");
+  assert.strictEqual(listed.status, 0, listed.stderr);
+  assert.deepStrictEqual(JSON.parse(listed.stdout).tasks.map((task) => task.task_id), ["0001"]);
+  assert.deepStrictEqual(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "task.json")), before, "board list must not rewrite current state");
+  assert.strictEqual(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "item.md"), "utf8"), "# Alpha intent\n", "board list must not rewrite intent");
 
-  const malformed = fixture({ malformed: true });
-  fixtures.push(malformed);
-  errorResult(run(malformed), "MALFORMED_CARD");
+  fs.renameSync(path.join(work, "2026-07-29-0001-alpha", "item.md"), path.join(work, "2026-07-29-0001-alpha", "missing-item.md"));
+  const unlinked = run("list");
+  assert.strictEqual(unlinked.status, 2, unlinked.stderr);
+  assert.strictEqual(error(unlinked), "MALFORMED_TASK");
+  fs.renameSync(path.join(work, "2026-07-29-0001-alpha", "missing-item.md"), path.join(work, "2026-07-29-0001-alpha", "item.md"));
 
-  const unsafe = fixture({ unsafeWorktree: true });
-  fixtures.push(unsafe);
-  errorResult(run(unsafe), "UNSAFE_WORKTREE");
+  const taskDir = path.join(work, "2026-07-29-0001-alpha");
+  const linkedState = path.join(temp, "linked-task.json");
+  fs.writeFileSync(linkedState, fs.readFileSync(path.join(taskDir, "task.json")));
+  fs.unlinkSync(path.join(taskDir, "task.json"));
+  fs.symlinkSync(linkedState, path.join(taskDir, "task.json"));
+  const symlinkedState = run("list");
+  assert.strictEqual(symlinkedState.status, 2, symlinkedState.stderr);
+  assert.strictEqual(error(symlinkedState), "MALFORMED_TASK");
+  fs.unlinkSync(path.join(taskDir, "task.json"));
+  fs.writeFileSync(path.join(taskDir, "task.json"), fs.readFileSync(linkedState));
 
-  const missingLock = fixture({ missingLock: true });
-  fixtures.push(missingLock);
-  errorResult(run(missingLock), "LOCK_MISMATCH");
+  const linkedIntent = path.join(temp, "linked-item.md");
+  fs.writeFileSync(linkedIntent, fs.readFileSync(path.join(taskDir, "item.md")));
+  fs.unlinkSync(path.join(taskDir, "item.md"));
+  fs.symlinkSync(linkedIntent, path.join(taskDir, "item.md"));
+  const symlinkedIntent = run("list");
+  assert.strictEqual(symlinkedIntent.status, 2, symlinkedIntent.stderr);
+  assert.strictEqual(error(symlinkedIntent), "MALFORMED_TASK");
+  fs.unlinkSync(path.join(taskDir, "item.md"));
+  fs.writeFileSync(path.join(taskDir, "item.md"), fs.readFileSync(linkedIntent));
 
-  console.log("task-brief helper tests passed");
+  const set = run("set-status", "0001", "active", "queue", JSON.parse(inspected.stdout).digest);
+  assert.strictEqual(set.status, 0, set.stderr);
+  assert.strictEqual(JSON.parse(set.stdout).task.status, "active");
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "task.json"))).status, "active");
+
+  const conflict = run("set-status", "0001", "cancelled", "queue", JSON.parse(set.stdout).digest);
+  assert.strictEqual(conflict.status, 2);
+  assert.strictEqual(error(conflict), "STATE_CHANGED");
+
+  const cancel = run("set-status", "0001", "cancelled", "active", JSON.parse(set.stdout).digest);
+  assert.strictEqual(cancel.status, 0, cancel.stderr);
+  assert.ok(fs.existsSync(path.join(work, "2026-07-29-0001-alpha")));
+
+  const cancelledInspection = run("inspect", "0001");
+  const withExecutionFacts = { ...JSON.parse(cancelledInspection.stdout).task, latest: { pr: "https://example.test/pr/1" } };
+  const replace = run("replace", "0001", JSON.parse(cancelledInspection.stdout).digest, JSON.stringify(withExecutionFacts));
+  assert.strictEqual(replace.status, 0, replace.stderr);
+  assert.deepStrictEqual(JSON.parse(replace.stdout).task.latest, withExecutionFacts.latest);
+  assert.strictEqual(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "item.md"), "utf8"), "# Alpha intent\n", "state replacement must not write intent");
+
+  const staleReplacement = run("replace", "0001", JSON.parse(cancelledInspection.stdout).digest, JSON.stringify(withExecutionFacts));
+  assert.strictEqual(staleReplacement.status, 2, staleReplacement.stderr);
+  assert.strictEqual(error(staleReplacement), "STATE_CHANGED");
+
+  for (const [field, value] of [["order", undefined], ["created", 123], ["depends_on", "0001"]]) {
+    const malformed = { version: 1, task_id: "0002", work_id: "2026-07-29-0002-malformed", title: "Malformed", status: "queue", order: 2, created: "2026-07-29", depends_on: [] };
+    malformed[field] = value;
+    write(path.join(work, malformed.work_id, "item.md"), "# Malformed intent\n");
+    state(malformed.work_id, malformed);
+    const result = run("list");
+    assert.strictEqual(result.status, 2, `${field}: ${result.stderr}`);
+    assert.strictEqual(error(result), "MALFORMED_TASK");
+    fs.rmSync(path.join(work, malformed.work_id), { recursive: true, force: true });
+  }
+
+  const active = JSON.parse(fs.readFileSync(path.join(work, "2026-07-29-0001-alpha", "task.json")));
+  active.status = "active";
+  active.latest = { pr: "https://example.test/pr/1" };
+  state(active.work_id, active);
+  const activeInspection = run("inspect", "0001");
+  assert.strictEqual(activeInspection.status, 0, activeInspection.stderr);
+  active.latest.pr = "https://example.test/pr/2";
+  state(active.work_id, active);
+  const stale = run("set-status", "0001", "done", "active", JSON.parse(activeInspection.stdout).digest);
+  assert.strictEqual(stale.status, 2, stale.stderr);
+  assert.strictEqual(error(stale), "STATE_CHANGED");
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(work, active.work_id, "task.json"))).latest.pr, "https://example.test/pr/2");
+  console.log("task-store helper tests passed");
 } finally {
-  for (const fixtureRoot of fixtures) fs.rmSync(fixtureRoot.base, { recursive: true, force: true });
+  fs.rmSync(temp, { recursive: true, force: true });
 }

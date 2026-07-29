@@ -1,0 +1,9 @@
+{
+  "output": "skills/task/scripts/task-store.mjs",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/task/scripts/task-store.mjs",
+  "artifactStorageOverride": false,
+  "notes": "Current-schema task helper for compact read views and expected-status atomic replacement.",
+  "overlayKind": "mdfOnly"
+}

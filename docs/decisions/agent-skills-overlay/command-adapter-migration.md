@@ -87,11 +87,11 @@ MDF-specific guidance belongs in a clearly labeled adaptation section. It may
 define how the upstream contract is realized locally, including:
 
 - installed plugin root and canonical project-root resolution;
-- `.mdf/work/<work-id>/` artifacts, task cards, append-only index projections,
-  locks, and worktree/branch checks;
+- `.mdf/work/<work-id>/` artifacts, `item.md` intent, `task.json` current
+  state, and worktree/branch checks;
 - exact approved spec/plan revisions and hashes;
 - task-owned paths, clean baselines, review and downstream-impact gates;
-- local evidence, completion mutations, lock release, and external-action
+- local evidence, completion mutations, and external-action
   confirmation;
 - Codex tool limitations and truthful reporting of unavailable or degraded
   reviewers.
@@ -127,10 +127,10 @@ mutation as part of the adapter commit.
 
 When the migration is performed under an MDF task, record each command's
 preserved upstream rules, MDF adaptations, commit hash, and verification in the
-canonical `.mdf/work/<work-id>/` evidence. Keep the card as the source of truth
-and append one current projection to `.mdf/index.jsonl` for each state change.
-Local MDF metadata is not implementation code and is not blindly staged with
-the adapter commit.
+canonical `.mdf/work/<work-id>/` evidence. `item.md` remains readable intent
+while `task.json` is the sole current machine-state record; do not create an
+index projection. Local MDF metadata is not implementation code and is not
+blindly staged with the adapter commit.
 
 ## Consequences
 

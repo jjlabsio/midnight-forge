@@ -31,7 +31,7 @@ evidence. Its direct invocation grants the root every action required by the
 recorded outcome and acceptance criteria, while a bare internal mode string
 without current run context grants nothing. Profiles define composition and
 completion rather than an action allowlist. The current handoff,
-task/lock/worktree/branch facts, and accepted artifact hashes remain required.
+task/worktree/branch facts, and accepted artifact hashes remain required.
 
 The profile owns intent sufficiency. It invokes `interview-me` before spec only
 for materially different user outcomes, unresolved user-owned trade-offs, or
@@ -44,19 +44,19 @@ Once intent is settled, local `auto-workflow` may run the in-scope
 spec/plan/build/test/review/simplify loop and commit each plan slice while
 leaving the whole MDF task active. `auto-workflow-pr` may resume those slices,
 use the latest spec as its acceptance baseline, run ship, and—only after final
-preflight—push and create/update the PR. It leaves the task active with its
-lock held and records the PR's immutable minimal task-card link. That ends the
+preflight—push and create/update the PR. It leaves the task active and records
+the PR's immutable minimal link in `task.json`. That ends the
 delivery profile. A later explicit, separate `github-after-merge` invocation
 completes the task only after directly verifying the merged PR's final state.
 Both modes must still stop for a new user-owned product, public-contract,
 security, privacy, data, target, or scope decision; failed verification,
-repeated no-progress, lock conflicts, changed artifact hashes, or uncertain PR
+repeated no-progress, changed artifact hashes, or uncertain PR
 state. External effect, cost, destructiveness, irreversibility, merge,
-deployment, deletion, stale-lock takeover, and cleanup are not independent
+deployment, deletion, and cleanup are not independent
 permission boundaries when required by the accepted outcome and criteria.
 
 Resume is state-based rather than a replay of the profile. When the latest
-handoff, accepted commit OID, task, lock, worktree, branch, and clean Git state
+handoff, accepted commit OID, task, worktree, branch, and clean Git state
 prove that local `auto-workflow` completed, `auto-workflow-pr` starts its
 remaining work at canonical `ship`. Reading and validating that evidence is a
 preflight, not permission to rerun accepted spec, plan, build, review,

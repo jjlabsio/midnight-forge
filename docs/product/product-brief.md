@@ -28,7 +28,7 @@ A developer initializes MDF, creates or starts a task, works in an isolated git 
 ## Current Scope
 
 - Codex plugin packaging.
-- MDF init, task, task board, migration, worktree, commit, PR, and cleanup skills.
+- MDF init, task, task board, worktree, commit, PR, and cleanup skills.
 - Vendored upstream `agent-skills` source under `vendor/agent-skills`.
 - MDF overlays under `overlays/mdf`.
 - Generated runtime files under root `skills/`, `references/`, and `agents/`.
@@ -44,7 +44,7 @@ A developer initializes MDF, creates or starts a task, works in an isolated git 
 ## Key Workflows
 
 - `init` prepares local MDF state and ignore setup.
-- `task` manages local work items and task locks.
+- `task` manages local work items in the canonical current-state store.
 - `auto-workflow` coordinates local spec, plan, build, review, simplification,
   and commit work.
 - `auto-workflow-pr` resumes that work through ship and GitHub PR preparation.

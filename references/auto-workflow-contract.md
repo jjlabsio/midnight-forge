@@ -46,7 +46,7 @@ For each ready plan slice:
    Rework only current-delivery blockers until accepted or `BLOCKED`.
 6. Root commits exactly the slice-owned paths.
 7. Root records the accepted slice and commit OID in the handoff.
-8. Root re-reads plan, card, lock, and Git before selecting another slice.
+8. Root re-reads plan, current task state, and Git before selecting another slice.
 
 Do not invoke upstream `build auto`. Do not simplify an individual slice.
 
@@ -82,4 +82,4 @@ After every approved slice is committed:
   outcome and criteria. This profile defines the local workflow sequence and
   handoff; it is not an action allowlist.
 - Finish with a verified local handoff or `BLOCKED`.
-- Keep the task `active` and its lock held.
+- Keep the task `active`; execution facts remain in `task.json`.

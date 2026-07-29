@@ -1,9 +1,0 @@
-{
-  "output": "skills/task/scripts/task-brief.mjs",
-  "source": null,
-  "classification": "mdf-only",
-  "overlay": "replacements/skills/task/scripts/task-brief.mjs",
-  "artifactStorageOverride": false,
-  "notes": "Read-only deterministic task card, dependency, lock, and worktree briefing facts.",
-  "overlayKind": "mdfOnly"
-}

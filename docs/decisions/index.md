@@ -6,11 +6,11 @@
 - [Keep active model routing in the dispatch policy](agent-skills-overlay/operational-model-routing-policy.md)
 - [Preserve upstream command contracts in MDF adapters](agent-skills-overlay/command-adapter-migration.md)
 - [Use generated runtime files](agent-skills-overlay/generated-runtime-files.md)
-- [Keep artifact and task state readable](agent-skills-overlay/overlay-v2-artifact-storage.md)
+- [Historical: keep artifact and task state readable (superseded)](agent-skills-overlay/overlay-v2-artifact-storage.md)
 - [Use a Codex-only plugin surface](agent-skills-overlay/codex-only-plugin-surface.md)
 - [Orchestrate auto-workflow autonomously within a scoped contract](agent-skills-overlay/auto-workflow-autonomous-orchestration.md)
 - [Use root-owned workflow drivers](agent-skills-overlay/root-owned-workflow-drivers.md)
-- [Defer delivery completion until merge](agent-skills-overlay/post-merge-delivery-finalization.md)
+- [Historical: defer delivery completion until merge (superseded)](agent-skills-overlay/post-merge-delivery-finalization.md)
 - [Require evidence-carrying Two-Key automatic stages (superseded)](agent-skills-overlay/evidence-carrying-auto-stages.md)
 
 ## MDF Task System

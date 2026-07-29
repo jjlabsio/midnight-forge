@@ -4,7 +4,7 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/using-git-worktrees/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "Active model-led worktree isolation with branch, path, lock, and cleanup guards.",
+  "notes": "Active model-led worktree isolation with branch, path, task-fact, and cleanup guards.",
   "overlayKind": "mdfOnly",
   "contractRefs": []
 }

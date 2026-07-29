@@ -16,7 +16,7 @@ description: "Use when the user explicitly requests MDF's direct GitHub PR deliv
 ## Root controller
 
 1. Before every operation, apply the loaded contracts' complete root boundary
-   and revalidate task, card, lock, worktree, branch, persisted PR link, Git,
+   and revalidate task state, intent, worktree, branch, persisted PR link, Git,
    artifacts, intent, authority, and applicable remote state.
 2. Run the selected profile exactly. This controller map is non-exhaustive and
    never overrides or omits a requirement from the loaded contracts.
@@ -56,6 +56,6 @@ failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
 Use the profile for composition and task-state completion, and the shared root
-boundary for outcome-based authority. Leave the task active and its lock held
-for a later explicit, separate `github-after-merge` invocation. Stage skills do
+boundary for outcome-based authority. Leave the task active for a later
+explicit, separate `github-after-merge` invocation. Stage skills do
 not interpret the profile.

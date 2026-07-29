@@ -93,9 +93,7 @@ Project init owns project-local MDF state under the canonical root:
 <canonical-root>/.mdf/
 <canonical-root>/.mdf/project.json
 <canonical-root>/.mdf/project/init.json
-<canonical-root>/.mdf/index.jsonl
 <canonical-root>/.mdf/work/
-<canonical-root>/.mdf/locks/
 ```
 
 Do not create an independent `.mdf/` directory inside a linked worktree. A linked worktree under `<canonical-root>/.worktrees/<branch>` reads and writes the canonical root `.mdf/` store.
@@ -234,7 +232,6 @@ After ignore policy passes, create any missing project layout:
 ```text
 <canonical-root>/.mdf/
 <canonical-root>/.mdf/work/
-<canonical-root>/.mdf/locks/
 <canonical-root>/.mdf/project/
 ```
 
@@ -262,7 +259,7 @@ Use the canonical root basename for `name`. Include `remote` when an origin remo
 }
 ```
 
-Create `index.jsonl` as an empty file when missing. Do not overwrite existing task state.
+Do not overwrite existing task state.
 
 Upsert the project into `~/.mdf/projects.json`:
 
@@ -275,7 +272,7 @@ Upsert the project into `~/.mdf/projects.json`:
       "name": "project-basename",
       "canonical_root": "/absolute/project/root",
       "remote": "git@github.com:user/project.git",
-      "index": ".mdf/index.jsonl",
+      "work": ".mdf/work/",
       "last_seen": "2026-06-08T00:00:00Z"
     }
   }

@@ -24,9 +24,7 @@ skills/ references/ agents/          # generated runtime surface
 Each inventory entry records its output, source or overlay input, hash when
 applicable, classification, and packaging rationale. Entries may also declare
 `contractRefs` for shared generated references; the packaging validator resolves
-those IDs through the inventory root's `contracts` registry. Maintained
-surfaces are classified as active, historical, or packaging in the task-0041
-inventory.
+those IDs through the inventory root's `contracts` registry.
 
 ## Sync and validation
 
@@ -46,10 +44,11 @@ progress, recovery, or ship success.
 Public MDF skills are readable workflow guidance over the upstream primitives.
 The model owns semantic routing, task interpretation, exact artifact approval,
 review meaning, downstream impact, recovery choice, and external authority.
-Canonical `.mdf` cards, rebuildable index projections (append-only for normal
-lifecycle writes), locks, and project-local worktrees remain preserved
-contracts. Task and board skills own automatic self-healing of that derived
-projection from authoritative cards and locks.
+Canonical `.mdf` task directories and project-local worktrees remain preserved
+contracts. Each directory contains readable `item.md` intent and one
+`task.json` current-state record; there is no index projection, lock, or
+automatic healing. Task boards use the task-store helper's read-only scan and
+never repair, migrate, or rewrite state while rendering.
 
 The model-led workflow keeps only the existing task-state primitives needed by
 the repository. Auto-workflow does not add a policy module, JSON protocol, or
@@ -64,7 +63,7 @@ When the caller explicitly invokes an automatic workflow, the run-scoped
 contract grants the root every action required by the recorded outcome and
 acceptance criteria. Profiles define composition and completion, not an action
 allowlist. A workflow invocation—not a bare mode string—supplies this grant;
-the current handoff, task/lock/worktree/branch facts, accepted artifact hashes,
+the current handoff, task/worktree/branch facts, accepted artifact hashes,
 and fresh preflight remain required. Neither mode alters standalone skill
 semantics. An ambiguous target, action outside the accepted outcome, or a new
 user-owned decision still stops; external effect, cost, destructiveness,
