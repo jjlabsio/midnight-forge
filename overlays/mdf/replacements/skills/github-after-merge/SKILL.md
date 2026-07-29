@@ -14,9 +14,17 @@ not need to invoke either skill separately.
 1. Require a PR number or URL only when the current task cannot provide a unique, well-formed `latest.pr` link; otherwise use that link. A bare request to sync after merge
    without an exact task ID or task-card PR link is synchronization-only and
    must not mutate MDF task state.
-2. Resolve the canonical root and read GitHub as the source of truth. Common
-   merge verification requires repository, PR number, URL, `mergedAt`,
-   `headRefOid`, and `baseRefName`.
+2. Resolve the canonical root. For managed finalization, use
+   `<skill-root>/scripts/post-merge-facts.mjs <owner/repo>
+   <positive-pr-number>` for the read-only GitHub facts. It concurrently runs
+   `gh pr view`, `gh pr checks --required`, and `gh repo view`; on success it
+   provides the PR URL, merged time, final head OID, base branch, merge commit
+   OID, default branch, and terminal passing required checks. Treat its facts
+   only as evidence: retain card-link resolution, Git containment, task
+   finalization, synchronization, cleanup, and every stop rule in this skill.
+   Stop on its structured nonzero result. Synchronization-only retains its
+   narrower common merge verification and does not require this helper's
+   managed-finalization-only facts.
 3. Select one path before task resolution:
    - Managed finalization: an explicit task ID is present, or exactly one task
      card has a matching `latest.pr` link. Resolve its exact task/work/lock;

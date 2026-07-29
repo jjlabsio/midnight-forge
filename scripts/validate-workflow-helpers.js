@@ -8,6 +8,7 @@ const tests = [
   "test-changed-paths.js",
   "test-subagent-observation.js",
   "test-task-brief.js",
+  "test-post-merge-facts.js",
 ];
 
 for (const test of tests) {

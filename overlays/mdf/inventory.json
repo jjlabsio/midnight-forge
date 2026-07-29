@@ -96,6 +96,7 @@
       "inventory/skills/auto-workflow-pr.json",
       "inventory/skills/quick-workflow-pr.json",
       "inventory/skills/task-scripts-task-brief.json",
+      "inventory/skills/github-after-merge-scripts-post-merge-facts.json",
       "inventory/skills/browser-testing-with-devtools.json",
       "inventory/skills/build.json",
       "inventory/skills/ci-cd-and-automation.json",
@@ -179,6 +180,7 @@
         "skills/ship/SKILL.md",
         "skills/github-pr/SKILL.md",
         "skills/github-after-merge/SKILL.md",
+        "skills/github-after-merge/scripts/post-merge-facts.mjs",
         "skills/github-clear-gone/SKILL.md"
       ],
       "disposition": "model-led workflow guidance and preserved canonical-state contracts"
