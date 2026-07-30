@@ -45,6 +45,7 @@ $tasks-project
 $tasks-user
 $auto-workflow
 $auto-workflow-pr
+$quick-workflow
 $quick-workflow-pr
 $spec
 $plan
@@ -76,6 +77,9 @@ code-simplify. CI or conflict failures stay on the same task, worktree, and
 branch and re-enter the shared evidence/spec-validity/plan-compatibility/
 current-tree recovery protocol; they do not create a new lifecycle state or
 repair task.
+`$quick-workflow` is the equivalent direct local workflow: it skips spec and
+plan, reuses the canonical build and review loop, commits the accepted result,
+and finishes with a verified local handoff without pushing or creating a PR.
 Plan-slice completion and whole-task completion are distinct.
 
 ## Architecture

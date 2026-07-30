@@ -1,6 +1,30 @@
 {
   "cases": [
     {
+      "id": "quick-local-delivery",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-contract.md",
+        "skills/quick-workflow/SKILL.md"
+      ],
+      "scenario": "A quick-workflow task remains active. Its planless build, root-observed focused checks, and fresh critic are accepted; the root committed the exact accepted paths. Report the next required profile completion behavior. This is direct local delivery: no GitHub PR exists or is needed.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": true,
+        "workflow_decisions": {
+          "local_handoff": true,
+          "task_active": true,
+          "github_pr": false,
+          "push": false,
+          "remote_pr_checks": false,
+          "pr_link_storage": false
+        },
+        "decisions": {
+          "accept_current": [true, false]
+        }
+      }
+    },
+    {
       "id": "quick-mixed-findings",
       "files": [
         "references/automatic-operation-contract.md",

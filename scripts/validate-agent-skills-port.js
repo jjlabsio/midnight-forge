@@ -128,12 +128,14 @@ const automaticContracts = {
     consumers: [
       "references/auto-workflow-contract.md",
       "references/auto-workflow-pr-contract.md",
+      "references/quick-workflow-contract.md",
       "references/quick-workflow-pr-contract.md",
       "references/subagent-dispatch-policy.md",
       "skills/auto-doubt-driven-development/SKILL.md",
       "skills/auto-workflow/SKILL.md",
       "skills/auto-workflow/scripts/changed-paths.mjs",
       "skills/auto-workflow-pr/SKILL.md",
+      "skills/quick-workflow/SKILL.md",
       "skills/quick-workflow-pr/SKILL.md",
     ],
   },
@@ -147,6 +149,10 @@ const automaticContracts = {
   "auto-workflow-pr-contract": {
     output: "references/auto-workflow-pr-contract.md",
     consumers: ["skills/auto-workflow-pr/SKILL.md"],
+  },
+  "quick-workflow-contract": {
+    output: "references/quick-workflow-contract.md",
+    consumers: ["skills/quick-workflow/SKILL.md"],
   },
   "quick-workflow-pr-contract": {
     output: "references/quick-workflow-pr-contract.md",
