@@ -77,6 +77,12 @@ code-simplify. CI or conflict failures stay on the same task, worktree, and
 branch and re-enter the shared evidence/spec-validity/plan-compatibility/
 current-tree recovery protocol; they do not create a new lifecycle state or
 repair task.
+Task creation records delivery intent in `item.md`: `pr` is the default, and
+compact `delivery: merge` is an opt-in endpoint consumed initially only by
+`$quick-workflow-pr`. It never selects a workflow or grants authority. That
+endpoint first completes the ordinary verified-PR gate, then freshly validates
+the exact PR and GitHub policy before one normal merge, requests remote branch
+deletion, and uses `$github-after-merge` for the existing finalization path.
 `$quick-workflow` is the equivalent direct local workflow: it skips spec and
 plan, reuses the canonical build and review loop, commits the accepted result,
 and finishes with a verified local handoff without pushing or creating a PR.
@@ -120,7 +126,8 @@ MDF task state and readable workflow artifacts are local by default:
 Linked worktrees under `<canonical-project-root>/.worktrees/<branch>` use the
 canonical root `.mdf/` directory and never create independent state. `item.md`
 preserves self-contained intent and artifacts; adjacent `task.json` is the
-single current lifecycle state. Boards use a read-only helper. There is no
+single current lifecycle state and execution facts. Delivery intent lives only
+in `item.md`; boards use a read-only helper. There is no
 index, lock, tombstone, repair, migration, work, resume, or drop runtime.
 
 ## Validation

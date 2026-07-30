@@ -4,7 +4,7 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/quick-workflow-pr/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "Direct lightweight implementation and PR workflow that intentionally skips spec and plan while reusing canonical build, review, and GitHub PR skills.",
+  "notes": "Direct lightweight implementation and PR workflow that intentionally skips spec and plan while reusing canonical build, review, and GitHub PR skills; it alone consumes merge delivery through the existing post-merge finalizer.",
   "overlayKind": "mdfOnly",
   "contractRefs": [
     "automatic-operation-contract",

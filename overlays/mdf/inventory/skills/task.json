@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/skills/task/SKILL.md",
   "artifactStorageOverride": false,
-  "notes": "Active model-led task lifecycle over intent cards and current task state.",
+  "notes": "Active model-led task lifecycle over intent cards, including normalized delivery intent, and current task state.",
   "overlayKind": "mdfOnly"
 }

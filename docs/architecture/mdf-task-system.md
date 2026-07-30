@@ -19,6 +19,13 @@ Evidence, and Log. `task.json` is the single current machine-state record
 facts). Neither file is a historical event stream. Linked worktrees read and
 write the canonical root store.
 
+Task creation normalizes compact `delivery: merge` into `item.md`; omitted
+delivery is `pr`. Delivery is task intent, not lifecycle or execution state:
+it neither selects a workflow nor grants action authority. Initially only
+`quick-workflow-pr` consumes `merge`, after its ordinary verified-PR gate and
+a fresh GitHub-policy validation; it then uses the existing post-merge
+finalizer rather than introducing another lifecycle path.
+
 `tasks project` and `tasks user` call the small task-store helper to obtain
 current facts. They are read-only: no index rebuild, repair, legacy parsing,
 migration, artifact scan, or cleanup occurs while rendering a board.

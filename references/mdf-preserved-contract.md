@@ -28,6 +28,9 @@
   accepted proposal, interpretation, evidence, delegated judgment, unresolved
   facts, Files, Criteria, and Log. It does not duplicate current lifecycle
   state.
+- Creation normalizes compact `delivery: merge` in `item.md`; omitted delivery
+  is `pr`. Delivery is intent only: it neither selects a workflow nor grants
+  authority. `task.json` retains only current lifecycle and execution facts.
 - Task state and artifacts are evidence, not reusable authority. The skill
   performing an action owns current target, safety, verification, and stop
   checks. Reject unsafe paths, malformed current state, duplicate IDs, and
