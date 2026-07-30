@@ -90,6 +90,18 @@ function validateCase(testCase) {
       throw new Error(`${testCase.id}: unknown expected decision ${key}`);
     }
   }
+  for (const key of Object.keys(expected.workflow_decisions || {})) {
+    if (![
+      "local_handoff",
+      "task_active",
+      "github_pr",
+      "push",
+      "remote_pr_checks",
+      "pr_link_storage",
+    ].includes(key)) {
+      throw new Error(`${testCase.id}: unknown workflow decision ${key}`);
+    }
+  }
 }
 
 function promptFor(testCase) {
@@ -127,6 +139,13 @@ function promptFor(testCase) {
       "Set top-level executor_authority to the exact finding labels actually passed to the rework executor as write authority; use an empty array when no rework executor is dispatched."
     );
   }
+  if (testCase.expected.workflow_decisions !== undefined) {
+    lines.splice(
+      4,
+      0,
+      "Set each requested local-delivery decision in decisions exactly as the selected profile requires."
+    );
+  }
   return lines.join("\n\n");
 }
 
@@ -135,6 +154,7 @@ function schemaFor(testCase) {
     testCase.expected.plan_granularity === undefined
     && testCase.expected.authorized_repairs === undefined
     && testCase.expected.executor_authority === undefined
+    && testCase.expected.workflow_decisions === undefined
   ) {
     return responseSchema;
   }
@@ -160,6 +180,19 @@ function schemaFor(testCase) {
     properties.executor_authority = {
       type: "array",
       items: { type: "string" }
+    };
+  }
+  if (testCase.expected.workflow_decisions !== undefined) {
+    const decisionProperties = { ...properties.decisions.properties };
+    const decisionRequired = [...properties.decisions.required];
+    for (const key of Object.keys(testCase.expected.workflow_decisions)) {
+      decisionProperties[key] = { type: "boolean" };
+      decisionRequired.push(key);
+    }
+    properties.decisions = {
+      ...properties.decisions,
+      required: decisionRequired,
+      properties: decisionProperties,
     };
   }
   return {
@@ -242,6 +275,11 @@ function grade(testCase, actual) {
       errors.push(
         `${decision}=${actual.decisions[decision]}, expected one of ${allowed.join(",")}`
       );
+    }
+  }
+  for (const [decision, expectedValue] of Object.entries(expected.workflow_decisions || {})) {
+    if (actual.decisions[decision] !== expectedValue) {
+      errors.push(`${decision}=${actual.decisions[decision]}, expected ${expectedValue}`);
     }
   }
   return errors;

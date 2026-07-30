@@ -1,0 +1,8 @@
+{
+  "output": "references/quick-workflow-contract.md",
+  "classification": "mdf-only",
+  "overlay": "replacements/references/quick-workflow-contract.md",
+  "overlayKind": "mdfOnly",
+  "notes": "Explicitly selected planless build, review, commit, and verified local handoff profile.",
+  "contractRefs": ["automatic-operation-contract"]
+}

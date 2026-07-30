@@ -1,0 +1,13 @@
+{
+  "output": "skills/quick-workflow/SKILL.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/quick-workflow/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Direct lightweight local implementation workflow that intentionally skips spec, plan, and PR delivery while reusing canonical build and review skills.",
+  "overlayKind": "mdfOnly",
+  "contractRefs": [
+    "automatic-operation-contract",
+    "quick-workflow-contract"
+  ]
+}
