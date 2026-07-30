@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.14.1 - 2026-07-30
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.14.0...v2.14.1)
+
+### Changes
+
+- chore: restore GPT-5.6 dispatch routing ([#120](https://github.com/jjlabsio/midnight-forge/pull/120))
 ## v2.14.0 - 2026-07-30
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.3...v2.14.0)
