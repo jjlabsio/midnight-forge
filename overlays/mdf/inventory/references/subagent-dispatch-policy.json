@@ -4,7 +4,7 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/subagent-dispatch-policy.md",
   "artifactStorageOverride": false,
-  "notes": "Plugin-installed root-owned dispatch contract for smallest-sufficient GPT-5.6 routing and artifact-backed observations.",
+  "notes": "Plugin-installed root-owned temporary GPT-5.5 quality-floor routing contract with artifact-backed observations.",
   "overlayKind": "mdfOnly",
   "contractRefs": ["automatic-operation-contract"]
 }
