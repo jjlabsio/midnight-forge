@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.13.3 - 2026-07-30
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.2...v2.13.3)
+
+### Changes
+
+- chore: temporarily route dispatches through gpt-5.5 ([#118](https://github.com/jjlabsio/midnight-forge/pull/118))
 ## v2.13.2 - 2026-07-29
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.1...v2.13.2)
