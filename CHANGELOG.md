@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.14.0 - 2026-07-30
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.3...v2.14.0)
+
+### Changes
+
+- feat: add local quick workflow profile ([#119](https://github.com/jjlabsio/midnight-forge/pull/119))
 ## v2.13.3 - 2026-07-30
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.13.2...v2.13.3)
