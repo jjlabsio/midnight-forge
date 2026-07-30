@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/README.md",
   "artifactStorageOverride": false,
-  "notes": "MDF plugin packaging or README surface, not generated from upstream packaging.",
+  "notes": "MDF plugin packaging or README surface, including task delivery endpoint boundaries, not generated from upstream packaging.",
   "overlayKind": "mdfOnly"
 }

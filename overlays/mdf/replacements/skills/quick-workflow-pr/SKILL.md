@@ -12,6 +12,9 @@ description: "Use when the user explicitly requests MDF's direct GitHub PR deliv
    `<plugin-root>/references/quick-workflow-pr-contract.md`,
    `<plugin-root>/references/subagent-dispatch-policy.md`.
 3. Select the `quick-workflow-pr` profile when the user explicitly requests it.
+   Within this profile alone, consume the current task's normalized delivery
+   intent: `pr` is the default; `merge` selects its post-verification merge
+   endpoint. Delivery intent itself is not an authority grant.
 
 ## Root controller
 
@@ -24,7 +27,8 @@ description: "Use when the user explicitly requests MDF's direct GitHub PR deliv
    diff and checks; one fresh critic; root disposition of its findings; rework
    only for current-delivery blockers until the root accepts and commits;
    `github-pr`; remote OID, latest-head checks, mergeability, and conflict
-   verification; persisted PR link; verified PR delivery.
+   verification; persisted PR link; then the profile's `pr` or `merge`
+   delivery endpoint.
 4. Use the user request and current task context as the acceptance baseline.
    Preserve the planless build's applicable RED, GREEN, regression, and build
    steps and every upstream acceptance, verification, fallback, and stop
@@ -48,14 +52,16 @@ description: "Use when the user explicitly requests MDF's direct GitHub PR deliv
 
 6. Omit spec, plan, simplification, ship, separate whole-build verification,
    and separate whole-tree review. Create no empty gates.
-7. Store the required task-card PR link and finish with verified PR delivery or
-   `BLOCKED`.
+7. Store the required task-card PR link. For `pr`, finish with verified PR
+   delivery and leave the task active. For `merge`, follow the contract's
+   fresh merge gate, normal merge, remote-branch deletion request, and
+   `github-after-merge` finalization; otherwise finish `BLOCKED`.
 
 **NEVER treat a caller wait timeout, no update, or elapsed silence as executor
 failure or terminal evidence. While the executor is `running`, keep waiting.
 Do not interrupt it or dispatch a replacement for those reasons.**
 
-Use the profile for composition and task-state completion, and the shared root
-boundary for outcome-based authority. Leave the task active for a later
-explicit, separate `github-after-merge` invocation. Stage skills do
-not interpret the profile.
+Use the profile for composition and the shared root boundary for outcome-based
+authority. Only its `pr` endpoint leaves the task active for a later explicit,
+separate `github-after-merge` invocation. Stage skills do not interpret the
+profile.

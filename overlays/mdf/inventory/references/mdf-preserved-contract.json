@@ -4,6 +4,6 @@
   "classification": "mdf-only",
   "overlay": "replacements/references/mdf-preserved-contract.md",
   "artifactStorageOverride": false,
-  "notes": "Readable reference for canonical root, cards, index, locks, malformed state, paths, interruption repair, and explicit authority.",
+  "notes": "Readable reference for canonical root, intent cards, current state, normalized delivery intent, malformed state, paths, and explicit authority.",
   "overlayKind": "mdfOnly"
 }

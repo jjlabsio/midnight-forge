@@ -37,7 +37,7 @@ example `worktree`, `branch`, `started`, `latest.pr`). Status is one of
 
 | Invocation | Action | End state |
 | --- | --- | --- |
-| create or queue | Write self-contained `item.md` and current `task.json`; no branch or worktree. | `queue` |
+| create or queue | Write self-contained normalized intent to `item.md` and current `task.json`; no branch or worktree. | `queue` |
 | `task <id> set` | The only queue-to-active operation. Load `using-git-worktrees`, prepare the branch/worktree, then atomically replace queue state with active execution facts and stop. | `active` |
 | `task <id> cancel` | Atomically replace current state with `cancelled`. Keep the directory, intent, artifacts, branch and worktree facts. | `cancelled` |
 | `github-after-merge` | After its merged-PR checks, atomically replace active state with `done`. | `done` |
@@ -51,4 +51,7 @@ Task does not select or authorize downstream work.
 Start `Context` with the triggering request verbatim and retain the existing
 self-contained intent rules, `Files`, `Criteria`, `Evidence`, and `Log`
 headings. `item.md` never duplicates lifecycle authority; current state belongs
-only in `task.json`. Keep `.mdf` out of source commits.
+only in `task.json`. When creation input includes compact `delivery: merge`,
+normalize it in `item.md` as delivery intent; otherwise record the documented
+`pr` default there. Delivery intent selects neither a workflow nor action
+authority. Keep `.mdf` out of source commits.
