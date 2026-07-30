@@ -15,21 +15,22 @@ not a runtime selector, controller, capability scorer, or model-to-role table.
 
 ## Model and effort
 
-- During this temporary policy, request only the supported `gpt-5.5` candidate;
-  never request GPT-5.6.
-- An executor defaults to `medium`. Request `high` only when the bounded task
-  has material ambiguity, consequential correctness or security risk,
-  cross-cutting architecture, difficult debugging, non-trivial verification,
-  or a failed `medium`-effort verification attempt.
-- An evaluator, critic, or reviewer defaults to `high`.
-- Request only `medium` or `high`; never request `none`, `low`, or `xhigh`.
+- Never request any GPT-5.6 Luna candidate. `gpt-5.6-sol` is eligible only at
+  `low`. Terra `high` is not a general candidate.
+- After the task is bounded and its concrete capability floor is clear, consider
+  candidates in this order: Terra `medium` → Sol `low` → Terra `xhigh` → Terra
+  `max`.
 - Before escalating, split a broad request or clarify an ambiguous one. State
   its acceptance boundary, verification method, and out-of-scope work. Surface
   scope expansion to the root or user rather than silently implementing it.
+- Terra `xhigh` and `max` need concrete capability-floor grounds, such as
+  unresolved material ambiguity, high error consequence, non-trivial
+  verification, or a lower-rung failure. They are never automatic promotions
+  for a role, tree size, generic quality preference, or future possibility.
 
 The root owns semantic selection and scope judgment. The recorder enforces only
-its explicit pre-spawn exclusions; it does not select, recommend, score, or
-assign a candidate.
+the explicit Luna and Sol exclusions before spawn; it does not select,
+recommend, score, or assign a candidate.
 
 ## Instruction source
 
