@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.16.0 - 2026-07-31
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.15.0...v2.16.0)
+
+### Changes
+
+- feat: sync local default branch after merge ([#122](https://github.com/jjlabsio/midnight-forge/pull/122))
 ## v2.15.0 - 2026-07-30
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.14.1...v2.15.0)
