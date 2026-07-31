@@ -29,12 +29,12 @@ function runJson(args, directory = fixture) {
   return JSON.parse(run(args, directory));
 }
 
-function expectIneligibleBegin(requestedModel, requestedEffort) {
+function expectIneligibleBegin(requestedModel, requestedEffort, requestedMode = "standard") {
   const journal = path.join(fixture, ".mdf", "observations", "subagent-invocations.jsonl");
   const before = fs.existsSync(journal) ? fs.readFileSync(journal, "utf8") : null;
   const result = spawnSync(
     process.execPath,
-    [helper, fixture, "begin", "work-1", requestedModel, requestedEffort, "executor"],
+    [helper, fixture, "begin", "work-1", requestedModel, requestedEffort, requestedMode, "executor"],
     { encoding: "utf8" }
   );
   assert.strictEqual(result.status, 2, result.stderr);
@@ -64,7 +64,7 @@ function checkerResult(directory) {
 
 function completeRows(invocationId, role = "executor", status = "finished") {
   return [
-    { event: "begin", invocation_id: invocationId, work_id: "work-1", requested_model: "gpt-test", requested_effort: "high", canonical_role: role },
+    { event: "begin", invocation_id: invocationId, work_id: "work-1", requested_model: "gpt-test", requested_effort: "high", requested_mode: "standard", canonical_role: role },
     { event: "finish", invocation_id: invocationId, status },
   ];
 }
@@ -142,25 +142,30 @@ async function main() {
     for (const effort of ["medium", "high", "xhigh", "max", "ultra"]) {
       expectIneligibleBegin("gpt-5.6-sol", effort);
     }
-    const eligibleSol = runJson(["begin", "-", "gpt-5.6-sol", "low", "executor"]);
+    expectIneligibleBegin("gpt-test", "medium", "fast");
+    expectIneligibleBegin("gpt-test", "medium", "unknown");
+    const eligibleSol = runJson(["begin", "-", "gpt-5.6-sol", "low", "standard", "executor"]);
     assert.strictEqual(eligibleSol.status, "recorded");
+    const eligibleTerraXhigh = runJson(["begin", "-", "gpt-5.6-terra", "xhigh", "standard", "executor"]);
+    assert.strictEqual(eligibleTerraXhigh.status, "recorded");
     expectIneligibleBegin("gpt-5.6-sol", "medium");
     assert.strictEqual(runJson(["finish", eligibleSol.invocation_id, "finished"]).status, "recorded");
+    assert.strictEqual(runJson(["finish", eligibleTerraXhigh.invocation_id, "finished"]).status, "recorded");
 
-    const unavailableRoot = runJson(["begin", "work-1", "gpt-test", "high", "executor"], path.join(fixture, "missing-root"));
+    const unavailableRoot = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], path.join(fixture, "missing-root"));
     assert.strictEqual(unavailableRoot.status, "unavailable");
     assert.match(unavailableRoot.invocation_id, /^mdf-/);
 
-    const unavailable = runJson(["begin", "missing-work", "gpt-test", "high", "executor"]);
+    const unavailable = runJson(["begin", "missing-work", "gpt-test", "high", "standard", "executor"]);
     assert.strictEqual(unavailable.status, "unavailable");
     assert.match(unavailable.invocation_id, /^mdf-/);
 
-    const begin = runJson(["begin", "work-1", "gpt-test", "high", "executor"]);
+    const begin = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"]);
     assert.strictEqual(begin.status, "recorded");
-    const distinct = runJson(["begin", "work-1", "gpt-test", "high", "executor"]);
+    const distinct = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"]);
     assert.strictEqual(distinct.status, "recorded");
     assert.notStrictEqual(distinct.invocation_id, begin.invocation_id);
-    assert.strictEqual(spawnSync(process.execPath, [helper, fixture, "begin", "work-1", "gpt-test", "high", "executor", "unexpected-key"]).status, 2);
+    assert.strictEqual(spawnSync(process.execPath, [helper, fixture, "begin", "work-1", "gpt-test", "high", "standard", "executor", "unexpected-key"]).status, 2);
 
     const roles = [
       "explorer",
@@ -175,12 +180,12 @@ async function main() {
       "web-performance-auditor",
     ];
     for (const role of roles) {
-      const roleBegin = runJson(["begin", "-", "gpt-test", "medium", role]);
+      const roleBegin = runJson(["begin", "-", "gpt-test", "medium", "standard", role]);
       assert.strictEqual(roleBegin.status, "recorded");
       assert.strictEqual(runJson(["finish", roleBegin.invocation_id, "finished"]).status, "recorded");
     }
     const parallelBegins = await Promise.all(Array.from({ length: 8 }, () =>
-      runAsync(["begin", "-", "gpt-test", "medium", "ship-test-engineer"])
+      runAsync(["begin", "-", "gpt-test", "medium", "standard", "ship-test-engineer"])
     ));
     assert.strictEqual(new Set(parallelBegins.map(({ invocation_id }) => invocation_id)).size, 8);
     assert(parallelBegins.every(({ status }) => status === "recorded"));
@@ -201,6 +206,7 @@ async function main() {
     const rows = fs.readFileSync(logPath, "utf8").trim().split("\n").map(JSON.parse);
     const beginRows = rows.filter((row) => row.event === "begin");
     assert(beginRows.every((row) => !Object.hasOwn(row, "dispatch_key")));
+    assert(beginRows.every((row) => row.requested_mode === "standard"));
     assert.strictEqual(beginRows.filter((row) => row.invocation_id === begin.invocation_id || row.invocation_id === distinct.invocation_id).length, 2);
     assert.strictEqual(rows.find((row) => row.event === "finish" && row.invocation_id === begin.invocation_id).status, rawStatus);
 
@@ -279,6 +285,37 @@ async function main() {
       expectInvalidRequestedFact(`multiline-${field}`, field, "line-one\nline-two");
       expectInvalidRequestedFact(`nul-${field}`, field, "contains\0nul");
       expectInvalidRequestedFact(`nonstring-${field}`, field, 7);
+    }
+    for (const [name, value] of [["empty", ""], ["multiline", "line-one\nline-two"], ["nul", "contains\0nul"], ["nonstring", 7]]) {
+      expectInvalidRequestedFact(`${name}-requested_mode`, "requested_mode", value);
+    }
+    expectInvalidRequestedFact("fast-requested-mode", "requested_mode", "fast");
+    expectInvalidRequestedFact("unknown-requested-mode", "requested_mode", "unknown");
+    {
+      const historicalModeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-historical-requested-mode-"));
+      try {
+        initialize(historicalModeRoot);
+        const historicalId = "mdf-historical-requested-mode";
+        const historicalRows = completeRows(historicalId);
+        delete historicalRows[0].requested_mode;
+        fs.mkdirSync(path.join(historicalModeRoot, ".mdf", "observations"), { recursive: true });
+        fs.writeFileSync(
+          path.join(historicalModeRoot, ".mdf", "observations", "subagent-invocations.jsonl"),
+          `${historicalRows.map(JSON.stringify).join("\n")}\n`
+        );
+        fs.writeFileSync(
+          path.join(historicalModeRoot, ".mdf", "work", "work-1", "handoff-001.md"),
+          attemptLine(historicalId, "executor", "none", "finished", "not_used")
+        );
+        const historicalChecker = checkerResult(historicalModeRoot);
+        assert.strictEqual(historicalChecker.status, 0, historicalChecker.stdout);
+        const current = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], historicalModeRoot);
+        assert.strictEqual(current.status, "recorded");
+        const rows = fs.readFileSync(path.join(historicalModeRoot, ".mdf", "observations", "subagent-invocations.jsonl"), "utf8").trim().split("\n").map(JSON.parse);
+        assert.strictEqual(rows.at(-1).requested_mode, "standard");
+      } finally {
+        fs.rmSync(historicalModeRoot, { recursive: true, force: true });
+      }
     }
     {
       const invalidRoutingRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-invalid-routing-status-"));
@@ -386,11 +423,11 @@ async function main() {
     fs.mkdirSync(symlinkRoot);
     fs.symlinkSync(path.join(symlinkState, ".mdf"), path.join(symlinkRoot, ".mdf"));
     fs.writeFileSync(path.join(symlinkState, ".mdf", "project", "init.json"), `${JSON.stringify({ canonical_root: symlinkRoot })}\n`);
-    const symlinkedBegin = runJson(["begin", "work-1", "gpt-test", "high", "executor"], symlinkRoot);
+    const symlinkedBegin = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], symlinkRoot);
     assert.strictEqual(symlinkedBegin.status, "unavailable");
     assert.strictEqual(spawnSync(process.execPath, [checker, symlinkRoot]).status, 2);
 
-    const traversal = spawnSync(process.execPath, [helper, fixture, "begin", "work-1\ninvalid", "gpt-test", "high", "executor"]);
+    const traversal = spawnSync(process.execPath, [helper, fixture, "begin", "work-1\ninvalid", "gpt-test", "high", "standard", "executor"]);
     assert.strictEqual(traversal.status, 2);
 
     const damagedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-damaged-journal-"));
@@ -401,7 +438,7 @@ async function main() {
       const damagedLog = path.join(damagedObservations, "subagent-invocations.jsonl");
       fs.writeFileSync(damagedLog, "{\"event\":\"begin\"");
       const before = fs.readFileSync(damagedLog, "utf8");
-      const damagedBegin = runJson(["begin", "work-1", "gpt-test", "high", "executor"], damagedRoot);
+      const damagedBegin = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], damagedRoot);
       assert.strictEqual(damagedBegin.status, "unavailable");
       assert.strictEqual(fs.readFileSync(damagedLog, "utf8"), before);
     } finally {
@@ -420,7 +457,7 @@ async function main() {
         const journal = path.join(observations, "subagent-invocations.jsonl");
         fs.writeFileSync(journal, `${JSON.stringify(tailRow)}\n`);
         const before = fs.readFileSync(journal, "utf8");
-        const result = runJson(["begin", "work-1", "gpt-test", "high", "executor"], malformedTailRoot);
+        const result = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], malformedTailRoot);
         assert.strictEqual(result.status, "unavailable");
         assert.strictEqual(fs.readFileSync(journal, "utf8"), before);
       } finally {
@@ -456,7 +493,7 @@ async function main() {
     const boundedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "mdf-bounded-finish-"));
     try {
       initialize(boundedRoot);
-      const oldBegin = runJson(["begin", "work-1", "gpt-test", "high", "executor"], boundedRoot);
+      const oldBegin = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], boundedRoot);
       const boundedLog = path.join(boundedRoot, ".mdf", "observations", "subagent-invocations.jsonl");
       const paddingRow = `${JSON.stringify({
         event: "begin",
@@ -464,6 +501,7 @@ async function main() {
         work_id: null,
         requested_model: "gpt-test",
         requested_effort: "low",
+        requested_mode: "standard",
         canonical_role: "tester",
       })}\n`;
       fs.appendFileSync(boundedLog, paddingRow.repeat(Math.ceil((1024 * 1024) / Buffer.byteLength(paddingRow)) + 2));
@@ -482,7 +520,7 @@ async function main() {
       const blockedInvocationId = "mdf-blocked-invocation";
       const blockedHash = createHash("sha256").update(blockedInvocationId).digest("hex");
       fs.writeFileSync(path.join(isolatedObservations, `subagent-invocation-finish-${blockedHash}.lock`), "stale");
-      const unrelated = runJson(["begin", "work-1", "gpt-test", "high", "executor"], isolatedLockRoot);
+      const unrelated = runJson(["begin", "work-1", "gpt-test", "high", "standard", "executor"], isolatedLockRoot);
       assert.strictEqual(unrelated.status, "recorded");
       assert.strictEqual(runJson(["finish", unrelated.invocation_id, "finished"], isolatedLockRoot).status, "recorded");
     } finally {

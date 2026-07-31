@@ -8,6 +8,7 @@ const roles = new Set([
   "explorer", "tester", "reviewer", "persona", "executor", "critic",
   "ship-code-reviewer", "ship-security-auditor", "ship-test-engineer", "web-performance-auditor",
 ]);
+const requestedModes = new Set(["standard"]);
 
 if (!canonicalRootArg) {
   console.error("Usage: check-subagent-observation-links.mjs <canonical-root>");
@@ -20,6 +21,10 @@ function safeComponent(value) {
 
 function safeValue(value) {
   return typeof value === "string" && value !== "" && !/[\r\n\0]/.test(value);
+}
+
+function hasAllowedRequestedMode(row) {
+  return !Object.hasOwn(row, "requested_mode") || requestedModes.has(row.requested_mode);
 }
 
 function checkedPath(base, components, kind) {
@@ -110,6 +115,7 @@ for (const row of rows) {
     if (row.work_id !== null && !safeComponent(row.work_id)) result.errors.push(`${row.invocation_id}: missing or unsafe work linkage`);
     if (!safeValue(row.requested_model)) result.errors.push(`${row.invocation_id}: invalid requested_model`);
     if (!safeValue(row.requested_effort)) result.errors.push(`${row.invocation_id}: invalid requested_effort`);
+    if (!hasAllowedRequestedMode(row)) result.errors.push(`${row.invocation_id}: invalid requested_mode`);
   }
   if (row.event === "finish" && !safeValue(row.status)) result.errors.push(`${row.invocation_id}: missing terminal status`);
 }
@@ -122,7 +128,8 @@ function validBeginFacts(begin) {
     && (begin.work_id === null || safeComponent(begin.work_id))
     && roles.has(begin.canonical_role)
     && safeValue(begin.requested_model)
-    && safeValue(begin.requested_effort);
+    && safeValue(begin.requested_effort)
+    && hasAllowedRequestedMode(begin);
 }
 
 function validFinishFacts(finish) {
@@ -279,6 +286,7 @@ for (const invocationId of [...classifiedIds].sort()) {
       || !roles.has(begins[0].canonical_role)
       || !safeValue(begins[0].requested_model)
       || !safeValue(begins[0].requested_effort)
+      || !hasAllowedRequestedMode(begins[0])
     ))
     || (finishes[0] && !safeValue(finishes[0].status))
   ) {

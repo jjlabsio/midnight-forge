@@ -32,8 +32,10 @@ The generated `references/model-routing-5.6.md` and
 `references/model-routing-performance.md` surfaces, their overlay inputs, and
 their inventory entries are removed. There is no replacement model-routing
 runtime reference and no runtime load from `docs/**`. The recorder retains only
-a narrow pre-dispatch guard for explicitly ineligible requests, before
-invocation-ID allocation, journal append, or spawn. That guard is not a policy
+a narrow pre-dispatch guard for explicitly ineligible model, effort, or
+requested-mode facts, before invocation-ID allocation, journal append, or
+spawn. The sole canonical requested mode is `standard`; `fast` and unknown
+modes are ineligible for MDF-managed dispatch. That guard is not a policy
 parser, selector, capability scorer, or model-to-role table.
 
 Chart readings, external benchmarks, and factual MDF observations remain in
@@ -47,8 +49,8 @@ change a candidate.
   reference.
 - The root must contain scope before escalating effort and retains selection
   accountability.
-- Explicitly forbidden Luna and Sol requests still fail mechanically at the
-  existing pre-spawn boundary.
+- Explicitly forbidden Luna, Sol, and requested-mode requests still fail
+  mechanically at the existing pre-spawn boundary.
 - Historical evidence remains inspectable with source, date, metric scope, and
   limits, but cannot be mistaken for live runtime telemetry.
 - Upstream workflow semantics and requested-versus-executed boundaries remain
