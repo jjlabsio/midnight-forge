@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.17.0 - 2026-07-31
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.16.0...v2.17.0)
+
+### Changes
+
+- feat: enforce standard subagent dispatch mode ([#123](https://github.com/jjlabsio/midnight-forge/pull/123))
 ## v2.16.0 - 2026-07-31
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.15.0...v2.16.0)
