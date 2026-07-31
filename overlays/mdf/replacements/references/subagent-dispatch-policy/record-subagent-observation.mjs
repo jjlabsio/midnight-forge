@@ -31,6 +31,7 @@ const roles = new Set([
   "ship-test-engineer",
   "web-performance-auditor",
 ]);
+const requestedModes = new Set(["standard"]);
 const JOURNAL_TAIL_BYTES = 1024 * 1024;
 
 function fail(message, code = 2) {
@@ -43,10 +44,11 @@ function safe(value, label) {
   return value;
 }
 
-function ineligibleRequest(model, effort) {
+function ineligibleRequest(model, effort, mode) {
   return model === "gpt-5.6-luna"
     || model.startsWith("gpt-5.6-luna-")
-    || (model === "gpt-5.6-sol" && effort !== "low");
+    || (model === "gpt-5.6-sol" && effort !== "low")
+    || !requestedModes.has(mode);
 }
 
 function emit(value) {
@@ -185,6 +187,10 @@ function validTailComponent(value) {
   return validTailValue(value) && value !== "." && value !== ".." && !value.includes("/") && !value.includes("\\");
 }
 
+function hasAllowedRequestedMode(row) {
+  return !Object.hasOwn(row, "requested_mode") || requestedModes.has(row.requested_mode);
+}
+
 function validTailRow(row) {
   if (!row || typeof row !== "object" || Array.isArray(row) || !validTailValue(row.invocation_id)) return false;
   if (row.event === "dispatch" || row.event === "terminal") return true;
@@ -192,6 +198,7 @@ function validTailRow(row) {
     return (row.work_id === null || validTailComponent(row.work_id))
       && validTailValue(row.requested_model)
       && validTailValue(row.requested_effort)
+      && hasAllowedRequestedMode(row)
       && roles.has(row.canonical_role);
   }
   if (row.event === "finish") return validTailValue(row.status);
@@ -227,20 +234,22 @@ function sameFinish(row, status) {
 if (!canonicalRootArg || !command) fail("Usage: record-subagent-observation.mjs <canonical-root> <begin|finish> <values...>");
 
 if (command === "begin") {
-  if (values.length !== 4) fail("Begin requires explicit work ID or dash, requested model, requested effort, and canonical role.");
-  const [workId, requestedModel, requestedEffort, canonicalRole] = values;
+  if (values.length !== 5) fail("Begin requires explicit work ID or dash, requested model, requested effort, requested mode, and canonical role.");
+  const [workId, requestedModel, requestedEffort, requestedMode, canonicalRole] = values;
   safe(workId, "work ID or dash");
   safe(requestedModel, "requested model");
   safe(requestedEffort, "requested effort");
+  safe(requestedMode, "requested mode");
   safe(canonicalRole, "canonical role");
-  if (ineligibleRequest(requestedModel, requestedEffort)) {
-    fail("Requested model and effort are ineligible under the subagent dispatch policy.");
+  if (ineligibleRequest(requestedModel, requestedEffort, requestedMode)) {
+    fail("Requested model, effort, or mode is ineligible under the subagent dispatch policy.");
   }
   const invocationId = `mdf-${randomUUID()}`;
   const facts = {
     work_id: workId === "-" ? null : workId,
     requested_model: requestedModel,
     requested_effort: requestedEffort,
+    requested_mode: requestedMode,
     canonical_role: canonicalRole,
   };
   try {

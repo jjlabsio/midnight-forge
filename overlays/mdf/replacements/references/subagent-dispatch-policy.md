@@ -6,10 +6,11 @@ not a runtime selector, controller, capability scorer, or model-to-role table.
 
 ## Prepare a dispatch
 
-1. Resolve the installed plugin root. Apply the model-and-effort rules below
-   before every MDF-managed subagent request.
+1. Resolve the installed plugin root. Every MDF-managed subagent path must use
+   the `begin` preflight below before spawn. Apply the model-and-effort and
+   requested-mode rules below.
 2. Record one compact dispatch entry in the existing root handoff or synthesis:
-   requested model and effort; qualitative selection and effort rationale;
+   requested model, effort, and mode; qualitative selection and effort rationale;
    instruction source and task kind; risk, capability confidence, write scope;
    fallback and degraded status. Do not create a routing artifact.
 
@@ -29,8 +30,17 @@ not a runtime selector, controller, capability scorer, or model-to-role table.
   for a role, tree size, generic quality preference, or future possibility.
 
 The root owns semantic selection and scope judgment. The recorder enforces only
-the explicit Luna and Sol exclusions before spawn; it does not select,
+the explicit Luna, Sol, and requested-mode exclusions before spawn; it does not select,
 recommend, score, or assign a candidate.
+
+## Requested mode
+
+`standard` is the sole canonical requested mode and is the default for every
+MDF-managed subagent. `fast` is forbidden regardless of requested model or
+effort; any other mode is also ineligible. This policy is enforced centrally
+at the existing preflight, not duplicated across individual skills. Direct
+subagent invocation outside an MDF-managed path is outside this repository's
+enforcement boundary.
 
 ## Instruction source
 
@@ -76,7 +86,7 @@ it is dispatched.
 Before every actual spawn, call `begin` once and retain only its generated
 invocation ID. Every call represents one actual dispatch observation and
 returns a fresh globally unique ID, including when observation is unavailable.
-An eligibility error means the requested model and effort are explicitly
+An eligibility error means the requested model, effort, or mode is explicitly
 forbidden by this policy: do not spawn, select an eligible request, and call
 `begin` again. The recorder mechanically enforces
 only those explicit exclusions; it does not read a policy at runtime, select a
@@ -85,7 +95,7 @@ candidate, score capability, or assign a model to a role.
 ```bash
 node <plugin-root>/references/subagent-dispatch-policy/record-subagent-observation.mjs \
   <canonical-root> begin <work-id-or-dash> <requested-model> \
-  <requested-effort> <canonical-role>
+  <requested-effort> <requested-mode> <canonical-role>
 ```
 
 After an actual terminal response, call `finish` once with only that ID and the
@@ -101,8 +111,8 @@ reports conflicts diagnostically without adding a row. A lost or unavailable
 `begin` observation is not reconstructed or retried for analysis; continue with
 the returned usable ID when one is available. The helper never accepts artifact
 paths, report content, prompts, responses, secrets, quality scores, or inferred
-runtime facts. Requested model and effort are requests, not executed-runtime
-facts.
+runtime facts. Requested model, effort, and mode are requests, not
+executed-runtime facts.
 
 The recorder performs only bounded journal work on the workflow path. `begin`
 validates the current journal tail before appending and never repairs, truncates,
@@ -115,13 +125,17 @@ New-format begin rows have no dispatch key. If an immutable historical begin
 row contains a `dispatch_key` extra field, ignore it; never rewrite it or use it
 for uniqueness, locking, linking, or analysis.
 
+New begin rows always record `requested_mode: "standard"`. An immutable
+historical begin row that lacks `requested_mode` remains valid; if that field is
+present in any begin row, it must be `standard`. Never rewrite historical rows.
+
 Observation is diagnostic only. A `unavailable` result, a missing event, or an
 incomplete pair never blocks or changes spawn, acceptance, retry, commit, or
 lifecycle closure. Do not reconstruct it, retry it as a workflow gate, or turn
 it into a second dispatch. Preserve the raw limitation for analysis.
 
 Only a malformed command, missing field, empty/multiline value, or explicit
-model-routing eligibility error is a blocking `begin` input error. After
+model-routing or requested-mode eligibility error is a blocking `begin` input error. After
 syntactic parsing, unsafe or unavailable canonical-root, work, role, journal,
 or lock facts return `unavailable` with a usable ID; they are excluded from
 analysis rather than reconstructed.
@@ -171,6 +185,7 @@ the checker does not reconstruct legacy artifact linkage.
 
 ```text
 model choice: <root-selected candidate>
+requested mode: standard
 instruction source: skill-backed | persona-backed
 canonical skill: <exact adapter>                       # skill-backed
 persona: <exact installed prompt>                      # persona-backed
