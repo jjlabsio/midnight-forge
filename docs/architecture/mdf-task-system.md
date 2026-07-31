@@ -38,6 +38,16 @@ tombstone, persistent lock, or recovery lifecycle. GitHub post-merge
 finalization records `done` in the same current state after its independent
 verification.
 
+After that successful `done` transition, `github-after-merge` best-effort
+fast-forwards any already-checked-out, clean local default-branch worktree to
+the fetched `origin/<default-branch>` tip before it loads `github-clear-gone`.
+It uses only an explicit fast-forward-only operation: no checkout, reset,
+rebase, force-update, or discarded change is permitted. A missing, dirty, or
+non-fast-forwardable worktree, or a synchronization failure, is reported as
+skipped or partial cleanup and never reopens the completed task. This local
+synchronization is finalizer-only; `github-clear-gone` remains standalone and
+does not mutate task state.
+
 Artifacts remain at `<canonical-root>/.mdf/work/{work_id}/` and historical
 artifacts remain readable. Legacy state is archived operationally during the
 cutover; the shipped runtime does not read or migrate it.

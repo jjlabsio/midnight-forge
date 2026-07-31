@@ -5,6 +5,14 @@ description: "Finalize a merged GitHub PR, complete its MDF task, and clean up g
 
 # github-after-merge
 
+## Upstream contract
+
+This is an `mdf-only` finalizer, not an adapter for an upstream command. Its
+task-state and local-worktree rules are MDF adaptations; no upstream finalizer
+or cleanup contract is replaced.
+
+## MDF adaptation
+
 This is the user-facing post-merge finalizer. It uses the current task store
 and then loads `github-clear-gone`; it never recreates the retired index or
 lock lifecycle.
@@ -28,9 +36,31 @@ lock lifecycle.
    retaining the task's identity, intent, artifacts, branch, worktree, and PR
    link. For `done`, verify the same merged-PR evidence and finish as a no-op.
    Stop for any other status or changed state.
-5. Only after finalization, load `github-clear-gone` for its normal
-   synchronization and cleanup contract. Failed cleanup reports partial
-   completion and never reopens the task.
+5. Only after the `done` transition or verified `done` no-op, best-effort
+   synchronize existing local default-branch worktrees before cleanup:
+   - Use the verified default branch from step 2 and the fetched ref from step
+     3. Resolve its exact fetched tip with
+     `git rev-parse --verify "refs/remotes/origin/<default-branch>^{commit}"`.
+   - Parse `git worktree list --porcelain`. A candidate is only a worktree
+     stanza with `branch refs/heads/<default-branch>`; do not infer candidates
+     from a directory name, a detached HEAD, or another branch.
+   - For each candidate, run `git -C <worktree-path> status --porcelain`.
+     Any output means it is dirty: report that worktree as skipped and do not
+     update it. If there is no candidate, report synchronization skipped.
+   - Before updating a clean candidate, require
+     `git -C <worktree-path> merge-base --is-ancestor HEAD <fetched-tip>`.
+     If it fails, the checked-out branch cannot fast-forward to the fetched
+     tip: report it skipped and do not update it.
+   - For an eligible candidate, run only
+     `git -C <worktree-path> merge --ff-only <fetched-tip>`, then require its
+     `HEAD` to equal `<fetched-tip>`. Never checkout another branch, reset,
+     rebase, force-update, or discard changes. A failed command or failed
+     postcondition is partial synchronization, not a reason to change task
+     state.
+6. Continue to load `github-clear-gone` for its normal standalone
+   synchronization and cleanup contract regardless of skipped or partial local
+   synchronization. Failed cleanup reports partial completion and never
+   reopens the task.
 
 ## Synchronization-only
 
