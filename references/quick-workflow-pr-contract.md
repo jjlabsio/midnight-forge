@@ -14,7 +14,7 @@ current task context as the acceptance baseline.
 | Shared preflight is incomplete | Apply the shared root boundary. |
 | No accepted build | Dispatch one build executor. |
 | Executor returned a successful terminal status with a complete reviewable report | Observe the actual diff and checks, then dispatch one fresh critic. Every other terminal response follows the shared evidence and recovery rules instead. |
-| Critic returned a successful terminal status with a complete `pass` or `changes_requested` report | Root dispositions every actionable finding through the shared completion standard. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. |
+| Critic returned a successful terminal status with a complete `pass` or `changes_requested` report | Root dispositions every actionable finding through the shared completion standard. Rework only `fix-now`, stop for `needs-user`, and permit acceptance when no current-delivery blocker remains. A `fix-now` grant requires its disposition handoff and rework executor before the shared final-response gate can permit a user-facing final response. |
 | Root accepts the observed change | Commit only the accepted result. |
 | Accepted commit is local only | Invoke `github-pr`. |
 | PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |

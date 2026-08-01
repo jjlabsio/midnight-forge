@@ -46,6 +46,92 @@
       }
     },
     {
+      "id": "quick-fix-now-final-response-gate",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr critic returns changes_requested with one fix-now finding that violates an accepted criterion. The root has written the immutable disposition handoff. Context is nearly exhausted, compaction has occurred, the caller wait timed out once, and the root wants to summarize progress to the user. The required rework executor has not been dispatched. Decide the next workflow behavior.",
+      "expected": {
+        "dispositions": {
+          "fix-now": "fix-now"
+        },
+        "may_accept": false,
+        "decisions": {
+          "rework_current": true,
+          "final_response": "none",
+          "verification": "focused",
+          "review": "bounded-change"
+        }
+      }
+    },
+    {
+      "id": "quick-verified-pr-final-response-endpoint",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr task has an accepted commit and a PR at its latest head. GitHub verification freshly confirms the remote OID, required checks, mergeability, and absence of conflicts. The immutable task-card PR link is stored. Delivery is pr. Immediately before composing the user-facing final response, the root re-read the active task, latest immutable handoff, and selected profile state. Decide the next workflow behavior.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": true,
+        "decisions": {
+          "final_response": "final"
+        }
+      }
+    },
+    {
+      "id": "quick-final-response-recheck-after-compaction",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr task previously verified PR delivery, but context compacted before the root composed its user-facing final response. The root has not re-read the active task, latest immutable handoff, or selected profile state since compaction. It wants to send the final response now rather than spend more context on a recheck. Decide the next workflow behavior.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": false,
+        "decisions": {
+          "final_response": "none"
+        }
+      }
+    },
+    {
+      "id": "quick-verified-merge-final-response-endpoint",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr task with delivery merge passed the fresh verified-PR gate. GitHub confirmed the normal merge, and the existing github-after-merge finalizer verified the merged PR and completed finalization. Immediately before composing the user-facing final response, the root re-read the active task, latest immutable handoff, and selected profile state. Decide the next workflow behavior.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": true,
+        "decisions": {
+          "final_response": "final"
+        }
+      }
+    },
+    {
+      "id": "quick-blocked-final-response-endpoint",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr task reached an existing substantive stop: GitHub reports an unresolved conflict, the task handoff records the evidence and BLOCKED stop, and no safe recovery remains. Immediately before composing the user-facing final response, the root re-read the active task, latest immutable handoff, and selected profile state. Decide the next workflow behavior.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": false,
+        "decisions": {
+          "stop_blocked": true,
+          "final_response": "final"
+        }
+      }
+    },
+    {
       "id": "accepted-outcome-escalation",
       "files": [
         "references/automatic-operation-contract.md",

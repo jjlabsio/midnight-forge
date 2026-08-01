@@ -15,6 +15,7 @@ const decisionDefaults = {
   request_user: false,
   stop_blocked: false,
   rework_current: false,
+  final_response: "none",
   verification: "none",
   review: "none",
   simplification_audit: false,
@@ -55,7 +56,9 @@ const responseSchema = {
       properties: Object.fromEntries(
         Object.entries(decisionDefaults).map(([key, value]) => [
           key,
-          key === "verification"
+          key === "final_response"
+            ? { type: "string", enum: ["none", "final"] }
+            : key === "verification"
             ? { type: "string", enum: ["none", "reuse", "focused", "full"] }
             : key === "review"
               ? {
@@ -109,7 +112,7 @@ function promptFor(testCase) {
     "This is an executable behavior evaluation, not a request to edit files.",
     `Read only these repository contracts: ${testCase.files.join(", ")}.`,
     "Apply their current automatic-workflow rules to the scenario below.",
-    "Fill every decision field for the next required workflow behavior. Use false or none when an operation must not run.",
+    "Fill every decision field for the next required workflow behavior. Derive `final_response` eligibility from the listed contract files and scenario. Use false or none when an operation must not run.",
     "For review, use bounded-change only for the quick-workflow critic, whole-tree for an auto-workflow whole-tree re-review, and simplification for the fresh critic after code-simplify.",
     "When rework_current is true, review denotes the fresh critic required after that rework, not a review already completed.",
     "Do not add future hardening, follow-up work, or preferred cleanup.",
