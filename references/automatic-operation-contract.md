@@ -108,6 +108,21 @@ Always keep one writer per shared worktree, treat reports as evidence rather
 than authority, and use no nested delegation, runtime controller, or
 machine-only protocol.
 
+## User-facing final-response gate
+
+Treat composing a user-facing final response as an automatic operation. Before
+returning it, the root re-reads the active task, latest immutable handoff, and
+selected profile state. It may return that final response only after verified
+PR delivery, verified merge finalization, or a recorded substantive `BLOCKED`
+stop.
+
+A critic `changes_requested` assessment with any `fix-now` finding is never
+final-response eligible. Write the disposition handoff and dispatch the
+required bounded rework executor before a final response. Context pressure,
+compaction, elapsed time, caller wait timeouts, and a wish to summarize
+progress are non-terminal: preserve the existing handoff, continue the
+selected profile after compaction, and send a progress update only when useful.
+
 ## Operation sequence
 
 For every automatic artifact or implementation operation:
