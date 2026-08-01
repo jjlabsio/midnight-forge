@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.17.1 - 2026-08-01
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.0...v2.17.1)
+
+### Changes
+
+- fix(workflow): gate automatic final responses ([#124](https://github.com/jjlabsio/midnight-forge/pull/124))
 ## v2.17.0 - 2026-07-31
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.16.0...v2.17.0)
