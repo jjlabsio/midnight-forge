@@ -98,6 +98,7 @@ function validateCase(testCase) {
       "local_handoff",
       "task_active",
       "github_pr",
+      "github_merge",
       "push",
       "remote_pr_checks",
       "pr_link_storage",

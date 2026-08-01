@@ -19,7 +19,8 @@ current task context as the acceptance baseline.
 | Accepted commit is local only | Invoke `github-pr`. |
 | PR exists at the latest head | Verify remote OID, latest-head checks, mergeability, and conflicts. |
 | PR is verified and delivery is `pr` | Store the immutable task-card PR link when absent and finish with verified PR delivery. |
-| PR is verified and delivery is `merge` | Store the immutable task-card PR link when absent, then execute the merge endpoint. |
+| PR is verified and delivery is `merge`, and the existing `github-pr` environment-variable contract scan found a change | Store the immutable task-card PR link when absent, report the affected variables and required operator actions without secret values, and finish `BLOCKED`. Do not call GitHub merge. |
+| PR is verified and delivery is `merge`, and the existing `github-pr` environment-variable contract scan found no change | Store the immutable task-card PR link when absent, then execute the merge endpoint. |
 
 The build is the planless port of upstream build. Retain every applicable RED,
 GREEN, regression, and build step; keep review and commit in the root.
@@ -45,6 +46,13 @@ or separate whole-tree review. Create no empty gates.
   absence of conflicts, and current GitHub/repository policy. Stop on a
   changed target, pending or failed check, conflict, non-mergeable state,
   policy failure, provider uncertainty, or any other substantive stop.
+- The environment-variable contract scan required by `github-pr` is the sole
+  merge detector. When it identifies an added, removed, renamed, or
+  semantically changed variable in committed environment examples,
+  application/configuration access, schemas, or deployment configuration, do
+  not call GitHub merge. Keep the verified PR available, report the scan's
+  affected variables and required operator actions without secret values, and
+  finish `BLOCKED` for human review and any later manual merge.
 - Only when that fresh gate passes, perform one normal GitHub merge using a
   method permitted by current repository policy. Never enable auto-merge or
   bypass branch protection, approvals, merge queues, or any GitHub policy.

@@ -115,6 +115,26 @@
       }
     },
     {
+      "id": "quick-blocked-merge-for-environment-contract-change",
+      "files": [
+        "references/automatic-operation-contract.md",
+        "references/quick-workflow-pr-contract.md",
+        "skills/quick-workflow-pr/SKILL.md"
+      ],
+      "scenario": "A quick-workflow-pr task with delivery merge has a verified PR at its latest head, including a stored immutable task-card PR link. The existing github-pr environment-variable contract scan identifies an added variable in committed deployment configuration; its affected variable and required operator action are available without a secret value. Decide the required delivery behavior.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": false,
+        "workflow_decisions": {
+          "github_merge": false
+        },
+        "decisions": {
+          "stop_blocked": true,
+          "final_response": "final"
+        }
+      }
+    },
+    {
       "id": "quick-blocked-final-response-endpoint",
       "files": [
         "references/automatic-operation-contract.md",
