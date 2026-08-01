@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.17.2 - 2026-08-01
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.1...v2.17.2)
+
+### Changes
+
+- fix(workflow): block merge on env contract changes ([#125](https://github.com/jjlabsio/midnight-forge/pull/125))
 ## v2.17.1 - 2026-08-01
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.0...v2.17.1)
