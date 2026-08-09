@@ -83,6 +83,24 @@
       }
     },
     {
+      "id": "published-pr-pending-checks-retains-link",
+      "files": [
+        "skills/github-pr/SKILL.md"
+      ],
+      "scenario": "This is an intermediate github-pr publish operation, not a critic result or final-response gate: return no dispositions and set final_response to none. An active task publishes a PR. GitHub confirms its exact repository, number, default base, head branch and repository, and remote head OID against local HEAD. A consumer check for that latest head is still pending. Decide whether to store the immutable task-card PR link now, whether the task remains active, and whether delivery is ready. Do not invent task statuses or new task-state fields.",
+      "expected": {
+        "dispositions": {},
+        "may_accept": false,
+        "workflow_decisions": {
+          "task_active": true,
+          "pr_link_storage": true
+        },
+        "decisions": {
+          "final_response": "none"
+        }
+      }
+    },
+    {
       "id": "quick-final-response-recheck-after-compaction",
       "files": [
         "references/automatic-operation-contract.md",

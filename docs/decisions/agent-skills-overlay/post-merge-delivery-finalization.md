@@ -33,8 +33,10 @@ entrypoint.
   release. Invoke it explicitly as a separate operation after merge; delivery
   workflows do not wait for the merge or resume to run it.
 - Require `github-pr` to record one explicit task-card link containing only the
-  GitHub repository and PR number. A later update to that same PR never
-  rewrites the link or creates a delivery artifact. `github-after-merge`
+  GitHub repository and PR number as soon as it verifies the exact published PR
+  identity, before checks and mergeability establish delivery readiness. A later
+  update to that same PR never rewrites the link or creates a delivery artifact.
+  `github-after-merge`
   resolves task identity from an explicit task ID plus that link, or from one
   unique matching link; branch names and PR text alone never establish task
   identity.
