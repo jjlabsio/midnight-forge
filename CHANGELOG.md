@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.17.3 - 2026-08-09
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.2...v2.17.3)
+
+### Changes
+
+- fix: persist task PR link before checks complete ([#126](https://github.com/jjlabsio/midnight-forge/pull/126))
 ## v2.17.2 - 2026-08-01
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.1...v2.17.2)
