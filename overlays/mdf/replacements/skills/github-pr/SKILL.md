@@ -114,28 +114,31 @@ not apply. Do not add, remove, rename, translate, merge, or reorder sections.
 3. Push the current branch with `git push --set-upstream origin <current-branch>` so its upstream is the same-named remote branch, then verify that remote branch's OID equals local HEAD.
 4. Query again. Update the exact match when title or body differs; otherwise
    create one. Never create a duplicate.
-5. Re-read the published title and body. Require the title convention and exact
-   MDF headings, order, and section completeness.
-6. Require every related or required check for the latest head to be terminal
+5. Re-read the published title, body, and identity. Require the title convention,
+   exact MDF headings, order, and section completeness; require its repository,
+   number, default base, head repository and branch to match the exact PR from
+   step 2, and require the current remote head OID to equal local `HEAD`.
+6. For an active task, keep the task active and, once step 5 verifies that exact
+   published identity, write its immutable link once to `task.json` only at
+   `latest.pr` as `{ "repository": "<owner>/<repo>", "number": <positive
+   integer> }`. Use only the task-store helper's digest-guarded
+   expected-`active` replacement, then re-read it; never write this state or any
+   PR link to `item.md` or another task card. A present link must match the same
+   repository and PR number; a later publish of that PR, including one with a
+   changed head, does not mutate state or create an artifact. Stop for a
+   different or malformed current link. Do not create or update
+   `delivery-NNN.md`. `github-after-merge`, not this skill, completes the task.
+   Keep verbose PR reports out of `.mdf/`; `task.json`'s minimal PR link is the
+   only canonical delivery state.
+7. Require every related or required check for the latest head to be terminal
    and passing, and require a mergeable head with no unresolved conflict.
-7. Report the PR URL plus raw head/base, checks, mergeability, conflicts, and
+8. Report the PR URL plus raw head/base, checks, mergeability, conflicts, and
    current-tree evidence.
 
-For an active task, keep the task active. After every gate passes, write the
-exact published PR once to `task.json` only, at `latest.pr`, as
-`{ "repository": "<owner>/<repo>", "number": <positive integer> }`. Use only
-the task-store helper's digest-guarded expected-status replacement, then
-re-read it; never write this state or any PR link to `item.md` or another task
-card. A present link must match the same repository and PR number; a later
-publish of that PR, including one with a changed head, does not mutate state or
-create an artifact. Stop for a different or malformed current link. Do not
-create or update
-`delivery-NNN.md`. `github-after-merge`, not this skill, completes the task.
-Keep verbose PR reports out of `.mdf/`; `task.json`'s minimal PR link is the
-only canonical delivery state.
-
-If push, PR mutation, checks, or mergeability fails, preserve the active task
-and return evidence to the caller. Source repair re-enters
+If push or PR mutation fails, preserve the active task and return evidence to
+the caller. If checks or mergeability fails after step 6, preserve both the
+active task and its stored immutable PR link, then return the evidence to the
+caller. Source repair re-enters
 `build -> review -> commit` on the same task, worktree, and branch. For a
 taskless path, report and stop without creating task state. Do not invent a
 repair task or treat provider/infrastructure failure as a source change.
