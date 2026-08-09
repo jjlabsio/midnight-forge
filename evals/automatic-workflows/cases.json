@@ -93,7 +93,6 @@
         "may_accept": false,
         "workflow_decisions": {
           "task_active": true,
-          "remote_pr_checks": true,
           "pr_link_storage": true
         },
         "decisions": {
