@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.18.0 - 2026-08-11
+
+[compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.3...v2.18.0)
+
+### Changes
+
+- feat: add guarded PR squash-merge delivery skill ([#127](https://github.com/jjlabsio/midnight-forge/pull/127))
 ## v2.17.3 - 2026-08-09
 
 [compare changes](https://github.com/jjlabsio/midnight-forge/compare/v2.17.2...v2.17.3)
