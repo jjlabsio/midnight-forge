@@ -1,0 +1,9 @@
+{
+  "output": "skills/github-pr-squash-merge/SKILL.md",
+  "source": null,
+  "classification": "mdf-only",
+  "overlay": "replacements/skills/github-pr-squash-merge/SKILL.md",
+  "artifactStorageOverride": false,
+  "notes": "Direct new-PR-only delivery skill that composes github-pr publication, a Codex current-thread heartbeat, one head-guarded squash merge, and github-after-merge finalization.",
+  "overlayKind": "mdfOnly"
+}
