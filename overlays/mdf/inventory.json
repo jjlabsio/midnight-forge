@@ -124,6 +124,7 @@
       "inventory/skills/github-clear-gone.json",
       "inventory/skills/github-commit.json",
       "inventory/skills/github-pr.json",
+      "inventory/skills/github-pr-squash-merge.json",
       "inventory/skills/idea-refine.json",
       "inventory/skills/idea-refine-examples.json",
       "inventory/skills/idea-refine-frameworks.json",
